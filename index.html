@@ -665,4 +665,630 @@ muyLejos+=<g transform="translate(${lx.toFixed(0)}, {lsc.toFixed(2)})" opacity="
 
 const filas=[
 {n:rndi(8,9), ry:-306, spread:396, sc:0.56, drop:82},
-{n:rndi(8,9), ry:-252, spread:382, sc:0.
+{n:rndi(8,9), ry:-252, spread:382, sc:0.68, drop:64},
+{n:rndi(7,8), ry:-196, spread:334, sc:0.82, drop:50},
+{n:rndi(6,7), ry:-140, spread:262, sc:0.98, drop:36},
+{n:rndi(4,5), ry:-88, spread:172, sc:1.14, drop:24}
+ ];
+const flores=[];
+filas.forEach(fila=>{
+for(let j=0;j<fila.n;j++){
+const t=fila.n>1?j/(fila.n-1):0.5;
+const nx=(t-0.5)2;
+const x=cx+nx(fila.spread/2)+rnd(-13,13);
+const y=knotY+fila.ry+nxnxfila.drop+rnd(-10,10);
+let tipoF, colorF, escF=fila.scrnd(0.9,1.1);
+if(esFoto){
+const sp=pick(bolsaFoto);
+tipoF=sp.t; colorF=shade(sp.c,rnd(-0.06,0.06));
+if(tipoF==='girasol') escF=1.18;
+if(tipoF==='pompon') escF*=0.85;
+}else{
+tipoF=pick(pesos); colorF=pick(fl);
+}
+flores.push({x,y,sc:escF,tipo:tipoF,c1:colorF});
+totalFlores++;
+}
+});
+
+let tallos='';
+flores.forEach(f=>{
+const mx=(f.x+cx)/2+rnd(-10,10);
+tallos+=<path d="M${cx}, {mx.toFixed(0)}, {f.x.toFixed(0)}, {f.x.toFixed(0)}, {pick(verdes)}" stroke-width="${(5*f.sc).toFixed(1)}" stroke-linecap="round" opacity="0.92"/>;
+});
+
+function hojaPapel(ang,R,hw,fill,traz){
+const p=M${cx}, {cx-hw}, {cx}, {cx+hw}, {cx}, {cx-hw0.8},{knotY-16-(R-26)*0.6} L{cx},{knotY-(R-22)} L{cx+hw0.8}, {ang}, {knotY})">
+<path d=" {fill}" stroke=" {dorado?2.2:1.4}"/>
+<path d=" {traz}" stroke-width="1" opacity="0.5" stroke-dasharray=" {cx}, {cx}, {shade(fill,-0.1)}" stroke-width="1.2" opacity="0.55"/>
+</g>`;
+}
+let papeles='';
+if(presentacion==='papel'){
+[-62,-31,0,31,62].forEach(a=>{papeles+=hojaPapel(a+rnd(-4,4),rnd(330,362),rnd(88,102),pA,dorado?oro:pBorde);});
+[-46,-15,15,46].forEach(a=>{papeles+=hojaPapel(a+rnd(-4,4),rnd(295,322),rnd(80,92),pB,dorado?oro:shade(pB,-0.12));});
+[-27,0,27].forEach(a=>{papeles+=hojaPapel(a+rnd(-3,3),rnd(262,284),rnd(72,82),pC,shade(pC,-0.08));});
+}
+
+function sprigStatice(){
+let s='';const col=shade(acento,rnd(-0.1,0.15));const br=rndi(3,4);
+for(let i=0;i<br;i++){const an=(-90+(i-(br-1)/2)*26+rnd(-8,8))*Math.PI/180;const len=rnd(30,46);
+const ex=Math.cos(an)*len,ey=Math.sin(an)*len;
+s+=<line x2="${ex.toFixed(0)}" y2="${ey.toFixed(0)}" stroke="#7ca06d" stroke-width="1.7"/>;
+for(let d=0;d<5;d++)s+=<circle cx="${(ex+rnd(-7,7)).toFixed(0)}" cy="${(ey+rnd(-7,7)).toFixed(0)}" r="${rnd(2,3.4).toFixed(1)}" fill="${col}"/>;
+}
+return s;
+}
+function sprigGypso(){
+let s='';const br=rndi(4,6);
+for(let i=0;i<br;i++){const an=(-90+(i-(br-1)/2)*22+rnd(-10,10))*Math.PI/180;const len=rnd(26,44);
+const ex=Math.cos(an)*len,ey=Math.sin(an)*len;
+s+=<line x2="${ex.toFixed(0)}" y2="${ey.toFixed(0)}" stroke="#9db89a" stroke-width="1.2"/>;
+for(let d=0;d<4;d++)s+=<circle cx="${(ex+rnd(-8,8)).toFixed(0)}" cy="${(ey+rnd(-8,8)).toFixed(0)}" r="${rnd(1.5,2.4).toFixed(1)}" fill="#fffdf5"/>; } return s; } function sprigEuca(){ let s='';const eg='#93ac97'; s+=; for(let i=1;i&lt;=4;i++){const yy=-i*13+rnd(-2,2); s+=; s+=; } return s; } const domeCy=knotY-238; const anclas=[]; let rellenoAtras='', rellenoFrente=''; const nRell=esFoto ? rndi(16,20) : rndi(10,14); for(let i=0;i&lt;nRell;i++){ const a=rnd(-95,95)*(Math.PI/180); const R=rnd(130,185); const x=cx+Math.sin(a)*R, y=domeCy-Math.cos(a)*R*0.85+rnd(-8,8); anclas.push({x:x,y:y,w:2.6}); const rotDeg=(Math.sin(a)*55).toFixed(0); const k=esFoto ? (i%3===2 ? 2 : 0) : rndi(0,2); const cuerpo=(k===0)?sprigStatice():((k===1)?sprigGypso():sprigEuca()); const g=<g transform="translate( {y.toFixed(0)}) rotate( {cuerpo}</g>`;
+if(i%4===0) rellenoFrente+=g; else rellenoAtras+=g;
+}
+
+const py=knotY-168;
+let cono;
+if(presentacion==='papel'){
+cono=<g&gt; &lt;path d="M${cx-172},${py} Q${cx},${py-26} ${cx+172},${py} L${cx+14},${knotY+112} L${cx-14},${knotY+112} Z" fill="url(#papelCono)" stroke="${dorado?oro:pBorde}" stroke-width="2.2"/>
+<path d="M${cx-108},${py+10} Q${cx},${py-14} ${cx+108},${py+10} L${cx+8},${knotY+96} L${cx-8},${knotY+96} Z" fill="${pC}" opacity="0.9"/&gt; &lt;path d="M${cx-152},${py+3} Q${cx},${py-19} ${cx+152},${py+3} L${cx+12},${knotY+102} L${cx-12},${knotY+102} Z" fill="none" stroke="${dorado?oro:shade(pA,-0.12)}" stroke-width="1.1" opacity="0.7"/>
+</g>`;
+}else{
+cono=jarronSVG(cx,knotY,presentacion);
+}
+
+const sombraRamo=<ellipse cx="${cx}" cy="${knotY-148}" rx="152" ry="26" fill="rgba(90,40,70,.13)"/>;
+
+let hojasRamo='';
+const nHojas=rndi(10,14);
+for(let i=0;i<nHojas;i++){
+const a=rnd(-100,100)*(Math.PI/180);
+const R=rnd(118,172);
+const x=cx+Math.sin(a)*R, y=domeCy-Math.cos(a)R0.8;
+const rotD=(Math.sin(a)*70+rnd(-14,14)).toFixed(0);
+const vg=pick(verdes);
+hojasRamo+=<g transform="translate(${x.toFixed(0)}, {rotD})"><path d=" {vg}" opacity="0.95"/><path d="M0,-4 L0, {shade(vg,-0.22)}" stroke-width="1.1" opacity="0.8"/></g>; } if(presentacion!=='papel'){ const nCol=esFoto ? rndi(8,10) : rndi(5,7); for(let i=0;i&lt;nCol;i++){ const t=nCol&gt;1?i/(nCol-1):0.5; const hx=cx-95+t*190+rnd(-9,9); const hy=knotY-58+rnd(-5,7); const rotD=(hx&lt;cx? -(122+rnd(0,32)) : (122+rnd(0,32))).toFixed(0); const vg=pick(verdes); hojasRamo+=<g transform="translate( {hy.toFixed(0)}) rotate( {petalo(rnd(40,56),rnd(13,17),true)}" fill="${vg}"/&gt;&lt;/g>;
+}
+}
+
+let capullos='';
+const nCap=rndi(4,6);
+for(let i=0;i<nCap;i++){
+const a=rnd(-95,95)*(Math.PI/180);
+const R=rnd(200,242);
+const x=cx+Math.sin(a)*R, y=domeCy-Math.cos(a)R0.8;
+anclas.push({x:x,y:y,w:3});
+const rotD=(Math.sin(a)*45).toFixed(0);
+const cc=esFoto?'#9e1b2f':pick(fl), vg=pick(verdes);
+capullos+=<g transform="translate(${x.toFixed(0)}, {rotD})">
+<path d="M0,26 L0,4" stroke=" {cc}" stroke=" {vg}"/>
+<path d="M7,-2 Q2,-16 0,-17 Q8,-14 9,-4 Z" fill="${vg}"/&gt; &lt;/g>;
+}
+
+anclas.forEach(p=>{
+const mx=(p.x+cx)/2+rnd(-8,8);
+tallos+=<path d="M${cx}, {mx.toFixed(0)}, {p.x.toFixed(0)}, {p.x.toFixed(0)}, {pick(verdes)}" stroke-width="${p.w}" stroke-linecap="round" opacity="0.85"/>;
+});
+
+let brillos='';
+const nBri=rndi(6,9);
+for(let i=0;i<nBri;i++){
+const bx=cx+rnd(-185,185), by=domeCy+rnd(-165,55), bs=rnd(3,6);
+brillos+=<path d="M${bx.toFixed(0)}, {(bx+bs0.28).toFixed(1)},{(by-bs*0.28).toFixed(1)} L{(bx+bs).toFixed(1)},{by.toFixed(0)} L{(bx+bs0.28).toFixed(1)}, {bx.toFixed(0)}, {(bx-bs0.28).toFixed(1)},{(by+bs*0.28).toFixed(1)} L{(bx-bs).toFixed(1)},{by.toFixed(0)} L{(bx-bs0.28).toFixed(1)},latex
+{(by-bs*0.28).toFixed(1)} Z" fill="#fffdf5" opacity="
+
+{rnd(0.45,0.8).toFixed(2)}"/>`;
+}
+
+let cabezas='';
+flores.forEach(f=>{
+const lum=luminancia(f.c1);
+const respaldo = lum>0.86 ? <circle cx="3" cy="4" r="42" fill="rgba(112,90,106,0.17)"/>
+: (lum>0.72 ? <circle cx="3" cy="4" r="42" fill="rgba(112,90,106,0.09)"/> : '');
+cabezas+=<g transform="translate(${f.x.toFixed(0)},${f.y.toFixed(0)}) scale(${f.sc.toFixed(2)})">${respaldo}${cabeza(f.tipo,f.c1)}</g>`;
+});
+
+const lazo = presentacion!=='papel' ? '' : <g&gt; &lt;path d="M${cx-12}, {cx-88}, {cx-96}, {cx-14}, {lazoC}"/>
+<path d="M {knotY-2} C {knotY-52}  {knotY+42}  {knotY+12} Z" fill=" {cx-12}, {cx-64}, {cx-70}, {cx-14}, {shade(lazoC,0.18)}"/>
+<path d="M {knotY-2} C {knotY-36}  {knotY+28}  {knotY+8} Z" fill=" {cx-9}, {cx-30}, {cx-38}, {cx-26}, {lazoC}" stroke-width="11" stroke-linecap="round"/>
+<path d="M {knotY+8} C {knotY+74}  {knotY+100}  {knotY+116}" fill="none" stroke=" {cx}" cy=" {shade(lazoC,0.12)}" stroke="${shade(lazoC,-0.15)}" stroke-width="2"/&gt; &lt;/g>;
+
+const tagAX = presentacion==='papel' ? cx+4 : cx+66;
+const tagAY = presentacion==='papel' ? knotY+8 : knotY-46;
+const tagX = presentacion==='papel' ? cx+70 : cx+108;
+const tagY = presentacion==='papel' ? knotY+102 : knotY+40;
+const etiqueta=<g&gt; &lt;path d="M${tagAX}, {tagAX+32}, {tagX-26}, {tagX-22},latex
+{tagY-28}" fill="none" stroke="#c9a24a" stroke-width="2.4"/&gt; &lt;g transform="translate(
+
+{tagX},${tagY}) rotate(9)"&gt; &lt;path d="M-30,-30 L46,-24 Q52,-23.5 52,-17 L52,20 Q52,26 46,26 L-40,26 Q-46,26 -46,20 L-46,-14 Z" fill="#fffaf3" stroke="#e7c79c" stroke-width="1.6"/&gt; &lt;circle cx="-33" cy="-18" r="3.4" fill="none" stroke="#c9a24a" stroke-width="1.6"/&gt; &lt;text x="5" y="6" text-anchor="middle" font-family="'Dancing Script','Segoe Script',cursive" font-size="29" font-weight="700" fill="#e63b72"&gt;Vane&lt;/text&gt; &lt;text x="40" y="21" text-anchor="middle" font-size="13" fill="#ff5c8a"&gt;❤&lt;/text&gt; &lt;/g&gt; &lt;/g>;
+
+svg+=<g class="sway" style="animation-duration:6.5s"&gt;${papeles} {rellenoAtras} {sombraRamo} {capullos} {rellenoFrente} {lazo}${etiqueta}&lt;/g>;
+return svg+</svg>;
+}
+
+const mensajes=[
+'Para la mujer que ilumina cada uno de mis días, Vane.',
+'Cada pétalo de este ramo es un motivo más para quererte.',
+'Hoy el jardín entero floreció solo para ti.',
+'Eres más hermosa que cualquier flor que pueda regalarte.',
+'Estas flores nacen pensando en ti, Vane.',
+'Si pudiera, te daría un jardín nuevo cada mañana.',
+'Que estas flores te recuerden lo mucho que te quiero.',
+'Tu sonrisa hace florecer hasta el día más gris.',
+'Un ramo distinto cada día, porque eres irrepetible.',
+'Contigo, hasta lo simple se vuelve primavera.'
+ ];
+
+let fondoSuave=false;
+const usarRamoNuevo = semilla >= 20260716;
+document.getElementById('garden').innerHTML = usarRamoNuevo ? ramoNuevo() : ramo();
+if(fondoSuave) document.body.classList.add('fondo-suave');
+
+const opts={weekday:'long',day:'numeric',month:'long',year:'numeric'};
+let fechaTxt;
+try{fechaTxt=hoy.toLocaleDateString('es-ES',opts);}catch(e){fechaTxt=hoy.toDateString();}
+fechaTxt=fechaTxt.charAt(0).toUpperCase()+fechaTxt.slice(1);
+document.getElementById('fecha').textContent=fechaTxt;
+document.getElementById('mensaje').textContent=pick(mensajes);
+
+const cont=document.getElementById('particles');
+const simbolos=['❤','💖','🌸','✿','❀','💗','🌷','🦋','🌼','🦋'];
+for(let i=0;i<28;i++){
+const e=document.createElement('span');
+e.className='float';e.textContent=simbolos[Math.floor(Math.random()*simbolos.length)];
+e.style.left=(Math.random()*100)+'%';
+e.style.fontSize=(12+Math.random()*22)+'px';
+e.style.animationDuration=(8+Math.random()*9)+'s';
+e.style.animationDelay=(-Math.random()*14)+'s';
+e.style.opacity=(0.3+Math.random()*0.5).toFixed(2);
+cont.appendChild(e);
+}
+
+const RAZONES=[
+'Porque estoy feliz cuando estamos juntos.',
+'Porque me gusta escucharte reír.',
+'Porque quiero cuidarte y estar contigo.',
+'Porque me siento tranquilo cuando estamos abrazados.',
+'Porque dormir a tu lado se siente muy bien.',
+'Porque me haces pensar a futuro contigo.',
+'Porque me haces buscar un futuro bonito juntos.',
+'Porque me molestas y me haces reír.',
+'Porque me haces pensar muchas cosas.',
+'Porque haces que quiera hacerte el amor a diario.',
+'Porque contigo el tiempo pasa rápido.',
+'Porque me encanta tu carita.',
+'Porque me gustas de pies a cabeza.',
+'Porque me alegras los días.',
+'Porque quiero cumplir tus sueños.',
+'Porque me gusta hacerte feliz y verte a los ojos.',
+'Porque me encanta tu cabello.',
+'Porque te vas a casar conmigo.',
+'Porque tendremos una vida juntos.'
+ ];
+const btnBeso=document.getElementById('beso');
+if(semilla>=20260716){
+btnBeso.textContent='Razones por las que te quiero 💗';
+btnBeso.classList.add('btn-razones');
+let idxRazon=semilla%RAZONES.length;
+btnBeso.addEventListener('click',function(){
+const card=document.getElementById('razonCard');
+document.getElementById('razonTexto').textContent=RAZONES[idxRazon];
+card.hidden=false;
+card.classList.remove('razon-pop'); void card.offsetWidth; card.classList.add('razon-pop');
+const r=btnBeso.getBoundingClientRect();
+lluviaCorazones(r.left+r.width/2, r.top, 7);
+idxRazon=(idxRazon+1)%RAZONES.length;
+if(typeof window.contarRazon==='function') window.contarRazon().catch(function(){});
+});
+}else{
+btnBeso.addEventListener('click',function(){
+const ico=['❤','💖','💋','🌹','💗','😘'];
+for(let i=0;i<16;i++){
+const e=document.createElement('span');
+e.className='burst';e.textContent=ico[Math.floor(Math.random()*ico.length)];
+e.style.left=(44+Math.random()*12)+'%';
+e.style.setProperty('--mdx', ((Math.random() * 2 - 1) * 60) + 'px');
+e.style.fontSize=(20+Math.random()*22)+'px';
+e.style.animationDelay=(Math.random()*0.4)+'s';
+e.style.animationDuration=(1.8+Math.random()*1)+'s';
+document.body.appendChild(e);
+setTimeout(()=>e.remove(),3200);
+}
+});
+}
+
+function lluviaCorazones(x,y,n){
+const ico=['❤','💖','💕','💗','🌹','💘','💞'];
+for(let i=0;i<n;i++){
+const e=document.createElement('span');
+e.className='pop-heart';
+e.textContent=ico[Math.floor(Math.random()*ico.length)];
+e.style.left=x+'px'; e.style.top=y+'px';
+e.style.setProperty('--dx',((Math.random()*2-1)*150).toFixed(0)+'px');
+e.style.setProperty('--dy',(-(70+Math.random()*180)).toFixed(0)+'px');
+e.style.setProperty('--rot',((Math.random()*2-1)*60).toFixed(0)+'deg');
+e.style.fontSize=(16+Math.random()*22)+'px';
+e.style.animationDelay=(Math.random()*0.12).toFixed(2)+'s';
+document.body.appendChild(e);
+setTimeout(function(){ e.remove(); },1700);
+}
+}
+const ramoWrap=document.getElementById('garden');
+if(ramoWrap){
+ramoWrap.addEventListener('pointerdown', function(e){
+lluviaCorazones(e.clientX, e.clientY, 8+Math.floor(Math.random()*7));
+const svgEl=ramoWrap.querySelector('svg');
+if(svgEl){ svgEl.classList.remove('ramo-bounce'); void svgEl.offsetWidth; svgEl.classList.add('ramo-bounce'); }
+});
+}
+})();
+</script>
+
+<script>
+/* ---------- Reproductor robustecido ---------- */
+(function(){
+"use strict";
+var player=null, ready=false, queued=null, sonando=false, quiereSonar=false;
+var POR_DEFECTO='FZfiLNGcZ4U';
+
+var elPlay = document.getElementById('repPlay');
+var elTitulo = document.getElementById('repTitulo');
+var elEstado = document.getElementById('repEstado');
+var elVol = document.getElementById('repVol');
+var elCambiar= document.getElementById('repCambiar');
+var elForm = document.getElementById('repForm');
+var elUrl = document.getElementById('repUrl');
+var elGuardar= document.getElementById('repGuardar');
+
+function leer(){try{return localStorage.getItem('vane_cancion')||POR_DEFECTO;}catch(e){return POR_DEFECTO;}}
+function guardar(id){try{localStorage.setItem('vane_cancion',id);}catch(e){}}
+
+function sacarId(url){
+if(!url) return null; url=url.trim();
+if(/^[A-Za-z0-9_-]{11}`$/.test(url)) return url;
+var m;
+if((m=url.match(/[?&]v=([A-Za-z0-9_-]{11})/))) return m[1];
+if((m=url.match(/youtu.be/([A-Za-z0-9_-]{11})/))) return m[1];
+if((m=url.match(//embed/([A-Za-z0-9_-]{11})/))) return m[1];
+if((m=url.match(//shorts/([A-Za-z0-9_-]{11})/))) return m[1];
+return null;
+}
+
+var idActual = leer();
+
+function traerTitulo(id){
+try{
+fetch('https://www.youtube.com/oembed?format=json&url=https://www.youtube.com/watch?v='+id)
+.then(function(r){return r.ok?r.json():null;})
+.then(function(d){if(d&&d.title) elTitulo.textContent=d.title;})
+.catch(function(){});
+}catch(e){}
+}
+
+function pintar(activo){
+sonando=activo;
+elPlay.textContent = activo ? '❚❚' : '♪';
+elPlay.classList.toggle('sonando', activo);
+elEstado.textContent = activo ? 'Sonando… 🎶' : 'En pausa';
+}
+
+var tag=document.createElement('script');
+tag.src='https://www.youtube.com/iframe_api';
+document.head.appendChild(tag);
+
+window.onYouTubeIframeAPIReady=function(){
+player=new YT.Player('ytplayer',{
+height:'0', width:'0', videoId:idActual,
+playerVars:{playsinline:1, rel:0, modestbranding:1, controls:0, loop:1, playlist:idActual},
+events:{
+'onReady':function(e){
+ready=true;
+e.target.setVolume(parseInt(elVol.value,10));
+if(queued){ reproducir(queued); queued=null; }
+else if(quiereSonar){ try{ e.target.playVideo(); }catch(x){} }
+},
+'onStateChange':function(e){
+if(e.data===YT.PlayerState.PLAYING) pintar(true);
+else if(e.data===YT.PlayerState.PAUSED) pintar(false);
+else if(e.data===YT.PlayerState.ENDED){ try{player.playVideo();}catch(x){} }
+},
+'onError':function(ev){
+elEstado.textContent='Intenta con otro enlace 😕';
+elForm.hidden=false;
+}
+}
+});
+};
+
+function reproducir(id){
+idActual=id;
+if(ready && player){
+try{ player.loadVideoById(id); player.playVideo(); }catch(e){}
+}else{ queued=id; }
+}
+
+elPlay.addEventListener('click', function(){
+if(!ready || !player){ queued=idActual; elEstado.textContent='Cargando…'; return; }
+if(sonando){ player.pauseVideo(); }
+else{ player.playVideo(); }
+});
+
+elVol.addEventListener('input', function(){
+if(ready && player){ try{ player.setVolume(parseInt(elVol.value,10)); }catch(e){} }
+});
+
+elCambiar.addEventListener('click', function(){
+elForm.hidden=!elForm.hidden;
+if(!elForm.hidden) elUrl.focus();
+});
+
+function aplicarCancion(){
+var id=sacarId(elUrl.value);
+if(!id){ elUrl.style.borderColor='#e63b72'; return; }
+guardar(id);
+elTitulo.textContent='Cargando canción…';
+traerTitulo(id);
+reproducir(id);
+elForm.hidden=true;
+elUrl.value='';
+}
+elGuardar.addEventListener('click', aplicarCancion);
+elUrl.addEventListener('keydown', function(e){ if(e.key==='Enter') aplicarCancion(); });
+
+var elBienvenida=document.getElementById('bienvenida');
+var elEntrar=document.getElementById('btnEntrar');
+if(elEntrar){
+elEntrar.addEventListener('click', function(){
+quiereSonar=true;
+if(ready && player){ try{ player.playVideo(); }catch(e){} }
+else { elEstado.textContent='Sincronizando... 🌸'; }
+if(elBienvenida){
+elBienvenida.classList.add('abriendo');
+setTimeout(function(){ elBienvenida.classList.add('oculta'); }, 1750);
+setTimeout(function(){ elBienvenida.style.display='none'; }, 2650);
+}
+});
+}
+
+traerTitulo(idActual);
+})();
+</script>
+
+<script>
+/* ---------- Galería de fotos ---------- */
+(function(){
+"use strict";
+var TOTAL=62;
+var gal=document.getElementById('galeria');
+if(!gal) return;
+var srcs=[];
+for(var i=1;i<=TOTAL;i++){ srcs.push('fotos/foto'+(i<10?'0':'')+i+'.jpg'); }
+
+srcs.forEach(function(src,idx){
+var d=document.createElement('div'); d.className='foto';
+var img=document.createElement('img');
+img.src=src; img.decoding='async'; img.alt='Recuerdo '+(idx+1);
+img.addEventListener('error',function(){ d.style.display='none'; });
+d.appendChild(img);
+d.addEventListener('click',function(){ abrir(idx); });
+gal.appendChild(d);
+});
+
+var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+var pausado=false, dir=1;
+function tick(){
+if(!pausado && gal.scrollWidth>gal.clientWidth+4){
+gal.scrollLeft+=0.4*dir;
+if(gal.scrollLeft+gal.clientWidth>=gal.scrollWidth-1) dir=-1;
+else if(gal.scrollLeft<=0) dir=1;
+}
+requestAnimationFrame(tick);
+}
+['pointerenter','pointerdown','touchstart','wheel'].forEach(function(ev){
+gal.addEventListener(ev,function(){ pausado=true; },{passive:true});
+});
+gal.addEventListener('pointerleave',function(){ pausado=false; });
+if(!reduce) requestAnimationFrame(tick);
+
+var lb=document.getElementById('lightbox'),
+lbImg=document.getElementById('lbImg'),
+lbCont=document.getElementById('lbContador');
+var actual=0;
+function abrir(i){ actual=i; lbImg.src=srcs[i]; lbCont.textContent=(i+1)+' / '+TOTAL; lb.classList.add('abierto'); }
+function cerrar(){ lb.classList.remove('abierto'); lbImg.src=''; }
+function mover(p){ actual=(actual+p+TOTAL)%TOTAL; lbImg.src=srcs[actual]; lbCont.textContent=(actual+1)+' / '+TOTAL; }
+document.getElementById('lbCerrar').addEventListener('click',cerrar);
+document.getElementById('lbPrev').addEventListener('click',function(e){ e.stopPropagation(); mover(-1); });
+document.getElementById('lbNext').addEventListener('click',function(e){ e.stopPropagation(); mover(1); });
+lb.addEventListener('click',function(e){ if(e.target===lb) cerrar(); });
+document.addEventListener('keydown',function(e){
+if(!lb.classList.contains('abierto')) return;
+if(e.key==='Escape') cerrar();
+else if(e.key==='ArrowLeft') mover(-1);
+else if(e.key==='ArrowRight') mover(1);
+});
+
+/* ---------- Recuerdo del día ---------- */
+var hoyR=new Date();
+var semR=hoyR.getFullYear()*10000+(hoyR.getMonth()+1)100+hoyR.getDate();
+if(semR>=20260716){
+var secR=document.getElementById('recuerdoSec');
+if(secR){
+var idxR=(semR7919)%TOTAL;
+document.getElementById('recuerdoImg').src=srcs[idxR];
+var pies=[
+'Cada foto contigo es mi favorita',
+'Este momento me hace sonreír siempre',
+'Mi lugar favorito: donde estés tú',
+'Un recuerdo que guardo en el corazón',
+'Contigo hasta las fotos salen mejor',
+'De mis días favoritos, este es uno',
+'Volvería a vivir este día mil veces',
+'Mira qué bonitos nos vemos juntos'
+ ];
+document.getElementById('recuerdoPie').textContent=pies[(semR*104729)%pies.length];
+document.getElementById('polaroid').addEventListener('click',function(){ abrir(idxR); });
+
+var notaKey='vane_nota_'+semR;
+var esPrev=/preview/i.test(location.pathname);
+var taN=document.getElementById('notaTexto');
+var btnN=document.getElementById('notaGuardar');
+var btnE=document.getElementById('notaEditar');
+var estN=document.getElementById('notaEstado');
+var yaGuardada=null, edicion=0;
+try{ yaGuardada=localStorage.getItem(notaKey); }catch(e){}
+try{ edicion=parseInt(localStorage.getItem(notaKey+'_v')||'0',10)||0; }catch(e){}
+if(yaGuardada && !edicion) edicion=1;
+function avisoPrev(msg){ return esPrev ? msg+' — SIMULADO' : msg; }
+function uiGuardada(actualizada){
+taN.value=yaGuardada; taN.disabled=true; btnN.hidden=true; btnE.hidden=false;
+estN.textContent=avisoPrev(actualizada?'Tu recuerdo quedó actualizado ❤':'Tu recuerdo de hoy quedó guardado ❤');
+estN.hidden=false;
+}
+function uiEditar(){
+taN.disabled=false; btnE.hidden=true;
+btnN.hidden=false; btnN.disabled=false; btnN.textContent='Guardar cambios 💌';
+estN.hidden=true; taN.focus();
+}
+if(yaGuardada){ uiGuardada(edicion>1); }
+btnE.addEventListener('click', uiEditar);
+btnN.addEventListener('click',function(){
+var txt=(taN.value||'').trim();
+if(!txt && !yaGuardada){ taN.focus(); return; }
+if(txt===yaGuardada){ uiGuardada(edicion>1); return; }
+if(typeof window.guardarRecuerdo!=='function'){
+estN.textContent='Un momento… vuelve a intentarlo ✨'; estN.hidden=false; return;
+}
+var borrando=(!txt && !!yaGuardada);
+btnN.disabled=true; estN.hidden=false; estN.textContent='Guardando… 💌';
+window.guardarRecuerdo(borrando?'(nota borrada)':txt,'foto'+(idxR+1),edicion+1).then(function(){
+edicion=edicion+1;
+try{ localStorage.setItem(notaKey,borrando?'':txt); localStorage.setItem(notaKey+'_v',String(edicion)); }catch(e){}
+if(borrando){
+yaGuardada=''; taN.value=''; taN.disabled=false;
+btnN.hidden=false; btnN.disabled=false; btnN.textContent='Guardar recuerdo 💌';
+btnE.hidden=true;
+estN.textContent=avisoPrev('Nota borrada');
+}else{
+yaGuardada=txt; uiGuardada(edicion>1);
+}
+}).catch(function(){
+btnN.disabled=false;
+estN.textContent='No se pudo guardar 😕';
+});
+});
+
+secR.hidden=false;
+}
+}
+})();
+</script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, serverTimestamp, doc, setDoc, increment } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+const firebaseConfig = {
+apiKey: "AIzaSyAczh32Mwrk0XcDP7beh4OtLUXi3xEEdRg",
+authDomain: "vanne-caccb.firebaseapp.com",
+projectId: "vanne-caccb",
+storageBucket: "vanne-caccb.firebasestorage.app",
+messagingSenderId: "268023006622",
+appId: "1:268023006622:web:859fc64651b26b7bd1828f"
+};
+try{
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const ES_PREVIEW = /preview/i.test(location.pathname);
+
+function nuevoId(){
+try{ if(window.crypto && crypto.randomUUID) return crypto.randomUUID(); }catch(e){}
+return 'dev-'+Date.now().toString(36)+Math.random().toString(36).slice(2,10);
+}
+let deviceId, primeraVez=false;
+try{
+deviceId = localStorage.getItem('vane_device_id');
+if(!deviceId){ deviceId = nuevoId(); localStorage.setItem('vane_device_id', deviceId); primeraVez=true; }
+}catch(e){ deviceId = nuevoId(); }
+
+var ua = navigator.userAgent || "";
+var so="Desconocido", navg="Desconocido", tipo="Escritorio", modelo="";
+if(/Windows NT 10/.test(ua)) so="Windows 10/11";
+else if(/Android/.test(ua)){ var a=ua.match(/Android\s([\d.]+)/); so="Android"+(a?(" "+a[1]):""); tipo="Móvil"; }
+else if(/iPhone/.test(ua)){ so="iOS (iPhone)"; tipo="Móvil"; }
+else if(/Mac OS X/.test(ua)) so="macOS";
+
+if(/Edg//.test(ua)) navg="Edge";
+else if(/Firefox//.test(ua)) navg="Firefox";
+else if(/Chrome//.test(ua)) navg="Chrome";
+else if(/Safari//.test(ua)) navg="Safari";
+
+var mm = ua.match(/Android[^;]*;\s?([^;)]+?)(?:\sBuild|))/);
+if(mm && mm[1]) modelo = mm[1].replace(/_/g,' ').trim();
+
+var pantalla="", zona="";
+try{ pantalla = screen.width+"x"+screen.height; }catch(e){}
+try{ zona = Intl.DateTimeFormat().resolvedOptions().timeZone || ""; }catch(e){}
+
+function traerUbicacion(){
+function espera(ms){ return new Promise(function(res){ setTimeout(function(){ res(null); }, ms); }); }
+function intento(url, mapear){
+return fetch(url).then(function(r){ return r.ok ? r.json() : null; }).then(mapear).catch(function(){ return null; });
+}
+var p1=intento('https://ipwho.is/', function(d){
+if(d && d.success!==false && d.latitude) return {ciudad:d.city||'', region:d.region||'', pais:d.country||'', ubicacionAprox:d.latitude+','+d.longitude};
+return null;
+});
+return Promise.race([p1, espera(2600)]).then(function(u){
+if(u) return u;
+var p2=intento('https://ipapi.co/json/', function(d){
+if(d && d.latitude) return {ciudad:d.city||'', region:d.region||'', pais:d.country_name||'', ubicacionAprox:d.latitude+','+d.longitude};
+return null;
+});
+return Promise.race([p2, espera(2600)]);
+});
+}
+
+if(!ES_PREVIEW) traerUbicacion().then(function(ubi){
+return addDoc(collection(db, "ingresos"), {
+fecha: serverTimestamp(),
+fechaLocal: new Date().toLocaleString('es-ES'),
+dispositivoId: deviceId,
+primeraVez: primeraVez,
+tipo: tipo,
+sistema: so,
+navegador: navg,
+modelo: modelo || "—",
+pantalla: pantalla,
+zonaHoraria: zona,
+idioma: navigator.language || "",
+origen: document.referrer || "directo",
+ciudad: ubi ? ubi.ciudad : "",
+region: ubi ? ubi.region : "",
+pais: ubi ? ubi.pais : "",
+pagina: "Vane"
+});
+}).catch(function(err){});
+
+window.guardarRecuerdo = function(nota, foto, edicion){
+if(ES_PREVIEW){ return Promise.resolve(); }
+return addDoc(collection(db, "recuerdos"), {
+fecha: serverTimestamp(),
+fechaLocal: new Date().toLocaleString('es-ES'),
+foto: foto || "",
+nota: String(nota).slice(0,600),
+edicion: edicion || 1,
+dispositivoId: deviceId,
+pagina: "Vane"
+});
+};
+
+/* Contador de clics del botón "Razones por las que te quiero" (suma atómica +1) */
+window.contarRazon = function(){
+if(ES_PREVIEW){ return Promise.resolve(); }
+return setDoc(doc(db, "contadores", "razones"), { total: increment(1), ultima: serverTimestamp() }, { merge: true });
+};
+}catch(e){}
+</script>
+</body>
+</html>
