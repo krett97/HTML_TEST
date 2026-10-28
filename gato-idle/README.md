@@ -25,6 +25,7 @@ Idle de un gato que tira las cosas de su dueño, de un vaso a la Luna. Celular p
 | `npm run build:archivo` | Todo el juego en un solo HTML (`dist-archivo/swat-to-the-moon.html`) que se abre sin servidor |
 | `npm run android:sync` | Build + copia al proyecto Android |
 | `npm run android:open` | Abre el proyecto en Android Studio |
+| `npm run apk:prueba` | APK de prueba sin Android Studio (ver abajo) |
 
 ## Probar en Android
 
@@ -33,6 +34,16 @@ Idle de un gato que tira las cosas de su dueño, de un vaso a la Luna. Celular p
 3. En Android Studio, conecta tu teléfono con la depuración USB activada y presiona ▶ (Run).
 
 Cada vez que cambies el código web, repite `npm run android:sync`.
+
+### APK de prueba (sin Android Studio)
+
+`npm run apk:prueba` genera `apk-prueba/build/swat-to-the-moon-prueba-<versión>.apk`: un visor mínimo (WebView) que carga el juego en un solo HTML. Usa herramientas de Ubuntu en lugar de Gradle, así que funciona aunque no haya acceso a los servidores de Google:
+
+```
+sudo apt-get install android-sdk-platform-23 android-sdk-build-tools dalvik-exchange apksigner zipalign
+```
+
+Diferencias con la app real (`android/`): se instala como **"Swat (prueba)"** con otro identificador (`com.krett97.gatoidle.prueba`), no vibra y no tiene plugins nativos. Está firmado con una llave de depuración local: si se genera en otra máquina, hay que desinstalar la versión anterior antes de instalar la nueva.
 
 ## Estructura
 
@@ -46,7 +57,8 @@ src/
   services/    plataforma: guardado, vibración, anuncios (falsos por ahora), ciclo de vida
   i18n/        textos en español e inglés
 tests/         pruebas de Vitest
-android/       proyecto nativo de Capacitor
+android/       proyecto nativo de Capacitor (la app final)
+apk-prueba/    APK de prueba sin Gradle (visor WebView)
 ```
 
 ## Cómo cambiar cosas sin tocar la lógica

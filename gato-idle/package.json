@@ -13,7 +13,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "android:sync": "npm run build && cap sync android",
-    "android:open": "cap open android"
+    "android:open": "cap open android",
+    "apk:prueba": "bash apk-prueba/build.sh"
   },
   "dependencies": {
     "@capacitor/android": "^8.6.0",

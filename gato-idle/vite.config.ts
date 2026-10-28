@@ -22,7 +22,7 @@ export default defineConfig(({ mode }) => {
         outDir: 'dist-archivo',
         assetsInlineLimit: () => true,
         cssCodeSplit: false,
-        rollupOptions: { output: { inlineDynamicImports: true } },
+        rolldownOptions: { output: { codeSplitting: false } },
       }),
     },
   };
