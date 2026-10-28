@@ -1,0 +1,64 @@
+# Swat to the Moon (nombre provisional)
+
+Idle de un gato que tira las cosas de su dueño, de un vaso a la Luna. Celular primero (Android), y también en navegador de PC.
+
+- Diseño completo: [`docs/DISENO.md`](docs/DISENO.md)
+- Prompt original: [`docs/prompt-original.md`](docs/prompt-original.md)
+
+**Estado:** fase 0 (esqueleto). Se puede tocar, el gato empuja el vaso, el vaso cae, se rompe y paga. El progreso se guarda.
+
+## Requisitos
+
+- Node 22 o más reciente.
+- Para Android: Android Studio (trae el SDK y Java).
+
+## Comandos
+
+| Comando | Qué hace |
+|---|---|
+| `npm install` | Instala dependencias (la primera vez) |
+| `npm run dev` | Abre el juego en `http://localhost:5173` y recarga al guardar cambios |
+| `npm run dev:host` | Igual, pero accesible desde tu celular en la misma red Wi-Fi (usa la dirección "Network" que imprime) |
+| `npm test` | Pruebas de la lógica (números, guardado, datos) |
+| `npm run check` | Revisión de tipos de TypeScript y Svelte |
+| `npm run build` | Build de producción en `dist/` |
+| `npm run build:archivo` | Todo el juego en un solo HTML (`dist-archivo/swat-to-the-moon.html`) que se abre sin servidor |
+| `npm run android:sync` | Build + copia al proyecto Android |
+| `npm run android:open` | Abre el proyecto en Android Studio |
+
+## Probar en Android
+
+1. `npm run android:sync`
+2. `npm run android:open`
+3. En Android Studio, conecta tu teléfono con la depuración USB activada y presiona ▶ (Run).
+
+Cada vez que cambies el código web, repite `npm run android:sync`.
+
+## Estructura
+
+```
+src/
+  core/        lógica pura (sin Phaser ni DOM): números grandes, estado, manotazo, guardado
+  data/        balance en JSON: objects.json, tools.json, balance.json
+  app/         une todo: bucle, autoguardado, eventos para la escena, datos para la UI
+  game/        escena de Phaser, escalado de píxeles y arte provisional
+  ui/          interfaz en Svelte: barra superior, escena, pestañas
+  services/    plataforma: guardado, vibración, anuncios (falsos por ahora), ciclo de vida
+  i18n/        textos en español e inglés
+tests/         pruebas de Vitest
+android/       proyecto nativo de Capacitor
+```
+
+## Cómo cambiar cosas sin tocar la lógica
+
+- **Balance** (vida y vistas de cada objeto, herramientas, tarifa por vista, tope de toques): `src/data/*.json`. Si escribes algo inválido (un id repetido, una herramienta que no existe), el juego se detiene al arrancar con un mensaje que dice qué archivo y qué objeto corregir.
+- **Textos**: `src/i18n/es.json` y `en.json`. Las pruebas verifican que ambos tengan las mismas claves.
+- **Nombre del juego**: `app.title` en los dos JSON de textos, `appName` en `capacitor.config.ts` y `<title>` en `index.html`.
+- **Arte**: hoy se dibuja en código (`src/game/placeholders.ts`). Para usar los sprites de PixelApp, se cargan los PNG con las mismas claves que `sprite` en `objects.json`.
+
+## Notas técnicas
+
+- **Pixel art nítido:** la escena se escala por múltiplos enteros de píxeles del dispositivo (`src/game/sceneSize.ts`), y el canvas crece para llenar el espacio sin dejar franjas.
+- **Guardado:** dos ranuras alternas con número de versión (`src/core/save.ts`). Para cambiar el formato, sube `SAVE_VERSION` y agrega una migración.
+- **Anuncios:** `src/services/ads.ts` define la interfaz. Hoy solo existe la versión de prueba; AdMob llega en la fase 5.
+- **`appId`** (`com.krett97.gatoidle`) es provisional y no se puede cambiar después de publicar en Google Play.

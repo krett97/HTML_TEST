@@ -1,0 +1,132 @@
+:root {
+  --bg: #1e1424;
+  --panel: #2b1d2f;
+  --panel-2: #3b2a4d;
+  --line: #120b16;
+  --text: #fff1e0;
+  --muted: #c9b2c4;
+  --accent: #f28c28;
+  --gold: #ffd36e;
+  --good: #5ec4a8;
+  --danger: #e5534b;
+  --font: 'Pixelify Sans', system-ui, sans-serif;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 16px;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+  overscroll-behavior: none;
+  overflow: hidden;
+}
+
+/* En PC el juego es una columna centrada; los costados llevan un patrón discreto. */
+body {
+  background-image: radial-gradient(rgba(255, 241, 224, 0.05) 1px, transparent 1px);
+  background-size: 12px 12px;
+}
+
+#app {
+  height: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+button,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+/* Botón con relieve de pixel art. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 2px solid var(--line);
+  border-radius: 4px;
+  background: var(--panel-2);
+  box-shadow: 0 3px 0 var(--line);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--line);
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.btn--accent {
+  background: var(--accent);
+  color: var(--line);
+  font-weight: 700;
+}
+.btn--danger {
+  background: var(--danger);
+  color: var(--text);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+/* Anuncio de prueba (services/ads.ts). */
+.ad-mock {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: rgba(10, 6, 12, 0.92);
+}
+.ad-mock__box {
+  width: min(320px, 86vw);
+  padding: 24px 20px;
+  border: 2px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel-2);
+  text-align: center;
+  box-shadow: 0 4px 0 var(--line);
+}
+.ad-mock__tag {
+  margin: 0 0 4px;
+  color: var(--gold);
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+.ad-mock__placement {
+  margin: 0 0 16px;
+  color: var(--muted);
+}
+.ad-mock__count {
+  margin: 0 0 20px;
+  font-size: 28px;
+}
+.ad-mock__close {
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 2px solid var(--line);
+  border-radius: 4px;
+  background: var(--accent);
+  color: var(--line);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}

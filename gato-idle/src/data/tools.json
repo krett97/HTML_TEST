@@ -1,0 +1,6 @@
+[
+  { "id": "pata",       "costo": 0,       "multDanio": 1 },
+  { "id": "garras",     "costo": 500,     "multDanio": 5 },
+  { "id": "carrito",    "costo": 25000,   "multDanio": 5 },
+  { "id": "aspiradora", "costo": 1500000, "multDanio": 5 }
+]

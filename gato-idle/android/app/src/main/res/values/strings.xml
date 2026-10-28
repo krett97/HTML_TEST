@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Swat to the Moon</string>
+    <string name="title_activity_main">Swat to the Moon</string>
+    <string name="package_name">com.krett97.gatoidle</string>
+    <string name="custom_url_scheme">com.krett97.gatoidle</string>
+</resources>

@@ -1,0 +1,68 @@
+{
+  "app": {
+    "title": "Swat to the Moon",
+    "lema": "De un vaso a la Luna"
+  },
+  "hud": {
+    "dinero": "Dinero",
+    "toca": "¡Toca para dar un manotazo!"
+  },
+  "tabs": {
+    "mejoras": "Mejoras",
+    "personal": "Personal",
+    "mudanza": "Mudanza",
+    "ajustes": "Ajustes"
+  },
+  "objetos": {
+    "vaso": "Vaso",
+    "florero": "Florero",
+    "tenis": "Tenis",
+    "sofa": "Sofá",
+    "cortinas": "Cortinas",
+    "colchon": "Colchón",
+    "tv": "TV",
+    "librero": "Librero",
+    "computadora": "Computadora",
+    "lavadora": "Lavadora",
+    "refri": "Refri"
+  },
+  "mejoras": {
+    "enLaMesa": "En la mesa",
+    "progreso": "Camino a la orilla",
+    "toques": "Toques",
+    "roturas": "Roturas",
+    "pronto": "Fuerza y Valor llegan en la fase 2."
+  },
+  "personal": {
+    "camarografo": "Camarógrafo",
+    "editor": "Editor",
+    "seguros": "Agente de seguros",
+    "cm": "Community manager",
+    "pronto": "Fase 3"
+  },
+  "mudanza": {
+    "pronto": "La mudanza llega en la fase 4: te mudas a una casa más cara y tus seguidores se quedan contigo."
+  },
+  "ajustes": {
+    "sonido": "Sonido",
+    "musica": "Música",
+    "vibracion": "Vibración",
+    "notacion": "Notación",
+    "letras": "Letras (1.5K, 2aa)",
+    "cientifica": "Científica (1.5e3)",
+    "idioma": "Idioma",
+    "auto": "Automático",
+    "partida": "Partida",
+    "guardarAhora": "Guardar ahora",
+    "ultimoGuardado": "Último guardado: {hora}",
+    "nuncaGuardado": "Aún no se ha guardado",
+    "soloMemoria": "Este navegador no permite guardar: el progreso se pierde al cerrar.",
+    "borrar": "Borrar partida",
+    "borrarConfirmar": "¿Seguro? Se pierde todo el progreso.",
+    "pruebas": "Pruebas",
+    "probarAnuncio": "Probar anuncio recompensado",
+    "anuncioOk": "Recompensa recibida",
+    "anuncioNo": "Sin recompensa (lo cerraste antes)",
+    "version": "Versión {version} · {plataforma} · anuncios: {anuncios}"
+  }
+}

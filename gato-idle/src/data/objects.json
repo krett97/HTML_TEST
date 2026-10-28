@@ -1,0 +1,13 @@
+[
+  { "id": "vaso",        "herramienta": "pata",       "estiloRotura": "empujar", "hp": 5,     "vistas": 10,      "sprite": "obj_vaso",        "placeholder": { "w": 8,  "h": 12, "color": "#9fd8ff" } },
+  { "id": "florero",     "herramienta": "pata",       "estiloRotura": "empujar", "hp": 12,    "vistas": 30,      "sprite": "obj_florero",     "placeholder": { "w": 10, "h": 18, "color": "#5ec4a8" } },
+  { "id": "tenis",       "herramienta": "pata",       "estiloRotura": "empujar", "hp": 30,    "vistas": 90,      "sprite": "obj_tenis",       "placeholder": { "w": 18, "h": 8,  "color": "#f2f2f2" } },
+  { "id": "sofa",        "herramienta": "garras",     "estiloRotura": "rasgar",  "hp": 80,    "vistas": 300,     "sprite": "obj_sofa",        "placeholder": { "w": 40, "h": 20, "color": "#c0504d" } },
+  { "id": "cortinas",    "herramienta": "garras",     "estiloRotura": "rasgar",  "hp": 200,   "vistas": 900,     "sprite": "obj_cortinas",    "placeholder": { "w": 24, "h": 40, "color": "#8e6bbf" } },
+  { "id": "colchon",     "herramienta": "garras",     "estiloRotura": "rasgar",  "hp": 500,   "vistas": 2800,    "sprite": "obj_colchon",     "placeholder": { "w": 44, "h": 12, "color": "#e8e0c8" } },
+  { "id": "tv",          "herramienta": "carrito",    "estiloRotura": "empujar", "hp": 1300,  "vistas": 9000,    "sprite": "obj_tv",          "placeholder": { "w": 30, "h": 22, "color": "#3a3a4a" } },
+  { "id": "librero",     "herramienta": "carrito",    "estiloRotura": "volcar",  "hp": 3500,  "vistas": 28000,   "sprite": "obj_librero",     "placeholder": { "w": 22, "h": 44, "color": "#8b5a2b" } },
+  { "id": "computadora", "herramienta": "aspiradora", "estiloRotura": "empujar", "hp": 9000,  "vistas": 90000,   "sprite": "obj_computadora", "placeholder": { "w": 24, "h": 20, "color": "#b8c4d0" } },
+  { "id": "lavadora",    "herramienta": "aspiradora", "estiloRotura": "volcar",  "hp": 25000, "vistas": 300000,  "sprite": "obj_lavadora",    "placeholder": { "w": 28, "h": 32, "color": "#e6eef5" } },
+  { "id": "refri",       "herramienta": "aspiradora", "estiloRotura": "volcar",  "hp": 70000, "vistas": 1000000, "sprite": "obj_refri",       "placeholder": { "w": 26, "h": 48, "color": "#dfe7ef" } }
+]

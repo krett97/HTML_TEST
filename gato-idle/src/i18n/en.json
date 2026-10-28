@@ -1,0 +1,68 @@
+{
+  "app": {
+    "title": "Swat to the Moon",
+    "lema": "From a glass to the Moon"
+  },
+  "hud": {
+    "dinero": "Money",
+    "toca": "Tap to swat!"
+  },
+  "tabs": {
+    "mejoras": "Upgrades",
+    "personal": "Staff",
+    "mudanza": "Move out",
+    "ajustes": "Settings"
+  },
+  "objetos": {
+    "vaso": "Glass",
+    "florero": "Vase",
+    "tenis": "Sneakers",
+    "sofa": "Couch",
+    "cortinas": "Curtains",
+    "colchon": "Mattress",
+    "tv": "TV",
+    "librero": "Bookcase",
+    "computadora": "Computer",
+    "lavadora": "Washing machine",
+    "refri": "Fridge"
+  },
+  "mejoras": {
+    "enLaMesa": "On the table",
+    "progreso": "Way to the edge",
+    "toques": "Taps",
+    "roturas": "Breaks",
+    "pronto": "Strength and Value arrive in phase 2."
+  },
+  "personal": {
+    "camarografo": "Camera operator",
+    "editor": "Editor",
+    "seguros": "Insurance agent",
+    "cm": "Community manager",
+    "pronto": "Phase 3"
+  },
+  "mudanza": {
+    "pronto": "Moving out arrives in phase 4: you move to a pricier home and your followers stay with you."
+  },
+  "ajustes": {
+    "sonido": "Sound",
+    "musica": "Music",
+    "vibracion": "Vibration",
+    "notacion": "Notation",
+    "letras": "Letters (1.5K, 2aa)",
+    "cientifica": "Scientific (1.5e3)",
+    "idioma": "Language",
+    "auto": "Automatic",
+    "partida": "Game",
+    "guardarAhora": "Save now",
+    "ultimoGuardado": "Last saved: {hora}",
+    "nuncaGuardado": "Not saved yet",
+    "soloMemoria": "This browser can't save: progress is lost when you close it.",
+    "borrar": "Delete game",
+    "borrarConfirmar": "Are you sure? All progress will be lost.",
+    "pruebas": "Testing",
+    "probarAnuncio": "Test rewarded ad",
+    "anuncioOk": "Reward received",
+    "anuncioNo": "No reward (closed early)",
+    "version": "Version {version} · {plataforma} · ads: {anuncios}"
+  }
+}
