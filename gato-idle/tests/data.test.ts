@@ -49,6 +49,9 @@ describe('datos de balance', () => {
     const badTool = [{ ...objects[0], herramienta: 'lanzallamas' }];
     expect(() => parseGameData({ ...base, objects: badTool })).toThrow(/no existe/);
 
+    const badPlace = [{ ...objects[0], lugar: 'azotea-tinaco' }];
+    expect(() => parseGameData({ ...base, objects: badPlace })).toThrow(/lugar/);
+
     const badStyle = [{ ...objects[0], estiloRotura: 'explotar' }];
     expect(() => parseGameData({ ...base, objects: badStyle })).toThrow(/estiloRotura/);
 

@@ -5,7 +5,7 @@ Idle de un gato que tira las cosas de su dueño, de un vaso a la Luna. Celular p
 - Diseño completo: [`docs/DISENO.md`](docs/DISENO.md)
 - Prompt original: [`docs/prompt-original.md`](docs/prompt-original.md)
 
-**Estado:** versión 0.8.1. Al empezar solo se puede dar manotazos; Fuerza, Valor, patrocinios (dinero por ver un anuncio cada 90 s), **críticos** (Garras afiladas y Sombrero ridículo), **Saco de jefe** (más daño para los aliados) —las tres cambian el aspecto del gato—, 7 aliados (gatito bebé, ratón, perro, perico, cuervo, mapache, cabra; cada uno mejor que el anterior) y la Investigación gatuna se van descubriendo conforme se avanza. 27 objetos, cada uno con su sonido. El progreso se guarda. Botón 🛠 (arriba a la derecha) con el **modo pruebas**: dinero infinito, daño ∞, avanzar como jugador hasta cualquier objeto y puntos de guardado.
+**Estado:** versión 0.9.0. Al empezar solo se puede dar manotazos; Fuerza, Valor, patrocinios (dinero por ver un anuncio cada 90 s), **críticos** (Garras afiladas y Sombrero ridículo), **Saco de jefe** (más daño para los aliados) —las tres cambian el aspecto del gato—, 7 aliados (gatito bebé, ratón, perro, perico, cuervo, mapache, cabra; cada uno mejor que el anterior) y la Investigación gatuna se van descubriendo conforme se avanza. 27 objetos, cada uno con su sonido y en su cuarto (cocina, sala, baño, recámara, cuarto de lavado). El progreso se guarda. Botón 🛠 (arriba a la derecha) con el **modo pruebas**: dinero infinito, daño ∞, avanzar como jugador hasta cualquier objeto y puntos de guardado.
 
 ## Requisitos
 
@@ -55,7 +55,7 @@ src/
   core/        lógica pura (sin Phaser ni DOM): números grandes, estado, economía, modificadores, guardado
   data/        balance en JSON: objects.json (con sonidos), tools.json (aspecto del gato por etapa), allies.json, unlocks.json (orden de descubrimientos), research.json (investigación gatuna), balance.json
   app/         une todo: bucle, autoguardado, eventos para la escena, datos para la UI
-  game/        escena de Phaser, escalado de píxeles y arte provisional
+  game/        escena de Phaser, cuartos y superficies (places.ts), escalado de píxeles y arte provisional
   ui/          interfaz en Svelte: barra superior, escena, pestañas
   services/    plataforma: sonido, guardado, vibración, anuncios (falsos por ahora), ciclo de vida
   i18n/        textos en español e inglés

@@ -17,6 +17,8 @@ export interface PlaceholderSpec {
 export interface ObjectDef {
   id: string;
   herramienta: string;
+  /** Cuarto y superficie donde está (cambia el escenario). */
+  lugar: PlaceId;
   estiloRotura: BreakStyle;
   hp: Decimal;
   vistas: Decimal;
@@ -42,6 +44,24 @@ export interface AllyDef {
     volumen: number;
   };
 }
+
+/**
+ * Dónde está cada objeto: cuarto y superficie ("cocina-barra", "sala-piso"…). Cambia el escenario;
+ * cómo se dibuja cada uno está en game/places.ts.
+ */
+export const PLACES = [
+  'cocina-barra',
+  'cocina-piso',
+  'sala-mesa',
+  'sala-mueble',
+  'sala-piso',
+  'bano-repisa',
+  'recamara-cama',
+  'recamara-piso',
+  'recamara-escritorio',
+  'lavado-piso',
+] as const;
+export type PlaceId = (typeof PLACES)[number];
 
 /** Funciones que se van descubriendo: "fuerza", "valor", "critico", "laboratorio", "aliado:<id>"… */
 export const FEATURES = ['fuerza', 'valor', 'patrocinios', 'critico', 'danioCritico', 'saco', 'laboratorio'] as const;
@@ -249,6 +269,10 @@ export function parseGameData(raw: RawGameData): GameData {
     if (!toolIds.has(herramienta)) {
       throw new DataError('objects.json', `"${id}": la herramienta "${herramienta}" no existe en tools.json`);
     }
+    const lugar = str('objects.json', item, 'lugar');
+    if (!(PLACES as readonly string[]).includes(lugar)) {
+      throw new DataError('objects.json', `"${id}": lugar "${lugar}" no es válido (${PLACES.join(', ')})`);
+    }
     const estilo = str('objects.json', item, 'estiloRotura');
     if (!(BREAK_STYLES as readonly string[]).includes(estilo)) {
       throw new DataError('objects.json', `"${id}": estiloRotura "${estilo}" no es válido (${BREAK_STYLES.join(', ')})`);
@@ -256,6 +280,7 @@ export function parseGameData(raw: RawGameData): GameData {
     return {
       id,
       herramienta,
+      lugar: lugar as PlaceId,
       estiloRotura: estilo as BreakStyle,
       hp: positive('objects.json', item, 'hp'),
       vistas: positive('objects.json', item, 'vistas'),

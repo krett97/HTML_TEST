@@ -1,6 +1,6 @@
 # Swat to the Moon — Documento de diseño
 
-> **Versión 0.8** · Actualiza el prompt original ([`prompt-original.md`](prompt-original.md)) con las mejoras del análisis.
+> **Versión 0.9** · Actualiza el prompt original ([`prompt-original.md`](prompt-original.md)) con las mejoras del análisis.
 > **Nombre provisional.** *Knock It Off!* ya está en uso (Spin Master vende un juego físico con ese nombre para jugar con tu gato, y hay varios juegos en itch.io). *Swat to the Moon* aún no está verificado en Play Store ni en registros de marca (USPTO / IMPI). El nombre visible se cambia en un solo lugar: `src/i18n/*.json` → `app.title` y `capacitor.config.ts` → `appName`.
 
 ---
@@ -101,7 +101,7 @@ Las herramientas marcan la etapa y el aspecto del gato; no se compran (ver §4).
 | 7 | Mecha-gato gigante | ciudad, planeta | |
 | 8 | Cohete | la Luna | |
 
-Escenarios: departamento → casa → mansión → rascacielos → ciudad → planeta → espacio.
+Escenarios: departamento → casa → mansión → rascacielos → ciudad → planeta → espacio. Dentro de cada casa, cada objeto está en su cuarto (ver §26).
 
 ## 6. Personal (generadores idle)
 
@@ -523,3 +523,26 @@ En la 0.8.0 eran unos lentes oscuros, pero en pixel art no se distinguían; en l
 | Refri | min 34.2 | min 36.2 |
 | Golpes para el refri | 17 | 17 |
 | Daño de los aliados al final | 80 % | 82 % |
+
+## 26. Cada objeto en su cuarto (versión 0.9.0)
+
+Todo encima de la misma mesa se sentía repetitivo (y un sofá o un librero sobre la mesa no tenía sentido). Ahora cada objeto dice **dónde está** (`lugar` en `objects.json`: cuarto y superficie) y la escena cambia de cuarto con un fundido corto cuando el dueño compra algo que va en otro lado.
+
+| Cuarto | Superficie | Objetos |
+|---|---|---|
+| Cocina | barra | vaso, taza, plato, tostadora, cafetera, licuadora, microondas |
+| Cocina | piso | estufa, refri |
+| Sala | mesa de centro | control, florero, celular |
+| Sala | mueble de TV | lámpara, bocina, consola, TV |
+| Sala | piso | sofá, mesa, librero |
+| Baño | repisa (con el inodoro abajo) | papel de baño |
+| Recámara | cama | cojín |
+| Recámara | piso | tenis, cortinas, colchón |
+| Recámara | escritorio | computadora |
+| Cuarto de lavado | piso | lavadora, secadora |
+
+- Cada cuarto tiene su pared, piso y detalle: azulejos y reloj en la cocina, lambrín de azulejo y espejo en el baño, alfombra y cortinas en la recámara, repisa con detergentes en el cuarto de lavado.
+- Cada superficie tiene su alto y su orilla (`src/game/places.ts`). Lo que está en una superficie se empuja hasta la orilla y cae; **lo que está en el piso no tiene orilla: se vuelca ahí mismo** (o se rasga).
+- El cuadro y la ventana quedan en el mismo lugar en todos los cuartos, para que el perico y el cuervo tengan dónde pararse.
+- Cuando lleguen los reinicios (subir el video y mudarse), cada casa nueva tendrá sus propios cuartos.
+- Arte provisional con rectángulos; para PixelApp, la lista de cuartos y superficies de arriba es la lista de fondos que hay que dibujar.

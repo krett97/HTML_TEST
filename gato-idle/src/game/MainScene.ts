@@ -1,4 +1,4 @@
-// La escena: el gato, la mesa y el objeto. Solo dibuja y anima; las reglas están en core/
+// La escena: el gato, el cuarto con su superficie (barra, mesa, cama…) y el objeto. Solo dibuja y anima; las reglas están en core/
 // y los toques se mandan a Game, que responde con eventos.
 import Phaser from 'phaser';
 import { get } from 'svelte/store';
@@ -9,13 +9,11 @@ import type { Game, LookChange } from '../app/game';
 import { t } from '../i18n';
 import { createPlaceholders } from './placeholders';
 import { FLOOR_H, SCENE_WIDTH } from './sceneSize';
+import { drawRoom, drawSurface, PICTURE_ABOVE_FLOOR, placeOf, WINDOW_ABOVE_FLOOR, type Place } from './places';
 import { toolLook, type ToolLook } from './sprites';
 
 // Medidas en píxeles virtuales. La escena se ancla abajo: si hay más alto, crece la pared.
-const TABLE_H = 44;
-const TABLE_LEFT = 18;
-/** La orilla. */
-const TABLE_RIGHT = 160;
+// La superficie (alto, inicio y orilla) depende del lugar del objeto: ver places.ts.
 const START_X = 74;
 const CAT_W = 20;
 /** Dónde va el sombrero respecto al gato (origen abajo a la izquierda): centrado en la cabeza, con las puntas de las orejas asomando. */
@@ -27,16 +25,6 @@ const MAX_TILT = 22;
 const MAX_SCRATCHES = 5;
 
 const COLORS = {
-  wall: 0x3b2a4d,
-  wallDark: 0x30223f,
-  floor: 0x6b4a3a,
-  floorLine: 0x56392c,
-  table: 0x8a5a3c,
-  tableEdge: 0x5e3b26,
-  window: 0x8fc7e8,
-  windowFrame: 0xe8d8c4,
-  frame: 0xd9a441,
-  picture: 0x5ec4a8,
   scratch: 0x2b1d2f,
 };
 
@@ -74,8 +62,16 @@ export class MainScene extends Phaser.Scene {
     super('principal');
   }
 
-  private get tableTop(): number {
-    return this.scale.height - FLOOR_H - TABLE_H;
+  /** Cuarto y superficie del objeto en la mesa (o en la barra, la cama, el piso…). */
+  private place: Place = placeOf('sala-mesa');
+
+  private get floorY(): number {
+    return this.scale.height - FLOOR_H;
+  }
+
+  /** Altura de la cubierta donde están el gato y el objeto. */
+  private get surfaceTop(): number {
+    return this.floorY - this.place.surface.height;
   }
 
   create(): void {
@@ -130,6 +126,8 @@ export class MainScene extends Phaser.Scene {
   private layout(): void {
     // El área de juego (0..180) queda centrada; lo que sobra a los lados es más cuarto.
     this.cameras.main.setScroll(-Math.floor((this.scale.width - SCENE_WIDTH) / 2), 0);
+    // Al redibujar (inicio, cambio de tamaño) se entra directo al cuarto, sin fundido.
+    this.place = placeOf(this.controller.data.objects.find((o) => o.id === this.controller.currentObjectId())!.lugar);
     this.drawBackground();
     this.placeObject();
     this.refreshAllies();
@@ -147,49 +145,34 @@ export class MainScene extends Phaser.Scene {
 
   private drawBackground(): void {
     const g = this.background.clear();
-    const left = this.cameras.main.scrollX;
-    const w = this.scale.width;
-    const h = this.scale.height;
-    const floorY = h - FLOOR_H;
-    const top = this.tableTop;
+    drawRoom(g, this.place.room, this.cameras.main.scrollX, this.scale.width, this.scale.height, this.floorY);
+    drawSurface(g, this.place.surface, this.floorY);
+  }
 
-    g.fillStyle(COLORS.wall).fillRect(left, 0, w, floorY);
-    g.fillStyle(COLORS.wallDark).fillRect(left, floorY - 6, w, 6); // zoclo
-
-    // Ventana y cuadro, solo si caben arriba de la mesa.
-    const windowY = top - 96;
-    if (windowY >= 6) {
-      g.fillStyle(COLORS.windowFrame).fillRect(22, windowY, 48, 40);
-      g.fillStyle(COLORS.window).fillRect(25, windowY + 3, 42, 34);
-      g.fillStyle(COLORS.windowFrame).fillRect(45, windowY + 3, 2, 34).fillRect(25, windowY + 19, 42, 2);
-    }
-    const pictureY = top - 70;
-    if (pictureY >= 6) {
-      g.fillStyle(COLORS.frame).fillRect(116, pictureY, 30, 22);
-      g.fillStyle(COLORS.picture).fillRect(118, pictureY + 2, 26, 18);
-    }
-
-    g.fillStyle(COLORS.floor).fillRect(left, floorY, w, FLOOR_H);
-    for (let y = floorY + 8; y < h; y += 8) g.fillStyle(COLORS.floorLine).fillRect(left, y, w, 1);
-
-    // Mesa: cubierta y patas.
-    g.fillStyle(COLORS.table).fillRect(TABLE_LEFT, top, TABLE_RIGHT - TABLE_LEFT, 5);
-    g.fillStyle(COLORS.tableEdge).fillRect(TABLE_LEFT, top + 5, TABLE_RIGHT - TABLE_LEFT, 2);
-    g.fillStyle(COLORS.tableEdge).fillRect(TABLE_LEFT + 6, top + 7, 5, TABLE_H - 7);
-    g.fillStyle(COLORS.tableEdge).fillRect(TABLE_RIGHT - 11, top + 7, 5, TABLE_H - 7);
+  /** Cambia de cuarto si el objeto nuevo está en otro lugar (con un fundido corto). */
+  private enterPlace(animate: boolean): void {
+    const next = placeOf(this.objectDef.lugar);
+    if (next.room === this.place.room && next.surface === this.place.surface) return;
+    this.place = next;
+    this.drawBackground();
+    if (animate) this.cameras.main.fadeIn(280, 18, 11, 22);
   }
 
   // ---- Posiciones ----
 
   private startX(): number {
     const width = this.textures.get(this.objectDef.sprite).getSourceImage().width;
-    return Math.max(START_X, TABLE_LEFT + CAT_W + 6 + width / 2);
+    return Math.max(START_X, this.place.surface.left + CAT_W + 6 + width / 2);
   }
 
-  /** Lo que se rasga no se mueve; lo demás avanza hasta que su centro queda en la orilla. */
+  /** Lo que se rasga o está en el piso no se mueve; lo demás avanza hasta que su centro queda en la orilla. */
   private objectX(progress: number): number {
-    if (this.objectDef.estiloRotura === 'rasgar') return this.startX();
-    return this.startX() + Math.min(progress, 1) * (TABLE_RIGHT - this.startX());
+    if (this.objectDef.estiloRotura === 'rasgar' || this.onFloor) return this.startX();
+    return this.startX() + Math.min(progress, 1) * (this.place.surface.right - this.startX());
+  }
+
+  private get onFloor(): boolean {
+    return this.place.surface.height === 0;
   }
 
   private objectAngle(progress: number): number {
@@ -203,10 +186,11 @@ export class MainScene extends Phaser.Scene {
   /** Pone el objeto actual en su posición según el progreso guardado. */
   private placeObject(): void {
     this.objectDef = this.controller.data.objects.find((o) => o.id === this.controller.currentObjectId())!;
+    this.enterPlace(true);
     this.tweens.killTweensOf([this.object, this.cat, this.vehicle]);
     const progress = this.controller.progress();
     this.object.setTexture(this.objectDef.sprite).setScale(1).setAlpha(1).setVisible(true);
-    this.object.setPosition(this.objectX(progress), this.tableTop).setAngle(this.objectAngle(progress));
+    this.object.setPosition(this.objectX(progress), this.surfaceTop).setAngle(this.objectAngle(progress));
     this.applyLook();
     this.moveCat(this.catXFor(this.object.x), false);
     this.drawScratches(progress);
@@ -224,8 +208,8 @@ export class MainScene extends Phaser.Scene {
     this.hat.setVisible(mejoras.sombrero);
     this.vehicle.setVisible(this.look.vehicle !== null);
     if (this.look.vehicle) this.vehicle.setTexture(this.look.vehicle);
-    this.cat.y = this.tableTop - this.look.lift;
-    this.vehicle.y = this.tableTop;
+    this.cat.y = this.surfaceTop - this.look.lift;
+    this.vehicle.y = this.surfaceTop;
   }
 
   private moveCat(x: number, animate: boolean): void {
@@ -267,7 +251,7 @@ export class MainScene extends Phaser.Scene {
     if (result.broke) {
       this.controller.playSound(sound.rotura, { tono: sound.tono });
       this.breakObject();
-      if (result.reward) this.floatText(TABLE_RIGHT - 10, this.tableTop - 20, `+$${this.controller.formatMoney(result.reward.dinero)}`, 'flotante');
+      if (result.reward) this.floatText(this.place.surface.right - 10, this.surfaceTop - 20, `+$${this.controller.formatMoney(result.reward.dinero)}`, 'flotante');
     } else {
       this.controller.playSound(sound.golpe, { tono: sound.tono, minGapMs: 45 });
       this.pushObject(result.progress);
@@ -278,7 +262,7 @@ export class MainScene extends Phaser.Scene {
 
   /** Dónde descansa cada aliado (esquina inferior izquierda del dibujo). */
   private allyRest(id: string): { x: number; y: number } {
-    const floorY = this.scale.height - FLOOR_H;
+    const floorY = this.floorY;
     switch (id) {
       case 'gatito':
         return { x: this.cat.x + 1, y: this.cat.y - 8 };
@@ -287,12 +271,12 @@ export class MainScene extends Phaser.Scene {
       case 'raton':
         return { x: 66, y: floorY + 4 };
       case 'perico': {
-        const pictureY = this.tableTop - 70;
-        return pictureY >= 18 ? { x: 125, y: pictureY + 1 } : { x: 132, y: this.tableTop - 34 };
+        const pictureY = floorY - PICTURE_ABOVE_FLOOR;
+        return pictureY >= 18 ? { x: 125, y: pictureY + 1 } : { x: 132, y: floorY - 78 };
       }
       case 'cuervo': {
-        const windowY = this.tableTop - 96;
-        return windowY >= 16 ? { x: 40, y: windowY + 1 } : { x: 100, y: this.tableTop - 40 };
+        const windowY = floorY - WINDOW_ABOVE_FLOOR;
+        return windowY >= 16 ? { x: 40, y: windowY + 1 } : { x: 100, y: floorY - 84 };
       }
       case 'cabra':
         return { x: 162, y: floorY + 5 };
@@ -352,7 +336,7 @@ export class MainScene extends Phaser.Scene {
     if (result.broke) {
       this.controller.playSound(sound.rotura, { tono: sound.tono });
       this.breakObject();
-      if (result.reward) this.floatText(TABLE_RIGHT - 10, this.tableTop - 20, `+$${this.controller.formatMoney(result.reward.dinero)}`, 'flotante');
+      if (result.reward) this.floatText(this.place.surface.right - 10, this.surfaceTop - 20, `+$${this.controller.formatMoney(result.reward.dinero)}`, 'flotante');
     } else {
       this.controller.playSound(sound.golpe, { tono: sound.tono, volumen: 0.45, minGapMs: 60 });
       this.pushObject(result.progress);
@@ -490,12 +474,25 @@ export class MainScene extends Phaser.Scene {
         ease: 'Quad.in',
         onComplete: () => piece.destroy(),
       });
+    } else if (this.onFloor) {
+      // En el piso no hay orilla: se vuelca ahí mismo y se hace pedazos.
+      this.tweens.add({
+        targets: piece,
+        angle: 90,
+        x: piece.x + 4,
+        duration: 300,
+        ease: 'Quad.in',
+        onComplete: () => {
+          piece.destroy();
+          this.shatter(piece.x + piece.height / 2, floorY - 2, color, 20, 260);
+        },
+      });
     } else {
       // Se va de la orilla y cae; lo que se vuelca gira más.
       this.tweens.chain({
         targets: piece,
         tweens: [
-          { x: TABLE_RIGHT + piece.width / 2 + 3, duration: 80, ease: 'Quad.out' },
+          { x: this.place.surface.right + piece.width / 2 + 3, duration: 80, ease: 'Quad.out' },
           { y: floorY, angle: def.estiloRotura === 'volcar' ? 90 : 75, duration: 260, ease: 'Quad.in' },
         ],
         onComplete: () => {
