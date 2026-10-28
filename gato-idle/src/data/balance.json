@@ -1,5 +1,18 @@
 {
   "tarifaPorVista": 0.1,
   "toquesMaxPorSegundo": 15,
-  "autoguardadoSegundos": 20
+  "autoguardadoSegundos": 20,
+  "fuerza": {
+    "costoBase": 5,
+    "crecimiento": 1.28,
+    "danioPorNivel": 1,
+    "hitoCada": 10,
+    "multHito": 1
+  },
+  "valor": {
+    "nivelesPorObjeto": 10,
+    "vistasPorNivel": 0.1,
+    "costoEnRoturas": 10,
+    "crecimiento": 1.25
+  }
 }

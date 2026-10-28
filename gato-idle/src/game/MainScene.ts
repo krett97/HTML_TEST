@@ -1,11 +1,14 @@
 // La escena: el gato, la mesa y el objeto. Solo dibuja y anima; las reglas están en core/
-// y los toques se mandan a Game, que responde con eventos "hit".
+// y los toques se mandan a Game, que responde con eventos.
 import Phaser from 'phaser';
+import { get } from 'svelte/store';
 import type { HitResult } from '../core/actions';
 import type { ObjectDef } from '../core/data';
 import type { Game } from '../app/game';
+import { t } from '../i18n';
 import { createPlaceholders } from './placeholders';
 import { FLOOR_H, SCENE_WIDTH } from './sceneSize';
+import { toolLook, type ToolLook } from './sprites';
 
 // Medidas en píxeles virtuales. La escena se ancla abajo: si hay más alto, crece la pared.
 const TABLE_H = 44;
@@ -14,6 +17,10 @@ const TABLE_LEFT = 18;
 const TABLE_RIGHT = 160;
 const START_X = 74;
 const CAT_W = 20;
+/** Inclinación máxima de los objetos que se "vuelcan", justo antes de caer. */
+const MAX_TILT = 22;
+/** Rasguños visibles en los objetos que se "rasgan". */
+const MAX_SCRATCHES = 5;
 
 const COLORS = {
   wall: 0x3b2a4d,
@@ -26,14 +33,18 @@ const COLORS = {
   windowFrame: 0xe8d8c4,
   frame: 0xd9a441,
   picture: 0x5ec4a8,
+  scratch: 0x2b1d2f,
 };
 
 export class MainScene extends Phaser.Scene {
   private background!: Phaser.GameObjects.Graphics;
+  private scratches!: Phaser.GameObjects.Graphics;
   private cat!: Phaser.GameObjects.Image;
+  private vehicle!: Phaser.GameObjects.Image;
   private paw!: Phaser.GameObjects.Image;
   private object!: Phaser.GameObjects.Image;
   private objectDef!: ObjectDef;
+  private look: ToolLook = toolLook('pata');
   private unsubscribers: (() => void)[] = [];
 
   constructor(private readonly controller: Game) {
@@ -50,7 +61,9 @@ export class MainScene extends Phaser.Scene {
     this.background = this.add.graphics();
     this.paw = this.add.image(0, 0, 'pata').setOrigin(0, 0.5).setDepth(1).setVisible(false);
     this.cat = this.add.image(0, 0, 'gato').setOrigin(0, 1).setDepth(2);
+    this.vehicle = this.add.image(0, 0, 'carrito').setOrigin(0.5, 1).setDepth(2.5).setVisible(false);
     this.object = this.add.image(0, 0, '__DEFAULT').setOrigin(0.5, 1).setDepth(3);
+    this.scratches = this.add.graphics().setDepth(3.5);
 
     this.layout();
     this.scale.on(Phaser.Scale.Events.RESIZE, this.layout, this);
@@ -60,6 +73,8 @@ export class MainScene extends Phaser.Scene {
 
     this.unsubscribers.push(
       this.controller.events.on('hit', (result) => this.onHit(result)),
+      this.controller.events.on('objeto', ({ objectId }) => this.onNewObject(objectId)),
+      this.controller.events.on('herramienta', ({ toolId }) => this.onNewTool(toolId)),
       this.controller.events.on('reset', () => this.placeObject()),
     );
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
@@ -110,12 +125,21 @@ export class MainScene extends Phaser.Scene {
     g.fillStyle(COLORS.tableEdge).fillRect(TABLE_RIGHT - 11, top + 7, 5, TABLE_H - 7);
   }
 
-  private objectX(progress: number, def: ObjectDef = this.objectDef): number {
-    const width = this.textures.get(def.sprite).getSourceImage().width;
-    // Con progreso 1 el centro del objeto queda justo en la orilla: medio objeto en el aire.
-    const edgeX = TABLE_RIGHT;
-    const startX = Math.max(START_X, TABLE_LEFT + CAT_W + 4 + width / 2);
-    return startX + Math.min(progress, 1) * (edgeX - startX);
+  // ---- Posiciones ----
+
+  private startX(): number {
+    const width = this.textures.get(this.objectDef.sprite).getSourceImage().width;
+    return Math.max(START_X, TABLE_LEFT + CAT_W + 6 + width / 2);
+  }
+
+  /** Lo que se rasga no se mueve; lo demás avanza hasta que su centro queda en la orilla. */
+  private objectX(progress: number): number {
+    if (this.objectDef.estiloRotura === 'rasgar') return this.startX();
+    return this.startX() + Math.min(progress, 1) * (TABLE_RIGHT - this.startX());
+  }
+
+  private objectAngle(progress: number): number {
+    return this.objectDef.estiloRotura === 'volcar' ? progress * MAX_TILT : 0;
   }
 
   private catXFor(objectX: number): number {
@@ -125,25 +149,89 @@ export class MainScene extends Phaser.Scene {
   /** Pone el objeto actual en su posición según el progreso guardado. */
   private placeObject(): void {
     this.objectDef = this.controller.data.objects.find((o) => o.id === this.controller.currentObjectId())!;
-    this.tweens.killTweensOf([this.object, this.cat]);
-    this.object.setTexture(this.objectDef.sprite).setScale(1).setAngle(0).setVisible(true);
-    const x = this.objectX(this.controller.progress());
-    this.object.setPosition(x, this.tableTop);
-    this.cat.setPosition(this.catXFor(x), this.tableTop);
+    this.tweens.killTweensOf([this.object, this.cat, this.vehicle]);
+    const progress = this.controller.progress();
+    this.object.setTexture(this.objectDef.sprite).setScale(1).setAlpha(1).setVisible(true);
+    this.object.setPosition(this.objectX(progress), this.tableTop).setAngle(this.objectAngle(progress));
+    this.applyLook();
+    this.moveCat(this.catXFor(this.object.x), false);
+    this.drawScratches(progress);
     this.paw.setVisible(false);
   }
 
+  /** Brazo y vehículo según la herramienta que usa el objeto en la mesa. */
+  private applyLook(): void {
+    this.look = toolLook(this.objectDef.herramienta);
+    this.paw.setTexture(this.look.arm);
+    this.vehicle.setVisible(this.look.vehicle !== null);
+    if (this.look.vehicle) this.vehicle.setTexture(this.look.vehicle);
+    this.cat.y = this.tableTop - this.look.lift;
+    this.vehicle.y = this.tableTop;
+  }
+
+  private moveCat(x: number, animate: boolean): void {
+    const vehicleX = x + CAT_W / 2;
+    if (!animate) {
+      this.cat.x = x;
+      this.vehicle.x = vehicleX;
+      return;
+    }
+    this.tweens.add({ targets: this.cat, x, duration: 140, ease: 'Sine.out' });
+    this.tweens.add({ targets: this.vehicle, x: vehicleX, duration: 140, ease: 'Sine.out' });
+  }
+
+  private drawScratches(progress: number): void {
+    const g = this.scratches.clear();
+    if (this.objectDef.estiloRotura !== 'rasgar' || progress <= 0) return;
+    const count = Math.min(MAX_SCRATCHES, Math.ceil(progress * MAX_SCRATCHES));
+    const w = this.object.width;
+    const h = this.object.height;
+    const left = this.object.x - w / 2;
+    const top = this.object.y - h;
+    g.fillStyle(COLORS.scratch, 0.85);
+    for (let i = 0; i < count; i++) {
+      // Tres rayitas diagonales por rasguño, repartidas a lo ancho.
+      const x0 = Math.round(left + 3 + ((w - 8) * (i + 0.5)) / MAX_SCRATCHES);
+      const y0 = Math.round(top + 2 + ((i * 7) % Math.max(1, h - 8)));
+      for (let line = 0; line < 3; line++) {
+        for (let step = 0; step < Math.min(5, h - 4); step++) g.fillRect(x0 + line * 2 + step, y0 + step, 1, 1);
+      }
+    }
+  }
+
+  // ---- Eventos ----
+
   private onHit(result: HitResult): void {
     this.swipePaw();
-    if (result.broke) this.breakObject();
-    else this.pushObject(result.progress);
+    if (result.broke) {
+      this.breakObject();
+      if (result.reward) this.floatText(TABLE_RIGHT - 10, this.tableTop - 20, `+$${this.controller.formatMoney(result.reward.dinero)}`, 'flotante');
+    } else {
+      this.pushObject(result.progress);
+    }
   }
+
+  private onNewObject(objectId: string): void {
+    this.placeObject();
+    this.popIn();
+    const objeto = get(t)(`objetos.${objectId}`);
+    this.toast(get(t)('avisos.objetoNuevo', { objeto }));
+  }
+
+  private onNewTool(toolId: string): void {
+    const herramienta = get(t)(`herramientas.${toolId}`);
+    this.toast(get(t)('avisos.herramienta', { herramienta }));
+    // Saltito de gusto.
+    this.tweens.add({ targets: this.cat, y: this.cat.y - 6, duration: 120, yoyo: true, ease: 'Quad.out' });
+  }
+
+  // ---- Animaciones ----
 
   private swipePaw(): void {
     const restX = this.cat.x + 6;
     const strikeX = this.object.x - this.object.width / 2 - this.paw.width + 3;
     this.tweens.killTweensOf(this.paw);
-    this.paw.setPosition(restX, this.tableTop - 7).setVisible(true);
+    this.paw.setPosition(restX, this.cat.y - 7).setVisible(true);
     this.tweens.add({
       targets: this.paw,
       x: Math.max(restX, strikeX),
@@ -157,55 +245,119 @@ export class MainScene extends Phaser.Scene {
 
   private pushObject(progress: number): void {
     const x = this.objectX(progress);
-    this.tweens.killTweensOf([this.object, this.cat]);
+    this.tweens.killTweensOf([this.object, this.cat, this.vehicle]);
     this.object.setScale(1).setVisible(true);
-    this.tweens.add({ targets: this.object, x, duration: 90, ease: 'Quad.out' });
+    this.tweens.add({ targets: this.object, x, angle: this.objectAngle(progress), duration: 90, ease: 'Quad.out' });
     // Pequeño apachurrón para que el golpe se sienta.
     this.tweens.add({ targets: this.object, scaleY: 0.88, scaleX: 1.08, duration: 50, yoyo: true });
-    this.tweens.add({ targets: this.cat, x: this.catXFor(x), duration: 140, ease: 'Sine.out' });
+    this.moveCat(this.catXFor(x), true);
+    // Lo que se rasga no se mueve, así que los rasguños van ya en su lugar.
+    this.drawScratches(progress);
   }
 
-  /** El objeto cae de la orilla y se rompe; el siguiente aparece al centro de la mesa. */
+  /** El objeto se rompe según su estilo; el siguiente aparece al centro de la mesa. */
   private breakObject(): void {
     const def = this.objectDef;
-    const falling = this.add
+    const color = Phaser.Display.Color.HexStringToColor(def.placeholder?.color ?? '#ffffff').color;
+    const piece = this.add
       .image(this.object.x, this.object.y, def.sprite)
       .setOrigin(0.5, 1)
+      .setAngle(this.object.angle)
       .setDepth(4);
     const floorY = this.scale.height - FLOOR_H + 4;
-    const color = Phaser.Display.Color.HexStringToColor(def.placeholder?.color ?? '#ffffff').color;
 
-    this.tweens.chain({
-      targets: falling,
-      tweens: [
-        { x: TABLE_RIGHT + falling.width / 2 + 3, duration: 80, ease: 'Quad.out' },
-        { y: floorY, angle: 75, duration: 260, ease: 'Quad.in' },
-      ],
-      onComplete: () => {
-        falling.destroy();
-        this.shatter(falling.x, floorY - 2, color);
-      },
-    });
+    if (def.estiloRotura === 'rasgar') {
+      // Queda hecho jirones ahí mismo.
+      this.shatter(piece.x, piece.y - piece.height / 2, color, 24, 400);
+      this.tweens.add({
+        targets: piece,
+        scaleY: 0.1,
+        alpha: 0,
+        duration: 260,
+        ease: 'Quad.in',
+        onComplete: () => piece.destroy(),
+      });
+    } else {
+      // Se va de la orilla y cae; lo que se vuelca gira más.
+      this.tweens.chain({
+        targets: piece,
+        tweens: [
+          { x: TABLE_RIGHT + piece.width / 2 + 3, duration: 80, ease: 'Quad.out' },
+          { y: floorY, angle: def.estiloRotura === 'volcar' ? 90 : 75, duration: 260, ease: 'Quad.in' },
+        ],
+        onComplete: () => {
+          piece.destroy();
+          this.shatter(piece.x, floorY - 2, color, 16, 260);
+        },
+      });
+    }
 
-    // El siguiente objeto aparece "comprado" por el dueño.
+    // El dueño ya puso otro igual en la mesa.
     this.placeObject();
-    this.object.setScale(0);
-    this.tweens.add({ targets: this.object, scale: 1, delay: 260, duration: 220, ease: 'Back.out' });
+    this.popIn(260);
   }
 
-  private shatter(x: number, y: number, tint: number): void {
+  private popIn(delay = 0): void {
+    this.object.setScale(0);
+    this.tweens.add({ targets: this.object, scale: 1, delay, duration: 220, ease: 'Back.out' });
+  }
+
+  private shatter(x: number, y: number, tint: number, count: number, gravity: number): void {
     const emitter = this.add.particles(x, y, 'px', {
       speed: { min: 30, max: 90 },
       angle: { min: 200, max: 340 },
-      gravityY: 260,
+      gravityY: gravity,
       lifespan: 650,
       scale: { start: 1, end: 0.5 },
       tint,
       emitting: false,
     });
     emitter.setDepth(5);
-    emitter.explode(16);
+    emitter.explode(count);
     this.cameras.main.shake(110, 0.012);
     this.time.delayedCall(800, () => emitter.destroy());
+  }
+
+  // ---- Textos sobre la escena (HTML, para que se lean nítidos) ----
+
+  /** Convierte un punto de la escena a píxeles CSS dentro del contenedor del canvas. */
+  private toCss(x: number, y: number): { left: number; top: number } {
+    const canvas = this.game.canvas;
+    const zoom = this.scale.zoom;
+    return {
+      left: canvas.offsetLeft + (x - this.cameras.main.scrollX) * zoom,
+      top: canvas.offsetTop + y * zoom,
+    };
+  }
+
+  private overlay(text: string, className: string, position?: { left: number; top: number }, parent?: HTMLElement): void {
+    parent ??= this.game.canvas.parentElement ?? undefined;
+    if (!parent) return;
+    const el = document.createElement('div');
+    el.className = className;
+    el.textContent = text;
+    if (position) {
+      el.style.left = `${position.left}px`;
+      el.style.top = `${position.top}px`;
+    }
+    el.addEventListener('animationend', () => el.remove());
+    parent.appendChild(el);
+  }
+
+  private floatText(x: number, y: number, text: string, className: string): void {
+    this.overlay(text, className, this.toCss(x, y));
+  }
+
+  /** Los avisos se apilan en una columna para que dos seguidos no se encimen. */
+  private toast(text: string): void {
+    const host = this.game.canvas.parentElement;
+    if (!host) return;
+    let column = host.querySelector<HTMLElement>(':scope > .avisos');
+    if (!column) {
+      column = document.createElement('div');
+      column.className = 'avisos';
+      host.appendChild(column);
+    }
+    this.overlay(text, 'aviso', undefined, column);
   }
 }

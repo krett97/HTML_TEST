@@ -31,7 +31,22 @@
     "progreso": "Camino a la orilla",
     "toques": "Toques",
     "roturas": "Roturas",
-    "pronto": "Fuerza y Valor llegan en la fase 2."
+    "golpes": "{n} manotazos para tirarlo",
+    "golpe": "1 manotazo para tirarlo",
+    "porRotura": "+${dinero} por rotura",
+    "nivel": "Nv. {n}",
+    "fuerza": "Fuerza",
+    "fuerzaEfecto": "Daño {actual} → {siguiente}",
+    "valor": "Valor",
+    "valorEfecto": "+${actual} → +${siguiente} por rotura",
+    "valorEtapa": "{n}/{total} para el siguiente objeto",
+    "valorUltimo": "Versiones cada vez más caras",
+    "valorNuevo": "El dueño compra: {objeto}",
+    "valorRequiere": "Primero: {herramienta}",
+    "herramientas": "Herramientas",
+    "multiplicador": "×{mult} daño",
+    "tuya": "Tuya",
+    "bloqueada": "Al llegar a: {objeto}"
   },
   "personal": {
     "camarografo": "Camarógrafo",
@@ -64,5 +79,15 @@
     "anuncioOk": "Recompensa recibida",
     "anuncioNo": "Sin recompensa (lo cerraste antes)",
     "version": "Versión {version} · {plataforma} · anuncios: {anuncios}"
+  },
+  "herramientas": {
+    "pata": "Pata",
+    "garras": "Garras afiladas",
+    "carrito": "Carrito a control remoto",
+    "aspiradora": "Aspiradora robot"
+  },
+  "avisos": {
+    "objetoNuevo": "¡El dueño compró: {objeto}!",
+    "herramienta": "¡Nueva herramienta: {herramienta}!"
   }
 }

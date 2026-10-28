@@ -21,8 +21,11 @@ export interface GameState {
   dinero: Decimal;
   /** Dinero ganado en la partida actual; define los seguidores al mudarse (fase 4). */
   dineroPartida: Decimal;
-  /** Índice en objects.json del objeto que está en la mesa. */
-  objetoActual: number;
+  nivelFuerza: number;
+  /** Cada `nivelesPorObjeto` niveles el dueño compra el siguiente objeto (ver economy.ts). */
+  nivelValor: number;
+  /** Ids de herramientas compradas, en el orden de tools.json. */
+  herramientas: string[];
   /** Daño acumulado sobre el objeto actual. */
   danioObjeto: Decimal;
   stats: {
@@ -39,7 +42,9 @@ export function createInitialState(now: number): GameState {
   return {
     dinero: ZERO,
     dineroPartida: ZERO,
-    objetoActual: 0,
+    nivelFuerza: 0,
+    nivelValor: 0,
+    herramientas: [],
     danioObjeto: ZERO,
     stats: { toques: 0, roturas: 0 },
     ajustes: {

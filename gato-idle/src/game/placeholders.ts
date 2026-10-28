@@ -1,48 +1,11 @@
 // Arte provisional generado en código. Cuando llegue el arte de PixelApp, se cargan los PNG con
-// las mismas claves (las de "sprite" en objects.json, "gato", "pata") y este archivo se borra.
+// las mismas claves (las de "sprite" en objects.json y las de SPRITES) y este archivo se borra.
 import type Phaser from 'phaser';
 import type { ObjectDef } from '../core/data';
-
-const PALETTE: Record<string, string> = {
-  k: '#2b1d2f', // contorno
-  o: '#f28c28', // naranja
-  d: '#c4621a', // rayas
-  w: '#fff1e0', // blanco
-  p: '#ff8fab', // nariz y cojinetes
-  e: '#1a1020', // ojo
-};
-
-// Gato naranja sentado, de perfil, mirando a la derecha (hacia la orilla).
-const CAT = [
-  '...........k....k...',
-  '..........kok..kok..',
-  '..........koooooook.',
-  '..........kooooeook.',
-  '..........koooowwwp.',
-  '..........koooowwwk.',
-  '...........kooowwk..',
-  '.....kkkkkkooowwk...',
-  '....kooddooooowwwk..',
-  '...koooooddoooowwk..',
-  'k..kooddoooooooowk..',
-  'k.koooooddooooooowk.',
-  'kokooddoooooooooowk.',
-  'kokooooooooooooowk..',
-  'kkkoooookooooowwk...',
-  '...kwwkkkkkkkwwk....',
-];
-
-// Brazo con la patita blanca en la punta; sale del pecho del gato en cada manotazo.
-const PAW = [
-  'kkkkkkkkk.',
-  'oooooowwwk',
-  'oooooowpwk',
-  'kkkkkkkkk.',
-];
+import { PALETTE, SPRITES } from './sprites';
 
 function pixelTexture(scene: Phaser.Scene, key: string, rows: string[]): void {
   const width = rows[0]!.length;
-  if (rows.some((row) => row.length !== width)) throw new Error(`placeholder "${key}": filas de distinto ancho`);
   const canvas = scene.textures.createCanvas(key, width, rows.length)!;
   const ctx = canvas.getContext();
   rows.forEach((row, y) => {
@@ -79,14 +42,17 @@ function objectTexture(scene: Phaser.Scene, obj: ObjectDef): void {
 }
 
 export function createPlaceholders(scene: Phaser.Scene, objects: ObjectDef[]): void {
-  pixelTexture(scene, 'gato', CAT);
-  pixelTexture(scene, 'pata', PAW);
+  for (const [key, rows] of Object.entries(SPRITES)) {
+    if (!scene.textures.exists(key)) pixelTexture(scene, key, rows);
+  }
   for (const obj of objects) {
     if (!scene.textures.exists(obj.sprite)) objectTexture(scene, obj);
   }
   // Un píxel blanco para las partículas (se tiñe del color de cada objeto).
-  const px = scene.textures.createCanvas('px', 2, 2)!;
-  px.getContext().fillStyle = '#ffffff';
-  px.getContext().fillRect(0, 0, 2, 2);
-  px.refresh();
+  if (!scene.textures.exists('px')) {
+    const px = scene.textures.createCanvas('px', 2, 2)!;
+    px.getContext().fillStyle = '#ffffff';
+    px.getContext().fillRect(0, 0, 2, 2);
+    px.refresh();
+  }
 }

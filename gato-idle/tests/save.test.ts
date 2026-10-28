@@ -20,7 +20,8 @@ describe('guardado', () => {
     const state = createInitialState(NOW);
     state.dinero = new Decimal('1.5e3000');
     state.danioObjeto = new Decimal(3);
-    state.objetoActual = 2;
+    state.nivelValor = 12;
+    state.herramientas = ['garras'];
     state.stats.toques = 42;
     state.ajustes.notacion = 'cientifica';
     state.ajustes.idioma = 'en';
@@ -31,7 +32,8 @@ describe('guardado', () => {
     expect(result.version).toBe(SAVE_VERSION);
     expect(result.state.dinero.eq(new Decimal('1.5e3000'))).toBe(true);
     expect(result.state.danioObjeto.eq(3)).toBe(true);
-    expect(result.state.objetoActual).toBe(2);
+    expect(result.state.nivelValor).toBe(12);
+    expect(result.state.herramientas).toEqual(['garras']);
     expect(result.state.stats.toques).toBe(42);
     expect(result.state.ajustes).toEqual(state.ajustes);
   });
@@ -45,10 +47,10 @@ describe('guardado', () => {
   });
 
   it('descarta valores con el tipo equivocado', () => {
-    const text = JSON.stringify({ v: SAVE_VERSION, t: NOW, s: { dinero: 'mucho', objetoActual: 'dos', ajustes: { sonido: 1 } } });
+    const text = JSON.stringify({ v: SAVE_VERSION, t: NOW, s: { dinero: 'mucho', nivelValor: 'dos', ajustes: { sonido: 1 } } });
     const { state } = load(text);
     expect(state.dinero.eq(ZERO)).toBe(true);
-    expect(state.objetoActual).toBe(0);
+    expect(state.nivelValor).toBe(0);
     expect(state.ajustes.sonido).toBe(true);
   });
 

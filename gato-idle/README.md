@@ -5,7 +5,7 @@ Idle de un gato que tira las cosas de su dueño, de un vaso a la Luna. Celular p
 - Diseño completo: [`docs/DISENO.md`](docs/DISENO.md)
 - Prompt original: [`docs/prompt-original.md`](docs/prompt-original.md)
 
-**Estado:** fase 0 (esqueleto). Se puede tocar, el gato empuja el vaso, el vaso cae, se rompe y paga. El progreso se guarda.
+**Estado:** fases 0 y 2. El gato tira objetos de la mesa; con el dinero se compran Fuerza (menos manotazos), Valor (el dueño compra objetos más caros, del vaso al refri) y herramientas (garras, carrito, aspiradora). El progreso se guarda.
 
 ## Requisitos
 
@@ -19,7 +19,8 @@ Idle de un gato que tira las cosas de su dueño, de un vaso a la Luna. Celular p
 | `npm install` | Instala dependencias (la primera vez) |
 | `npm run dev` | Abre el juego en `http://localhost:5173` y recarga al guardar cambios |
 | `npm run dev:host` | Igual, pero accesible desde tu celular en la misma red Wi-Fi (usa la dirección "Network" que imprime) |
-| `npm test` | Pruebas de la lógica (números, guardado, datos) |
+| `npm test` | Pruebas de la lógica (números, economía, guardado, datos) |
+| `npm run simular` | Simula a un jugador y muestra en qué minuto llega a cada objeto (`npm run simular -- 3` para 3 toques por segundo) |
 | `npm run check` | Revisión de tipos de TypeScript y Svelte |
 | `npm run build` | Build de producción en `dist/` |
 | `npm run build:archivo` | Todo el juego en un solo HTML (`dist-archivo/swat-to-the-moon.html`) que se abre sin servidor |
@@ -49,7 +50,7 @@ Diferencias con la app real (`android/`): se instala como **"Swat (prueba)"** co
 
 ```
 src/
-  core/        lógica pura (sin Phaser ni DOM): números grandes, estado, manotazo, guardado
+  core/        lógica pura (sin Phaser ni DOM): números grandes, estado, economía, modificadores, guardado
   data/        balance en JSON: objects.json, tools.json, balance.json
   app/         une todo: bucle, autoguardado, eventos para la escena, datos para la UI
   game/        escena de Phaser, escalado de píxeles y arte provisional
@@ -57,13 +58,14 @@ src/
   services/    plataforma: guardado, vibración, anuncios (falsos por ahora), ciclo de vida
   i18n/        textos en español e inglés
 tests/         pruebas de Vitest
+tools/         simulador de balance
 android/       proyecto nativo de Capacitor (la app final)
 apk-prueba/    APK de prueba sin Gradle (visor WebView)
 ```
 
 ## Cómo cambiar cosas sin tocar la lógica
 
-- **Balance** (vida y vistas de cada objeto, herramientas, tarifa por vista, tope de toques): `src/data/*.json`. Si escribes algo inválido (un id repetido, una herramienta que no existe), el juego se detiene al arrancar con un mensaje que dice qué archivo y qué objeto corregir.
+- **Balance** (vida y vistas de cada objeto, herramientas y sus efectos, costos de Fuerza y Valor, tarifa por vista, tope de toques): `src/data/*.json`. Después de cambiarlo, corre `npm run simular` para ver cómo cambia el ritmo. Si escribes algo inválido (un id repetido, una herramienta que no existe), el juego se detiene al arrancar con un mensaje que dice qué archivo y qué objeto corregir.
 - **Textos**: `src/i18n/es.json` y `en.json`. Las pruebas verifican que ambos tengan las mismas claves.
 - **Nombre del juego**: `app.title` en los dos JSON de textos, `appName` en `capacitor.config.ts` y `<title>` en `index.html`.
 - **Arte**: hoy se dibuja en código (`src/game/placeholders.ts`). Para usar los sprites de PixelApp, se cargan los PNG con las mismas claves que `sprite` en `objects.json`.

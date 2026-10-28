@@ -1,7 +1,7 @@
 {
   "name": "gato-idle",
   "private": true,
-  "version": "0.0.1",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -14,7 +14,8 @@
     "test:watch": "vitest",
     "android:sync": "npm run build && cap sync android",
     "android:open": "cap open android",
-    "apk:prueba": "bash apk-prueba/build.sh"
+    "apk:prueba": "bash apk-prueba/build.sh",
+    "simular": "tsx tools/simulate.ts"
   },
   "dependencies": {
     "@capacitor/android": "^8.6.0",
@@ -32,6 +33,7 @@
     "@tsconfig/svelte": "^5.0.8",
     "svelte": "^5.57.3",
     "svelte-check": "^4.7.7",
+    "tsx": "^4.23.15",
     "typescript": "^6.0.3",
     "vite": "^8.3.5",
     "vitest": "^5.0.5"

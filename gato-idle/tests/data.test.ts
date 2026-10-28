@@ -41,6 +41,12 @@ describe('datos de balance', () => {
 
     const noHp = [{ ...objects[0], hp: 0 }];
     expect(() => parseGameData({ objects: noHp, tools, balance })).toThrow(/mayor que 0/);
+
+    const badEffect = [tools[0], { ...tools[1], efectos: [{ stat: 'suerte', op: 'mult', valor: 2 }] }];
+    expect(() => parseGameData({ objects, tools: badEffect, balance })).toThrow(/stat "suerte"/);
+
+    const noFreeTool = tools.slice(1);
+    expect(() => parseGameData({ objects, tools: noFreeTool, balance })).toThrow(/gratis/);
   });
 });
 

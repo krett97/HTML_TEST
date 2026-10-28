@@ -1,6 +1,7 @@
-// Acciones del juego: modifican el estado y devuelven qué pasó, para que la escena lo anime.
-import type { GameData, ObjectDef } from './data';
-import { num, ZERO, type Decimal } from './num';
+// El manotazo: modifica el estado y devuelve qué pasó, para que la escena lo anime.
+import type { GameData } from './data';
+import { currentObject, moneyPerBreak, objectProgress, tapDamage, viewsPerBreak } from './economy';
+import { ZERO, type Decimal } from './num';
 import type { GameState } from './state';
 
 export interface HitResult {
@@ -13,21 +14,6 @@ export interface HitResult {
   reward?: { vistas: Decimal; dinero: Decimal };
 }
 
-export function currentObject(state: GameState, data: GameData): ObjectDef {
-  const index = Math.min(Math.max(state.objetoActual, 0), data.objects.length - 1);
-  return data.objects[index]!;
-}
-
-export function objectProgress(state: GameState, data: GameData): number {
-  const hp = currentObject(state, data).hp;
-  return Math.min(1, state.danioObjeto.div(hp).toNumber());
-}
-
-/** Daño de un manotazo. Fuerza y herramientas llegan en la fase 2 (sistema de modificadores). */
-export function tapDamage(_state: GameState, _data: GameData): Decimal {
-  return num(1);
-}
-
 /** Aplica daño al objeto actual. Si llega a la orilla, se rompe y paga. */
 export function hit(state: GameState, data: GameData, damage: Decimal): HitResult {
   const obj = currentObject(state, data);
@@ -37,8 +23,8 @@ export function hit(state: GameState, data: GameData, damage: Decimal): HitResul
     return { objectId: obj.id, damage, progress: objectProgress(state, data), broke: false };
   }
 
-  const vistas = obj.vistas;
-  const dinero = vistas.mul(data.balance.tarifaPorVista);
+  const vistas = viewsPerBreak(state, data);
+  const dinero = moneyPerBreak(state, data);
   state.dinero = state.dinero.add(dinero);
   state.dineroPartida = state.dineroPartida.add(dinero);
   state.stats.roturas += 1;

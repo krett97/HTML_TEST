@@ -31,7 +31,22 @@
     "progreso": "Way to the edge",
     "toques": "Taps",
     "roturas": "Breaks",
-    "pronto": "Strength and Value arrive in phase 2."
+    "golpes": "{n} swats to knock it off",
+    "golpe": "1 swat to knock it off",
+    "porRotura": "+${dinero} per break",
+    "nivel": "Lv. {n}",
+    "fuerza": "Strength",
+    "fuerzaEfecto": "Damage {actual} → {siguiente}",
+    "valor": "Value",
+    "valorEfecto": "+${actual} → +${siguiente} per break",
+    "valorEtapa": "{n}/{total} to the next item",
+    "valorUltimo": "Ever pricier versions",
+    "valorNuevo": "The owner buys: {objeto}",
+    "valorRequiere": "First: {herramienta}",
+    "herramientas": "Tools",
+    "multiplicador": "×{mult} damage",
+    "tuya": "Yours",
+    "bloqueada": "Unlocks at: {objeto}"
   },
   "personal": {
     "camarografo": "Camera operator",
@@ -64,5 +79,15 @@
     "anuncioOk": "Reward received",
     "anuncioNo": "No reward (closed early)",
     "version": "Version {version} · {plataforma} · ads: {anuncios}"
+  },
+  "herramientas": {
+    "pata": "Paw",
+    "garras": "Sharp claws",
+    "carrito": "RC car",
+    "aspiradora": "Robot vacuum"
+  },
+  "avisos": {
+    "objetoNuevo": "The owner bought: {objeto}!",
+    "herramienta": "New tool: {herramienta}!"
   }
 }

@@ -78,6 +78,12 @@ select {
   color: var(--line);
   font-weight: 700;
 }
+/* Sin dinero suficiente: apagado, pero el precio se sigue leyendo. */
+.btn--accent:disabled {
+  opacity: 1;
+  background: var(--bg);
+  color: var(--muted);
+}
 .btn--danger {
   background: var(--danger);
   color: var(--text);
@@ -129,4 +135,81 @@ select {
   font: inherit;
   font-weight: 700;
   cursor: pointer;
+}
+
+/* Textos sobre la escena (los crea MainScene). */
+.flotante {
+  position: absolute;
+  z-index: 2;
+  transform: translate(-50%, -100%);
+  color: var(--gold);
+  font-size: 20px;
+  font-weight: 700;
+  white-space: nowrap;
+  text-shadow:
+    0 2px 0 var(--line),
+    2px 0 0 var(--line),
+    -2px 0 0 var(--line),
+    0 -2px 0 var(--line);
+  pointer-events: none;
+  animation: flotar 900ms ease-out forwards;
+}
+@keyframes flotar {
+  from {
+    opacity: 1;
+    translate: 0 0;
+  }
+  to {
+    opacity: 0;
+    translate: 0 -44px;
+  }
+}
+
+.avisos {
+  position: absolute;
+  z-index: 3;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+}
+.aviso {
+  max-width: 100%;
+  padding: 6px 12px;
+  border: 2px solid var(--line);
+  border-radius: 4px;
+  background: var(--accent);
+  box-shadow: 0 3px 0 var(--line);
+  color: var(--line);
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
+  pointer-events: none;
+  animation: aviso 2400ms ease forwards;
+}
+@keyframes aviso {
+  0% {
+    opacity: 0;
+    translate: 0 -8px;
+  }
+  8%,
+  85% {
+    opacity: 1;
+    translate: 0 0;
+  }
+  100% {
+    opacity: 0;
+    translate: 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flotante,
+  .aviso {
+    animation-timing-function: steps(1, end);
+  }
 }

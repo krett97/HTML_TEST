@@ -1,5 +1,6 @@
 <script lang="ts">
   import { t } from '../i18n';
+  import { useGame } from './context';
   import Mejoras from './tabs/Mejoras.svelte';
   import Personal from './tabs/Personal.svelte';
   import Mudanza from './tabs/Mudanza.svelte';
@@ -11,6 +12,8 @@
     { id: 'mudanza', icon: '📦', component: Mudanza },
     { id: 'ajustes', icon: '⚙️', component: Ajustes },
   ] as const;
+
+  const view = useGame().view;
 
   let active = $state<(typeof TABS)[number]['id']>('mejoras');
   const Current = $derived(TABS.find((tab) => tab.id === active)!.component);
@@ -30,7 +33,12 @@
         aria-selected={tab.id === active}
         onclick={() => (active = tab.id)}
       >
-        <span aria-hidden="true">{tab.icon}</span>
+        <span class="tab-icon" aria-hidden="true">
+          {tab.icon}
+          {#if tab.id === 'mejoras' && $view.hayCompra && active !== 'mejoras'}
+            <span class="dot" data-testid="aviso-mejora"></span>
+          {/if}
+        </span>
         <span class="label">{$t(`tabs.${tab.id}`)}</span>
       </button>
     {/each}
@@ -40,7 +48,7 @@
 <style>
   .panel {
     flex: 0 0 auto;
-    height: clamp(240px, 42dvh, 380px);
+    height: clamp(260px, 48dvh, 440px);
     display: flex;
     flex-direction: column;
     background: var(--panel);
@@ -82,5 +90,19 @@
   }
   .label {
     white-space: nowrap;
+  }
+  .tab-icon {
+    position: relative;
+  }
+  /* Hay algo que comprar en Mejoras. */
+  .dot {
+    position: absolute;
+    top: -2px;
+    right: -9px;
+    width: 9px;
+    height: 9px;
+    border: 2px solid var(--line);
+    border-radius: 50%;
+    background: var(--gold);
   }
 </style>

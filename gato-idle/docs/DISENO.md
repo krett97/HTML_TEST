@@ -1,6 +1,6 @@
 # Swat to the Moon — Documento de diseño
 
-> **Versión 0.2** · Actualiza el prompt original ([`prompt-original.md`](prompt-original.md)) con las mejoras del análisis.
+> **Versión 0.3** · Actualiza el prompt original ([`prompt-original.md`](prompt-original.md)) con las mejoras del análisis.
 > **Nombre provisional.** *Knock It Off!* ya está en uso (Spin Master vende un juego físico con ese nombre para jugar con tu gato, y hay varios juegos en itch.io). *Swat to the Moon* aún no está verificado en Play Store ni en registros de marca (USPTO / IMPI). El nombre visible se cambia en un solo lugar: `src/i18n/*.json` → `app.title` y `capacitor.config.ts` → `appName`.
 
 ---
@@ -51,25 +51,37 @@
 | **Dinero** | Vistas × tarifa. Se gasta en mejoras, herramientas y personal. | Sí |
 | **Seguidores** | Moneda de prestigio. El dueño se muda, pero los seguidores se quedan. Cada uno da +X % de ingresos. | No |
 
-### Mejoras principales
+### Mejoras principales (implementadas)
 
-- **Fuerza:** más daño por manotazo, así que menos toques por objeto.
-- **Valor:** mejora con muchos niveles (+% de vistas por nivel). **Cada ~10 niveles el dueño compra el siguiente objeto** (más vida, más vistas).
+- **Fuerza:** daño por manotazo = `1 + nivel`. Costo: `5 × 1.28^nivel`. Hay un ajuste opcional de "hitos" (×N cada tantos niveles), apagado por ahora.
+- **Valor:** **cada 10 niveles el dueño compra el siguiente objeto** (más vida, más vistas). Dentro de un objeto, cada nivel da +10 % de vistas. Costo: lo que pagan 10 roturas del objeto actual × `1.25^(nivel dentro del objeto)`.
 - **Tensión del jugador:** Fuerza contra Valor. Si subes Valor sin Fuerza, cada objeto tarda demasiado.
 - **Meta de balance:** si el jugador va al día, cada objeto pide **5–15 toques**.
 
-### Herramientas
+### Herramientas (implementadas)
 
-Se compran con dinero. Cada una:
+Cada una:
 - es **requisito** para pasar a la siguiente familia de objetos (sin garras no hay sofá);
-- da un **multiplicador grande de daño** (momento de poder);
-- cambia la animación del manotazo.
+- **se compra justo cuando hace falta**: cuando el dueño quiere comprar el primer objeto de su familia. El botón aparece en la misma tarjeta de Valor. Comprarla antes rompía el ritmo (todo caía de un golpe);
+- multiplica el daño ×3;
+- cambia el aspecto del gato: garras en la pata, sentado en el carrito, montado en la aspiradora.
 
-### Fórmulas de partida (se ajustan con el simulador)
+### Valores actuales (`src/data/*.json`, calibrados con `npm run simular`)
 
-- Costo de una mejora: `base × 1.15^nivel`.
-- Vida y vistas: valores por objeto en `objects.json`, crecientes de forma exponencial. Las vistas crecen un poco más rápido que la vida, para que subir Valor valga la pena.
-- Seguidores al mudarse: `floor(√(dinero ganado en la partida / escala))`.
+| Objeto | Vida | Vistas | | Objeto | Vida | Vistas |
+|---|---|---|---|---|---|---|
+| Vaso | 5 | 10 | | TV | 950 | 7.3K |
+| Florero | 12 | 30 | | Librero | 2.3K | 22K |
+| Tenis | 29 | 90 | | Computadora | 5.5K | 66K |
+| Sofá | 70 | 270 | | Lavadora | 13.2K | 197K |
+| Cortinas | 165 | 810 | | Refri | 31.7K | 590K |
+| Colchón | 400 | 2.4K | | | | |
+
+Herramientas: garras $600, carrito $20K, aspiradora $600K. Tarifa: $0.10 por vista.
+
+### Fórmulas pendientes
+
+- Seguidores al mudarse: `floor(√(dinero ganado en la partida / escala))` (fase 4).
 
 ## 5. Progresión de herramientas y objetos
 
@@ -182,7 +194,9 @@ Vibración ligera, partículas, sonido de rotura, números flotantes, temblor de
 - **Notación:** K, M, B, T y luego aa, ab… sin traducir (en español "billón" es 10¹², no 10⁹). Opción de notación científica.
 - Después del MVP: notificaciones locales ("tu gato está aburrido", "ganancias offline llenas").
 
-## 13. Ritmo (metas iniciales)
+## 13. Ritmo
+
+Metas:
 
 | Hito | Cuándo |
 |---|---|
@@ -193,6 +207,18 @@ Vibración ligera, partículas, sonido de rotura, números flotantes, temblor de
 | Community manager | antes de 10 min |
 | Primera mudanza | 30–60 min |
 | Partidas siguientes al mismo punto | 2–3× más rápido |
+
+Lo que da hoy el simulador (`npm run simular`): un jugador que toca 5 veces por segundo, sin ganancias automáticas todavía, y compra siempre lo que antes se paga solo.
+
+| Hito | Minuto |
+|---|---|
+| Florero | 1.7 |
+| Garras | 3.9 |
+| Carrito | 11.5 |
+| Aspiradora | 21.7 |
+| Refri | 36.4 |
+
+Una persona real compra peor que el simulador, así que tardará más; el camarógrafo (fase 3) lo acelerará. Se recalibra al terminar la fase 3.
 
 ## 14. Técnica
 
@@ -258,9 +284,9 @@ Fuera del MVP: herramientas 5–8, otras mascotas, paseador y abogado, 7 vidas, 
 
 | Fase | Entrega | Estado |
 |---|---|---|
-| 0. Esqueleto | Proyecto, escena placeholder con toque, UI con pestañas, servicios falsos, guardado versionado, números grandes, Android | **En curso** |
-| 1. "¿Es divertido tocar?" | Manotazo → desliza → cae → rompe; 3 objetos; todo el juice | |
-| 2. Economía | Fuerza/Valor, objetos de 4 herramientas, estilos de rotura, simulador | |
+| 0. Esqueleto | Proyecto, escena placeholder con toque, UI con pestañas, servicios falsos, guardado versionado, números grandes, Android | ✅ |
+| 1. "¿Es divertido tocar?" | Manotazo → desliza → cae → rompe; números flotantes y avisos ✅. Falta: sonido, tutorial, mejor animación del gato | Parcial |
+| 2. Economía | Fuerza/Valor, 11 objetos y 4 herramientas, estilos de rotura (empujar, rasgar, volcar), modificadores, simulador | ✅ |
 | 3. Idle | 4 empleados, offline, autoguardado completo | |
 | 4. Meta | Mudanza, Schrödinger, Cheshire, evento del dueño | |
 | 5. Anuncios y Android | AdMob de prueba, 5 recompensas, consentimiento, ajustes, APK | |
