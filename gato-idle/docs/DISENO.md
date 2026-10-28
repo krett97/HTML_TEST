@@ -1,6 +1,6 @@
 # Swat to the Moon — Documento de diseño
 
-> **Versión 0.3** · Actualiza el prompt original ([`prompt-original.md`](prompt-original.md)) con las mejoras del análisis.
+> **Versión 0.4** · Actualiza el prompt original ([`prompt-original.md`](prompt-original.md)) con las mejoras del análisis.
 > **Nombre provisional.** *Knock It Off!* ya está en uso (Spin Master vende un juego físico con ese nombre para jugar con tu gato, y hay varios juegos en itch.io). *Swat to the Moon* aún no está verificado en Play Store ni en registros de marca (USPTO / IMPI). El nombre visible se cambia en un solo lugar: `src/i18n/*.json` → `app.title` y `capacitor.config.ts` → `appName`.
 
 ---
@@ -307,3 +307,23 @@ Fuera del MVP: herramientas 5–8, otras mascotas, paseador y abogado, 7 vidas, 
 3. Idiomas del MVP: solo español o también inglés.
 4. Repositorio: `HTML_TEST` es público; para un juego comercial conviene un repo privado.
 5. `appId` de Android (`com.krett97.gatoidle` es provisional; no se puede cambiar después de publicar).
+
+## 19. Cambios de la versión 0.3.0 (juego)
+
+- **Sonido:** efectos sintetizados con Web Audio (`src/services/audio.ts`), sin archivos. Cada objeto tiene en `objects.json` un sonido al golpearlo, otro al romperse y un tono propio: no hay dos objetos que suenen igual. Materiales: vidrio, cerámica, plástico, tela, goma, madera, metal y aparatos eléctricos. También suenan las compras, las herramientas y las voces de los aliados. Cuando haya grabaciones reales se cambian las recetas por archivos y los datos siguen igual.
+- **27 objetos** en 4 familias, con 5 niveles de Valor cada uno:
+  - Pata: vaso, taza, plato, control remoto, florero, celular del dueño.
+  - Garras: papel de baño, cojín, tenis, cortinas, sofá, colchón.
+  - Carrito: lámpara, bocina, consola de videojuegos, TV, mesa de centro, librero.
+  - Aspiradora: tostadora, cafetera, licuadora, microondas, computadora, lavadora, secadora, estufa, refri.
+- **Aliados** (`allies.json`, pestaña Aliados): golpean solos cada cierto tiempo, sin tocar. Daño por golpe = base × nivel, ×2 cada 25 niveles.
+
+| Aliado | Llega con | Golpe | Ritmo |
+|---|---|---|---|
+| Gatito bebé | desde el inicio | rasguña | cada 1 s |
+| Perro | papel de baño | muerde | cada 2 s |
+| Perico | lámpara | picotea | cada 0.8 s |
+| Mapache | tostadora | saquea | cada 1.5 s |
+
+- **Ritmo** (simulador, 5 toques/s): garras min 4.9, carrito 10.5, aspiradora 18.9, refri 41.4. Los aliados hacen ~5 % del daño al inicio y ~60 % al final.
+- El "Personal del canal" (camarógrafo, editor, seguros, community manager) queda para la siguiente fase, ahora como ganancias y ganancias offline.

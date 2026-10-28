@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { tap } from '../src/core/actions';
-import { currentObject, normalizeState, objectProgress } from '../src/core/economy';
+import { currentObject, objectProgress } from '../src/core/economy';
+import { normalizeState } from '../src/core/normalize';
 import { createInitialState } from '../src/core/state';
 import { gameData } from '../src/data';
 

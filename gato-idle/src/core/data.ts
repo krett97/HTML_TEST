@@ -3,6 +3,7 @@
 // captura (un id repetido, una herramienta que no existe) truene con un mensaje claro.
 import { OPS, STATS, type Effect } from './modifiers';
 import { num, type Decimal } from './num';
+import { ALL_SOUNDS, BREAK_SOUNDS, HIT_SOUNDS, type ObjectSound, type SoundId } from './sounds';
 
 export const BREAK_STYLES = ['empujar', 'rasgar', 'volcar'] as const;
 export type BreakStyle = (typeof BREAK_STYLES)[number];
@@ -19,9 +20,29 @@ export interface ObjectDef {
   estiloRotura: BreakStyle;
   hp: Decimal;
   vistas: Decimal;
+  sonido: ObjectSound;
   sprite: string;
   /** Rectángulo de color que se dibuja mientras no exista el sprite real. */
   placeholder?: PlaceholderSpec;
+}
+
+/** Mascota que destruye sola: golpea cada `intervalo` segundos. */
+export interface AllyDef {
+  id: string;
+  /** Aparece al llegar a este objeto (id de objects.json). */
+  desbloqueo: string;
+  costoBase: Decimal;
+  crecimiento: number;
+  /** Daño de cada golpe por nivel. */
+  danioBase: number;
+  intervalo: number;
+  sonido: {
+    golpe: SoundId;
+    /** De vez en cuando, además del golpe: maullido, ladrido… */
+    voz: SoundId | null;
+    tono: number;
+    volumen: number;
+  };
 }
 
 export interface ToolDef {
@@ -51,17 +72,26 @@ export interface Balance {
     costoEnRoturas: number;
     crecimiento: number;
   };
+  aliados: {
+    /** Cada tantos niveles de un aliado, su daño se multiplica por `multHito`. */
+    hitoCada: number;
+    multHito: number;
+    /** Probabilidad de que un golpe venga con voz (maullido, ladrido…). */
+    probabilidadVoz: number;
+  };
 }
 
 export interface GameData {
   objects: ObjectDef[];
   tools: ToolDef[];
+  allies: AllyDef[];
   balance: Balance;
 }
 
 export interface RawGameData {
   objects: unknown;
   tools: unknown;
+  allies: unknown;
   balance: unknown;
 }
 
@@ -117,6 +147,23 @@ function effects(file: string, item: Raw): Effect[] {
   });
 }
 
+function sound<T extends string>(file: string, item: Raw, value: unknown, allowed: readonly T[], what: string): T {
+  if (typeof value !== 'string' || !(allowed as readonly string[]).includes(value)) {
+    throw new DataError(file, `"${String(item.id)}": sonido de ${what} "${String(value)}" no existe (${allowed.join(', ')})`);
+  }
+  return value as T;
+}
+
+function objectSound(file: string, item: Raw): ObjectSound {
+  const raw = (item.sonido ?? {}) as Raw;
+  const tono = typeof raw.tono === 'number' && raw.tono > 0 ? raw.tono : 1;
+  return {
+    golpe: sound(file, item, raw.golpe, HIT_SOUNDS, 'golpe'),
+    rotura: sound(file, item, raw.rotura, BREAK_SOUNDS, 'rotura'),
+    tono,
+  };
+}
+
 function section(file: string, parent: Raw, key: string): Raw {
   const value = parent[key];
   if (value === null || typeof value !== 'object') throw new DataError(file, `falta la sección "${key}"`);
@@ -159,6 +206,7 @@ export function parseGameData(raw: RawGameData): GameData {
       estiloRotura: estilo as BreakStyle,
       hp: positive('objects.json', item, 'hp'),
       vistas: positive('objects.json', item, 'vistas'),
+      sonido: objectSound('objects.json', item),
       sprite: str('objects.json', item, 'sprite'),
       placeholder: item.placeholder as PlaceholderSpec | undefined,
     };
@@ -166,11 +214,37 @@ export function parseGameData(raw: RawGameData): GameData {
   uniqueIds('objects.json', objects);
   if (objects.length === 0) throw new DataError('objects.json', 'no hay objetos');
 
+  const objectIds = new Set(objects.map((o) => o.id));
+  const allies: AllyDef[] = asArray('allies.json', raw.allies).map((item) => {
+    const id = str('allies.json', item, 'id');
+    const desbloqueo = str('allies.json', item, 'desbloqueo');
+    if (!objectIds.has(desbloqueo)) {
+      throw new DataError('allies.json', `"${id}": desbloqueo "${desbloqueo}" no existe en objects.json`);
+    }
+    const rawSound = (item.sonido ?? {}) as Raw;
+    return {
+      id,
+      desbloqueo,
+      costoBase: positive('allies.json', item, 'costoBase'),
+      crecimiento: positive('allies.json', item, 'crecimiento').toNumber(),
+      danioBase: positive('allies.json', item, 'danioBase').toNumber(),
+      intervalo: positive('allies.json', item, 'intervalo').toNumber(),
+      sonido: {
+        golpe: sound('allies.json', item, rawSound.golpe, ALL_SOUNDS, 'golpe'),
+        voz: rawSound.voz == null ? null : sound('allies.json', item, rawSound.voz, ALL_SOUNDS, 'voz'),
+        tono: typeof rawSound.tono === 'number' && rawSound.tono > 0 ? rawSound.tono : 1,
+        volumen: typeof rawSound.volumen === 'number' && rawSound.volumen > 0 ? rawSound.volumen : 1,
+      },
+    };
+  });
+  uniqueIds('allies.json', allies);
+
   const file = 'balance.json';
   const b = (raw.balance ?? {}) as Raw;
   const n = (item: Raw, key: string) => positive(file, item, key).toNumber();
   const fuerza = section(file, b, 'fuerza');
   const valor = section(file, b, 'valor');
+  const aliados = section(file, b, 'aliados');
   const balance: Balance = {
     tarifaPorVista: n(b, 'tarifaPorVista'),
     toquesMaxPorSegundo: n(b, 'toquesMaxPorSegundo'),
@@ -188,7 +262,12 @@ export function parseGameData(raw: RawGameData): GameData {
       costoEnRoturas: n(valor, 'costoEnRoturas'),
       crecimiento: n(valor, 'crecimiento'),
     },
+    aliados: {
+      hitoCada: Math.max(1, Math.floor(n(aliados, 'hitoCada'))),
+      multHito: n(aliados, 'multHito'),
+      probabilidadVoz: Math.min(1, n(aliados, 'probabilidadVoz')),
+    },
   };
 
-  return { objects, tools, balance };
+  return { objects, tools, allies, balance };
 }

@@ -2,13 +2,13 @@
   import { t } from '../i18n';
   import { useGame } from './context';
   import Mejoras from './tabs/Mejoras.svelte';
-  import Personal from './tabs/Personal.svelte';
+  import Aliados from './tabs/Aliados.svelte';
   import Mudanza from './tabs/Mudanza.svelte';
   import Ajustes from './tabs/Ajustes.svelte';
 
   const TABS = [
     { id: 'mejoras', icon: '🐾', component: Mejoras },
-    { id: 'personal', icon: '🎥', component: Personal },
+    { id: 'aliados', icon: '🐱', component: Aliados },
     { id: 'mudanza', icon: '📦', component: Mudanza },
     { id: 'ajustes', icon: '⚙️', component: Ajustes },
   ] as const;
@@ -35,8 +35,8 @@
       >
         <span class="tab-icon" aria-hidden="true">
           {tab.icon}
-          {#if tab.id === 'mejoras' && $view.hayCompra && active !== 'mejoras'}
-            <span class="dot" data-testid="aviso-mejora"></span>
+          {#if tab.id !== active && ((tab.id === 'mejoras' && $view.hayCompra) || (tab.id === 'aliados' && $view.hayCompraAliado))}
+            <span class="dot" data-testid="aviso-{tab.id}"></span>
           {/if}
         </span>
         <span class="label">{$t(`tabs.${tab.id}`)}</span>

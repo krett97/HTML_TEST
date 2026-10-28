@@ -5,7 +5,7 @@ Idle de un gato que tira las cosas de su dueño, de un vaso a la Luna. Celular p
 - Diseño completo: [`docs/DISENO.md`](docs/DISENO.md)
 - Prompt original: [`docs/prompt-original.md`](docs/prompt-original.md)
 
-**Estado:** fases 0 y 2. El gato tira objetos de la mesa; con el dinero se compran Fuerza (menos manotazos), Valor (el dueño compra objetos más caros, del vaso al refri) y herramientas (garras, carrito, aspiradora). El progreso se guarda.
+**Estado:** versión 0.3.0. El gato tira 27 objetos de la mesa, cada uno con su sonido. Con el dinero se compran Fuerza, Valor (el dueño compra objetos más caros, del vaso al refri), herramientas (garras, carrito, aspiradora) y aliados que destruyen solos (gatito bebé, perro, perico, mapache). El progreso se guarda.
 
 ## Requisitos
 
@@ -51,11 +51,11 @@ Diferencias con la app real (`android/`): se instala como **"Swat (prueba)"** co
 ```
 src/
   core/        lógica pura (sin Phaser ni DOM): números grandes, estado, economía, modificadores, guardado
-  data/        balance en JSON: objects.json, tools.json, balance.json
+  data/        balance en JSON: objects.json (con sonidos), tools.json, allies.json, balance.json
   app/         une todo: bucle, autoguardado, eventos para la escena, datos para la UI
   game/        escena de Phaser, escalado de píxeles y arte provisional
   ui/          interfaz en Svelte: barra superior, escena, pestañas
-  services/    plataforma: guardado, vibración, anuncios (falsos por ahora), ciclo de vida
+  services/    plataforma: sonido, guardado, vibración, anuncios (falsos por ahora), ciclo de vida
   i18n/        textos en español e inglés
 tests/         pruebas de Vitest
 tools/         simulador de balance

@@ -3,7 +3,8 @@
 import Phaser from 'phaser';
 import { get } from 'svelte/store';
 import type { HitResult } from '../core/actions';
-import type { ObjectDef } from '../core/data';
+import { allyLevel } from '../core/allies';
+import type { AllyDef, ObjectDef } from '../core/data';
 import type { Game } from '../app/game';
 import { t } from '../i18n';
 import { createPlaceholders } from './placeholders';
@@ -36,6 +37,15 @@ const COLORS = {
   scratch: 0x2b1d2f,
 };
 
+/** Color de las chispitas que deja cada aliado al golpear. */
+const ALLY_SPARK: Record<string, number> = { gatito: 0xb8b0c0, perro: 0xa8693a, perico: 0x4caf50, mapache: 0x8a8296 };
+
+interface AllyVisual {
+  sprite: Phaser.GameObjects.Image;
+  /** Desplazamiento animado sobre su lugar de descanso (los saltitos al atacar). */
+  hop: { dx: number; dy: number };
+}
+
 export class MainScene extends Phaser.Scene {
   private background!: Phaser.GameObjects.Graphics;
   private scratches!: Phaser.GameObjects.Graphics;
@@ -45,6 +55,7 @@ export class MainScene extends Phaser.Scene {
   private object!: Phaser.GameObjects.Image;
   private objectDef!: ObjectDef;
   private look: ToolLook = toolLook('pata');
+  private readonly allies = new Map<string, AllyVisual>();
   private unsubscribers: (() => void)[] = [];
 
   constructor(private readonly controller: Game) {
@@ -64,6 +75,10 @@ export class MainScene extends Phaser.Scene {
     this.vehicle = this.add.image(0, 0, 'carrito').setOrigin(0.5, 1).setDepth(2.5).setVisible(false);
     this.object = this.add.image(0, 0, '__DEFAULT').setOrigin(0.5, 1).setDepth(3);
     this.scratches = this.add.graphics().setDepth(3.5);
+    for (const ally of this.controller.data.allies) {
+      const sprite = this.add.image(0, 0, `aliado_${ally.id}`).setOrigin(0, 1).setDepth(ally.id === 'gatito' ? 2.7 : 2.2);
+      this.allies.set(ally.id, { sprite, hop: { dx: 0, dy: 0 } });
+    }
 
     this.layout();
     this.scale.on(Phaser.Scale.Events.RESIZE, this.layout, this);
@@ -75,7 +90,12 @@ export class MainScene extends Phaser.Scene {
       this.controller.events.on('hit', (result) => this.onHit(result)),
       this.controller.events.on('objeto', ({ objectId }) => this.onNewObject(objectId)),
       this.controller.events.on('herramienta', ({ toolId }) => this.onNewTool(toolId)),
-      this.controller.events.on('reset', () => this.placeObject()),
+      this.controller.events.on('aliado', ({ allyId, result }) => this.onAllyHit(allyId, result)),
+      this.controller.events.on('aliadoNuevo', ({ allyId }) => this.onNewAlly(allyId)),
+      this.controller.events.on('reset', () => {
+        this.placeObject();
+        this.refreshAllies();
+      }),
     );
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.unsubscribers.forEach((off) => off());
@@ -89,6 +109,16 @@ export class MainScene extends Phaser.Scene {
     this.cameras.main.setScroll(-Math.floor((this.scale.width - SCENE_WIDTH) / 2), 0);
     this.drawBackground();
     this.placeObject();
+    this.refreshAllies();
+  }
+
+  /** Cada cuadro: los aliados siguen su lugar (el gatito va sobre el lomo del gato). */
+  update(): void {
+    for (const [id, visual] of this.allies) {
+      if (!visual.sprite.visible) continue;
+      const base = this.allyRest(id);
+      visual.sprite.setPosition(Math.round(base.x + visual.hop.dx), Math.round(base.y + visual.hop.dy));
+    }
   }
 
   private drawBackground(): void {
@@ -203,12 +233,120 @@ export class MainScene extends Phaser.Scene {
 
   private onHit(result: HitResult): void {
     this.swipePaw();
+    const sound = this.objectDef.sonido;
     if (result.broke) {
+      this.controller.playSound(sound.rotura, { tono: sound.tono });
       this.breakObject();
       if (result.reward) this.floatText(TABLE_RIGHT - 10, this.tableTop - 20, `+$${this.controller.formatMoney(result.reward.dinero)}`, 'flotante');
     } else {
+      this.controller.playSound(sound.golpe, { tono: sound.tono, minGapMs: 45 });
       this.pushObject(result.progress);
     }
+  }
+
+  // ---- Aliados ----
+
+  /** Dónde descansa cada aliado (esquina inferior izquierda del dibujo). */
+  private allyRest(id: string): { x: number; y: number } {
+    const floorY = this.scale.height - FLOOR_H;
+    switch (id) {
+      case 'gatito':
+        return { x: this.cat.x + 1, y: this.cat.y - 8 };
+      case 'perro':
+        return { x: 1, y: floorY + 5 };
+      case 'perico': {
+        const pictureY = this.tableTop - 70;
+        return pictureY >= 18 ? { x: 125, y: pictureY + 1 } : { x: 132, y: this.tableTop - 34 };
+      }
+      default:
+        return { x: 127, y: floorY + 5 };
+    }
+  }
+
+  private refreshAllies(): void {
+    for (const [id, visual] of this.allies) {
+      visual.sprite.setVisible(allyLevel(this.controller.state, id) > 0);
+      this.tweens.killTweensOf(visual.hop);
+      visual.hop.dx = 0;
+      visual.hop.dy = 0;
+    }
+    this.update();
+  }
+
+  private onNewAlly(allyId: string): void {
+    const visual = this.allies.get(allyId);
+    if (!visual) return;
+    visual.sprite.setVisible(true).setScale(0);
+    this.update();
+    this.tweens.add({ targets: visual.sprite, scale: 1, duration: 260, ease: 'Back.out' });
+    const ally = get(t)(`aliados.${allyId}`);
+    this.toast(get(t)('avisos.aliadoNuevo', { aliado: ally }));
+    const def = this.allyDef(allyId);
+    if (def.sonido.voz) this.controller.playSound(def.sonido.voz, { tono: def.sonido.tono });
+  }
+
+  private allyDef(allyId: string): AllyDef {
+    return this.controller.data.allies.find((a) => a.id === allyId)!;
+  }
+
+  private onAllyHit(allyId: string, result: HitResult): void {
+    const visual = this.allies.get(allyId);
+    const def = this.allyDef(allyId);
+    if (visual?.sprite.visible) this.allyAttack(allyId, visual);
+
+    // Sonido del aliado (y a veces su voz) y, más bajito, el del objeto.
+    const { golpe, voz, tono, volumen } = def.sonido;
+    this.controller.playSound(golpe, { tono, volumen, minGapMs: 60 });
+    if (voz && Math.random() < this.controller.data.balance.aliados.probabilidadVoz) {
+      this.controller.playSound(voz, { tono, volumen });
+    }
+    const sound = this.objectDef.sonido;
+    if (result.broke) {
+      this.controller.playSound(sound.rotura, { tono: sound.tono });
+      this.breakObject();
+      if (result.reward) this.floatText(TABLE_RIGHT - 10, this.tableTop - 20, `+$${this.controller.formatMoney(result.reward.dinero)}`, 'flotante');
+    } else {
+      this.controller.playSound(sound.golpe, { tono: sound.tono, volumen: 0.45, minGapMs: 60 });
+      this.pushObject(result.progress);
+      this.sparks(ALLY_SPARK[allyId] ?? 0xffffff);
+      this.floatText(this.object.x, this.object.y - this.object.height, this.controller.formatMoney(result.damage), 'flotante chico');
+    }
+  }
+
+  /** Saltito hacia el objeto: el gatito brinca, el perico vuela, perro y mapache dan un brinco. */
+  private allyAttack(allyId: string, visual: AllyVisual): void {
+    this.tweens.killTweensOf(visual.hop);
+    visual.hop.dx = 0;
+    visual.hop.dy = 0;
+    const rest = this.allyRest(allyId);
+    let target = { dx: 0, dy: -6 };
+    if (allyId === 'gatito') {
+      target = { dx: this.object.x - this.object.width / 2 - 13 - rest.x, dy: -3 };
+    } else if (allyId === 'perico') {
+      target = { dx: this.object.x - 5 - rest.x, dy: this.object.y - this.object.height - 2 - rest.y };
+    }
+    this.tweens.add({
+      targets: visual.hop,
+      dx: target.dx,
+      dy: target.dy,
+      duration: allyId === 'perico' ? 140 : 90,
+      ease: 'Quad.out',
+      yoyo: true,
+      hold: 40,
+    });
+  }
+
+  private sparks(tint: number): void {
+    const emitter = this.add.particles(this.object.x, this.object.y - this.object.height / 2, 'px', {
+      speed: { min: 20, max: 50 },
+      lifespan: 300,
+      scale: { start: 0.8, end: 0.2 },
+      tint,
+      emitting: false,
+    });
+    emitter.setDepth(5);
+    emitter.explode(4);
+    this.time.delayedCall(400, () => emitter.destroy());
   }
 
   private onNewObject(objectId: string): void {

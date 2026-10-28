@@ -26,6 +26,8 @@ export interface GameState {
   nivelValor: number;
   /** Ids de herramientas compradas, en el orden de tools.json. */
   herramientas: string[];
+  /** Nivel de cada aliado comprado (los que no aparecen están en 0). */
+  aliados: { id: string; nivel: number }[];
   /** Daño acumulado sobre el objeto actual. */
   danioObjeto: Decimal;
   stats: {
@@ -45,6 +47,7 @@ export function createInitialState(now: number): GameState {
     nivelFuerza: 0,
     nivelValor: 0,
     herramientas: [],
+    aliados: [],
     danioObjeto: ZERO,
     stats: { toques: 0, roturas: 0 },
     ajustes: {

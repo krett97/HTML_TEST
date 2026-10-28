@@ -6,7 +6,7 @@ import { ownsTool } from './tools';
 import type { Decimal } from './num';
 import type { GameState } from './state';
 
-export const STATS = ['danio', 'vistas'] as const;
+export const STATS = ['danio', 'vistas', 'danioAliados'] as const;
 export type Stat = (typeof STATS)[number];
 
 export const OPS = ['suma', 'mult'] as const;

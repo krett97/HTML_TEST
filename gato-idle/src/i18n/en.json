@@ -9,21 +9,37 @@
   },
   "tabs": {
     "mejoras": "Upgrades",
-    "personal": "Staff",
+    "aliados": "Allies",
     "mudanza": "Move out",
     "ajustes": "Settings"
   },
   "objetos": {
     "vaso": "Glass",
+    "taza": "Mug",
+    "plato": "Plate",
+    "control": "Remote control",
     "florero": "Vase",
+    "celular": "Owner's phone",
+    "papel": "Toilet paper",
+    "cojin": "Cushion",
     "tenis": "Sneakers",
-    "sofa": "Couch",
     "cortinas": "Curtains",
+    "sofa": "Couch",
     "colchon": "Mattress",
+    "lampara": "Lamp",
+    "bocina": "Speaker",
+    "consola": "Game console",
     "tv": "TV",
+    "mesa": "Coffee table",
     "librero": "Bookcase",
+    "tostadora": "Toaster",
+    "cafetera": "Coffee maker",
+    "licuadora": "Blender",
+    "microondas": "Microwave",
     "computadora": "Computer",
     "lavadora": "Washing machine",
+    "secadora": "Dryer",
+    "estufa": "Stove",
     "refri": "Fridge"
   },
   "mejoras": {
@@ -49,11 +65,12 @@
     "bloqueada": "Unlocks at: {objeto}"
   },
   "personal": {
+    "titulo": "Channel staff",
     "camarografo": "Camera operator",
     "editor": "Editor",
     "seguros": "Insurance agent",
     "cm": "Community manager",
-    "pronto": "Phase 3"
+    "pronto": "Coming soon"
   },
   "mudanza": {
     "pronto": "Moving out arrives in phase 4: you move to a pricier home and your followers stay with you."
@@ -88,6 +105,25 @@
   },
   "avisos": {
     "objetoNuevo": "The owner bought: {objeto}!",
-    "herramienta": "New tool: {herramienta}!"
+    "herramienta": "New tool: {herramienta}!",
+    "aliadoNuevo": "{aliado} joined!"
+  },
+  "aliados": {
+    "gatito": "Baby kitten",
+    "perro": "Dog",
+    "perico": "Parrot",
+    "mapache": "Raccoon",
+    "accion": {
+      "gatito": "Scratches",
+      "perro": "Bites",
+      "perico": "Pecks",
+      "mapache": "Raids"
+    },
+    "titulo": "They wreck things on their own, even when you don't tap",
+    "total": "Automatic damage: {dps} per second",
+    "efecto": "{accion} every {segundos} s · damage {actual} → {siguiente}",
+    "efectoNuevo": "{accion} every {segundos} s · damage {siguiente}",
+    "bloqueado": "Arrives with: {objeto}",
+    "adoptar": "Adopt"
   }
 }

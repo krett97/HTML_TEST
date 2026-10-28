@@ -3,7 +3,7 @@
 import { Decimal, isDecimal } from './num';
 import { createInitialState, type GameState } from './state';
 
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
 
 /** Lo que se escribe en disco. */
 interface SaveFile {
@@ -16,8 +16,27 @@ interface SaveFile {
 
 type Migration = (state: Record<string, unknown>) => Record<string, unknown>;
 
+// v1 → v2: la lista pasó de 11 a 27 objetos y de 10 a 5 niveles de Valor por objeto. Se conserva
+// el objeto en el que iba el jugador. Las listas quedan fijas aquí aunque objects.json cambie después.
+const OBJECTS_V1 = ['vaso', 'florero', 'tenis', 'sofa', 'cortinas', 'colchon', 'tv', 'librero', 'computadora', 'lavadora', 'refri'];
+const OBJECTS_V2 = [
+  'vaso', 'taza', 'plato', 'control', 'florero', 'celular',
+  'papel', 'cojin', 'tenis', 'cortinas', 'sofa', 'colchon',
+  'lampara', 'bocina', 'consola', 'tv', 'mesa', 'librero',
+  'tostadora', 'cafetera', 'licuadora', 'microondas', 'computadora', 'lavadora', 'secadora', 'estufa', 'refri',
+];
+
+function migrateV1(s: Record<string, unknown>): Record<string, unknown> {
+  // La versión 0.0.1 guardaba el índice del objeto; la 0.2.0, el nivel de Valor (10 por objeto).
+  const valor = typeof s.nivelValor === 'number' ? s.nivelValor : typeof s.objetoActual === 'number' ? s.objetoActual * 10 : 0;
+  const oldIndex = Math.min(Math.max(Math.floor(valor / 10), 0), OBJECTS_V1.length - 1);
+  const steps = valor - oldIndex * 10;
+  const newIndex = Math.max(0, OBJECTS_V2.indexOf(OBJECTS_V1[oldIndex]!));
+  return { ...s, nivelValor: newIndex * 5 + Math.min(4, Math.floor(steps / 2)) };
+}
+
 /** MIGRATIONS[n] convierte un guardado de la versión n a la n + 1. */
-export const MIGRATIONS: Record<number, Migration> = {};
+export const MIGRATIONS: Record<number, Migration> = { 1: migrateV1 };
 
 export function serialize(state: GameState, now: number): string {
   const file: SaveFile = { v: SAVE_VERSION, t: now, s: state };

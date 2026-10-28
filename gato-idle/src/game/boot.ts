@@ -17,6 +17,8 @@ export function mountScene(parent: HTMLElement, controller: Game): () => void {
     backgroundColor: '#3b2a4d',
     banner: false,
     input: { activePointers: 3 },
+    // El sonido lo maneja services/audio.ts.
+    audio: { noAudio: true },
     scale: { mode: Phaser.Scale.NONE, zoom: initial.zoom, autoRound: false },
     scene: [new MainScene(controller)],
   });

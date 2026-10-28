@@ -13,13 +13,15 @@ import {
   fuerzaCost,
   moneyPerBreak,
   nextTool,
-  normalizeState,
+  tapDamage,
   tapsToBreak,
   valorCost,
   valorPreview,
   toolAvailable,
   valorStepsInObject,
 } from '../src/core/economy';
+import { normalizeState } from '../src/core/normalize';
+import { allyCost, allyLevel, allyUnlocked, alliesDps, buyAlly } from '../src/core/allies';
 import { formatNum } from '../src/core/format';
 import { num } from '../src/core/num';
 import { createInitialState, type GameState } from '../src/core/state';
@@ -28,13 +30,22 @@ import { gameData } from '../src/data';
 const TAPS_PER_SECOND = Number(process.argv[2] ?? 5) || 5;
 const MAX_MINUTES = 120;
 
-/** Dinero por segundo tocando a ritmo constante. */
+/** Golpes por segundo de los aliados. */
+function allyHitsPerSecond(state: GameState, data: GameData): number {
+  return data.allies.reduce((sum, ally) => sum + (allyLevel(state, ally.id) > 0 ? 1 / ally.intervalo : 0), 0);
+}
+
+/** Dinero por segundo tocando a ritmo constante, más lo que rompen los aliados. */
 function income(state: GameState, data: GameData): number {
-  return (TAPS_PER_SECOND / tapsToBreak(state, data)) * moneyPerBreak(state, data).toNumber();
+  const hp = currentObject(state, data).hp.toNumber();
+  const dps = tapDamage(state, data).toNumber() * TAPS_PER_SECOND + alliesDps(state, data).toNumber();
+  // Cada golpe rompe a lo mucho un objeto.
+  const breaks = Math.min(dps / hp, TAPS_PER_SECOND + allyHitsPerSecond(state, data));
+  return breaks * moneyPerBreak(state, data).toNumber();
 }
 
 function clone(state: GameState): GameState {
-  return { ...state, herramientas: [...state.herramientas] };
+  return { ...state, herramientas: [...state.herramientas], aliados: state.aliados.map((a) => ({ ...a })) };
 }
 
 interface Option {
@@ -51,6 +62,10 @@ function options(state: GameState, data: GameData): Option[] {
   if (!preview.requiredTool) {
     list.push({ name: 'valor', cost: valorCost(state, data).toNumber(), apply: (s) => void buyValor(s, data) });
   }
+  for (const ally of data.allies) {
+    if (!allyUnlocked(state, data, ally)) continue;
+    list.push({ name: `aliado:${ally.id}`, cost: allyCost(state, data, ally).toNumber(), apply: (s) => void buyAlly(s, data, ally.id) });
+  }
   const tool = nextTool(state, data);
   if (tool && toolAvailable(state, data, tool.id)) list.push({ name: tool.id, cost: tool.costo.toNumber(), apply: (s) => void buyTool(s, data, tool.id) });
   return list;
@@ -59,7 +74,11 @@ function options(state: GameState, data: GameData): Option[] {
 /** Elige la compra que antes se paga sola: espera para comprarla + tiempo en recuperarla. */
 function choose(state: GameState, data: GameData): Option {
   const rate = income(state, data);
-  const blocked = valorPreview(state, data).requiredTool;
+  const preview = valorPreview(state, data);
+  const blocked = preview.requiredTool;
+  // Un objeto nuevo siempre se compra en cuanto alcanza: es lo que el jugador quiere ver, aunque
+  // al principio rinda menos (aguanta más golpes).
+  const progress = blocked ? blocked.id : preview.nextObject ? 'valor' : null;
   let best: Option | null = null;
   let bestScore = Infinity;
   for (const option of options(state, data)) {
@@ -68,8 +87,7 @@ function choose(state: GameState, data: GameData): Option {
     option.apply(after);
     const gain = income(after, data) - rate;
     const wait = Math.max(0, option.cost - state.dinero.toNumber()) / rate;
-    // La herramienta que bloquea el Valor siempre conviene: sin ella no hay más objetos.
-    const score = blocked && option.name === blocked.id ? wait : wait + option.cost / Math.max(gain, 1e-9);
+    const score = option.name === progress ? wait : wait + option.cost / Math.max(gain, 1e-9);
     if (score < bestScore) {
       bestScore = score;
       best = option;
@@ -86,6 +104,8 @@ export interface SimRow {
   valor: number;
   golpes: number;
   pagoPorRotura: string;
+  /** Qué parte del daño hacen los aliados. */
+  aliadosPct: number;
 }
 
 export function simulate(data: GameData, maxMinutes = MAX_MINUTES): { rows: SimRow[]; counts: Record<string, number> } {
@@ -111,15 +131,17 @@ export function simulate(data: GameData, maxMinutes = MAX_MINUTES): { rows: SimR
     counts[option.name] = (counts[option.name] ?? 0) + 1;
 
     const object = currentObject(state, data).id;
-    const isTool = option.name !== 'fuerza' && option.name !== 'valor';
-    if (object !== lastObject || isTool) {
+    const isTool = !['fuerza', 'valor'].includes(option.name) && !option.name.startsWith('aliado:');
+    const newAlly = option.name.startsWith('aliado:') && counts[option.name] === 1;
+    if (object !== lastObject || isTool || newAlly) {
       rows.push({
         minuto: seconds / 60,
-        hito: isTool ? `🔧 ${option.name}` : object,
+        hito: isTool ? `🔧 ${option.name}` : newAlly ? `🐾 ${option.name.slice(7)}` : object,
         fuerza: state.nivelFuerza,
         valor: state.nivelValor,
         golpes: tapsToBreak(state, data),
         pagoPorRotura: formatNum(moneyPerBreak(state, data)),
+        aliadosPct: Math.round((100 * alliesDps(state, data).toNumber()) / (alliesDps(state, data).toNumber() + tapDamage(state, data).toNumber() * TAPS_PER_SECOND)),
       });
       lastObject = object;
     }
@@ -131,8 +153,8 @@ export function simulate(data: GameData, maxMinutes = MAX_MINUTES): { rows: SimR
 
 function main(): void {
   const { rows: simRows, counts } = simulate(gameData);
-  const rows = simRows.map((r) => [r.minuto.toFixed(1), r.hito, String(r.fuerza), String(r.valor), String(r.golpes), r.pagoPorRotura]);
-  const header = ['min', 'objeto / compra', 'fuerza', 'valor', 'golpes', '$/rotura'];
+  const rows = simRows.map((r) => [r.minuto.toFixed(1), r.hito, String(r.fuerza), String(r.valor), String(r.golpes), r.pagoPorRotura, `${r.aliadosPct}%`]);
+  const header = ['min', 'objeto / compra', 'fuerza', 'valor', 'golpes', '$/rotura', 'aliados'];
   const widths = header.map((h, i) => Math.max(h.length, ...rows.map((r) => r[i]!.length)));
   const line = (cells: string[]) => cells.map((c, i) => c.padEnd(widths[i]!)).join('  ');
   console.log(`Jugador que toca ${TAPS_PER_SECOND} veces por segundo y compra lo que antes se paga solo.\n`);

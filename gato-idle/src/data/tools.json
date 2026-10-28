@@ -1,6 +1,6 @@
 [
   { "id": "pata",       "costo": 0,      "efectos": [] },
-  { "id": "garras",     "costo": 600,    "efectos": [{ "stat": "danio", "op": "mult", "valor": 3 }] },
-  { "id": "carrito",    "costo": 20000,  "efectos": [{ "stat": "danio", "op": "mult", "valor": 3 }] },
-  { "id": "aspiradora", "costo": 600000, "efectos": [{ "stat": "danio", "op": "mult", "valor": 3 }] }
+  { "id": "garras",     "costo": 900,    "efectos": [{ "stat": "danio", "op": "mult", "valor": 3 }] },
+  { "id": "carrito",    "costo": 30000,  "efectos": [{ "stat": "danio", "op": "mult", "valor": 3 }] },
+  { "id": "aspiradora", "costo": 900000, "efectos": [{ "stat": "danio", "op": "mult", "valor": 3 }] }
 ]

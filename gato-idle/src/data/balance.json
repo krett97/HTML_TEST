@@ -10,9 +10,14 @@
     "multHito": 1
   },
   "valor": {
-    "nivelesPorObjeto": 10,
+    "nivelesPorObjeto": 5,
     "vistasPorNivel": 0.1,
-    "costoEnRoturas": 10,
-    "crecimiento": 1.25
+    "costoEnRoturas": 28,
+    "crecimiento": 1.3
+  },
+  "aliados": {
+    "hitoCada": 25,
+    "multHito": 2,
+    "probabilidadVoz": 0.15
   }
 }

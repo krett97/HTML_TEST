@@ -9,21 +9,37 @@
   },
   "tabs": {
     "mejoras": "Mejoras",
-    "personal": "Personal",
+    "aliados": "Aliados",
     "mudanza": "Mudanza",
     "ajustes": "Ajustes"
   },
   "objetos": {
     "vaso": "Vaso",
+    "taza": "Taza",
+    "plato": "Plato",
+    "control": "Control remoto",
     "florero": "Florero",
+    "celular": "Celular del dueño",
+    "papel": "Papel de baño",
+    "cojin": "Cojín",
     "tenis": "Tenis",
-    "sofa": "Sofá",
     "cortinas": "Cortinas",
+    "sofa": "Sofá",
     "colchon": "Colchón",
+    "lampara": "Lámpara",
+    "bocina": "Bocina",
+    "consola": "Consola de videojuegos",
     "tv": "TV",
+    "mesa": "Mesa de centro",
     "librero": "Librero",
+    "tostadora": "Tostadora",
+    "cafetera": "Cafetera",
+    "licuadora": "Licuadora",
+    "microondas": "Microondas",
     "computadora": "Computadora",
     "lavadora": "Lavadora",
+    "secadora": "Secadora",
+    "estufa": "Estufa",
     "refri": "Refri"
   },
   "mejoras": {
@@ -49,11 +65,12 @@
     "bloqueada": "Al llegar a: {objeto}"
   },
   "personal": {
+    "titulo": "Personal del canal",
     "camarografo": "Camarógrafo",
     "editor": "Editor",
     "seguros": "Agente de seguros",
     "cm": "Community manager",
-    "pronto": "Fase 3"
+    "pronto": "Próximamente"
   },
   "mudanza": {
     "pronto": "La mudanza llega en la fase 4: te mudas a una casa más cara y tus seguidores se quedan contigo."
@@ -88,6 +105,25 @@
   },
   "avisos": {
     "objetoNuevo": "¡El dueño compró: {objeto}!",
-    "herramienta": "¡Nueva herramienta: {herramienta}!"
+    "herramienta": "¡Nueva herramienta: {herramienta}!",
+    "aliadoNuevo": "¡Llegó {aliado}!"
+  },
+  "aliados": {
+    "gatito": "Gatito bebé",
+    "perro": "Perro",
+    "perico": "Perico",
+    "mapache": "Mapache",
+    "accion": {
+      "gatito": "Rasguña",
+      "perro": "Muerde",
+      "perico": "Picotea",
+      "mapache": "Saquea"
+    },
+    "titulo": "Destruyen solos, aunque no toques",
+    "total": "Daño automático: {dps} por segundo",
+    "efecto": "{accion} cada {segundos} s · daño {actual} → {siguiente}",
+    "efectoNuevo": "{accion} cada {segundos} s · daño {siguiente}",
+    "bloqueado": "Llega con: {objeto}",
+    "adoptar": "Adoptar"
   }
 }

@@ -7,13 +7,13 @@ import {
   fuerzaCost,
   moneyPerBreak,
   nextTool,
-  normalizeState,
   tapDamage,
   tapsToBreak,
   toolAvailable,
   valorCost,
   valorPreview,
 } from '../src/core/economy';
+import { normalizeState } from '../src/core/normalize';
 import { num } from '../src/core/num';
 import { createInitialState } from '../src/core/state';
 import { gameData } from '../src/data';
@@ -60,34 +60,34 @@ describe('Valor', () => {
     expect(moneyPerBreak(state, gameData).gt(before)).toBe(true);
   });
 
-  it('al décimo nivel el dueño compra el siguiente objeto y empieza al centro de la mesa', () => {
+  it('al quinto nivel el dueño compra el siguiente objeto y empieza al centro de la mesa', () => {
     const state = newState(1e9);
-    state.nivelValor = 9;
+    state.nivelValor = 4;
     state.danioObjeto = num(3);
-    expect(valorPreview(state, gameData).nextObject?.id).toBe('florero');
+    expect(valorPreview(state, gameData).nextObject?.id).toBe('taza');
 
     const result = buyValor(state, gameData);
-    expect(result.newObject?.id).toBe('florero');
-    expect(currentObject(state, gameData).id).toBe('florero');
+    expect(result.newObject?.id).toBe('taza');
+    expect(currentObject(state, gameData).id).toBe('taza');
     expect(state.danioObjeto.eq(0)).toBe(true);
   });
 
   it('el siguiente objeto vale más que el último nivel del anterior', () => {
     const state = newState();
-    state.nivelValor = 9;
+    state.nivelValor = 4;
     const lastOfVaso = moneyPerBreak(state, gameData);
-    state.nivelValor = 10;
+    state.nivelValor = 5;
     expect(moneyPerBreak(state, gameData).gt(lastOfVaso)).toBe(true);
   });
 
   it('sin la herramienta no se puede pasar a la siguiente familia', () => {
     const state = newState(1e12);
-    state.nivelValor = 29; // último nivel de los tenis; sigue el sofá (garras)
+    state.nivelValor = 29; // último nivel del celular; sigue el papel de baño (garras)
     expect(valorPreview(state, gameData).requiredTool?.id).toBe('garras');
     expect(buyValor(state, gameData).bought).toBe(false);
 
     expect(buyTool(state, gameData, 'garras')).toBe(true);
-    expect(buyValor(state, gameData).newObject?.id).toBe('sofa');
+    expect(buyValor(state, gameData).newObject?.id).toBe('papel');
   });
 
   it('el costo depende del objeto actual', () => {

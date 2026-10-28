@@ -154,6 +154,11 @@ select {
   pointer-events: none;
   animation: flotar 900ms ease-out forwards;
 }
+.flotante.chico {
+  font-size: 13px;
+  color: var(--text);
+  animation-duration: 600ms;
+}
 @keyframes flotar {
   from {
     opacity: 1;

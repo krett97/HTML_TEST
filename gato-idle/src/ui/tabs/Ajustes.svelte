@@ -8,7 +8,8 @@
   const game = useGame();
   const view = game.view;
 
-  const TOGGLES = ['sonido', 'musica', 'vibracion'] as const;
+  // "Música" vuelve cuando haya música.
+  const TOGGLES = ['sonido', 'vibracion'] as const;
   const NOTATIONS: Notation[] = ['letras', 'cientifica'];
   const LANGUAGE_NAMES: Record<Locale, string> = { es: 'Español', en: 'English' };
 

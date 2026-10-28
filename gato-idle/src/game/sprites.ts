@@ -16,6 +16,12 @@ export const PALETTE: Record<string, string> = {
   s: '#4a4a5a', // aspiradora
   S: '#6a6a7a', // aspiradora, costado
   G: '#5ec4a8', // luz de la aspiradora
+  a: '#b8b0c0', // gris (gatito, mapache)
+  A: '#8a8296', // gris oscuro
+  b: '#a8693a', // café (perro)
+  B: '#7a4a28', // café oscuro
+  v: '#4caf50', // verde (perico)
+  V: '#2e7d32', // verde oscuro
 };
 
 // Gato naranja sentado, de perfil, mirando a la derecha (hacia la orilla).
@@ -76,7 +82,74 @@ export const VACUUM = [
   '.kkkkkkkkkkkkkkkkkkkkkk.',
 ];
 
-export const SPRITES = { gato: CAT, pata: PAW, garra: CLAW, carrito: CAR, aspiradora: VACUUM };
+// Gatito bebé gris, mirando a la derecha.
+export const KITTEN = [
+  '.......k..k.',
+  '......kakkak',
+  '......kaaaak',
+  '......kaaeak',
+  '..k...kaawwp',
+  '.k.kkkkaawk.',
+  '.kkaaAaaawk.',
+  '..kaAaaaaak.',
+  '...kwkkkwk..',
+];
+
+// Perro café sentado.
+export const DOG = [
+  '.........kkkk...',
+  '........kbbbbk..',
+  '.......kBbbebbk.',
+  '.......kBbbbbbkk',
+  '.......kBbbwwwwk',
+  '........kbbwwkk.',
+  '..kkkkkkbbbbk...',
+  '.kbbbbbbbbbbbk..',
+  'kbkbbbbbbbbbbk..',
+  '..kbwbkkkbwbk...',
+  '..kkkk...kkkk...',
+];
+
+// Perico verde parado.
+export const PARROT = [
+  '...kkkk...',
+  '..kvvvvk..',
+  '.kvvvvevk.',
+  '.kvvvvvkyk',
+  '.kvVvvvkk.',
+  'kvVVvvvk..',
+  'kvVVvvvk..',
+  'kvVVvrrk..',
+  '.kVVvvk...',
+  '..kVkk....',
+  '..kk.k....',
+];
+
+// Mapache con antifaz.
+export const RACCOON = [
+  '........k..k..',
+  '.......kak.kak',
+  '.......kaaaaak',
+  '.......kkwkkwk',
+  '.......kaawwak',
+  '..k....kaaaak.',
+  '.kAk.kkaaaak..',
+  '.kaAkaaaaaaak.',
+  '..kAaaaaaaak..',
+  '...kakkkkak...',
+];
+
+export const SPRITES = {
+  gato: CAT,
+  pata: PAW,
+  garra: CLAW,
+  carrito: CAR,
+  aspiradora: VACUUM,
+  aliado_gatito: KITTEN,
+  aliado_perro: DOG,
+  aliado_perico: PARROT,
+  aliado_mapache: RACCOON,
+};
 
 /** Cómo luce el gato según la herramienta del objeto en la mesa. */
 export interface ToolLook {

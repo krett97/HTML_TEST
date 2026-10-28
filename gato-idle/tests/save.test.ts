@@ -66,6 +66,18 @@ describe('guardado', () => {
     expect(load(text).state.dinero.eq(7)).toBe(true);
   });
 
+  it('v1 → v2: conserva el objeto en el que iba el jugador', () => {
+    // 0.2.0: nivel de Valor 34 = sofá (índice 3 de la lista vieja), 4 niveles adentro.
+    // En la lista nueva el sofá es el índice 10 y hay la mitad de niveles por objeto.
+    const v020 = JSON.stringify({ v: 1, t: NOW, s: { nivelValor: 34, herramientas: ['garras'] } });
+    expect(load(v020).state.nivelValor).toBe(10 * 5 + 2);
+    // 0.0.1: solo había índice de objeto.
+    const v001 = JSON.stringify({ v: 1, t: NOW, s: { objetoActual: 0, dinero: { $d: '12' } } });
+    const old = load(v001).state;
+    expect(old.nivelValor).toBe(0);
+    expect(old.dinero.eq(12)).toBe(true);
+  });
+
   it('falla si falta una migración', () => {
     const result = deserialize(JSON.stringify({ v: 0, t: NOW, s: {} }), NOW);
     expect(result.ok).toBe(false);
