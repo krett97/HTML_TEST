@@ -30,9 +30,9 @@ export interface Modifier extends Effect {
 
 export function collectModifiers(state: GameState, data: GameData): Modifier[] {
   const mods: Modifier[] = [];
-  // Lentes de jefe: el gato dirige a la pandilla y todos los aliados pegan más.
-  if (state.nivelLentes > 0) {
-    mods.push({ stat: 'danioAliados', op: 'mult', valor: lentesMultiplier(state, data), fuente: 'mejora:lentes' });
+  // Saco de jefe: el gato de traje dirige a la pandilla y todos los aliados pegan más.
+  if (state.nivelSaco > 0) {
+    mods.push({ stat: 'danioAliados', op: 'mult', valor: sacoMultiplier(state, data), fuente: 'mejora:saco' });
   }
   for (const research of data.research) {
     if (!state.laboratorio.hechas.includes(research.id)) continue;
@@ -43,9 +43,9 @@ export function collectModifiers(state: GameState, data: GameData): Modifier[] {
   return mods;
 }
 
-/** Por cuánto multiplican los Lentes de jefe el daño de los aliados. */
-export function lentesMultiplier(state: GameState, data: GameData): number {
-  return 1 + state.nivelLentes * data.balance.lentes.multPorNivel;
+/** Por cuánto multiplica el Saco de jefe el daño de los aliados. */
+export function sacoMultiplier(state: GameState, data: GameData): number {
+  return 1 + state.nivelSaco * data.balance.saco.multPorNivel;
 }
 
 /** Cuántos aliados distintos se han adoptado. */

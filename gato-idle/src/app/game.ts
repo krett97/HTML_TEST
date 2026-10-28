@@ -19,14 +19,14 @@ import { addAllyLevels, advanceClock, completeAllResearch, discoverAll, discover
 import { deserialize, serialize } from '../core/save';
 import { canAfford } from '../core/wallet';
 import type { AllyDef, GameData } from '../core/data';
-import { lentesMultiplier, type Effect } from '../core/modifiers';
+import { sacoMultiplier, type Effect } from '../core/modifiers';
 import { finishResearch, researchRemaining, researchStatus, startResearch, type ResearchStatus } from '../core/research';
 import { checkUnlocks, hasUnlock, nextUnlock } from '../core/unlocks';
 import {
   buyCritChance,
   buyCritDamage,
   buyFuerza,
-  buyLentes,
+  buySaco,
   buyValor,
   critChance,
   critChanceCost,
@@ -35,7 +35,7 @@ import {
   critMultiplier,
   currentObject,
   fuerzaCost,
-  lentesCost,
+  sacoCost,
   objectIndexFor,
   moneyPerBreak,
   objectProgress,
@@ -68,7 +68,7 @@ export interface GameEvents {
   objeto: { objectId: string };
   /** El gato empezó a usar otra herramienta (llegó a una familia nueva de objetos). */
   herramienta: { toolId: string };
-  /** El gato cambió de aspecto por una mejora: garras (crítico), sombrero (daño crítico) o lentes (aliados). */
+  /** El gato cambió de aspecto por una mejora: garras (crítico), sombrero (daño crítico) o saco (aliados). */
   aspecto: { cambio: LookChange };
   /** Un aliado golpeó solo. */
   aliado: { allyId: string; result: HitResult };
@@ -90,8 +90,8 @@ export interface CatLook {
   garras: boolean;
   /** Sombrero chistoso: ya tiene daño crítico. */
   sombrero: boolean;
-  /** Lentes de jefe: ya mejoró a los aliados. */
-  lentes: boolean;
+  /** Saco de jefe: ya mejoró a los aliados. */
+  saco: boolean;
 }
 
 export type LookChange = keyof CatLook;
@@ -172,13 +172,13 @@ export interface ViewModel {
   critico: { nivel: number; costo: string; alcanza: boolean; prob: number; probSiguiente: number; maximo: boolean };
   /** Sombrero: por cuánto multiplica un crítico. */
   danioCritico: { nivel: number; costo: string; alcanza: boolean; mult: string; multSiguiente: string };
-  /** Lentes de jefe: por cuánto se multiplica el daño de todos los aliados. */
-  lentes: { nivel: number; costo: string; alcanza: boolean; mult: string; multSiguiente: string };
+  /** Saco de jefe: por cuánto se multiplica el daño de todos los aliados. */
+  saco: { nivel: number; costo: string; alcanza: boolean; mult: string; multSiguiente: string };
   herramientaActual: string;
   /** Algo se puede comprar ahora (punto en la pestaña Mejoras). */
   hayCompra: boolean;
   /** Qué partes del juego ya se descubrieron. */
-  funciones: { fuerza: boolean; valor: boolean; critico: boolean; danioCritico: boolean; lentes: boolean; laboratorio: boolean; aliados: boolean };
+  funciones: { fuerza: boolean; valor: boolean; critico: boolean; danioCritico: boolean; saco: boolean; laboratorio: boolean; aliados: boolean };
   /** Oferta de patrocinio en pantalla: ver un anuncio a cambio de dinero. */
   patrocinio: { visible: boolean; recompensa: string };
   /** Descubrimientos recientes (para la etiqueta "¡Nuevo!"). */
@@ -327,11 +327,11 @@ export class Game {
     return this.afterPurchase(bought);
   }
 
-  /** Lentes de jefe: +daño de todos los aliados. */
-  buyLentes(): boolean {
-    const first = this.state.nivelLentes === 0;
-    const bought = buyLentes(this.state, this.data);
-    if (bought && first) this.events.emit('aspecto', { cambio: 'lentes' });
+  /** Saco de jefe: +daño de todos los aliados. */
+  buySaco(): boolean {
+    const first = this.state.nivelSaco === 0;
+    const bought = buySaco(this.state, this.data);
+    if (bought && first) this.events.emit('aspecto', { cambio: 'saco' });
     return this.afterPurchase(bought);
   }
 
@@ -531,7 +531,7 @@ export class Game {
 
   catLook(): CatLook {
     const s = this.state;
-    return { garras: s.nivelCritico > 0, sombrero: s.nivelDanioCritico > 0, lentes: s.nivelLentes > 0 };
+    return { garras: s.nivelCritico > 0, sombrero: s.nivelDanioCritico > 0, saco: s.nivelSaco > 0 };
   }
 
   progress(): number {
@@ -673,7 +673,7 @@ export class Game {
     const costoValor = valorCost(s, d);
     const costoCritico = critChanceCost(s, d);
     const costoDanioCritico = critDamageCost(s, d);
-    const costoLentes = lentesCost(s, d);
+    const costoSaco = sacoCost(s, d);
     const nuevoObjeto = valorNextObject(s, d);
     const object = currentObject(s, d);
     const critMax = critChanceMaxed(s, d);
@@ -684,7 +684,7 @@ export class Game {
     const puedeValor = canAfford(s, costoValor);
     const puedeCritico = !critMax && canAfford(s, costoCritico);
     const puedeDanioCritico = canAfford(s, costoDanioCritico);
-    const puedeLentes = canAfford(s, costoLentes);
+    const puedeSaco = canAfford(s, costoSaco);
     const aliados = d.allies.map((ally) => this.allyView(ally, fmt));
     const best = bestAllyPurchase(s, d);
     for (const ally of aliados) ally.mejor = ally.id === best && aliados.filter((a) => a.desbloqueado).length > 1;
@@ -735,12 +735,12 @@ export class Game {
         mult: mult(critMultiplier(s, d)),
         multSiguiente: mult(critMultiplier({ ...s, nivelDanioCritico: s.nivelDanioCritico + 1 }, d)),
       },
-      lentes: {
-        nivel: s.nivelLentes,
-        costo: fmt(costoLentes),
-        alcanza: puedeLentes,
-        mult: mult(lentesMultiplier(s, d)),
-        multSiguiente: mult(lentesMultiplier({ ...s, nivelLentes: s.nivelLentes + 1 }, d)),
+      saco: {
+        nivel: s.nivelSaco,
+        costo: fmt(costoSaco),
+        alcanza: puedeSaco,
+        mult: mult(sacoMultiplier(s, d)),
+        multSiguiente: mult(sacoMultiplier({ ...s, nivelSaco: s.nivelSaco + 1 }, d)),
       },
       herramientaActual: object.herramienta,
       hayCompra:
@@ -748,13 +748,13 @@ export class Game {
         (hasUnlock(s, 'valor') && puedeValor) ||
         (hasUnlock(s, 'critico') && puedeCritico) ||
         (hasUnlock(s, 'danioCritico') && puedeDanioCritico) ||
-        (hasUnlock(s, 'lentes') && puedeLentes),
+        (hasUnlock(s, 'saco') && puedeSaco),
       funciones: {
         fuerza: hasUnlock(s, 'fuerza'),
         valor: hasUnlock(s, 'valor'),
         critico: hasUnlock(s, 'critico'),
         danioCritico: hasUnlock(s, 'danioCritico'),
-        lentes: hasUnlock(s, 'lentes'),
+        saco: hasUnlock(s, 'saco'),
         laboratorio: hasUnlock(s, 'laboratorio'),
         aliados: s.desbloqueos.some((id) => id.startsWith('aliado:')),
       },

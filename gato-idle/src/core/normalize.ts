@@ -13,7 +13,7 @@ export function normalizeState(state: GameState, data: GameData): void {
   state.nivelFuerza = Math.max(0, Math.floor(state.nivelFuerza));
   state.nivelValor = Math.max(0, Math.floor(state.nivelValor));
   state.nivelDanioCritico = Math.max(0, Math.floor(state.nivelDanioCritico));
-  state.nivelLentes = Math.max(0, Math.floor(state.nivelLentes));
+  state.nivelSaco = Math.max(0, Math.floor(state.nivelSaco));
   // La probabilidad no pasa del tope aunque cambie balance.json.
   const { probPorNivel, probMax } = data.balance.critico;
   state.nivelCritico = Math.min(Math.max(0, Math.floor(state.nivelCritico)), Math.ceil(probMax / probPorNivel));

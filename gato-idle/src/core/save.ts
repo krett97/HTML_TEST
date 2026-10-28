@@ -3,7 +3,7 @@
 import { Decimal, isDecimal } from './num';
 import { createInitialState, type GameState } from './state';
 
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 
 /** Lo que se escribe en disco. */
 interface SaveFile {
@@ -47,8 +47,15 @@ function migrateV2(s: Record<string, unknown>): Record<string, unknown> {
   return { ...rest, dinero: dinero.add(refund) };
 }
 
+// v3 → v4: los "Lentes de jefe" ahora son el "Saco de jefe" (mismo efecto); se conservan los niveles.
+function migrateV3(s: Record<string, unknown>): Record<string, unknown> {
+  const { nivelLentes, ...rest } = s;
+  const desbloqueos = Array.isArray(rest.desbloqueos) ? rest.desbloqueos.map((id) => (id === 'lentes' ? 'saco' : id)) : rest.desbloqueos;
+  return { ...rest, nivelSaco: nivelLentes ?? 0, desbloqueos };
+}
+
 /** MIGRATIONS[n] convierte un guardado de la versión n a la n + 1. */
-export const MIGRATIONS: Record<number, Migration> = { 1: migrateV1, 2: migrateV2 };
+export const MIGRATIONS: Record<number, Migration> = { 1: migrateV1, 2: migrateV2, 3: migrateV3 };
 
 export function serialize(state: GameState, now: number): string {
   const file: SaveFile = { v: SAVE_VERSION, t: now, s: state };

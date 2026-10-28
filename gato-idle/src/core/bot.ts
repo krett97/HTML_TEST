@@ -7,13 +7,13 @@ import {
   buyCritChance,
   buyCritDamage,
   buyFuerza,
-  buyLentes,
+  buySaco,
   buyValor,
   critChanceCost,
   critChanceMaxed,
   critDamageCost,
   fuerzaCost,
-  lentesCost,
+  sacoCost,
   objectIndexFor,
   valorCost,
   valorNextObject,
@@ -48,8 +48,8 @@ function options(state: GameState, data: GameData): Option[] {
   if (hasUnlock(state, 'danioCritico')) {
     list.push({ name: 'danioCritico', cost: critDamageCost(state, data).toNumber(), apply: (s) => void buyCritDamage(s, data) });
   }
-  if (hasUnlock(state, 'lentes')) {
-    list.push({ name: 'lentes', cost: lentesCost(state, data).toNumber(), apply: (s) => void buyLentes(s, data) });
+  if (hasUnlock(state, 'saco')) {
+    list.push({ name: 'saco', cost: sacoCost(state, data).toNumber(), apply: (s) => void buySaco(s, data) });
   }
   for (const ally of data.allies) {
     if (!allyUnlocked(state, data, ally)) continue;

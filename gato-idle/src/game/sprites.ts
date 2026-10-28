@@ -28,6 +28,8 @@ export const PALETTE: Record<string, string> = {
   M: '#ffffff', // brillo del acero
   u: '#8e5bd1', // sombrero morado
   U: '#6a3fa3', // sombrero, sombra
+  j: '#34303f', // saco negro
+  J: '#5a5470', // solapa del saco
 };
 
 // Gato naranja sentado, de perfil, mirando a la derecha (hacia la orilla).
@@ -46,6 +48,27 @@ export const CAT = [
   'k.koooooddooooooowk.',
   'kokooddoooooooooowk.',
   'kokooooooooooooowk..',
+  'kkkoooookooooowwk...',
+  '...kwwkkkkkkkwwk....',
+];
+
+// Saco de jefe (mejora de aliados): el mismo gato con saco negro de la cintura para arriba, solapa,
+// camisa blanca (su pecho) y corbata roja.
+export const CAT_SUIT = [
+  '...........k....k...',
+  '..........kok..kok..',
+  '..........koooooook.',
+  '..........kooooeook.',
+  '..........koooowwwp.',
+  '..........koooowwwk.',
+  '...........kooowwk..',
+  '.....kkkkkkjjJwrk...',
+  '....kooddjjjjJwrwk..',
+  '...kooooojjjjjJwrk..',
+  'k..kooddojjjjjjJrk..',
+  'k.kooooodjjjjjjjJwk.',
+  'kokooddoojjjjjjjJwk.',
+  'kokoooooojjjjjjJwk..',
   'kkkoooookooooowwk...',
   '...kwwkkkkkkkwwk....',
 ];
@@ -199,19 +222,19 @@ export const GOAT = [
   '..kkk....kkk....',
 ];
 
-// Lentes de jefe (mejora de aliados): lentes oscuros "deal with it", de perfil, con brillo.
-export const GLASSES = [
-  'kkkkkkkkkk',
-  '...knnnMnk',
-  '....knnnk.',
-];
+/** Con saco, la manga del brazo también es negra. */
+function sleeve(rows: string[]): string[] {
+  return rows.map((row) => row.slice(0, 6).replaceAll('o', 'j') + row.slice(6));
+}
 
 export const SPRITES = {
   gato: CAT,
+  gato_saco: CAT_SUIT,
   pata: PAW,
   garra: CLAW,
+  pata_saco: sleeve(PAW),
+  garra_saco: sleeve(CLAW),
   sombrero: HAT,
-  lentes: GLASSES,
   carrito: CAR,
   aspiradora: VACUUM,
   aliado_gatito: KITTEN,

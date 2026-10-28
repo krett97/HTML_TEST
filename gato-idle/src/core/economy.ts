@@ -113,9 +113,9 @@ export function critDamageCost(state: GameState, data: GameData): Decimal {
   return num(costoBase).mul(num(crecimiento).pow(state.nivelDanioCritico)).floor();
 }
 
-export function lentesCost(state: GameState, data: GameData): Decimal {
-  const { costoBase, crecimiento } = data.balance.lentes;
-  return num(costoBase).mul(num(crecimiento).pow(state.nivelLentes)).floor();
+export function sacoCost(state: GameState, data: GameData): Decimal {
+  const { costoBase, crecimiento } = data.balance.saco;
+  return num(costoBase).mul(num(crecimiento).pow(state.nivelSaco)).floor();
 }
 
 /** El objeto que compraría el dueño con el siguiente nivel de Valor, si cambia. */
@@ -154,9 +154,9 @@ export function buyCritChance(state: GameState, data: GameData): boolean {
   return true;
 }
 
-export function buyLentes(state: GameState, data: GameData): boolean {
-  if (!pay(state, lentesCost(state, data))) return false;
-  state.nivelLentes += 1;
+export function buySaco(state: GameState, data: GameData): boolean {
+  if (!pay(state, sacoCost(state, data))) return false;
+  state.nivelSaco += 1;
   return true;
 }
 

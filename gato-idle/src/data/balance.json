@@ -27,7 +27,7 @@
     "costoBase": 2000,
     "crecimiento": 1.4
   },
-  "lentes": {
+  "saco": {
     "multPorNivel": 0.1,
     "costoBase": 50000,
     "crecimiento": 1.5

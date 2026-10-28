@@ -86,6 +86,13 @@ describe('guardado', () => {
     expect('herramientas' in state).toBe(false);
   });
 
+  it('v3 → v4: los Lentes de jefe pasan a ser el Saco de jefe', () => {
+    const v3 = JSON.stringify({ v: 3, t: NOW, s: { nivelLentes: 6, desbloqueos: ['fuerza', 'lentes'] } });
+    const state = load(v3).state;
+    expect(state.nivelSaco).toBe(6);
+    expect(state.desbloqueos).toEqual(['fuerza', 'saco']);
+  });
+
   it('falla si falta una migración', () => {
     const result = deserialize(JSON.stringify({ v: 0, t: NOW, s: {} }), NOW);
     expect(result.ok).toBe(false);

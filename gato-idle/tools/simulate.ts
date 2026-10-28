@@ -58,7 +58,7 @@ export function simulate(data: GameData, maxMinutes = MAX_MINUTES): { rows: SimR
 
     const object = currentObject(state, data).id;
     // Se anota la primera compra de cada aliado y de cada mejora de crítico.
-    const firstBuy = (name.startsWith('aliado:') || ['critico', 'danioCritico', 'lentes'].includes(name)) && counts[name] === 1;
+    const firstBuy = (name.startsWith('aliado:') || ['critico', 'danioCritico', 'saco'].includes(name)) && counts[name] === 1;
     if (object !== lastObject || firstBuy) {
       const allies = alliesDps(state, data).toNumber();
       const pct = Math.round((100 * allies) / (allies + tapDamage(state, data).toNumber() * TAPS_PER_SECOND));

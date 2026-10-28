@@ -137,24 +137,24 @@
   </div>
   {/if}
 
-  {#if $view.funciones.lentes}
-  <div class="card upgrade" class:fresh={$view.nuevos.includes('lentes')}>
-    <span class="icon" aria-hidden="true">🕶️</span>
+  {#if $view.funciones.saco}
+  <div class="card upgrade" class:fresh={$view.nuevos.includes('saco')}>
+    <span class="icon" aria-hidden="true">🤵</span>
     <div class="info">
       <div class="name">
-        {$t('mejoras.lentes')} <span class="level">{$t('mejoras.nivel', { n: $view.lentes.nivel })}</span>
-        {#if $view.nuevos.includes('lentes')}<NewBadge />{/if}
+        {$t('mejoras.saco')} <span class="level">{$t('mejoras.nivel', { n: $view.saco.nivel })}</span>
+        {#if $view.nuevos.includes('saco')}<NewBadge />{/if}
       </div>
-      <div class="effect">{$t('mejoras.lentesEfecto', { actual: $view.lentes.mult, siguiente: $view.lentes.multSiguiente })}</div>
+      <div class="effect">{$t('mejoras.sacoEfecto', { actual: $view.saco.mult, siguiente: $view.saco.multSiguiente })}</div>
     </div>
     <button
       type="button"
       class="btn btn--accent buy"
-      disabled={!$view.lentes.alcanza}
-      onclick={() => game.buyLentes()}
-      data-testid="comprar-lentes"
+      disabled={!$view.saco.alcanza}
+      onclick={() => game.buySaco()}
+      data-testid="comprar-saco"
     >
-      ${$view.lentes.costo}
+      ${$view.saco.costo}
     </button>
   </div>
   {/if}

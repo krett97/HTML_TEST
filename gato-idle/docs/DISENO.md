@@ -60,7 +60,7 @@
 - **Meta de balance:** si el jugador va al día, cada objeto pide **5–15 toques**.
 
 - **Garras afiladas** y **Sombrero ridículo:** los críticos (ver §24).
-- **Lentes de jefe:** más daño para todos los aliados (ver §25).
+- **Saco de jefe:** más daño para todos los aliados (ver §25).
 
 ### Herramientas (ya no se compran, desde 0.7.0)
 
@@ -360,7 +360,7 @@ El jugador siempre debe sentir que avanza y que está a punto de desbloquear alg
 | Sombrero ridículo (daño crítico) | llegar a las cortinas | 5.9 |
 | Investigación gatuna | llegar a la lámpara | 8.5 |
 | Perico | llegar a la consola | 10.5 |
-| Lentes de jefe (daño de aliados) | llegar a la TV | 11.6 |
+| Saco de jefe (daño de aliados) | llegar a la TV | 11.6 |
 | Cuervo | llegar a la mesa de centro | 13.0 |
 | Mapache | llegar a la tostadora | 17.1 |
 | Cabra | llegar a la lavadora | 27.9 |
@@ -401,7 +401,7 @@ Cada aliado nuevo es mucho mejor que el anterior, aunque cueste más: subir de n
 | Mapache | $6M | 960 | 1.5 s | 640 |
 | Cabra | $50M | 4,800 | 2.5 s | 1,920 |
 
-(Desde la 0.8.0 los aliados tardíos tienen el 40 % del daño base que tenían: los Lentes de jefe se los reponen, ver §25.)
+(Desde la 0.8.0 los aliados tardíos tienen el 40 % del daño base que tenían: el Saco de jefe se los repone, ver §25.)
 
 En la pestaña Aliados, cada tarjeta dice cuánto daño por segundo suma la siguiente compra (**"+10 daño/s"**), y la que da más daño por cada peso lleva la etiqueta **"★ Mejor compra"** (`bestAllyPurchase` en `src/core/allies.ts`).
 
@@ -447,12 +447,12 @@ Lo que necesita arte con expresión (no solo un sprite quieto):
 
 | Quién | Estados mínimos |
 |---|---|
-| Gato | quieto, manotazo (anticipación + golpe), cara inocente, celebración, regañado; con y sin garras de acero, sombrero y lentes (se combinan) |
+| Gato | quieto, manotazo (anticipación + golpe), cara inocente, celebración, regañado; con y sin garras de acero, sombrero y saco (se combinan) |
 | Dueño | grabando, sorprendido, enojado, emocionado por las vistas |
 | Cada aliado | quieto, ataque, su manía (gesto propio) |
 | Cada objeto | normal, tambaleándose en la orilla, cayendo, roto en pedazos |
 
-Ya cumple con esto (en código, con arte provisional): los textos del modo pruebas ("El dueño ni se dio cuenta"), los nombres de la investigación gatuna, el "¡ZARPAZO!" con garras de acero, el sombrero ridículo, los lentes de jefe que caen rebotando, las voces de los aliados y los sonidos por objeto. Pendiente: animaciones con expresión, el dueño en escena, títulos de video y comentarios falsos (§10).
+Ya cumple con esto (en código, con arte provisional): los textos del modo pruebas ("El dueño ni se dio cuenta"), los nombres de la investigación gatuna, el "¡ZARPAZO!" con garras de acero, el sombrero ridículo, el saco de jefe con corbata, las voces de los aliados y los sonidos por objeto. Pendiente: animaciones con expresión, el dueño en escena, títulos de video y comentarios falsos (§10).
 
 ## 23. Modo pruebas (versión 0.6.0)
 
@@ -500,20 +500,22 @@ El simulador, el patrocinio y el ingreso usan ese promedio (`critFactor` en `src
 
 Los aliados no hacen críticos (por ahora): el crítico es el premio de tocar.
 
-## 25. Lentes de jefe: los aliados pegan más (versión 0.8.0)
+## 25. Saco de jefe: los aliados pegan más (versión 0.8)
 
-El gato es el director creativo del canal y, con lentes oscuros, **el jefe de la pandilla**. Es una mejora en la pestaña Mejoras, después del Sombrero ridículo:
+El gato es el director creativo del canal y, de saco y corbata, **el jefe de la pandilla**. Es una mejora en la pestaña Mejoras, después del Sombrero ridículo:
 
 | | |
 |---|---|
 | Aparece | al llegar a la TV (min 11.6 en el simulador; primera compra hacia el min 13.7) |
 | Efecto | el daño de **todos** los aliados se multiplica por `1 + 0.1 × nivel` (nivel 5 = ×1.5) |
 | Costo | `50,000 × 1.5^nivel` |
-| Aspecto | lentes oscuros con brillo, que caen rebotando la primera vez ("deal with it") |
+| Aspecto | saquito negro de la cintura para arriba, con solapa, camisa blanca (su pecho), corbata roja y manga negra en el brazo del manotazo. La primera vez se lo acomoda |
 
 Se suma a los demás multiplicadores de aliados (Vida en manada, Entrenamiento de aliados, Sindicato de mascotas) por el sistema de modificadores (`danioAliados`).
 
-**Balance.** Los lentes solos aceleraban demasiado el juego (refri en el min 22–30) y dejaban el manotazo sin importancia (los aliados hacían el 97 % del daño). Para compensar, el perico, el cuervo, el mapache y la cabra quedaron con el 40 % de su daño base: con los lentes que compra un jugador normal (~18 niveles, ×2.8) vuelven a pegar como antes. La escalera de aliados se conserva (cada uno sigue siendo más del doble de bueno que el anterior por nivel).
+En la 0.8.0 eran unos lentes oscuros, pero en pixel art no se distinguían; en la 0.8.1 pasaron a ser el saco (los guardados conservan los niveles).
+
+**Balance.** El saco solo aceleraban demasiado el juego (refri en el min 22–30) y dejaban el manotazo sin importancia (los aliados hacían el 97 % del daño). Para compensar, el perico, el cuervo, el mapache y la cabra quedaron con el 40 % de su daño base: con el saco que compra un jugador normal (~18 niveles, ×2.8) vuelven a pegar como antes. La escalera de aliados se conserva (cada uno sigue siendo más del doble de bueno que el anterior por nivel).
 
 | | 0.7 | 0.8 |
 |---|---|---|
