@@ -6,14 +6,26 @@
     "costoBase": 5,
     "crecimiento": 1.28,
     "danioPorNivel": 1,
-    "hitoCada": 10,
-    "multHito": 1
+    "hitoCada": 11,
+    "multHito": 2
   },
   "valor": {
     "nivelesPorObjeto": 5,
     "vistasPorNivel": 0.1,
     "costoEnRoturas": 28,
     "crecimiento": 1.3
+  },
+  "critico": {
+    "probPorNivel": 0.01,
+    "probMax": 0.5,
+    "costoBase": 200,
+    "crecimiento": 1.4
+  },
+  "danioCritico": {
+    "multBase": 2,
+    "multPorNivel": 0.1,
+    "costoBase": 2000,
+    "crecimiento": 1.4
   },
   "aliados": {
     "hitoCada": 25,

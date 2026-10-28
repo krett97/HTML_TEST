@@ -18,25 +18,29 @@ import { incomePerSecond, sponsorReward } from '../core/income';
 import { addAllyLevels, advanceClock, completeAllResearch, discoverAll, discoverNext, finishResearchNow } from '../core/pruebas';
 import { deserialize, serialize } from '../core/save';
 import { canAfford } from '../core/wallet';
-import type { AllyDef, GameData, ToolDef } from '../core/data';
+import type { AllyDef, GameData } from '../core/data';
 import type { Effect } from '../core/modifiers';
 import { finishResearch, researchRemaining, researchStatus, startResearch, type ResearchStatus } from '../core/research';
 import { checkUnlocks, hasUnlock, nextUnlock } from '../core/unlocks';
 import {
+  buyCritChance,
+  buyCritDamage,
   buyFuerza,
-  buyTool,
   buyValor,
+  critChance,
+  critChanceCost,
+  critChanceMaxed,
+  critDamageCost,
+  critMultiplier,
   currentObject,
   fuerzaCost,
   objectIndexFor,
   moneyPerBreak,
   objectProgress,
-  ownsTool,
   tapDamage,
   tapsToBreak,
-  toolAvailable,
   valorCost,
-  valorPreview,
+  valorNextObject,
   valorStepsInObject,
   viewsPerBreak,
 } from '../core/economy';
@@ -60,8 +64,10 @@ export interface GameEvents {
   hit: HitResult;
   /** El dueño compró un objeto nuevo (subió Valor de etapa). */
   objeto: { objectId: string };
-  /** Se compró una herramienta. */
+  /** El gato empezó a usar otra herramienta (llegó a una familia nueva de objetos). */
   herramienta: { toolId: string };
+  /** El gato cambió de aspecto por una mejora: garras metálicas (crítico) o sombrero (daño crítico). */
+  aspecto: { cambio: 'garras' | 'sombrero' };
   /** Un aliado golpeó solo. */
   aliado: { allyId: string; result: HitResult };
   /** Se adoptó un aliado (primer nivel). */
@@ -76,16 +82,12 @@ export interface GameEvents {
   reset: undefined;
 }
 
-export interface ToolView {
-  id: string;
-  /** 'disponible': hace falta ahora para que el dueño compre el siguiente objeto. */
-  estado: 'comprada' | 'disponible' | 'bloqueada';
-  costo: string;
-  alcanza: boolean;
-  /** Multiplicador de daño que da. */
-  mult: number;
-  /** Ids de los objetos que desbloquea. */
-  objetos: string[];
+/** Cómo se ve el gato por sus mejoras. */
+export interface CatLook {
+  /** Garras metálicas: ya tiene probabilidad de crítico. */
+  garras: boolean;
+  /** Sombrero chistoso: ya tiene daño crítico. */
+  sombrero: boolean;
 }
 
 export interface AllyView {
@@ -159,17 +161,16 @@ export interface ViewModel {
     gananciaSiguiente: string;
     /** El objeto que compra el dueño con el siguiente nivel, si cambia. */
     nuevoObjeto: string | null;
-    /** La herramienta que falta para seguir, si falta. */
-    requiere: string | null;
-    costoHerramienta: string;
-    alcanzaHerramienta: boolean;
   };
+  /** Garras afiladas: probabilidad de crítico, en %. */
+  critico: { nivel: number; costo: string; alcanza: boolean; prob: number; probSiguiente: number; maximo: boolean };
+  /** Sombrero: por cuánto multiplica un crítico. */
+  danioCritico: { nivel: number; costo: string; alcanza: boolean; mult: string; multSiguiente: string };
   herramientaActual: string;
-  herramientas: ToolView[];
   /** Algo se puede comprar ahora (punto en la pestaña Mejoras). */
   hayCompra: boolean;
   /** Qué partes del juego ya se descubrieron. */
-  funciones: { fuerza: boolean; valor: boolean; herramientas: boolean; laboratorio: boolean; aliados: boolean };
+  funciones: { fuerza: boolean; valor: boolean; critico: boolean; danioCritico: boolean; laboratorio: boolean; aliados: boolean };
   /** Oferta de patrocinio en pantalla: ver un anuncio a cambio de dinero. */
   patrocinio: { visible: boolean; recompensa: string };
   /** Descubrimientos recientes (para la etiqueta "¡Nuevo!"). */
@@ -297,17 +298,32 @@ export class Game {
   }
 
   buyValor(): boolean {
+    const before = currentObject(this.state, this.data).herramienta;
     const result = buyValor(this.state, this.data);
-    if (result.newObject) this.events.emit('objeto', { objectId: result.newObject.id });
+    if (result.newObject) {
+      this.events.emit('objeto', { objectId: result.newObject.id });
+      // El gato se sube solo al carrito o a la aspiradora al llegar a esos objetos.
+      if (result.newObject.herramienta !== before) {
+        this.events.emit('herramienta', { toolId: result.newObject.herramienta });
+        this.playSound('herramienta');
+      }
+    }
     return this.afterPurchase(result.bought);
   }
 
-  buyTool(toolId: string): boolean {
-    const bought = buyTool(this.state, this.data, toolId);
-    if (bought) {
-      this.events.emit('herramienta', { toolId });
-      this.playSound('herramienta');
-    }
+  /** Garras afiladas: +probabilidad de crítico. */
+  buyCritChance(): boolean {
+    const first = this.state.nivelCritico === 0;
+    const bought = buyCritChance(this.state, this.data);
+    if (bought && first) this.events.emit('aspecto', { cambio: 'garras' });
+    return this.afterPurchase(bought);
+  }
+
+  /** Sombrero: +daño de los críticos. */
+  buyCritDamage(): boolean {
+    const first = this.state.nivelDanioCritico === 0;
+    const bought = buyCritDamage(this.state, this.data);
+    if (bought && first) this.events.emit('aspecto', { cambio: 'sombrero' });
     return this.afterPurchase(bought);
   }
 
@@ -497,6 +513,10 @@ export class Game {
     return currentObject(this.state, this.data).id;
   }
 
+  catLook(): CatLook {
+    return { garras: this.state.nivelCritico > 0, sombrero: this.state.nivelDanioCritico > 0 };
+  }
+
   progress(): number {
     return objectProgress(this.state, this.data);
   }
@@ -624,21 +644,6 @@ export class Game {
     };
   }
 
-  private toolView(tool: ToolDef): ToolView {
-    const s = this.state;
-    const mult = tool.efectos
-      .filter((e) => e.stat === 'danio' && e.op === 'mult')
-      .reduce((total, e) => total * e.valor, 1);
-    return {
-      id: tool.id,
-      estado: ownsTool(s, tool) ? 'comprada' : toolAvailable(s, this.data, tool.id) ? 'disponible' : 'bloqueada',
-      costo: formatNum(tool.costo, s.ajustes.notacion),
-      alcanza: canAfford(s, tool.costo),
-      mult,
-      objetos: this.data.objects.filter((o) => o.herramienta === tool.id).map((o) => o.id),
-    };
-  }
-
   private buildView(): ViewModel {
     const s = this.state;
     const d = this.data;
@@ -649,13 +654,18 @@ export class Game {
 
     const costoFuerza = fuerzaCost(s, d);
     const costoValor = valorCost(s, d);
-    const preview = valorPreview(s, d);
+    const costoCritico = critChanceCost(s, d);
+    const costoDanioCritico = critDamageCost(s, d);
+    const nuevoObjeto = valorNextObject(s, d);
     const object = currentObject(s, d);
-    const herramientas = d.tools.map((tool) => this.toolView(tool));
+    const critMax = critChanceMaxed(s, d);
+    const pct = (p: number) => Math.round(p * 1000) / 10;
+    const mult = (m: number) => `×${Math.round(m * 100) / 100}`;
 
     const puedeFuerza = canAfford(s, costoFuerza);
-    const puedeValor = !preview.requiredTool && canAfford(s, costoValor);
-    const puedeHerramienta = herramientas.some((t) => t.estado === 'disponible' && t.alcanza);
+    const puedeValor = canAfford(s, costoValor);
+    const puedeCritico = !critMax && canAfford(s, costoCritico);
+    const puedeDanioCritico = canAfford(s, costoDanioCritico);
     const aliados = d.allies.map((ally) => this.allyView(ally, fmt));
     const best = bestAllyPurchase(s, d);
     for (const ally of aliados) ally.mejor = ally.id === best && aliados.filter((a) => a.desbloqueado).length > 1;
@@ -689,18 +699,34 @@ export class Game {
         costo: fmt(costoValor),
         alcanza: puedeValor,
         gananciaSiguiente: fmt(moneyPerBreak(withValor, d)),
-        nuevoObjeto: preview.nextObject?.id ?? null,
-        requiere: preview.requiredTool?.id ?? null,
-        costoHerramienta: preview.requiredTool ? fmt(preview.requiredTool.costo) : '',
-        alcanzaHerramienta: preview.requiredTool ? canAfford(s, preview.requiredTool.costo) : false,
+        nuevoObjeto: nuevoObjeto?.id ?? null,
+      },
+      critico: {
+        nivel: s.nivelCritico,
+        costo: fmt(costoCritico),
+        alcanza: puedeCritico,
+        prob: pct(critChance(s, d)),
+        probSiguiente: pct(critChance({ ...s, nivelCritico: s.nivelCritico + 1 }, d)),
+        maximo: critMax,
+      },
+      danioCritico: {
+        nivel: s.nivelDanioCritico,
+        costo: fmt(costoDanioCritico),
+        alcanza: puedeDanioCritico,
+        mult: mult(critMultiplier(s, d)),
+        multSiguiente: mult(critMultiplier({ ...s, nivelDanioCritico: s.nivelDanioCritico + 1 }, d)),
       },
       herramientaActual: object.herramienta,
-      herramientas,
-      hayCompra: (hasUnlock(s, 'fuerza') && puedeFuerza) || (hasUnlock(s, 'valor') && puedeValor) || puedeHerramienta,
+      hayCompra:
+        (hasUnlock(s, 'fuerza') && puedeFuerza) ||
+        (hasUnlock(s, 'valor') && puedeValor) ||
+        (hasUnlock(s, 'critico') && puedeCritico) ||
+        (hasUnlock(s, 'danioCritico') && puedeDanioCritico),
       funciones: {
         fuerza: hasUnlock(s, 'fuerza'),
         valor: hasUnlock(s, 'valor'),
-        herramientas: hasUnlock(s, 'herramientas'),
+        critico: hasUnlock(s, 'critico'),
+        danioCritico: hasUnlock(s, 'danioCritico'),
         laboratorio: hasUnlock(s, 'laboratorio'),
         aliados: s.desbloqueos.some((id) => id.startsWith('aliado:')),
       },

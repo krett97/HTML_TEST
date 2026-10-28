@@ -3,7 +3,19 @@
 // la partida a la que salta el modo pruebas se parece a la de alguien que jugó de verdad.
 import { allyCost, allyUnlocked, buyAlly } from './allies';
 import type { GameData } from './data';
-import { buyFuerza, buyTool, buyValor, fuerzaCost, nextTool, objectIndexFor, toolAvailable, valorCost, valorPreview } from './economy';
+import {
+  buyCritChance,
+  buyCritDamage,
+  buyFuerza,
+  buyValor,
+  critChanceCost,
+  critChanceMaxed,
+  critDamageCost,
+  fuerzaCost,
+  objectIndexFor,
+  valorCost,
+  valorNextObject,
+} from './economy';
 import { breaksPerSecond, incomePerSecond } from './income';
 import { num } from './num';
 import { pruebasIniciales, type GameState } from './state';
@@ -17,7 +29,7 @@ interface Option {
 }
 
 function clone(state: GameState): GameState {
-  return { ...state, herramientas: [...state.herramientas], aliados: state.aliados.map((a) => ({ ...a })) };
+  return { ...state, aliados: state.aliados.map((a) => ({ ...a })) };
 }
 
 function options(state: GameState, data: GameData): Option[] {
@@ -25,27 +37,28 @@ function options(state: GameState, data: GameData): Option[] {
   if (hasUnlock(state, 'fuerza')) {
     list.push({ name: 'fuerza', cost: fuerzaCost(state, data).toNumber(), apply: (s) => void buyFuerza(s, data) });
   }
-  const preview = valorPreview(state, data);
-  if (hasUnlock(state, 'valor') && !preview.requiredTool) {
+  if (hasUnlock(state, 'valor')) {
     list.push({ name: 'valor', cost: valorCost(state, data).toNumber(), apply: (s) => void buyValor(s, data) });
+  }
+  if (hasUnlock(state, 'critico') && !critChanceMaxed(state, data)) {
+    list.push({ name: 'critico', cost: critChanceCost(state, data).toNumber(), apply: (s) => void buyCritChance(s, data) });
+  }
+  if (hasUnlock(state, 'danioCritico')) {
+    list.push({ name: 'danioCritico', cost: critDamageCost(state, data).toNumber(), apply: (s) => void buyCritDamage(s, data) });
   }
   for (const ally of data.allies) {
     if (!allyUnlocked(state, data, ally)) continue;
     list.push({ name: `aliado:${ally.id}`, cost: allyCost(state, data, ally).toNumber(), apply: (s) => void buyAlly(s, data, ally.id) });
   }
-  const tool = nextTool(state, data);
-  if (tool && toolAvailable(state, data, tool.id)) list.push({ name: tool.id, cost: tool.costo.toNumber(), apply: (s) => void buyTool(s, data, tool.id) });
   return list;
 }
 
 /** Elige la compra que antes se paga sola: espera para comprarla + tiempo en recuperarla. */
 function choose(state: GameState, data: GameData, tps: number): Option {
   const rate = incomePerSecond(state, data, tps).toNumber();
-  const preview = valorPreview(state, data);
-  const blocked = preview.requiredTool;
   // Un objeto nuevo siempre se compra en cuanto alcanza: es lo que el jugador quiere ver, aunque
   // al principio rinda menos (aguanta más golpes).
-  const progress = blocked ? blocked.id : preview.nextObject ? 'valor' : null;
+  const progress = valorNextObject(state, data) ? 'valor' : null;
   let best: Option | null = null;
   let bestScore = Infinity;
   for (const option of options(state, data)) {
@@ -66,7 +79,7 @@ function choose(state: GameState, data: GameData, tps: number): Option {
 export interface BotStep {
   /** Segundos de juego que tomó este paso. */
   seconds: number;
-  /** Qué compró ("fuerza", "valor", "aliado:perro", "garras") o null si solo tocó. */
+  /** Qué compró ("fuerza", "valor", "critico", "aliado:perro"…) o null si solo tocó. */
   bought: string | null;
   discovered: UnlockDef[];
 }

@@ -1,7 +1,7 @@
 // Cuánto gana el jugador por segundo y cuánto paga un patrocinio (anuncio recompensado).
 import { allyLevel, alliesDps } from './allies';
 import type { GameData } from './data';
-import { currentObject, moneyPerBreak, tapDamage } from './economy';
+import { currentObject, expectedTapDamage, moneyPerBreak } from './economy';
 import type { Decimal } from './num';
 import type { GameState } from './state';
 
@@ -13,7 +13,8 @@ export function allyHitsPerSecond(state: GameState, data: GameData): number {
 /** Objetos rotos por segundo tocando `tapsPerSecond` veces, más lo que rompen los aliados. */
 export function breaksPerSecond(state: GameState, data: GameData, tapsPerSecond: number): number {
   const hp = currentObject(state, data).hp.toNumber();
-  const dps = tapDamage(state, data).toNumber() * tapsPerSecond + alliesDps(state, data).toNumber();
+  // Los críticos cuentan por su promedio (ver critFactor).
+  const dps = expectedTapDamage(state, data).toNumber() * tapsPerSecond + alliesDps(state, data).toNumber();
   // Cada golpe rompe a lo mucho un objeto.
   return Math.min(dps / hp, tapsPerSecond + allyHitsPerSecond(state, data));
 }

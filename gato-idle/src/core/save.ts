@@ -3,7 +3,7 @@
 import { Decimal, isDecimal } from './num';
 import { createInitialState, type GameState } from './state';
 
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 
 /** Lo que se escribe en disco. */
 interface SaveFile {
@@ -35,8 +35,20 @@ function migrateV1(s: Record<string, unknown>): Record<string, unknown> {
   return { ...s, nivelValor: newIndex * 5 + Math.min(4, Math.floor(steps / 2)) };
 }
 
+// v2 → v3: las herramientas ya no se compran (los críticos tomaron su lugar). Se devuelve lo que
+// costaron; los precios quedan fijos aquí aunque cambie el balance.
+const TOOL_PRICES_V2: Record<string, number> = { garras: 900, carrito: 30_000, aspiradora: 900_000 };
+
+function migrateV2(s: Record<string, unknown>): Record<string, unknown> {
+  const { herramientas, ...rest } = s;
+  const owned = Array.isArray(herramientas) ? herramientas : [];
+  const refund = owned.reduce<number>((sum, id) => sum + (TOOL_PRICES_V2[String(id)] ?? 0), 0);
+  const dinero = isDecimal(rest.dinero) ? rest.dinero : new Decimal(0);
+  return { ...rest, dinero: dinero.add(refund) };
+}
+
 /** MIGRATIONS[n] convierte un guardado de la versión n a la n + 1. */
-export const MIGRATIONS: Record<number, Migration> = { 1: migrateV1 };
+export const MIGRATIONS: Record<number, Migration> = { 1: migrateV1, 2: migrateV2 };
 
 export function serialize(state: GameState, now: number): string {
   const file: SaveFile = { v: SAVE_VERSION, t: now, s: state };

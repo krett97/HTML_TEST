@@ -5,7 +5,7 @@ Idle de un gato que tira las cosas de su dueño, de un vaso a la Luna. Celular p
 - Diseño completo: [`docs/DISENO.md`](docs/DISENO.md)
 - Prompt original: [`docs/prompt-original.md`](docs/prompt-original.md)
 
-**Estado:** versión 0.6.1. Al empezar solo se puede dar manotazos; Fuerza, Valor, patrocinios (dinero por ver un anuncio cada 90 s), 7 aliados (gatito bebé, ratón, perro, perico, cuervo, mapache, cabra; cada uno mejor que el anterior), herramientas y el Laboratorio de gatitos se van descubriendo conforme se avanza. 27 objetos, cada uno con su sonido. El progreso se guarda. Botón 🛠 (arriba a la derecha) con el **modo pruebas**: dinero infinito, daño ∞, avanzar como jugador hasta cualquier objeto y puntos de guardado.
+**Estado:** versión 0.7.0. Al empezar solo se puede dar manotazos; Fuerza, Valor, patrocinios (dinero por ver un anuncio cada 90 s), **críticos** (Garras afiladas y Sombrero ridículo, que también cambian el aspecto del gato), 7 aliados (gatito bebé, ratón, perro, perico, cuervo, mapache, cabra; cada uno mejor que el anterior) y la Investigación gatuna se van descubriendo conforme se avanza. 27 objetos, cada uno con su sonido. El progreso se guarda. Botón 🛠 (arriba a la derecha) con el **modo pruebas**: dinero infinito, daño ∞, avanzar como jugador hasta cualquier objeto y puntos de guardado.
 
 ## Requisitos
 
@@ -53,7 +53,7 @@ Diferencias con la app real (`android/`): se instala como **"Swat (prueba)"** co
 ```
 src/
   core/        lógica pura (sin Phaser ni DOM): números grandes, estado, economía, modificadores, guardado
-  data/        balance en JSON: objects.json (con sonidos), tools.json, allies.json, unlocks.json (orden de descubrimientos), research.json (laboratorio), balance.json
+  data/        balance en JSON: objects.json (con sonidos), tools.json (aspecto del gato por etapa), allies.json, unlocks.json (orden de descubrimientos), research.json (investigación gatuna), balance.json
   app/         une todo: bucle, autoguardado, eventos para la escena, datos para la UI
   game/        escena de Phaser, escalado de píxeles y arte provisional
   ui/          interfaz en Svelte: barra superior, escena, pestañas
@@ -67,7 +67,7 @@ apk-prueba/    APK de prueba sin Gradle (visor WebView)
 
 ## Cómo cambiar cosas sin tocar la lógica
 
-- **Balance** (vida y vistas de cada objeto, herramientas y sus efectos, costos de Fuerza y Valor, tarifa por vista, tope de toques, frecuencia y tamaño del patrocinio): `src/data/*.json`. Después de cambiarlo, corre `npm run simular` para ver cómo cambia el ritmo. Si escribes algo inválido (un id repetido, una herramienta que no existe), el juego se detiene al arrancar con un mensaje que dice qué archivo y qué objeto corregir.
+- **Balance** (vida y vistas de cada objeto, costos de Fuerza, Valor y críticos, tarifa por vista, tope de toques, frecuencia y tamaño del patrocinio): `src/data/*.json`. Después de cambiarlo, corre `npm run simular` para ver cómo cambia el ritmo. Si escribes algo inválido (un id repetido, una herramienta que no existe), el juego se detiene al arrancar con un mensaje que dice qué archivo y qué objeto corregir.
 - **Textos**: `src/i18n/es.json` y `en.json`. Las pruebas verifican que ambos tengan las mismas claves.
 - **Nombre del juego**: `app.title` en los dos JSON de textos, `appName` en `capacitor.config.ts` y `<title>` en `index.html`.
 - **Humor**: es un principio de diseño (ver `docs/DISENO.md` §22). Todo lo nuevo debería tener su chiste.

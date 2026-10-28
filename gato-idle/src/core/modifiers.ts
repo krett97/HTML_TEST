@@ -1,8 +1,7 @@
-// Sistema de modificadores: todo lo que cambia una estadística (herramientas; después personal,
-// gatos legendarios, mudanza y anuncios) se declara como un efecto en los datos. Un solo lugar
+// Sistema de modificadores: todo lo que cambia una estadística (investigaciones; después personal,
+// gatos legendarios, habilidades de la mudanza y anuncios) se declara como un efecto en los datos. Un solo lugar
 // calcula el valor final, así que agregar una fuente nueva no obliga a tocar las fórmulas.
 import type { GameData } from './data';
-import { ownsTool } from './tools';
 import type { Decimal } from './num';
 
 import type { GameState } from './state';
@@ -25,16 +24,12 @@ export interface Effect {
 }
 
 export interface Modifier extends Effect {
-  /** De dónde viene, p. ej. "herramienta:garras". Sirve para mostrar desgloses. */
+  /** De dónde viene, p. ej. "investigacion:mirada". Sirve para mostrar desgloses. */
   fuente: string;
 }
 
 export function collectModifiers(state: GameState, data: GameData): Modifier[] {
   const mods: Modifier[] = [];
-  for (const tool of data.tools) {
-    if (!ownsTool(state, tool)) continue;
-    for (const effect of tool.efectos) mods.push({ ...effect, fuente: `herramienta:${tool.id}` });
-  }
   for (const research of data.research) {
     if (!state.laboratorio.hechas.includes(research.id)) continue;
     for (const effect of research.efectos) {

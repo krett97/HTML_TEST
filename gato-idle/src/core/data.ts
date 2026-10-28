@@ -43,8 +43,8 @@ export interface AllyDef {
   };
 }
 
-/** Funciones que se van descubriendo: "fuerza", "valor", "herramientas", "laboratorio", "aliado:<id>". */
-export const FEATURES = ['fuerza', 'valor', 'patrocinios', 'herramientas', 'laboratorio'] as const;
+/** Funciones que se van descubriendo: "fuerza", "valor", "critico", "laboratorio", "aliado:<id>"… */
+export const FEATURES = ['fuerza', 'valor', 'patrocinios', 'critico', 'danioCritico', 'laboratorio'] as const;
 
 /** Un descubrimiento: se desbloquea al cumplir su condición, en el orden de unlocks.json. */
 export interface UnlockDef {
@@ -63,10 +63,13 @@ export interface ResearchDef {
   efectos: Effect[];
 }
 
+/**
+ * Con qué tira el gato cada familia de objetos (pata, garras, carrito, aspiradora). Ya no se
+ * compran: el gato las usa solo al llegar a esos objetos y solo cambian cómo se ve. Las compras
+ * con efecto volverán como "Habilidades" en los reinicios (fase 4).
+ */
 export interface ToolDef {
   id: string;
-  costo: Decimal;
-  efectos: Effect[];
 }
 
 export interface Balance {
@@ -88,6 +91,20 @@ export interface Balance {
     vistasPorNivel: number;
     /** El primer nivel de cada objeto cuesta lo que pagan tantas roturas de ese objeto. */
     costoEnRoturas: number;
+    crecimiento: number;
+  };
+  critico: {
+    /** Probabilidad de crítico que da cada nivel (0.01 = 1 %), hasta `probMax`. */
+    probPorNivel: number;
+    probMax: number;
+    costoBase: number;
+    crecimiento: number;
+  };
+  danioCritico: {
+    /** Un crítico multiplica el daño por multBase + nivel × multPorNivel. */
+    multBase: number;
+    multPorNivel: number;
+    costoBase: number;
     crecimiento: number;
   };
   patrocinio: {
@@ -215,14 +232,8 @@ function uniqueIds(file: string, items: { id: string }[]): void {
 }
 
 export function parseGameData(raw: RawGameData): GameData {
-  const tools: ToolDef[] = asArray('tools.json', raw.tools).map((item) => ({
-    id: str('tools.json', item, 'id'),
-    costo: positive('tools.json', item, 'costo', true),
-    efectos: effects('tools.json', item),
-  }));
-  if (tools.length === 0 || !tools[0]!.costo.eq(0)) {
-    throw new DataError('tools.json', 'la primera herramienta debe ser gratis (con ella empieza el gato)');
-  }
+  const tools: ToolDef[] = asArray('tools.json', raw.tools).map((item) => ({ id: str('tools.json', item, 'id') }));
+  if (tools.length === 0) throw new DataError('tools.json', 'no hay herramientas');
   uniqueIds('tools.json', tools);
   const toolIds = new Set(tools.map((t) => t.id));
 
@@ -308,6 +319,8 @@ export function parseGameData(raw: RawGameData): GameData {
   const valor = section(file, b, 'valor');
   const aliados = section(file, b, 'aliados');
   const patrocinio = section(file, b, 'patrocinio');
+  const critico = section(file, b, 'critico');
+  const danioCritico = section(file, b, 'danioCritico');
   const balance: Balance = {
     tarifaPorVista: n(b, 'tarifaPorVista'),
     toquesMaxPorSegundo: n(b, 'toquesMaxPorSegundo'),
@@ -324,6 +337,18 @@ export function parseGameData(raw: RawGameData): GameData {
       vistasPorNivel: n(valor, 'vistasPorNivel'),
       costoEnRoturas: n(valor, 'costoEnRoturas'),
       crecimiento: n(valor, 'crecimiento'),
+    },
+    critico: {
+      probPorNivel: n(critico, 'probPorNivel'),
+      probMax: Math.min(1, n(critico, 'probMax')),
+      costoBase: n(critico, 'costoBase'),
+      crecimiento: n(critico, 'crecimiento'),
+    },
+    danioCritico: {
+      multBase: n(danioCritico, 'multBase'),
+      multPorNivel: n(danioCritico, 'multPorNivel'),
+      costoBase: n(danioCritico, 'costoBase'),
+      crecimiento: n(danioCritico, 'crecimiento'),
     },
     patrocinio: {
       cadaSegundos: n(patrocinio, 'cadaSegundos'),

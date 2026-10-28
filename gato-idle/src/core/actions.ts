@@ -1,6 +1,6 @@
 // El manotazo: modifica el estado y devuelve qué pasó, para que la escena lo anime.
 import type { GameData } from './data';
-import { currentObject, moneyPerBreak, objectProgress, tapDamage, viewsPerBreak } from './economy';
+import { critChance, critMultiplier, currentObject, moneyPerBreak, objectProgress, tapDamage, viewsPerBreak } from './economy';
 import { ZERO, type Decimal } from './num';
 import type { GameState } from './state';
 
@@ -10,6 +10,8 @@ export interface HitResult {
   /** Progreso del objeto hacia la orilla, de 0 a 1. */
   progress: number;
   broke: boolean;
+  /** Fue un manotazo crítico ("¡ZARPAZO!"). */
+  critico?: boolean;
   /** Solo si se rompió. */
   reward?: { vistas: Decimal; dinero: Decimal };
 }
@@ -32,7 +34,10 @@ export function hit(state: GameState, data: GameData, damage: Decimal): HitResul
   return { objectId: obj.id, damage, progress: 1, broke: true, reward: { vistas, dinero } };
 }
 
-export function tap(state: GameState, data: GameData): HitResult {
+/** Un manotazo del jugador. Con probabilidad de crítico, multiplica su daño. `rng` sirve para las pruebas. */
+export function tap(state: GameState, data: GameData, rng: () => number = Math.random): HitResult {
   state.stats.toques += 1;
-  return hit(state, data, tapDamage(state, data));
+  const critico = rng() < critChance(state, data);
+  const damage = critico ? tapDamage(state, data).mul(critMultiplier(state, data)) : tapDamage(state, data);
+  return { ...hit(state, data, damage), critico };
 }

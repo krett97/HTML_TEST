@@ -18,6 +18,9 @@ const TABLE_LEFT = 18;
 const TABLE_RIGHT = 160;
 const START_X = 74;
 const CAT_W = 20;
+/** Dónde va el sombrero respecto al gato (origen abajo a la izquierda): centrado en la cabeza, tapando las orejas. */
+const HAT_X = 15;
+const HAT_Y = -14;
 /** Inclinación máxima de los objetos que se "vuelcan", justo antes de caer. */
 const MAX_TILT = 22;
 /** Rasguños visibles en los objetos que se "rasgan". */
@@ -60,6 +63,7 @@ export class MainScene extends Phaser.Scene {
   private cat!: Phaser.GameObjects.Image;
   private vehicle!: Phaser.GameObjects.Image;
   private paw!: Phaser.GameObjects.Image;
+  private hat!: Phaser.GameObjects.Image;
   private object!: Phaser.GameObjects.Image;
   private objectDef!: ObjectDef;
   private look: ToolLook = toolLook('pata');
@@ -81,6 +85,7 @@ export class MainScene extends Phaser.Scene {
     this.paw = this.add.image(0, 0, 'pata').setOrigin(0, 0.5).setDepth(1).setVisible(false);
     this.cat = this.add.image(0, 0, 'gato').setOrigin(0, 1).setDepth(2);
     this.vehicle = this.add.image(0, 0, 'carrito').setOrigin(0.5, 1).setDepth(2.5).setVisible(false);
+    this.hat = this.add.image(0, 0, 'sombrero').setOrigin(0.5, 1).setDepth(2.8).setVisible(false);
     this.object = this.add.image(0, 0, '__DEFAULT').setOrigin(0.5, 1).setDepth(3);
     this.scratches = this.add.graphics().setDepth(3.5);
     for (const ally of this.controller.data.allies) {
@@ -98,6 +103,7 @@ export class MainScene extends Phaser.Scene {
       this.controller.events.on('hit', (result) => this.onHit(result)),
       this.controller.events.on('objeto', ({ objectId }) => this.onNewObject(objectId)),
       this.controller.events.on('herramienta', ({ toolId }) => this.onNewTool(toolId)),
+      this.controller.events.on('aspecto', ({ cambio }) => this.onNewLook(cambio)),
       this.controller.events.on('aliado', ({ allyId, result }) => this.onAllyHit(allyId, result)),
       this.controller.events.on('aliadoNuevo', ({ allyId }) => this.onNewAlly(allyId)),
       this.controller.events.on('descubrimiento', ({ unlockId }) => this.onDiscovery(unlockId)),
@@ -129,8 +135,9 @@ export class MainScene extends Phaser.Scene {
     this.refreshAllies();
   }
 
-  /** Cada cuadro: los aliados siguen su lugar (el gatito va sobre el lomo del gato). */
+  /** Cada cuadro: el sombrero va en la cabeza del gato y los aliados siguen su lugar (el gatito, en el lomo). */
   update(): void {
+    this.hat.setPosition(this.cat.x + HAT_X, this.cat.y + HAT_Y);
     for (const [id, visual] of this.allies) {
       if (!visual.sprite.visible) continue;
       const base = this.allyRest(id);
@@ -206,10 +213,12 @@ export class MainScene extends Phaser.Scene {
     this.paw.setVisible(false);
   }
 
-  /** Brazo y vehículo según la herramienta que usa el objeto en la mesa. */
+  /** Vehículo según la herramienta del objeto en la mesa; garras y sombrero según las mejoras de crítico. */
   private applyLook(): void {
     this.look = toolLook(this.objectDef.herramienta);
-    this.paw.setTexture(this.look.arm);
+    const mejoras = this.controller.catLook();
+    this.paw.setTexture(mejoras.garras ? 'garra' : 'pata');
+    this.hat.setVisible(mejoras.sombrero);
     this.vehicle.setVisible(this.look.vehicle !== null);
     if (this.look.vehicle) this.vehicle.setTexture(this.look.vehicle);
     this.cat.y = this.tableTop - this.look.lift;
@@ -250,6 +259,7 @@ export class MainScene extends Phaser.Scene {
 
   private onHit(result: HitResult): void {
     this.swipePaw();
+    if (result.critico) this.criticalHit();
     const sound = this.objectDef.sonido;
     if (result.broke) {
       this.controller.playSound(sound.rotura, { tono: sound.tono });
@@ -402,7 +412,26 @@ export class MainScene extends Phaser.Scene {
     this.tweens.add({ targets: this.cat, y: this.cat.y - 6, duration: 120, yoyo: true, ease: 'Quad.out' });
   }
 
+  /** Compró la primera Garra afilada o el primer Sombrero: se lo pone, salta y presume. */
+  private onNewLook(cambio: 'garras' | 'sombrero'): void {
+    this.applyLook();
+    this.toast(get(t)(`avisos.${cambio}`));
+    this.controller.playSound('herramienta');
+    this.tweens.add({ targets: this.cat, y: this.cat.y - 6, duration: 120, yoyo: true, ease: 'Quad.out' });
+    if (cambio === 'sombrero') {
+      this.hat.setScale(0);
+      this.tweens.add({ targets: this.hat, scale: 1, duration: 260, ease: 'Back.out' });
+    }
+  }
+
   // ---- Animaciones ----
+
+  /** "¡ZARPAZO!": texto rojo, tajo de acero y sacudida. */
+  private criticalHit(): void {
+    this.controller.playSound('critico', { minGapMs: 60 });
+    this.floatText(this.object.x, this.object.y - this.object.height - 4, get(t)('mejoras.zarpazo'), 'flotante critico');
+    this.cameras.main.shake(80, 0.008);
+  }
 
   private swipePaw(): void {
     const restX = this.cat.x + 6;

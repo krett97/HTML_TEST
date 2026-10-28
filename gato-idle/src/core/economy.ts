@@ -1,8 +1,7 @@
 // Fórmulas de la economía: daño, vistas, costos y compras. Todos los números vienen de
 // src/data/*.json; aquí solo está cómo se combinan.
-import type { GameData, ObjectDef, ToolDef } from './data';
+import type { GameData, ObjectDef } from './data';
 import { applyModifiers, collectModifiers } from './modifiers';
-import { nextTool, ownsTool } from './tools';
 import { num, ZERO, type Decimal } from './num';
 import type { GameState } from './state';
 import { pay } from './wallet';
@@ -43,7 +42,38 @@ export function tapDamage(state: GameState, data: GameData): Decimal {
   return state.pruebas.multDanio === 1 ? damage : damage.mul(state.pruebas.multDanio);
 }
 
-/** Manotazos que necesita el objeto actual desde cero. */
+// ---- Críticos ----
+
+/** Probabilidad de que un manotazo sea crítico (0 a probMax). */
+export function critChance(state: GameState, data: GameData): number {
+  const { probPorNivel, probMax } = data.balance.critico;
+  return Math.min(probMax, state.nivelCritico * probPorNivel);
+}
+
+/** Por cuánto multiplica el daño un crítico. */
+export function critMultiplier(state: GameState, data: GameData): number {
+  const { multBase, multPorNivel } = data.balance.danioCritico;
+  return multBase + state.nivelDanioCritico * multPorNivel;
+}
+
+/**
+ * Cuánto rinde en promedio cada manotazo gracias a los críticos: 1 + prob × (mult − 1).
+ * Con esto el simulador y la economía tratan los críticos como un multiplicador medible.
+ */
+export function critFactor(state: GameState, data: GameData): number {
+  return 1 + critChance(state, data) * (critMultiplier(state, data) - 1);
+}
+
+/** Daño promedio de un manotazo, contando los críticos. */
+export function expectedTapDamage(state: GameState, data: GameData): Decimal {
+  return tapDamage(state, data).mul(critFactor(state, data));
+}
+
+export function critChanceMaxed(state: GameState, data: GameData): boolean {
+  return critChance(state, data) >= data.balance.critico.probMax;
+}
+
+/** Manotazos que necesita el objeto actual desde cero (sin contar críticos). */
 export function tapsToBreak(state: GameState, data: GameData): number {
   const taps = currentObject(state, data).hp.div(tapDamage(state, data)).ceil();
   return Math.max(1, taps.toNumber());
@@ -73,20 +103,21 @@ export function valorCost(state: GameState, data: GameData): Decimal {
   return basePayout.mul(costoEnRoturas).mul(num(crecimiento).pow(valorStepsInObject(state, data))).floor();
 }
 
-export interface ValorPreview {
-  /** El objeto que compraría el dueño con el siguiente nivel, si cambia. */
-  nextObject: ObjectDef | null;
-  /** La herramienta que hace falta para ese objeto, si aún no se tiene. */
-  requiredTool: ToolDef | null;
+export function critChanceCost(state: GameState, data: GameData): Decimal {
+  const { costoBase, crecimiento } = data.balance.critico;
+  return num(costoBase).mul(num(crecimiento).pow(state.nivelCritico)).floor();
 }
 
-export function valorPreview(state: GameState, data: GameData): ValorPreview {
+export function critDamageCost(state: GameState, data: GameData): Decimal {
+  const { costoBase, crecimiento } = data.balance.danioCritico;
+  return num(costoBase).mul(num(crecimiento).pow(state.nivelDanioCritico)).floor();
+}
+
+/** El objeto que compraría el dueño con el siguiente nivel de Valor, si cambia. */
+export function valorNextObject(state: GameState, data: GameData): ObjectDef | null {
   const current = objectIndexFor(state.nivelValor, data);
   const next = objectIndexFor(state.nivelValor + 1, data);
-  if (next === current) return { nextObject: null, requiredTool: null };
-  const nextObject = data.objects[next]!;
-  const tool = data.tools.find((t) => t.id === nextObject.herramienta)!;
-  return { nextObject, requiredTool: ownsTool(state, tool) ? null : tool };
+  return next === current ? null : data.objects[next]!;
 }
 
 // ---- Compras ----
@@ -104,28 +135,22 @@ export interface ValorPurchase {
 }
 
 export function buyValor(state: GameState, data: GameData): ValorPurchase {
-  const preview = valorPreview(state, data);
-  if (preview.requiredTool || !pay(state, valorCost(state, data))) return { bought: false, newObject: null };
+  const nextObject = valorNextObject(state, data);
+  if (!pay(state, valorCost(state, data))) return { bought: false, newObject: null };
   state.nivelValor += 1;
   // Objeto nuevo: empieza en el centro de la mesa.
-  if (preview.nextObject) state.danioObjeto = ZERO;
-  return { bought: true, newObject: preview.nextObject };
+  if (nextObject) state.danioObjeto = ZERO;
+  return { bought: true, newObject: nextObject };
 }
 
-/**
- * Una herramienta se compra cuando hace falta: cuando el dueño quiere comprar el primer objeto
- * de su familia. Así no se puede saltar la etapa anterior comprándola antes.
- */
-export function toolAvailable(state: GameState, data: GameData, toolId: string): boolean {
-  return valorPreview(state, data).requiredTool?.id === toolId;
-}
-
-export function buyTool(state: GameState, data: GameData, toolId: string): boolean {
-  if (!toolAvailable(state, data, toolId)) return false;
-  const tool = nextTool(state, data)!;
-  if (!pay(state, tool.costo)) return false;
-  state.herramientas.push(tool.id);
+export function buyCritChance(state: GameState, data: GameData): boolean {
+  if (critChanceMaxed(state, data) || !pay(state, critChanceCost(state, data))) return false;
+  state.nivelCritico += 1;
   return true;
 }
 
-export { nextTool, ownsTool };
+export function buyCritDamage(state: GameState, data: GameData): boolean {
+  if (!pay(state, critDamageCost(state, data))) return false;
+  state.nivelDanioCritico += 1;
+  return true;
+}

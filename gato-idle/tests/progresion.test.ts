@@ -32,7 +32,7 @@ describe('descubrimientos', () => {
     state.stats.roturas = 30;
     state.nivelValor = 15; // control remoto
     expect(checkUnlocks(state, gameData).map((u) => u.id)).toEqual(['patrocinios', 'aliado:gatito', 'aliado:raton']);
-    expect(nextUnlock(state, gameData)?.unlock.id).toBe('herramientas');
+    expect(nextUnlock(state, gameData)?.unlock.id).toBe('critico');
     // No se repiten.
     expect(checkUnlocks(state, gameData)).toEqual([]);
   });
@@ -41,7 +41,6 @@ describe('descubrimientos', () => {
     const state = newState();
     state.stats.roturas = 1000;
     state.nivelValor = 130;
-    state.herramientas = ['garras', 'carrito', 'aspiradora'];
     checkUnlocks(state, gameData);
     expect(nextUnlock(state, gameData)).toBeNull();
     expect(hasUnlock(state, 'laboratorio')).toBe(true);
@@ -52,7 +51,6 @@ describe('laboratorio', () => {
   function labState(dinero: number) {
     const state = newState(dinero);
     state.nivelValor = 60; // lámpara
-    state.herramientas = ['garras', 'carrito'];
     state.stats.roturas = 100;
     checkUnlocks(state, gameData);
     return state;
@@ -113,7 +111,6 @@ describe('progreso hacia un descubrimiento por objeto', () => {
     const { gameData } = await import('../src/data');
     const state = createInitialState(0);
     normalizeState(state, gameData);
-    state.herramientas = ['garras', 'carrito', 'aspiradora'];
     const perro = gameData.unlocks.find((u) => u.id === 'aliado:perro')!; // papel de baño, objeto 6
     state.nivelValor = 12;
     expect(unlockProgress(state, gameData, perro)).toMatchObject({ current: 12, target: 30 });

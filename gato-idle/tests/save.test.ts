@@ -21,7 +21,7 @@ describe('guardado', () => {
     state.dinero = new Decimal('1.5e3000');
     state.danioObjeto = new Decimal(3);
     state.nivelValor = 12;
-    state.herramientas = ['garras'];
+    state.nivelCritico = 7;
     state.stats.toques = 42;
     state.ajustes.notacion = 'cientifica';
     state.ajustes.idioma = 'en';
@@ -33,7 +33,7 @@ describe('guardado', () => {
     expect(result.state.dinero.eq(new Decimal('1.5e3000'))).toBe(true);
     expect(result.state.danioObjeto.eq(3)).toBe(true);
     expect(result.state.nivelValor).toBe(12);
-    expect(result.state.herramientas).toEqual(['garras']);
+    expect(result.state.nivelCritico).toBe(7);
     expect(result.state.stats.toques).toBe(42);
     expect(result.state.ajustes).toEqual(state.ajustes);
   });
@@ -76,6 +76,14 @@ describe('guardado', () => {
     const old = load(v001).state;
     expect(old.nivelValor).toBe(0);
     expect(old.dinero.eq(12)).toBe(true);
+  });
+
+  it('v2 → v3: devuelve lo que costaron las herramientas compradas', () => {
+    const v2 = JSON.stringify({ v: 2, t: NOW, s: { nivelValor: 70, herramientas: ['pata', 'garras', 'carrito'], dinero: { $d: '100' } } });
+    const state = load(v2).state;
+    expect(state.dinero.eq(100 + 900 + 30_000)).toBe(true);
+    expect(state.nivelValor).toBe(70);
+    expect('herramientas' in state).toBe(false);
   });
 
   it('falla si falta una migración', () => {

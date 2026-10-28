@@ -10,7 +10,7 @@
   "tabs": {
     "mejoras": "Upgrades",
     "aliados": "Allies",
-    "laboratorio": "Lab",
+    "laboratorio": "Research",
     "ajustes": "Settings"
   },
   "objetos": {
@@ -58,11 +58,12 @@
     "valorEtapa": "{n}/{total} to the next item",
     "valorUltimo": "Ever pricier versions",
     "valorNuevo": "The owner buys: {objeto}",
-    "valorRequiere": "First: {herramienta}",
-    "herramientas": "Tools",
-    "multiplicador": "×{mult} damage",
-    "tuya": "Yours",
-    "bloqueada": "Upgrade Value to unlock it"
+    "critico": "Sharp claws",
+    "criticoEfecto": "Crit {actual}% → {siguiente}%",
+    "criticoMax": "Crit {actual}% (maxed)",
+    "danioCritico": "Silly hat",
+    "danioCriticoEfecto": "Swipe {actual} → {siguiente}",
+    "zarpazo": "SWIPE!"
   },
   "ajustes": {
     "sonido": "Sound",
@@ -88,17 +89,18 @@
   },
   "herramientas": {
     "pata": "Paw",
-    "garras": "Sharp claws",
     "carrito": "RC car",
     "aspiradora": "Robot vacuum"
   },
   "avisos": {
     "objetoNuevo": "The owner bought: {objeto}!",
-    "herramienta": "New tool: {herramienta}!",
+    "herramienta": "The cat got: {herramienta}!",
     "aliadoNuevo": "{aliado} joined!",
     "descubrimiento": "New: {nombre}!",
     "aliadoDisponible": "New ally: {aliado}!",
-    "investigacion": "Research done: {nombre}"
+    "investigacion": "Research done: {nombre}",
+    "garras": "Steel claws! Critical swipes unlocked",
+    "sombrero": "Hat on! Swipes hit harder"
   },
   "aliados": {
     "gatito": "Baby kitten",
@@ -138,12 +140,13 @@
     "todo": "You've discovered everything in this version. Coming next: moving out and the channel staff.",
     "fuerza": "Strength",
     "valor": "Value",
-    "herramientas": "Tools",
-    "laboratorio": "Kitten lab",
-    "patrocinios": "Sponsorships"
+    "laboratorio": "Cat research",
+    "patrocinios": "Sponsorships",
+    "critico": "Sharp claws",
+    "danioCritico": "Silly hat"
   },
   "laboratorio": {
-    "titulo": "Kitten lab",
+    "titulo": "Cat research",
     "intro": "Kittens in lab coats study the owner. Each project takes real time and keeps going while the game is closed.",
     "investigar": "Research",
     "enCurso": "Researching: {nombre}",
@@ -188,7 +191,7 @@
     "danio": "Swat damage",
     "danioNota": "∞ knocks off any item in one swat. Allies hit normally.",
     "avanzar": "Play ahead",
-    "avanzarNota": "A bot taps 5 times per second and buys whatever pays off best, like the simulator. The lab moves forward by the same time.",
+    "avanzarNota": "A bot taps 5 times per second and buys whatever pays off best, like the simulator. Cat research moves forward by the same time.",
     "hasta": "Play until…",
     "jugar": "Play",
     "jugaste": "Played {tiempo}: now at {objeto}.",
@@ -199,7 +202,7 @@
     "nadaQueDescubrir": "Nothing left to discover.",
     "aliados": "+10 levels to allies",
     "terminarInvestigacion": "Finish research",
-    "todasInvestigaciones": "Complete the lab",
+    "todasInvestigaciones": "Complete all research",
     "patrocinio": "Show sponsor",
     "puntos": "Save points",
     "puntosNota": "Copies separate from your game: save a stage and come back to it anytime.",

@@ -30,6 +30,7 @@ export const OTHER_SOUNDS = [
   'balido',
   'compra',
   'herramienta',
+  'critico',
   'objeto-nuevo',
   'descubrimiento',
 ] as const;

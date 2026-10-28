@@ -18,7 +18,7 @@ const MAX_MINUTES = 120;
 
 export interface SimRow {
   minuto: number;
-  /** Objeto al que se llegó o herramienta comprada ("🔧 garras"). */
+  /** Objeto al que se llegó o primera compra ("🐾 perro", "🎯 critico"). */
   hito: string;
   fuerza: number;
   valor: number;
@@ -57,12 +57,12 @@ export function simulate(data: GameData, maxMinutes = MAX_MINUTES): { rows: SimR
     counts[name] = (counts[name] ?? 0) + 1;
 
     const object = currentObject(state, data).id;
-    const isTool = !['fuerza', 'valor'].includes(name) && !name.startsWith('aliado:');
-    const newAlly = name.startsWith('aliado:') && counts[name] === 1;
-    if (object !== lastObject || isTool || newAlly) {
+    // Se anota la primera compra de cada aliado y de cada mejora de crítico.
+    const firstBuy = (name.startsWith('aliado:') || name === 'critico' || name === 'danioCritico') && counts[name] === 1;
+    if (object !== lastObject || firstBuy) {
       const allies = alliesDps(state, data).toNumber();
       const pct = Math.round((100 * allies) / (allies + tapDamage(state, data).toNumber() * TAPS_PER_SECOND));
-      rows.push(row(seconds, isTool ? `🔧 ${name}` : newAlly ? `🐾 ${name.slice(7)}` : object, state, pct));
+      rows.push(row(seconds, !firstBuy ? object : name.startsWith('aliado:') ? `🐾 ${name.slice(7)}` : `🎯 ${name}`, state, pct));
       lastObject = object;
     }
     // Termina a media etapa del último objeto.

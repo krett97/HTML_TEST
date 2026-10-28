@@ -6,10 +6,6 @@
 
   const game = useGame();
   const view = game.view;
-
-  const TOOL_ICONS: Record<string, string> = { pata: '🐾', garras: '🗡️', carrito: '🏎️', aspiradora: '🤖' };
-
-  /** Nombre del primer objeto que desbloquea una herramienta. */
 </script>
 
 <div class="stack">
@@ -64,9 +60,7 @@
         {$t('mejoras.valor')} <span class="level">{$t('mejoras.nivel', { n: $view.valor.nivel })}</span>
         {#if $view.nuevos.includes('valor')}<NewBadge />{/if}
       </div>
-      {#if $view.valor.requiere}
-        <div class="effect warn">🔒 {$t('mejoras.valorRequiere', { herramienta: $t(`herramientas.${$view.valor.requiere}`) })}</div>
-      {:else if $view.valor.nuevoObjeto}
+      {#if $view.valor.nuevoObjeto}
         <div class="effect gold">{$t('mejoras.valorNuevo', { objeto: $t(`objetos.${$view.valor.nuevoObjeto}`) })}</div>
       {:else}
         <div class="effect">{$t('mejoras.valorEfecto', { actual: $view.ganancia, siguiente: $view.valor.gananciaSiguiente })}</div>
@@ -81,65 +75,68 @@
         </div>
       {/if}
     </div>
-    {#if $view.valor.requiere}
-      {@const toolId = $view.valor.requiere}
-      <button
-        type="button"
-        class="btn btn--accent buy"
-        disabled={!$view.valor.alcanzaHerramienta}
-        onclick={() => game.buyTool(toolId)}
-        data-testid="comprar-herramienta-valor"
-        aria-label="{$t(`herramientas.${toolId}`)} ${$view.valor.costoHerramienta}"
-      >
-        {TOOL_ICONS[toolId] ?? '🔧'} ${$view.valor.costoHerramienta}
-      </button>
-    {:else}
-      <button
-        type="button"
-        class="btn btn--accent buy"
-        disabled={!$view.valor.alcanza}
-        onclick={() => game.buyValor()}
-        data-testid="comprar-valor"
-      >
-        ${$view.valor.costo}
-      </button>
-    {/if}
+    <button
+      type="button"
+      class="btn btn--accent buy"
+      disabled={!$view.valor.alcanza}
+      onclick={() => game.buyValor()}
+      data-testid="comprar-valor"
+    >
+      ${$view.valor.costo}
+    </button>
   </div>
   {/if}
 
-  {#if $view.funciones.herramientas}
-  <h3>{$t('mejoras.herramientas')} {#if $view.nuevos.includes('herramientas')}<NewBadge />{/if}</h3>
-  <ul class="tools">
-    {#each $view.herramientas as tool (tool.id)}
-      <li class="card upgrade tool" class:owned={tool.estado === 'comprada'} class:locked={tool.estado === 'bloqueada'}>
-        <span class="icon" aria-hidden="true">{TOOL_ICONS[tool.id] ?? '🔧'}</span>
-        <div class="info">
-          <div class="name">{$t(`herramientas.${tool.id}`)}</div>
-          <div class="effect">
-            {#if tool.mult > 1}{$t('mejoras.multiplicador', { mult: tool.mult })} · {/if}{tool.objetos
-              .map((id) => $t(`objetos.${id}`))
-              .join(', ')}
-          </div>
-        </div>
-        {#if tool.estado === 'comprada'}
-          <span class="tag">✓ {$t('mejoras.tuya')}</span>
-        {:else if tool.estado === 'disponible'}
-          <button
-            type="button"
-            class="btn btn--accent buy"
-            disabled={!tool.alcanza}
-            onclick={() => game.buyTool(tool.id)}
-            data-testid="comprar-herramienta"
-          >
-            ${tool.costo}
-          </button>
-        {:else}
-          <span class="tag muted">🔒 {$t('mejoras.bloqueada')}</span>
-        {/if}
-      </li>
-    {/each}
-  </ul>
+  {#if $view.funciones.critico}
+  <div class="card upgrade" class:fresh={$view.nuevos.includes('critico')}>
+    <span class="icon" aria-hidden="true">🗡️</span>
+    <div class="info">
+      <div class="name">
+        {$t('mejoras.critico')} <span class="level">{$t('mejoras.nivel', { n: $view.critico.nivel })}</span>
+        {#if $view.nuevos.includes('critico')}<NewBadge />{/if}
+      </div>
+      <div class="effect">
+        {$view.critico.maximo
+          ? $t('mejoras.criticoMax', { actual: $view.critico.prob })
+          : $t('mejoras.criticoEfecto', { actual: $view.critico.prob, siguiente: $view.critico.probSiguiente })}
+      </div>
+    </div>
+    <button
+      type="button"
+      class="btn btn--accent buy"
+      disabled={!$view.critico.alcanza}
+      onclick={() => game.buyCritChance()}
+      data-testid="comprar-critico"
+    >
+      {$view.critico.maximo ? '✓' : `$${$view.critico.costo}`}
+    </button>
+  </div>
   {/if}
+
+  {#if $view.funciones.danioCritico}
+  <div class="card upgrade" class:fresh={$view.nuevos.includes('danioCritico')}>
+    <span class="icon" aria-hidden="true">🎩</span>
+    <div class="info">
+      <div class="name">
+        {$t('mejoras.danioCritico')} <span class="level">{$t('mejoras.nivel', { n: $view.danioCritico.nivel })}</span>
+        {#if $view.nuevos.includes('danioCritico')}<NewBadge />{/if}
+      </div>
+      <div class="effect">
+        {$t('mejoras.danioCriticoEfecto', { actual: $view.danioCritico.mult, siguiente: $view.danioCritico.multSiguiente })}
+      </div>
+    </div>
+    <button
+      type="button"
+      class="btn btn--accent buy"
+      disabled={!$view.danioCritico.alcanza}
+      onclick={() => game.buyCritDamage()}
+      data-testid="comprar-danio-critico"
+    >
+      ${$view.danioCritico.costo}
+    </button>
+  </div>
+  {/if}
+
 </div>
 
 <style>
@@ -201,9 +198,6 @@
   .gold {
     color: var(--gold);
   }
-  .warn {
-    color: var(--gold);
-  }
   .steps {
     display: flex;
     gap: 3px;
@@ -223,30 +217,7 @@
     min-width: 84px;
     font-variant-numeric: tabular-nums;
   }
-  h3 {
-    margin: 8px 2px 0;
-    font-size: 15px;
-    color: var(--muted);
-  }
-  .tools {
-    display: grid;
-    gap: 8px;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
   .fresh {
     border-color: var(--gold);
-  }
-  .tool.locked {
-    opacity: 0.6;
-  }
-  .tag {
-    max-width: 120px;
-    font-size: 13px;
-    text-align: right;
-  }
-  .owned .tag {
-    color: var(--good);
   }
 </style>

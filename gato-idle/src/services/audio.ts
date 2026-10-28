@@ -260,6 +260,12 @@ const RECIPES: Record<SoundId, (v: Voice) => void> = {
   herramienta: (v) => {
     [523, 659, 784, 1047].forEach((f, i) => tone(v, { type: 'square', f, at: i * 0.08, dur: 0.16, vol: 0.07 }));
   },
+  // Zarpazo crítico: tajo metálico + "¡ting!" de acero.
+  critico: (v) => {
+    noise(v, { filter: 'highpass', f: 2500, f2: 6000, dur: 0.12, vol: 0.6, attack: 0.004 });
+    tone(v, { type: 'square', f: 1760, f2: 2349, at: 0.02, dur: 0.07, vol: 0.06 });
+    tone(v, { f: 3520, at: 0.05, dur: 0.35, vol: 0.08, vibrato: [9, 30] });
+  },
   descubrimiento: (v) => {
     [659, 784, 988, 1319].forEach((f, i) => tone(v, { type: 'triangle', f, at: i * 0.07, dur: 0.25, vol: 0.12 }));
     tone(v, { f: 2637, at: 0.3, dur: 0.5, vol: 0.06, vibrato: [6, 20] });

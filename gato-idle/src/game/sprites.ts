@@ -24,6 +24,10 @@ export const PALETTE: Record<string, string> = {
   V: '#2e7d32', // verde oscuro
   n: '#26232e', // negro (cuervo)
   N: '#45405a', // ala del cuervo
+  m: '#9fb3c8', // acero (garras afiladas)
+  M: '#ffffff', // brillo del acero
+  u: '#8e5bd1', // sombrero morado
+  U: '#6a3fa3', // sombrero, sombra
 };
 
 // Gato naranja sentado, de perfil, mirando a la derecha (hacia la orilla).
@@ -54,12 +58,25 @@ export const PAW = [
   'kkkkkkkkk.',
 ];
 
-// La misma pata con las garras afuera.
+// Garras afiladas (mejora de crítico): la misma pata con garras de acero que brillan.
 export const CLAW = [
-  'kkkkkkkkk...',
-  'oooooowwwkcc',
-  'oooooowpwkcc',
-  'kkkkkkkkk...',
+  'kkkkkkkkkk....',
+  'oooooowwwkmMm.',
+  'oooooowpwkmMmm',
+  'kkkkkkkkkk....',
+];
+
+// Sombrero ridículo (mejora de daño crítico): chistera morada con flor, un poco grande para el gato.
+export const HAT = [
+  '...kkkkk...',
+  '..kuuuuUk..',
+  '..kuuuuUk..',
+  '..kuuuuUk..',
+  '..kyypyyk..',
+  '..kuuuuUk..',
+  'kkkuuuuUkkk',
+  'kuuuuuuuuUk',
+  'kkkkkkkkkkk',
 ];
 
 // Carrito a control remoto; el gato va sentado encima.
@@ -186,6 +203,7 @@ export const SPRITES = {
   gato: CAT,
   pata: PAW,
   garra: CLAW,
+  sombrero: HAT,
   carrito: CAR,
   aspiradora: VACUUM,
   aliado_gatito: KITTEN,
@@ -197,10 +215,8 @@ export const SPRITES = {
   aliado_cabra: GOAT,
 };
 
-/** Cómo luce el gato según la herramienta del objeto en la mesa. */
+/** Cómo luce el gato según la herramienta del objeto en la mesa (las garras van aparte: son la mejora de crítico). */
 export interface ToolLook {
-  /** Textura del brazo. */
-  arm: 'pata' | 'garra';
   /** Vehículo bajo el gato, si hay. */
   vehicle: 'carrito' | 'aspiradora' | null;
   /** Cuánto sube el gato para ir sentado en el vehículo. */
@@ -209,13 +225,11 @@ export interface ToolLook {
 
 export function toolLook(toolId: string): ToolLook {
   switch (toolId) {
-    case 'garras':
-      return { arm: 'garra', vehicle: null, lift: 0 };
     case 'carrito':
-      return { arm: 'pata', vehicle: 'carrito', lift: 6 };
+      return { vehicle: 'carrito', lift: 6 };
     case 'aspiradora':
-      return { arm: 'pata', vehicle: 'aspiradora', lift: 4 };
+      return { vehicle: 'aspiradora', lift: 4 };
     default:
-      return { arm: 'pata', vehicle: null, lift: 0 };
+      return { vehicle: null, lift: 0 };
   }
 }

@@ -1,6 +1,6 @@
 # Swat to the Moon — Documento de diseño
 
-> **Versión 0.6** · Actualiza el prompt original ([`prompt-original.md`](prompt-original.md)) con las mejoras del análisis.
+> **Versión 0.7** · Actualiza el prompt original ([`prompt-original.md`](prompt-original.md)) con las mejoras del análisis.
 > **Nombre provisional.** *Knock It Off!* ya está en uso (Spin Master vende un juego físico con ese nombre para jugar con tu gato, y hay varios juegos en itch.io). *Swat to the Moon* aún no está verificado en Play Store ni en registros de marca (USPTO / IMPI). El nombre visible se cambia en un solo lugar: `src/i18n/*.json` → `app.title` y `capacitor.config.ts` → `appName`.
 
 ---
@@ -28,7 +28,7 @@
 2. Cada objeto tiene **vida (HP)**. Cada manotazo le quita `daño` y el objeto **avanza hacia la orilla**: su posición es la barra de vida.
 3. Al llegar a la orilla, **cae y se rompe** (animación, partículas, sonido, vibración).
 4. La rotura genera **vistas** (número flotante) y **dinero** = vistas × tarifa.
-5. Con dinero se compran mejoras, herramientas y personal.
+5. Con dinero se compran mejoras, aliados, investigaciones y personal.
 
 **Regla de oro:** el gesto nunca cambia, siempre es un manotazo. Lo que cambia es lo que golpea.
 
@@ -49,23 +49,25 @@
 | Moneda | Qué es | ¿Se pierde en la mudanza? |
 |---|---|---|
 | **Vistas** | Lo que genera cada rotura. Es el número que flota en pantalla. | — (es un flujo, no se acumula para gastar) |
-| **Dinero** | Vistas × tarifa. Se gasta en mejoras, herramientas y personal. | Sí |
+| **Dinero** | Vistas × tarifa. Se gasta en mejoras, aliados, investigaciones y personal. | Sí |
 | **Seguidores** | Moneda de prestigio. El dueño se muda, pero los seguidores se quedan. Cada uno da +X % de ingresos. | No |
 
 ### Mejoras principales (implementadas)
 
-- **Fuerza:** daño por manotazo = `1 + nivel`. Costo: `5 × 1.28^nivel`. Hay un ajuste opcional de "hitos" (×N cada tantos niveles), apagado por ahora.
+- **Fuerza:** daño por manotazo = `(1 + nivel) × 2^⌊nivel / 11⌋` (se duplica cada 11 niveles). Costo: `5 × 1.28^nivel`.
 - **Valor:** **cada 10 niveles el dueño compra el siguiente objeto** (más vida, más vistas). Dentro de un objeto, cada nivel da +10 % de vistas. Costo: lo que pagan 10 roturas del objeto actual × `1.25^(nivel dentro del objeto)`.
 - **Tensión del jugador:** Fuerza contra Valor. Si subes Valor sin Fuerza, cada objeto tarda demasiado.
 - **Meta de balance:** si el jugador va al día, cada objeto pide **5–15 toques**.
 
-### Herramientas (implementadas)
+- **Garras afiladas** y **Sombrero ridículo:** los críticos (ver §24).
 
-Cada una:
-- es **requisito** para pasar a la siguiente familia de objetos (sin garras no hay sofá);
-- **se compra justo cuando hace falta**: cuando el dueño quiere comprar el primer objeto de su familia. El botón aparece en la misma tarjeta de Valor. Comprarla antes rompía el ritmo (todo caía de un golpe);
-- multiplica el daño ×3;
-- cambia el aspecto del gato: garras en la pata, sentado en el carrito, montado en la aspiradora.
+### Herramientas (ya no se compran, desde 0.7.0)
+
+Hasta la 0.6 se compraban, daban ×3 de daño y eran el candado para pasar a la siguiente familia de objetos. Se sentían como "un número que sube", así que:
+- **El gato las usa solo** al llegar a esos objetos: se sube al carrito con los muebles y a la aspiradora con los electrodomésticos. Solo cambian su aspecto (y salta un aviso: "¡El gato consiguió: Carrito a control remoto!").
+- **Las garras pasaron a ser la mejora de crítico** (§24).
+- **Las compras con efecto vuelven como "Habilidades" en los reinicios** (fase 4), con mecánicas propias: la embestida del carrito (cada 10 toques, un golpe enorme), la aspiradora que recoge los pedazos (+% de dinero y golpes solos), etc.
+- Las partidas viejas recuperan lo que pagaron por ellas (migración del guardado v2 → v3).
 
 ### Valores actuales (`src/data/*.json`, calibrados con `npm run simular`)
 
@@ -78,7 +80,7 @@ Cada una:
 | Cortinas | 165 | 810 | | Refri | 31.7K | 590K |
 | Colchón | 400 | 2.4K | | | | |
 
-Herramientas: garras $600, carrito $20K, aspiradora $600K. Tarifa: $0.10 por vista.
+Tarifa: $0.10 por vista.
 
 ### Fórmulas pendientes
 
@@ -86,12 +88,13 @@ Herramientas: garras $600, carrito $20K, aspiradora $600K. Tarifa: $0.10 por vis
 
 ## 5. Progresión de herramientas y objetos
 
+Las herramientas marcan la etapa y el aspecto del gato; no se compran (ver §4).
+
 | # | Herramienta | Objetos | En el MVP |
 |---|---|---|---|
-| 1 | Pata | vaso, florero, tenis | ✅ |
-| 2 | Garras afiladas | sofá, cortinas, colchón | ✅ |
-| 3 | Carrito a control remoto | TV, muebles (mesa, librero) | ✅ |
-| 4 | Montado en aspiradora robot | computadora, lavadora, refri | ✅ |
+| 1 | Pata (con garras de acero si ya tiene Garras afiladas) | vaso … celular, papel de baño … colchón | ✅ |
+| 2 | Carrito a control remoto | lámpara … librero | ✅ |
+| 3 | Montado en aspiradora robot | tostadora … refri | ✅ |
 | 5 | Grúa con bola de demolición (el manotazo va a la palanca) | piano (el clásico piano que cae), coche, casa | |
 | 6 | Excavadora | mansión, edificios | |
 | 7 | Mecha-gato gigante | ciudad, planeta | |
@@ -119,7 +122,8 @@ Modelo tipo *Tap Titans*: los objetos tienen vida y el personal aporta **daño a
 ### La mudanza (prestigio 1, en el MVP)
 
 - **Qué es una partida:** va del vaso hacia la Luna. La mudanza te regresa al vaso.
-- **Se pierde:** dinero, Fuerza, Valor, herramientas y personal.
+- **Se pierde:** dinero, Fuerza, Valor, críticos, aliados y personal.
+- **Se gana:** puntos para **Habilidades** permanentes (lo que antes eran las herramientas compradas).
 - **Se conserva:** seguidores, gatos legendarios, compras, skins, logros y ajustes.
 - **"Casa más cara":** multiplicador + cambio cosmético del departamento.
 - **Vista previa obligatoria:** "Si te mudas ahora: +37 seguidores".
@@ -187,7 +191,7 @@ Cada sistema hace algo distinto: Cheshire baja la probabilidad de que te vea, el
 
 ## 11. Juice
 
-Vibración ligera, partículas, sonido de rotura, números flotantes, temblor de pantalla en roturas grandes, animación distinta por herramienta. Todo se puede apagar en ajustes.
+Vibración ligera, partículas, sonido de rotura, números flotantes, temblor de pantalla en roturas grandes y en los zarpazos críticos, animación distinta por herramienta. Todo se puede apagar en ajustes.
 
 ## 12. UX
 
@@ -292,9 +296,9 @@ Cada fase responde una pregunta. Se pasa a la siguiente cuando se cumple su crit
 |---|---|---|---|---|
 | 0. Esqueleto | ¿Funciona la base? | Proyecto, escena con toque, pestañas, servicios falsos, guardado versionado, números grandes, Android | Se instala en el celular, se toca y el progreso sobrevive al cerrar la app | ✅ |
 | 1. ¿Es divertido tocar? | ¿Dan ganas de seguir tocando sin mejoras? | Manotazo → desliza → cae → rompe; números flotantes, avisos y sonido por objeto ✅. Falta: animación del gato con expresión y un mini tutorial | Tocar se siente bien por sí solo (sonido, vibración, animación) y alguien que no conoce el juego entiende qué hacer sin explicación | Casi |
-| 2. Economía | ¿Hay siempre una compra que valga la pena? | Fuerza, Valor, 27 objetos, 4 herramientas, modificadores, laboratorio, simulador | El simulador llega al último objeto sin atorarse y sin tramos de más de ~3 min sin novedad | ✅ |
+| 2. Economía | ¿Hay siempre una compra que valga la pena? | Fuerza, Valor, críticos, 27 objetos, modificadores, investigación gatuna, simulador | El simulador llega al último objeto sin atorarse y sin tramos de más de ~3 min sin novedad | ✅ |
 | 3. Idle | ¿El juego avanza sin mí? | Aliados ✅ y autoguardado ✅. Falta: **ganancias offline** (al volver: "mientras no estabas ganaste $X") y el personal del canal | Al cerrar el juego un rato y volver, hay una recompensa que dé gusto, y los aliados cargan buena parte del daño | Parcial |
-| 4. Meta (reinicios) | ¿Hay razón para jugar días? | **La mudanza** (empezar de cero con un bono permanente), gatos legendarios, evento "¡Llegó el dueño!" | Una mudanza deja al jugador más fuerte y la segunda vuelta es claramente más rápida | Pendiente |
+| 4. Meta (reinicios) | ¿Hay razón para jugar días? | **La mudanza** (empezar de cero con un bono permanente), **Habilidades** (carrito, aspiradora…), gatos legendarios, evento "¡Llegó el dueño!" | Una mudanza deja al jugador más fuerte y la segunda vuelta es claramente más rápida | Pendiente |
 | 5. Anuncios y Android | ¿Puede ganar dinero sin molestar? | Patrocinio con anuncio falso ✅, APK de prueba ✅. Falta: AdMob con IDs de prueba, las otras 4 recompensas, consentimiento de privacidad (requisito de Google) | Los anuncios de prueba de Google se ven y pagan en el celular, y la app cumple las políticas de Play | Parcial |
 | 6. Pulido | ¿Está listo para publicar? | Arte de PixelApp, tutorial, layout de PC, balance con testers. Inglés ✅, modo pruebas ✅ | Un grupo de testers juega una semana y el ritmo, el humor y los anuncios se sienten bien | Pendiente |
 
@@ -339,7 +343,7 @@ Cada fase responde una pregunta. Se pasa a la siguiente cuando se cumple su crit
 El jugador siempre debe sentir que avanza y que está a punto de desbloquear algo. Al principio solo puede dar manotazos; todo lo demás se va **descubriendo**: rápido al inicio y cada vez más espaciado, hasta investigaciones que tardan días.
 
 - **`unlocks.json`** define el orden y la condición de cada descubrimiento (romper N objetos o llegar a un objeto). Agregar uno nuevo es agregar una línea.
-- Siempre se ve la tarjeta **"Próximo descubrimiento"**, con su barra de progreso y qué falta ("Tira 3 objetos más" o **"Mejora el Valor"**), sin revelar qué es. **Nunca se dice a qué objeto hay que llegar** (ni en esa tarjeta, ni en el aliado oculto, el laboratorio o las herramientas): solo que hay que mejorar el Valor, y la barra avanza con cada nivel de Valor.
+- Siempre se ve la tarjeta **"Próximo descubrimiento"**, con su barra de progreso y qué falta ("Tira 3 objetos más" o **"Mejora el Valor"**), sin revelar qué es. **Nunca se dice a qué objeto hay que llegar** (ni en esa tarjeta, ni en el aliado oculto ni en la investigación gatuna): solo que hay que mejorar el Valor, y la barra avanza con cada nivel de Valor.
 - Al descubrir algo: aviso, sonido y la etiqueta **"¡Nuevo!"** en la tarjeta o la pestaña. Las pestañas aparecen solo cuando se descubren.
 - Los aliados futuros se ven como **"???"** hasta descubrirlos.
 
@@ -350,15 +354,18 @@ El jugador siempre debe sentir que avanza y que está a punto de desbloquear alg
 | Patrocinios (anuncio por dinero) | 20 roturas | 0.2 |
 | Gatito bebé (pestaña Aliados) | 30 roturas | 0.3 |
 | Ratón | llegar al control remoto | 2.2 |
-| Herramientas | llegar al florero | 3.1 |
-| Perro | llegar al papel de baño | 5.1 |
-| Laboratorio de gatitos | llegar a la lámpara | 10.4 |
-| Perico | llegar a la consola | 11.8 |
-| Cuervo | llegar a la mesa de centro | 14.5 |
-| Mapache | llegar a la tostadora | 18.7 |
-| Cabra | llegar a la lavadora | 27.1 |
+| Garras afiladas (prob. de crítico) | llegar al florero | 2.9 |
+| Perro | llegar al papel de baño | 4.0 |
+| Sombrero ridículo (daño crítico) | llegar a las cortinas | 5.9 |
+| Investigación gatuna | llegar a la lámpara | 8.5 |
+| Perico | llegar a la consola | 10.5 |
+| Cuervo | llegar a la mesa de centro | 13.0 |
+| Mapache | llegar a la tostadora | 16.7 |
+| Cabra | llegar a la lavadora | 26.3 |
 
-### Laboratorio de gatitos
+(En el juego nunca se dice el objeto: solo "Mejora el Valor".)
+
+### Investigación gatuna (antes "Laboratorio de gatitos")
 
 Gatitos con bata analizan al dueño. Cada investigación cuesta dinero, **tarda tiempo real** y sigue avanzando con el juego cerrado; da una mejora permanente (se suma al sistema de modificadores). Se investiga una a la vez y en orden (`research.json`).
 
@@ -394,7 +401,7 @@ Cada aliado nuevo es mucho mejor que el anterior, aunque cueste más: subir de n
 
 En la pestaña Aliados, cada tarjeta dice cuánto daño por segundo suma la siguiente compra (**"+10 daño/s"**), y la que da más daño por cada peso lleva la etiqueta **"★ Mejor compra"** (`bestAllyPurchase` en `src/core/allies.ts`).
 
-### Vida en manada (laboratorio)
+### Vida en manada (investigación gatuna)
 
 Multiplica el daño de los aliados por **1 + 0.1 × aliados adoptados**: con gatito y perro, ×1.2; con los 7, ×1.7. Se declara como un modificador con `"escala": "aliados"`, así que cualquier investigación futura puede escalar igual.
 
@@ -441,7 +448,7 @@ Lo que necesita arte con expresión (no solo un sprite quieto):
 | Cada aliado | quieto, ataque, su manía (gesto propio) |
 | Cada objeto | normal, tambaleándose en la orilla, cayendo, roto en pedazos |
 
-Ya cumple con esto (en código, con arte provisional): los textos del modo pruebas ("El dueño ni se dio cuenta"), los nombres del laboratorio, las voces de los aliados y los sonidos por objeto. Pendiente: animaciones con expresión, el dueño en escena, títulos de video y comentarios falsos (§10).
+Ya cumple con esto (en código, con arte provisional): los textos del modo pruebas ("El dueño ni se dio cuenta"), los nombres de la investigación gatuna, el "¡ZARPAZO!" con garras de acero y el sombrero ridículo, las voces de los aliados y los sonidos por objeto. Pendiente: animaciones con expresión, el dueño en escena, títulos de video y comentarios falsos (§10).
 
 ## 23. Modo pruebas (versión 0.6.0)
 
@@ -451,10 +458,40 @@ Como el juego es largo, hace falta probar etapas avanzadas sin empezar de cero. 
 |---|---|
 | Dinero | **Dinero infinito** (todo gratis; el contador muestra ∞) y botones para recibir 1 min, 10 min o 1 h de ganancias |
 | Daño del manotazo | ×1, ×10, ×100, ×1000 o **∞** (tira cualquier objeto de un toque). Los aliados pegan normal |
-| Avanzar como jugador | +5 min, +30 min o **"Jugar hasta…"** un objeto. Lo hace un jugador automático (el mismo del simulador, `src/core/bot.ts`), así que la partida queda como la de alguien que jugó de verdad: con su Fuerza, Valor, herramientas, aliados y descubrimientos. El laboratorio avanza el mismo tiempo |
+| Avanzar como jugador | +5 min, +30 min o **"Jugar hasta…"** un objeto. Lo hace un jugador automático (el mismo del simulador, `src/core/bot.ts`), así que la partida queda como la de alguien que jugó de verdad: con su Fuerza, Valor, críticos, aliados y descubrimientos. La investigación gatuna avanza el mismo tiempo |
 | Atajos | Descubrir el siguiente o todo, +10 niveles a los aliados, terminar la investigación en curso o todas, mostrar el patrocinio ya |
 | Puntos de guardado | 3 copias aparte de la partida: guardar una etapa y volver a ella cuando se quiera |
 
 - Con algún truco prendido, el botón 🛠 se pone **rojo** para no olvidarlo; "Apagar todos los trucos" los quita.
 - Los trucos se guardan con la partida (`pruebas` en el estado) y las compras pasan todas por `src/core/wallet.ts`.
 - **Versión de tienda:** compilar con `PRUEBAS=no` (por ejemplo `PRUEBAS=no npm run build`). El botón desaparece y los trucos se apagan al cargar.
+
+## 24. Críticos: Garras afiladas y Sombrero ridículo (versión 0.7.0)
+
+Dos mejoras nuevas en la pestaña Mejoras, que se descubren después de Fuerza y Valor. Cada manotazo tira un dado: si sale crítico, aparece **"¡ZARPAZO!"** en rojo, suena un tajo de acero y la pantalla tiembla.
+
+| Mejora | Aparece (simulador) | Efecto | Costo | Aspecto del gato |
+|---|---|---|---|---|
+| **Garras afiladas** | min 2.9 | +1 % de probabilidad de crítico por nivel, **tope 50 %** | `200 × 1.4^nivel` | garras de acero en la pata |
+| **Sombrero ridículo** | min 5.9 | el crítico multiplica el daño ×2, +0.1 por nivel, sin tope | `2000 × 1.4^nivel` | chistera morada con flor |
+
+**Por qué es medible:** en promedio, cada manotazo rinde
+
+```
+daño promedio = daño × (1 + probabilidad × (multiplicador − 1))
+```
+
+El simulador, el patrocinio y el ingreso usan ese promedio (`critFactor` en `src/core/economy.ts`), así que los críticos se balancean como cualquier otro multiplicador. En cada partida hay suerte, pero el ritmo promedio es predecible.
+
+**Balance (simulador, 5 toques/s):** al quitar el ×27 de las herramientas, el daño se repuso con los críticos y con hitos de Fuerza (×2 cada 11 niveles). El ritmo quedó casi igual que antes:
+
+| | Antes (0.6) | Ahora (0.7) |
+|---|---|---|
+| Lámpara | min 10.4 | min 8.5 |
+| Tostadora | min 18.7 | min 16.7 |
+| Refri | min 35.3 | min 34.2 |
+| Golpes para el refri | 22 | 17 |
+| Daño de los aliados al final | 84 % | 80 % |
+| Críticos al final | — | 32 % de probabilidad, ×4.5 (rinde ×2.1 en promedio) |
+
+Los aliados no hacen críticos (por ahora): el crítico es el premio de tocar.

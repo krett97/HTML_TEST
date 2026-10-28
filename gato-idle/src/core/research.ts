@@ -1,4 +1,4 @@
-// Laboratorio de gatitos: investigaciones que tardan tiempo real (de un minuto a días) y dan
+// Investigación gatuna (antes "laboratorio"): investigaciones que tardan tiempo real (de un minuto a días) y dan
 // mejoras permanentes. Se investiga una a la vez, en orden, y el reloj sigue con el juego cerrado.
 import type { GameData, ResearchDef } from './data';
 import { objectIndexFor } from './economy';

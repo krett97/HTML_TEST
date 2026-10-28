@@ -44,7 +44,6 @@ describe('modo pruebas', () => {
     state.pruebas.dineroInfinito = true;
     const seconds = playUntil(state, gameData, { objeto: 'lampara' });
     expect(currentObject(state, gameData).id).toBe('lampara');
-    expect(state.herramientas).toEqual(expect.arrayContaining(['garras', 'carrito']));
     expect(state.desbloqueos).toContain('laboratorio');
     // Mismo ritmo que el simulador: la lámpara llega hacia el minuto 10.
     expect(seconds / 60).toBeGreaterThan(8);

@@ -16,7 +16,7 @@ describe('datos de balance', () => {
   it('los JSON del juego son válidos', () => {
     expect(gameData.objects.length).toBe(27);
     expect(gameData.allies.map((a) => a.id)).toEqual(['gatito', 'raton', 'perro', 'perico', 'cuervo', 'mapache', 'cabra']);
-    expect(gameData.tools.map((t) => t.id)).toEqual(['pata', 'garras', 'carrito', 'aspiradora']);
+    expect(gameData.tools.map((t) => t.id)).toEqual(['pata', 'carrito', 'aspiradora']);
   });
 
   it('cada objeto vale más y aguanta más que el anterior', () => {
@@ -55,8 +55,8 @@ describe('datos de balance', () => {
     const noHp = [{ ...objects[0], hp: 0 }];
     expect(() => parseGameData({ ...base, objects: noHp })).toThrow(/mayor que 0/);
 
-    const badEffect = [tools[0], { ...tools[1], efectos: [{ stat: 'suerte', op: 'mult', valor: 2 }] }];
-    expect(() => parseGameData({ ...base, tools: badEffect })).toThrow(/stat "suerte"/);
+    const badEffect = [{ ...research[0], efectos: [{ stat: 'suerte', op: 'mult', valor: 2 }] }];
+    expect(() => parseGameData({ ...base, research: badEffect })).toThrow(/stat "suerte"/);
 
     const badSound = [{ ...objects[0], sonido: { golpe: 'trueno', rotura: 'cristal', tono: 1 } }];
     expect(() => parseGameData({ ...base, objects: badSound })).toThrow(/trueno/);
@@ -70,8 +70,7 @@ describe('datos de balance', () => {
     const badResearch = [{ ...research[0], requiere: 'castillo' }];
     expect(() => parseGameData({ ...base, research: badResearch })).toThrow(/castillo/);
 
-    const noFreeTool = tools.slice(1);
-    expect(() => parseGameData({ ...base, tools: noFreeTool })).toThrow(/gratis/);
+    expect(() => parseGameData({ ...base, tools: [] })).toThrow(/no hay herramientas/);
   });
 });
 

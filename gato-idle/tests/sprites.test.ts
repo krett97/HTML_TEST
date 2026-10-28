@@ -14,7 +14,6 @@ describe('dibujos provisionales', () => {
   it('cada herramienta tiene un aspecto definido', () => {
     for (const tool of gameData.tools) {
       const look = toolLook(tool.id);
-      expect(look.arm in SPRITES).toBe(true);
       if (look.vehicle) expect(look.vehicle in SPRITES).toBe(true);
     }
   });

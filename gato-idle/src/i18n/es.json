@@ -10,7 +10,7 @@
   "tabs": {
     "mejoras": "Mejoras",
     "aliados": "Aliados",
-    "laboratorio": "Laboratorio",
+    "laboratorio": "Investigación",
     "ajustes": "Ajustes"
   },
   "objetos": {
@@ -58,11 +58,12 @@
     "valorEtapa": "{n}/{total} para el siguiente objeto",
     "valorUltimo": "Versiones cada vez más caras",
     "valorNuevo": "El dueño compra: {objeto}",
-    "valorRequiere": "Primero: {herramienta}",
-    "herramientas": "Herramientas",
-    "multiplicador": "×{mult} daño",
-    "tuya": "Tuya",
-    "bloqueada": "Mejora el Valor para desbloquearla"
+    "critico": "Garras afiladas",
+    "criticoEfecto": "Crítico {actual}% → {siguiente}%",
+    "criticoMax": "Crítico {actual}% (al máximo)",
+    "danioCritico": "Sombrero ridículo",
+    "danioCriticoEfecto": "Zarpazo {actual} → {siguiente}",
+    "zarpazo": "¡ZARPAZO!"
   },
   "ajustes": {
     "sonido": "Sonido",
@@ -88,17 +89,18 @@
   },
   "herramientas": {
     "pata": "Pata",
-    "garras": "Garras afiladas",
     "carrito": "Carrito a control remoto",
     "aspiradora": "Aspiradora robot"
   },
   "avisos": {
     "objetoNuevo": "¡El dueño compró: {objeto}!",
-    "herramienta": "¡Nueva herramienta: {herramienta}!",
+    "herramienta": "¡El gato consiguió: {herramienta}!",
     "aliadoNuevo": "¡Llegó {aliado}!",
     "descubrimiento": "¡Nuevo: {nombre}!",
     "aliadoDisponible": "¡Nuevo aliado: {aliado}!",
-    "investigacion": "Investigación terminada: {nombre}"
+    "investigacion": "Investigación terminada: {nombre}",
+    "garras": "¡Garras de acero! Ahora hay zarpazos críticos",
+    "sombrero": "¡Sombrero puesto! Los zarpazos pegan más fuerte"
   },
   "aliados": {
     "gatito": "Gatito bebé",
@@ -138,12 +140,13 @@
     "todo": "Ya descubriste todo lo de esta versión. Siguen: la mudanza y el personal del canal.",
     "fuerza": "Fuerza",
     "valor": "Valor",
-    "herramientas": "Herramientas",
-    "laboratorio": "Laboratorio de gatitos",
-    "patrocinios": "Patrocinios"
+    "laboratorio": "Investigación gatuna",
+    "patrocinios": "Patrocinios",
+    "critico": "Garras afiladas",
+    "danioCritico": "Sombrero ridículo"
   },
   "laboratorio": {
-    "titulo": "Laboratorio de gatitos",
+    "titulo": "Investigación gatuna",
     "intro": "Gatitos con bata analizan al dueño. Cada investigación tarda tiempo real y sigue aunque cierres el juego.",
     "investigar": "Investigar",
     "enCurso": "Investigando: {nombre}",
@@ -188,7 +191,7 @@
     "danio": "Daño del manotazo",
     "danioNota": "∞ tira cualquier objeto de un manotazo. Los aliados pegan normal.",
     "avanzar": "Avanzar como jugador",
-    "avanzarNota": "Un jugador automático toca 5 veces por segundo y compra lo que más le conviene, igual que el simulador. El laboratorio también avanza ese tiempo.",
+    "avanzarNota": "Un jugador automático toca 5 veces por segundo y compra lo que más le conviene, igual que el simulador. La investigación gatuna también avanza ese tiempo.",
     "hasta": "Jugar hasta…",
     "jugar": "Jugar",
     "jugaste": "Jugaste {tiempo}: ahora vas en {objeto}.",
@@ -199,7 +202,7 @@
     "nadaQueDescubrir": "Ya no hay nada que descubrir.",
     "aliados": "+10 niveles a los aliados",
     "terminarInvestigacion": "Terminar investigación",
-    "todasInvestigaciones": "Completar el laboratorio",
+    "todasInvestigaciones": "Completar la investigación",
     "patrocinio": "Mostrar patrocinio",
     "puntos": "Puntos de guardado",
     "puntosNota": "Copias aparte de tu partida: guarda una etapa y vuelve a ella cuando quieras.",

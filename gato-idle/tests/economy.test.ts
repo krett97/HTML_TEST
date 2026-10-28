@@ -1,17 +1,21 @@
 import { describe, expect, it } from 'vitest';
+import { tap } from '../src/core/actions';
 import {
+  buyCritChance,
+  buyCritDamage,
   buyFuerza,
-  buyTool,
   buyValor,
+  critChance,
+  critFactor,
+  critMultiplier,
   currentObject,
+  expectedTapDamage,
   fuerzaCost,
   moneyPerBreak,
-  nextTool,
   tapDamage,
   tapsToBreak,
-  toolAvailable,
   valorCost,
-  valorPreview,
+  valorNextObject,
 } from '../src/core/economy';
 import { normalizeState } from '../src/core/normalize';
 import { num } from '../src/core/num';
@@ -64,7 +68,7 @@ describe('Valor', () => {
     const state = newState(1e9);
     state.nivelValor = 4;
     state.danioObjeto = num(3);
-    expect(valorPreview(state, gameData).nextObject?.id).toBe('taza');
+    expect(valorNextObject(state, gameData)?.id).toBe('taza');
 
     const result = buyValor(state, gameData);
     expect(result.newObject?.id).toBe('taza');
@@ -80,14 +84,12 @@ describe('Valor', () => {
     expect(moneyPerBreak(state, gameData).gt(lastOfVaso)).toBe(true);
   });
 
-  it('sin la herramienta no se puede pasar a la siguiente familia', () => {
+  it('Valor pasa de una familia de objetos a la siguiente sin comprar nada más', () => {
     const state = newState(1e12);
-    state.nivelValor = 29; // último nivel del celular; sigue el papel de baño (garras)
-    expect(valorPreview(state, gameData).requiredTool?.id).toBe('garras');
-    expect(buyValor(state, gameData).bought).toBe(false);
-
-    expect(buyTool(state, gameData, 'garras')).toBe(true);
+    state.nivelValor = 29; // último nivel del celular; sigue el papel de baño
     expect(buyValor(state, gameData).newObject?.id).toBe('papel');
+    state.nivelValor = 59;
+    expect(buyValor(state, gameData).newObject?.herramienta).toBe('carrito');
   });
 
   it('el costo depende del objeto actual', () => {
@@ -98,40 +100,54 @@ describe('Valor', () => {
   });
 });
 
-describe('herramientas', () => {
-  it('solo se compran cuando el dueño necesita la siguiente familia', () => {
-    const state = newState(1e9);
-    expect(nextTool(state, gameData)?.id).toBe('garras');
-    expect(toolAvailable(state, gameData, 'garras')).toBe(false);
-    expect(buyTool(state, gameData, 'garras')).toBe(false);
-
-    state.nivelValor = 29;
-    expect(toolAvailable(state, gameData, 'garras')).toBe(true);
-    expect(buyTool(state, gameData, 'carrito')).toBe(false);
-    expect(buyTool(state, gameData, 'garras')).toBe(true);
-    expect(nextTool(state, gameData)?.id).toBe('carrito');
+describe('críticos', () => {
+  it('Garras afiladas: +1 % por nivel, con tope', () => {
+    const state = newState(1e30);
+    expect(critChance(state, gameData)).toBe(0);
+    expect(buyCritChance(state, gameData)).toBe(true);
+    expect(critChance(state, gameData)).toBeCloseTo(0.01);
+    state.nivelCritico = 50;
+    expect(critChance(state, gameData)).toBe(0.5);
+    expect(buyCritChance(state, gameData)).toBe(false);
   });
 
-  it('cada herramienta multiplica el daño', () => {
-    const state = newState(1e9);
-    state.nivelValor = 29;
-    buyTool(state, gameData, 'garras');
-    expect(tapDamage(state, gameData).eq(3)).toBe(true);
-    state.nivelValor = 59;
-    buyTool(state, gameData, 'carrito');
-    expect(tapDamage(state, gameData).eq(9)).toBe(true);
+  it('Sombrero: el crítico empieza en ×2 y sube 0.1 por nivel', () => {
+    const state = newState(1e30);
+    expect(critMultiplier(state, gameData)).toBe(2);
+    expect(buyCritDamage(state, gameData)).toBe(true);
+    expect(critMultiplier(state, gameData)).toBeCloseTo(2.1);
+  });
+
+  it('daño promedio = daño × (1 + prob × (mult − 1))', () => {
+    const state = newState();
+    state.nivelFuerza = 9; // daño 10
+    state.nivelCritico = 20; // 20 %
+    state.nivelDanioCritico = 10; // ×3
+    expect(critFactor(state, gameData)).toBeCloseTo(1.4);
+    expect(expectedTapDamage(state, gameData).toNumber()).toBeCloseTo(tapDamage(state, gameData).toNumber() * 1.4);
+  });
+
+  it('el manotazo crítico multiplica el daño y lo marca', () => {
+    const state = newState();
+    state.nivelValor = 130; // refri: no se rompe de un golpe
+    state.nivelCritico = 20;
+    const normal = tap(state, gameData, () => 0.5);
+    expect(normal.critico).toBe(false);
+    const crit = tap(state, gameData, () => 0.1);
+    expect(crit.critico).toBe(true);
+    expect(crit.damage.eq(normal.damage.mul(2))).toBe(true);
   });
 });
 
 describe('normalizeState', () => {
-  it('corrige un guardado con herramientas sueltas y Valor de más', () => {
+  it('corrige niveles rotos y la probabilidad de crítico por encima del tope', () => {
     const state = newState();
-    state.herramientas = ['carrito', 'inventada'];
-    state.nivelValor = 75;
+    state.nivelValor = 75.5;
     state.nivelFuerza = 2.7;
+    state.nivelCritico = 400;
     normalizeState(state, gameData);
-    expect(state.herramientas).toEqual(['pata']);
-    expect(state.nivelValor).toBe(29);
+    expect(state.nivelValor).toBe(75);
     expect(state.nivelFuerza).toBe(2);
+    expect(state.nivelCritico).toBe(50);
   });
 });

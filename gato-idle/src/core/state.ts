@@ -38,8 +38,9 @@ export interface GameState {
   nivelFuerza: number;
   /** Cada `nivelesPorObjeto` niveles el dueño compra el siguiente objeto (ver economy.ts). */
   nivelValor: number;
-  /** Ids de herramientas compradas, en el orden de tools.json. */
-  herramientas: string[];
+  /** Niveles de "Prob. de crítico" y "Daño crítico" (ver economy.ts). */
+  nivelCritico: number;
+  nivelDanioCritico: number;
   /** Nivel de cada aliado comprado (los que no aparecen están en 0). */
   aliados: { id: string; nivel: number }[];
   /** Descubrimientos ya conseguidos (ids de unlocks.json), en orden. */
@@ -69,7 +70,8 @@ export function createInitialState(now: number): GameState {
     dineroPartida: ZERO,
     nivelFuerza: 0,
     nivelValor: 0,
-    herramientas: [],
+    nivelCritico: 0,
+    nivelDanioCritico: 0,
     aliados: [],
     desbloqueos: [],
     laboratorio: { hechas: [], actual: null },
