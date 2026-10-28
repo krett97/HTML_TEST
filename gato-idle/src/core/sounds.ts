@@ -20,7 +20,19 @@ export const BREAK_SOUNDS = [
 ] as const;
 
 /** Voces de los aliados y sonidos de la interfaz. */
-export const OTHER_SOUNDS = ['miau', 'guau', 'pio', 'chillido', 'compra', 'herramienta', 'objeto-nuevo'] as const;
+export const OTHER_SOUNDS = [
+  'miau',
+  'guau',
+  'pio',
+  'chillido',
+  'chirrido',
+  'graznido',
+  'balido',
+  'compra',
+  'herramienta',
+  'objeto-nuevo',
+  'descubrimiento',
+] as const;
 
 export type HitSound = (typeof HIT_SOUNDS)[number];
 export type BreakSound = (typeof BREAK_SOUNDS)[number];

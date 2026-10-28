@@ -5,12 +5,16 @@ import { writable, type Readable, type Writable } from 'svelte/store';
 import { hit, tap, type HitResult } from '../core/actions';
 import { allyCost, allyHitDamage, allyLevel, allyUnlocked, alliesDps, buyAlly } from '../core/allies';
 import type { AllyDef, GameData, ToolDef } from '../core/data';
+import type { Effect } from '../core/modifiers';
+import { finishResearch, researchRemaining, researchStatus, startResearch, type ResearchStatus } from '../core/research';
+import { checkUnlocks, hasUnlock, nextUnlock } from '../core/unlocks';
 import {
   buyFuerza,
   buyTool,
   buyValor,
   currentObject,
   fuerzaCost,
+  objectIndexFor,
   moneyPerBreak,
   objectProgress,
   ownsTool,
@@ -48,6 +52,10 @@ export interface GameEvents {
   aliado: { allyId: string; result: HitResult };
   /** Se adoptó un aliado (primer nivel). */
   aliadoNuevo: { allyId: string };
+  /** Se descubrió algo nuevo (id de unlocks.json). */
+  descubrimiento: { unlockId: string };
+  /** Terminó una investigación del laboratorio. */
+  investigacion: { researchId: string };
   /** La partida se reinició: la escena vuelve a poner el objeto al inicio. */
   reset: undefined;
 }
@@ -68,13 +76,37 @@ export interface AllyView {
   id: string;
   nivel: number;
   desbloqueado: boolean;
-  /** Objeto con el que llega. */
-  desbloqueo: string;
+  /** Qué hace falta para descubrirlo. */
+  condicion: { roturas?: number; objeto?: string };
   costo: string;
   alcanza: boolean;
   danio: string;
   danioSiguiente: string;
   intervalo: number;
+}
+
+export interface ResearchView {
+  id: string;
+  estado: ResearchStatus;
+  costo: string;
+  alcanza: boolean;
+  /** Segundos que tarda. */
+  duracion: number;
+  efectos: Effect[];
+  requiere: string;
+  /** Ya se llegó al objeto que pide (si está bloqueada, es porque falta terminar la anterior). */
+  alcanzado: boolean;
+}
+
+export interface NextUnlockView {
+  /** "fuerza", "valor", "aliado:raton"… */
+  id: string;
+  tipo: 'funcion' | 'aliado';
+  condicion: 'roturas' | 'objeto';
+  /** Para "objeto": el id del objeto al que hay que llegar. */
+  objeto: string | null;
+  actual: number;
+  meta: number;
 }
 
 /** Lo que la UI necesita mostrar, ya formateado. */
@@ -116,6 +148,15 @@ export interface ViewModel {
   herramientas: ToolView[];
   /** Algo se puede comprar ahora (punto en la pestaña Mejoras). */
   hayCompra: boolean;
+  /** Qué partes del juego ya se descubrieron. */
+  funciones: { fuerza: boolean; valor: boolean; herramientas: boolean; laboratorio: boolean; aliados: boolean };
+  /** Descubrimientos recientes (para la etiqueta "¡Nuevo!"). */
+  nuevos: string[];
+  proximo: NextUnlockView | null;
+  laboratorio: {
+    actual: { id: string; restante: number; duracion: number } | null;
+    proyectos: ResearchView[];
+  };
   aliados: AllyView[];
   /** Daño por segundo de todos los aliados. */
   dpsAliados: string;
@@ -136,6 +177,8 @@ const TICK_MS = 100;
 const MAX_TICK_MS = 3000;
 /** Golpes que un aliado puede dar en un solo tick, como máximo. */
 const MAX_HITS_PER_TICK = 4;
+/** Cuánto tiempo se marca algo recién descubierto con "¡Nuevo!". */
+const NEW_BADGE_MS = 45_000;
 
 export class Game {
   readonly events = new Emitter<GameEvents>();
@@ -152,6 +195,9 @@ export class Game {
   private lastTick = 0;
   /** Milisegundos acumulados por aliado hacia su siguiente golpe. */
   private readonly allyTimers = new Map<string, number>();
+  /** Descubrimientos recientes y cuándo ocurrieron (no se guarda). */
+  private readonly recentUnlocks = new Map<string, number>();
+  private lastSecond = 0;
 
   constructor(
     readonly data: GameData,
@@ -176,6 +222,8 @@ export class Game {
       this.lastSavedAt = loaded.savedAt;
     }
     normalizeState(this.state, this.data);
+    // Lo que ya se había ganado antes de esta versión se descubre en silencio.
+    checkUnlocks(this.state, this.data);
     if (!isLocale(this.state.ajustes.idioma)) this.state.ajustes.idioma = null;
     this.applyLocale();
     this.services.audio.enabled = this.state.ajustes.sonido;
@@ -234,6 +282,10 @@ export class Game {
     return this.afterPurchase(bought);
   }
 
+  startResearch(researchId: string): boolean {
+    return this.afterPurchase(startResearch(this.state, this.data, researchId, Date.now()));
+  }
+
   /** Sonido respetando el ajuste "Sonido". */
   playSound(id: SoundId, options?: PlayOptions): void {
     this.services.audio.play(id, options);
@@ -267,6 +319,7 @@ export class Game {
     this.state.ajustes = ajustes;
     this.lastSavedAt = null;
     this.allyTimers.clear();
+    this.recentUnlocks.clear();
     this.events.emit('reset', undefined);
     await this.save();
   }
@@ -303,7 +356,30 @@ export class Game {
     const dt = Math.min(now - this.lastTick, MAX_TICK_MS);
     this.lastTick = now;
     this.runAllies(dt);
+    this.runDiscoveries(now);
     if (this.dirty) this.refreshView();
+  }
+
+  private runDiscoveries(now: number): void {
+    for (const unlock of checkUnlocks(this.state, this.data)) {
+      this.recentUnlocks.set(unlock.id, now);
+      this.events.emit('descubrimiento', { unlockId: unlock.id });
+      this.playSound('descubrimiento');
+      this.markDirty();
+    }
+    const done = finishResearch(this.state, this.data, Date.now());
+    if (done) {
+      this.events.emit('investigacion', { researchId: done.id });
+      this.playSound('descubrimiento');
+      this.markDirty();
+      void this.save();
+    }
+    // Una vez por segundo: cuenta regresiva del laboratorio y caducidad de "¡Nuevo!".
+    if (now - this.lastSecond >= 1000) {
+      this.lastSecond = now;
+      for (const [id, at] of this.recentUnlocks) if (now - at > NEW_BADGE_MS) this.recentUnlocks.delete(id);
+      if (this.state.laboratorio.actual || this.recentUnlocks.size > 0) this.markDirty();
+    }
   }
 
   /** Cada aliado golpea cada `intervalo` segundos. */
@@ -354,7 +430,7 @@ export class Game {
       id: ally.id,
       nivel,
       desbloqueado: allyUnlocked(s, this.data, ally),
-      desbloqueo: ally.desbloqueo,
+      condicion: { ...this.data.unlocks.find((u) => u.id === `aliado:${ally.id}`)!.condicion },
       costo: fmt(costo),
       alcanza: s.dinero.gte(costo),
       danio: fmt(allyHitDamage(nivel, ally, s, this.data)),
@@ -396,6 +472,10 @@ export class Game {
     const puedeValor = !preview.requiredTool && s.dinero.gte(costoValor);
     const puedeHerramienta = herramientas.some((t) => t.estado === 'disponible' && t.alcanza);
     const aliados = d.allies.map((ally) => this.allyView(ally, fmt));
+    const next = nextUnlock(s, d);
+    const now = Date.now();
+    const current = s.laboratorio.actual;
+    const currentDef = current ? d.research.find((r) => r.id === current.id) : undefined;
 
     return {
       dinero: fmt(s.dinero),
@@ -429,7 +509,36 @@ export class Game {
       },
       herramientaActual: object.herramienta,
       herramientas,
-      hayCompra: puedeFuerza || puedeValor || puedeHerramienta,
+      hayCompra: (hasUnlock(s, 'fuerza') && puedeFuerza) || (hasUnlock(s, 'valor') && puedeValor) || puedeHerramienta,
+      funciones: {
+        fuerza: hasUnlock(s, 'fuerza'),
+        valor: hasUnlock(s, 'valor'),
+        herramientas: hasUnlock(s, 'herramientas'),
+        laboratorio: hasUnlock(s, 'laboratorio'),
+        aliados: s.desbloqueos.some((id) => id.startsWith('aliado:')),
+      },
+      nuevos: [...this.recentUnlocks.keys()],
+      proximo: next && {
+        id: next.unlock.id,
+        tipo: next.unlock.id.startsWith('aliado:') ? 'aliado' : 'funcion',
+        condicion: 'roturas' in next.unlock.condicion ? 'roturas' : 'objeto',
+        objeto: 'objeto' in next.unlock.condicion ? next.unlock.condicion.objeto : null,
+        actual: next.current,
+        meta: next.target,
+      },
+      laboratorio: {
+        actual: current && currentDef ? { id: current.id, restante: researchRemaining(s, now), duracion: currentDef.duracion } : null,
+        proyectos: d.research.map((r) => ({
+          id: r.id,
+          estado: researchStatus(s, d, r),
+          costo: fmt(r.costo),
+          alcanza: s.dinero.gte(r.costo),
+          duracion: r.duracion,
+          efectos: r.efectos,
+          requiere: r.requiere,
+          alcanzado: objectIndexFor(s.nivelValor, d) >= d.objects.findIndex((o) => o.id === r.requiere),
+        })),
+      },
       aliados,
       dpsAliados: fmt(alliesDps(s, d)),
       hayCompraAliado: aliados.some((a) => a.desbloqueado && a.alcanza),

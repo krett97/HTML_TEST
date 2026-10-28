@@ -1,6 +1,8 @@
 <script lang="ts">
   import { t } from '../../i18n';
   import { useGame } from '../context';
+  import NewBadge from '../NewBadge.svelte';
+  import NextDiscovery from '../NextDiscovery.svelte';
 
   const game = useGame();
   const view = game.view;
@@ -33,10 +35,16 @@
     </div>
   </div>
 
-  <div class="card upgrade">
+  <NextDiscovery />
+
+  {#if $view.funciones.fuerza}
+  <div class="card upgrade" class:fresh={$view.nuevos.includes('fuerza')}>
     <span class="icon" aria-hidden="true">💪</span>
     <div class="info">
-      <div class="name">{$t('mejoras.fuerza')} <span class="level">{$t('mejoras.nivel', { n: $view.fuerza.nivel })}</span></div>
+      <div class="name">
+        {$t('mejoras.fuerza')} <span class="level">{$t('mejoras.nivel', { n: $view.fuerza.nivel })}</span>
+        {#if $view.nuevos.includes('fuerza')}<NewBadge />{/if}
+      </div>
       <div class="effect">{$t('mejoras.fuerzaEfecto', { actual: $view.danio, siguiente: $view.fuerza.danioSiguiente })}</div>
     </div>
     <button
@@ -49,11 +57,16 @@
       ${$view.fuerza.costo}
     </button>
   </div>
+  {/if}
 
-  <div class="card upgrade">
+  {#if $view.funciones.valor}
+  <div class="card upgrade" class:fresh={$view.nuevos.includes('valor')}>
     <span class="icon" aria-hidden="true">💎</span>
     <div class="info">
-      <div class="name">{$t('mejoras.valor')} <span class="level">{$t('mejoras.nivel', { n: $view.valor.nivel })}</span></div>
+      <div class="name">
+        {$t('mejoras.valor')} <span class="level">{$t('mejoras.nivel', { n: $view.valor.nivel })}</span>
+        {#if $view.nuevos.includes('valor')}<NewBadge />{/if}
+      </div>
       {#if $view.valor.requiere}
         <div class="effect warn">🔒 {$t('mejoras.valorRequiere', { herramienta: $t(`herramientas.${$view.valor.requiere}`) })}</div>
       {:else if $view.valor.nuevoObjeto}
@@ -95,8 +108,10 @@
       </button>
     {/if}
   </div>
+  {/if}
 
-  <h3>{$t('mejoras.herramientas')}</h3>
+  {#if $view.funciones.herramientas}
+  <h3>{$t('mejoras.herramientas')} {#if $view.nuevos.includes('herramientas')}<NewBadge />{/if}</h3>
   <ul class="tools">
     {#each $view.herramientas as tool (tool.id)}
       <li class="card upgrade tool" class:owned={tool.estado === 'comprada'} class:locked={tool.estado === 'bloqueada'}>
@@ -127,6 +142,7 @@
       </li>
     {/each}
   </ul>
+  {/if}
 </div>
 
 <style>
@@ -221,6 +237,9 @@
     margin: 0;
     padding: 0;
     list-style: none;
+  }
+  .fresh {
+    border-color: var(--gold);
   }
   .tool.locked {
     opacity: 0.6;

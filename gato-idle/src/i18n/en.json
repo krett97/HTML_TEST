@@ -10,7 +10,7 @@
   "tabs": {
     "mejoras": "Upgrades",
     "aliados": "Allies",
-    "mudanza": "Move out",
+    "laboratorio": "Lab",
     "ajustes": "Settings"
   },
   "objetos": {
@@ -64,17 +64,6 @@
     "tuya": "Yours",
     "bloqueada": "Unlocks at: {objeto}"
   },
-  "personal": {
-    "titulo": "Channel staff",
-    "camarografo": "Camera operator",
-    "editor": "Editor",
-    "seguros": "Insurance agent",
-    "cm": "Community manager",
-    "pronto": "Coming soon"
-  },
-  "mudanza": {
-    "pronto": "Moving out arrives in phase 4: you move to a pricier home and your followers stay with you."
-  },
   "ajustes": {
     "sonido": "Sound",
     "musica": "Music",
@@ -106,7 +95,10 @@
   "avisos": {
     "objetoNuevo": "The owner bought: {objeto}!",
     "herramienta": "New tool: {herramienta}!",
-    "aliadoNuevo": "{aliado} joined!"
+    "aliadoNuevo": "{aliado} joined!",
+    "descubrimiento": "New: {nombre}!",
+    "aliadoDisponible": "New ally: {aliado}!",
+    "investigacion": "Research done: {nombre}"
   },
   "aliados": {
     "gatito": "Baby kitten",
@@ -117,13 +109,62 @@
       "gatito": "Scratches",
       "perro": "Bites",
       "perico": "Pecks",
-      "mapache": "Raids"
+      "mapache": "Raids",
+      "raton": "Nibbles",
+      "cuervo": "Pecks",
+      "cabra": "Rams"
     },
     "titulo": "They wreck things on their own, even when you don't tap",
     "total": "Automatic damage: {dps} per second",
     "efecto": "{accion} every {segundos} s · damage {actual} → {siguiente}",
     "efectoNuevo": "{accion} every {segundos} s · damage {siguiente}",
-    "bloqueado": "Arrives with: {objeto}",
-    "adoptar": "Adopt"
+    "adoptar": "Adopt",
+    "raton": "Mouse",
+    "cuervo": "Crow",
+    "cabra": "Goat",
+    "oculto": "???",
+    "pista": "A new ally"
+  },
+  "descubrimientos": {
+    "proximo": "Next discovery",
+    "misterio": "???",
+    "pistaFuncion": "Something new for the cat",
+    "pistaAliado": "A new ally",
+    "roturas": "Knock off {n} more items",
+    "objeto": "Reach: {objeto}",
+    "nuevo": "New!",
+    "todo": "You've discovered everything in this version. Coming next: moving out and the channel staff.",
+    "fuerza": "Strength",
+    "valor": "Value",
+    "herramientas": "Tools",
+    "laboratorio": "Kitten lab"
+  },
+  "laboratorio": {
+    "titulo": "Kitten lab",
+    "intro": "Kittens in lab coats study the owner. Each project takes real time and keeps going while the game is closed.",
+    "investigar": "Research",
+    "enCurso": "Researching: {nombre}",
+    "falta": "{tiempo} left",
+    "ocupado": "Another one is running",
+    "hecha": "Done",
+    "dura": "Takes {tiempo}",
+    "requiere": "Unlocks at: {objeto}",
+    "oculta": "Secret research",
+    "stats": {
+      "danio": "damage",
+      "vistas": "views",
+      "danioAliados": "ally damage"
+    },
+    "proyectos": {
+      "mirada": "Study of the innocent stare",
+      "fisioterapia": "Paw physiotherapy",
+      "psicologia": "Owner psychology",
+      "entrenamiento": "Ally training",
+      "patrones": "Owner shopping analysis",
+      "kungfu": "Feline kung fu",
+      "sindicato": "Pet union",
+      "gravedad": "Applied gravity"
+    },
+    "despues": "After the previous one is done"
   }
 }

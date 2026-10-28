@@ -1,6 +1,6 @@
 # Swat to the Moon — Documento de diseño
 
-> **Versión 0.4** · Actualiza el prompt original ([`prompt-original.md`](prompt-original.md)) con las mejoras del análisis.
+> **Versión 0.5** · Actualiza el prompt original ([`prompt-original.md`](prompt-original.md)) con las mejoras del análisis.
 > **Nombre provisional.** *Knock It Off!* ya está en uso (Spin Master vende un juego físico con ese nombre para jugar con tu gato, y hay varios juegos en itch.io). *Swat to the Moon* aún no está verificado en Play Store ni en registros de marca (USPTO / IMPI). El nombre visible se cambia en un solo lugar: `src/i18n/*.json` → `app.title` y `capacitor.config.ts` → `appName`.
 
 ---
@@ -327,3 +327,43 @@ Fuera del MVP: herramientas 5–8, otras mascotas, paseador y abogado, 7 vidas, 
 
 - **Ritmo** (simulador, 5 toques/s): garras min 4.9, carrito 10.5, aspiradora 18.9, refri 41.4. Los aliados hacen ~5 % del daño al inicio y ~60 % al final.
 - El "Personal del canal" (camarógrafo, editor, seguros, community manager) queda para la siguiente fase, ahora como ganancias y ganancias offline.
+
+## 20. Principio de diseño: siempre hay algo nuevo por descubrir (versión 0.4.0)
+
+El jugador siempre debe sentir que avanza y que está a punto de desbloquear algo. Al principio solo puede dar manotazos; todo lo demás se va **descubriendo**: rápido al inicio y cada vez más espaciado, hasta investigaciones que tardan días.
+
+- **`unlocks.json`** define el orden y la condición de cada descubrimiento (romper N objetos o llegar a un objeto). Agregar uno nuevo es agregar una línea.
+- Siempre se ve la tarjeta **"Próximo descubrimiento"**, con su barra de progreso y qué falta ("Tira 3 objetos más", "Llega a: Lámpara"), sin revelar qué es.
+- Al descubrir algo: aviso, sonido y la etiqueta **"¡Nuevo!"** en la tarjeta o la pestaña. Las pestañas aparecen solo cuando se descubren.
+- Los aliados futuros se ven como **"???"** hasta descubrirlos.
+
+| Descubrimiento | Condición | Minuto (simulador) |
+|---|---|---|
+| Fuerza | 3 roturas | 0.1 |
+| Valor | 12 roturas | 0.2 |
+| Gatito bebé (pestaña Aliados) | 30 roturas | 0.3 |
+| Ratón | llegar al control remoto | 2.2 |
+| Herramientas | llegar al florero | 3.1 |
+| Perro | llegar al papel de baño | 5.1 |
+| Laboratorio de gatitos | llegar a la lámpara | 10.5 |
+| Perico | llegar a la consola | 12 |
+| Cuervo | llegar a la mesa de centro | 14.8 |
+| Mapache | llegar a la tostadora | 18.9 |
+| Cabra | llegar a la lavadora | 28.5 |
+
+### Laboratorio de gatitos
+
+Gatitos con bata analizan al dueño. Cada investigación cuesta dinero, **tarda tiempo real** y sigue avanzando con el juego cerrado; da una mejora permanente (se suma al sistema de modificadores). Se investiga una a la vez y en orden (`research.json`).
+
+| Investigación | Efecto | Duración |
+|---|---|---|
+| Estudio de la mirada inocente | ×1.25 vistas | 1 min |
+| Fisioterapia de pata | ×1.25 daño | 5 min |
+| Psicología del dueño | ×1.5 vistas | 20 min |
+| Entrenamiento de aliados | ×1.5 daño de aliados | 1 h |
+| Análisis de las compras del dueño | ×2 vistas | 4 h |
+| Kung fu felino | ×2 daño | 12 h |
+| Sindicato de mascotas | ×2 daño de aliados | 1 día |
+| Gravedad aplicada | ×3 daño | 3 días |
+
+Ideas para más adelante: acelerar una investigación con un anuncio recompensado, y más descubrimientos de largo plazo (la mudanza, el personal del canal, gatos legendarios).

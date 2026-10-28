@@ -22,6 +22,8 @@ export const PALETTE: Record<string, string> = {
   B: '#7a4a28', // café oscuro
   v: '#4caf50', // verde (perico)
   V: '#2e7d32', // verde oscuro
+  n: '#26232e', // negro (cuervo)
+  N: '#45405a', // ala del cuervo
 };
 
 // Gato naranja sentado, de perfil, mirando a la derecha (hacia la orilla).
@@ -139,6 +141,47 @@ export const RACCOON = [
   '...kakkkkak...',
 ];
 
+// Ratón gris.
+export const MOUSE = [
+  '......k.k..',
+  '.....kakak.',
+  '...kkaaaaek',
+  '..kaaaaaaap',
+  'kkaaaaaaak.',
+  '...kpk.kpk.',
+];
+
+// Cuervo negro.
+export const CROW = [
+  '.....kkk....',
+  '....knnnk...',
+  '...knnwnk...',
+  '...knnnnkyy.',
+  '..knnnnnk...',
+  '.knNNnnnk...',
+  'knNNNnnnk...',
+  'knNNnnnk....',
+  '.kknnkk.....',
+  '...k.k......',
+];
+
+// Cabra blanca con cuernos.
+export const GOAT = [
+  '..........gg....',
+  '.........kkgk...',
+  '........kwwwwk..',
+  '........kwwewwk.',
+  '........kwwwwwwk',
+  '.........kwwwkk.',
+  '..kkkkkkkwwwk...',
+  '.kwwwwwwwwwwk...',
+  'kwkwwwwwwwwwk...',
+  '.kwwwwwwwwwwk...',
+  '..kwkkkkkkwk....',
+  '..kwk....kwk....',
+  '..kkk....kkk....',
+];
+
 export const SPRITES = {
   gato: CAT,
   pata: PAW,
@@ -149,6 +192,9 @@ export const SPRITES = {
   aliado_perro: DOG,
   aliado_perico: PARROT,
   aliado_mapache: RACCOON,
+  aliado_raton: MOUSE,
+  aliado_cuervo: CROW,
+  aliado_cabra: GOAT,
 };
 
 /** Cómo luce el gato según la herramienta del objeto en la mesa. */

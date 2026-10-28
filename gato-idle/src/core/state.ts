@@ -28,6 +28,14 @@ export interface GameState {
   herramientas: string[];
   /** Nivel de cada aliado comprado (los que no aparecen están en 0). */
   aliados: { id: string; nivel: number }[];
+  /** Descubrimientos ya conseguidos (ids de unlocks.json), en orden. */
+  desbloqueos: string[];
+  laboratorio: {
+    /** Investigaciones terminadas. */
+    hechas: string[];
+    /** La que está en curso y cuándo termina (ms de reloj, sigue con el juego cerrado). */
+    actual: { id: string; fin: number } | null;
+  };
   /** Daño acumulado sobre el objeto actual. */
   danioObjeto: Decimal;
   stats: {
@@ -48,6 +56,8 @@ export function createInitialState(now: number): GameState {
     nivelValor: 0,
     herramientas: [],
     aliados: [],
+    desbloqueos: [],
+    laboratorio: { hechas: [], actual: null },
     danioObjeto: ZERO,
     stats: { toques: 0, roturas: 0 },
     ajustes: {

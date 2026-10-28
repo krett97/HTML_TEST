@@ -1,12 +1,24 @@
 <script lang="ts">
   import { t } from '../../i18n';
   import { useGame } from '../context';
+  import NewBadge from '../NewBadge.svelte';
 
   const game = useGame();
   const view = game.view;
 
-  const ICONS: Record<string, string> = { gatito: '🐱', perro: '🐶', perico: '🦜', mapache: '🦝' };
-  const STAFF = ['camarografo', 'editor', 'seguros', 'cm'] as const;
+  const ICONS: Record<string, string> = {
+    gatito: '🐱',
+    raton: '🐭',
+    perro: '🐶',
+    perico: '🦜',
+    cuervo: '🐦‍⬛',
+    mapache: '🦝',
+    cabra: '🐐',
+  };
+
+  const unlocked = $derived($view.aliados.filter((a) => a.desbloqueado));
+  /** Solo se asoma el siguiente, sin nombre: lo demás es sorpresa. */
+  const teaser = $derived($view.aliados.find((a) => !a.desbloqueado));
 </script>
 
 <div class="stack">
@@ -15,58 +27,60 @@
     <strong class="gold" data-testid="dps">{$t('aliados.total', { dps: $view.dpsAliados })}</strong>
   </div>
 
-  {#each $view.aliados as ally (ally.id)}
-    <div class="card upgrade" class:locked={!ally.desbloqueado}>
+  {#each unlocked as ally (ally.id)}
+    <div class="card upgrade" class:fresh={$view.nuevos.includes(`aliado:${ally.id}`)}>
       <span class="icon" aria-hidden="true">{ICONS[ally.id] ?? '🐾'}</span>
       <div class="info">
         <div class="name">
           {$t(`aliados.${ally.id}`)}
           {#if ally.nivel > 0}<span class="level">{$t('mejoras.nivel', { n: ally.nivel })}</span>{/if}
+          {#if $view.nuevos.includes(`aliado:${ally.id}`)}<NewBadge />{/if}
         </div>
-        {#if ally.desbloqueado}
-          <div class="effect">
-            {#if ally.nivel > 0}
-              {$t('aliados.efecto', {
-                accion: $t(`aliados.accion.${ally.id}`),
-                segundos: ally.intervalo,
-                actual: ally.danio,
-                siguiente: ally.danioSiguiente,
-              })}
-            {:else}
-              {$t('aliados.efectoNuevo', {
-                accion: $t(`aliados.accion.${ally.id}`),
-                segundos: ally.intervalo,
-                siguiente: ally.danioSiguiente,
-              })}
-            {/if}
-          </div>
-        {:else}
-          <div class="effect">🔒 {$t('aliados.bloqueado', { objeto: $t(`objetos.${ally.desbloqueo}`) })}</div>
-        {/if}
+        <div class="effect">
+          {#if ally.nivel > 0}
+            {$t('aliados.efecto', {
+              accion: $t(`aliados.accion.${ally.id}`),
+              segundos: ally.intervalo,
+              actual: ally.danio,
+              siguiente: ally.danioSiguiente,
+            })}
+          {:else}
+            {$t('aliados.efectoNuevo', {
+              accion: $t(`aliados.accion.${ally.id}`),
+              segundos: ally.intervalo,
+              siguiente: ally.danioSiguiente,
+            })}
+          {/if}
+        </div>
       </div>
-      {#if ally.desbloqueado}
-        <button
-          type="button"
-          class="btn btn--accent buy"
-          disabled={!ally.alcanza}
-          onclick={() => game.buyAlly(ally.id)}
-          data-testid="comprar-aliado-{ally.id}"
-          aria-label="{ally.nivel > 0 ? $t('mejoras.nivel', { n: ally.nivel + 1 }) : $t('aliados.adoptar')} {$t(`aliados.${ally.id}`)} ${ally.costo}"
-        >
-          {#if ally.nivel === 0}<span class="adopt">{$t('aliados.adoptar')}</span>{/if}
-          ${ally.costo}
-        </button>
-      {/if}
+      <button
+        type="button"
+        class="btn btn--accent buy"
+        disabled={!ally.alcanza}
+        onclick={() => game.buyAlly(ally.id)}
+        data-testid="comprar-aliado-{ally.id}"
+        aria-label="{ally.nivel > 0 ? $t('mejoras.nivel', { n: ally.nivel + 1 }) : $t('aliados.adoptar')} {$t(`aliados.${ally.id}`)} ${ally.costo}"
+      >
+        {#if ally.nivel === 0}<span class="adopt">{$t('aliados.adoptar')}</span>{/if}
+        ${ally.costo}
+      </button>
     </div>
   {/each}
 
-  <h3>{$t('personal.titulo')}</h3>
-  <ul class="staff">
-    {#each STAFF as id (id)}
-      <li>{$t(`personal.${id}`)}</li>
-    {/each}
-  </ul>
-  <p class="muted small">🔒 {$t('personal.pronto')}</p>
+  {#if teaser}
+    <div class="card upgrade locked" data-testid="aliado-oculto">
+      <span class="icon" aria-hidden="true">❔</span>
+      <div class="info">
+        <div class="name">{$t('aliados.oculto')}</div>
+        <div class="effect">
+          🔒 {$t('aliados.pista')} ·
+          {teaser.condicion.objeto
+            ? $t('descubrimientos.objeto', { objeto: $t(`objetos.${teaser.condicion.objeto}`) })
+            : $t('descubrimientos.roturas', { n: Math.max(0, (teaser.condicion.roturas ?? 0) - $view.roturas) })}
+        </div>
+      </div>
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -127,28 +141,7 @@
     font-size: 12px;
     font-weight: 400;
   }
-  h3 {
-    margin: 8px 2px 0;
-    font-size: 15px;
-    color: var(--muted);
-  }
-  .staff {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-  .staff li {
-    padding: 4px 8px;
-    border: 2px solid var(--line);
-    border-radius: 4px;
-    color: var(--muted);
-    font-size: 13px;
-  }
-  .small {
-    margin: 0 2px;
-    font-size: 13px;
+  .fresh {
+    border-color: var(--gold);
   }
 </style>

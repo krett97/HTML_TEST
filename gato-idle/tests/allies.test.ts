@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { allyCost, allyHitDamage, allyLevel, allyUnlocked, alliesDps, buyAlly } from '../src/core/allies';
 import { normalizeState } from '../src/core/normalize';
+import { checkUnlocks } from '../src/core/unlocks';
 import { num } from '../src/core/num';
 import { createInitialState } from '../src/core/state';
 import { gameData } from '../src/data';
@@ -15,16 +16,21 @@ function newState(dinero = 0) {
 }
 
 describe('aliados', () => {
-  it('el gatito bebé está disponible desde el inicio y los demás llegan después', () => {
+  it('cada aliado llega con su descubrimiento', () => {
     const state = newState();
+    expect(allyUnlocked(state, gameData, ally('gatito'))).toBe(false);
+    state.stats.roturas = 30;
+    checkUnlocks(state, gameData);
     expect(allyUnlocked(state, gameData, ally('gatito'))).toBe(true);
     expect(allyUnlocked(state, gameData, ally('perro'))).toBe(false);
     state.nivelValor = 30; // papel de baño
+    checkUnlocks(state, gameData);
     expect(allyUnlocked(state, gameData, ally('perro'))).toBe(true);
   });
 
   it('adoptar y mejorar sube el nivel y cobra', () => {
     const state = newState(100);
+    state.desbloqueos = ['aliado:gatito'];
     const cost = allyCost(state, gameData, ally('gatito'));
     expect(buyAlly(state, gameData, 'gatito')).toBe(true);
     expect(allyLevel(state, 'gatito')).toBe(1);

@@ -21,6 +21,7 @@ import {
   valorStepsInObject,
 } from '../src/core/economy';
 import { normalizeState } from '../src/core/normalize';
+import { checkUnlocks, hasUnlock, nextUnlock } from '../src/core/unlocks';
 import { allyCost, allyLevel, allyUnlocked, alliesDps, buyAlly } from '../src/core/allies';
 import { formatNum } from '../src/core/format';
 import { num } from '../src/core/num';
@@ -35,13 +36,17 @@ function allyHitsPerSecond(state: GameState, data: GameData): number {
   return data.allies.reduce((sum, ally) => sum + (allyLevel(state, ally.id) > 0 ? 1 / ally.intervalo : 0), 0);
 }
 
-/** Dinero por segundo tocando a ritmo constante, más lo que rompen los aliados. */
-function income(state: GameState, data: GameData): number {
+/** Objetos rotos por segundo tocando a ritmo constante, más lo que rompen los aliados. */
+function breaksPerSecond(state: GameState, data: GameData): number {
   const hp = currentObject(state, data).hp.toNumber();
   const dps = tapDamage(state, data).toNumber() * TAPS_PER_SECOND + alliesDps(state, data).toNumber();
   // Cada golpe rompe a lo mucho un objeto.
-  const breaks = Math.min(dps / hp, TAPS_PER_SECOND + allyHitsPerSecond(state, data));
-  return breaks * moneyPerBreak(state, data).toNumber();
+  return Math.min(dps / hp, TAPS_PER_SECOND + allyHitsPerSecond(state, data));
+}
+
+/** Dinero por segundo. */
+function income(state: GameState, data: GameData): number {
+  return breaksPerSecond(state, data) * moneyPerBreak(state, data).toNumber();
 }
 
 function clone(state: GameState): GameState {
@@ -55,11 +60,12 @@ interface Option {
 }
 
 function options(state: GameState, data: GameData): Option[] {
-  const list: Option[] = [
-    { name: 'fuerza', cost: fuerzaCost(state, data).toNumber(), apply: (s) => void buyFuerza(s, data) },
-  ];
+  const list: Option[] = [];
+  if (hasUnlock(state, 'fuerza')) {
+    list.push({ name: 'fuerza', cost: fuerzaCost(state, data).toNumber(), apply: (s) => void buyFuerza(s, data) });
+  }
   const preview = valorPreview(state, data);
-  if (!preview.requiredTool) {
+  if (hasUnlock(state, 'valor') && !preview.requiredTool) {
     list.push({ name: 'valor', cost: valorCost(state, data).toNumber(), apply: (s) => void buyValor(s, data) });
   }
   for (const ally of data.allies) {
@@ -118,21 +124,37 @@ export function simulate(data: GameData, maxMinutes = MAX_MINUTES): { rows: SimR
   const lastId = data.objects.at(-1)!.id;
 
   while (seconds < maxMinutes * 60) {
+    // Sin nada que comprar todavía: solo toca hasta el siguiente descubrimiento.
+    if (options(state, data).length === 0) {
+      const next = nextUnlock(state, data);
+      const missing = next && 'roturas' in next.unlock.condicion ? next.target - next.current : 1;
+      const wait = missing / breaksPerSecond(state, data);
+      seconds += wait;
+      state.dinero = state.dinero.add(income(state, data) * wait);
+      state.stats.roturas += missing;
+      for (const unlock of checkUnlocks(state, data)) rows.push({ minuto: seconds / 60, hito: `✨ ${unlock.id}`, fuerza: state.nivelFuerza, valor: state.nivelValor, golpes: tapsToBreak(state, data), pagoPorRotura: formatNum(moneyPerBreak(state, data)), aliadosPct: 0 });
+      continue;
+    }
     const option = choose(state, data);
     const rate = income(state, data);
     const wait = Math.max(0, option.cost - state.dinero.toNumber()) / rate;
     seconds += wait;
     state.dinero = state.dinero.add(rate * wait);
+    state.stats.roturas += Math.floor(breaksPerSecond(state, data) * wait);
     // Evita quedarse a una fracción de centavo por redondeo.
     if (state.dinero.lt(option.cost)) state.dinero = num(option.cost);
     const before = state.dinero;
     option.apply(state);
     if (state.dinero.eq(before)) throw new Error(`No se pudo comprar ${option.name}`);
     counts[option.name] = (counts[option.name] ?? 0) + 1;
+    const discovered = checkUnlocks(state, data);
 
     const object = currentObject(state, data).id;
     const isTool = !['fuerza', 'valor'].includes(option.name) && !option.name.startsWith('aliado:');
     const newAlly = option.name.startsWith('aliado:') && counts[option.name] === 1;
+    for (const unlock of discovered) {
+      rows.push({ minuto: seconds / 60, hito: `✨ ${unlock.id}`, fuerza: state.nivelFuerza, valor: state.nivelValor, golpes: tapsToBreak(state, data), pagoPorRotura: formatNum(moneyPerBreak(state, data)), aliadosPct: 0 });
+    }
     if (object !== lastObject || isTool || newAlly) {
       rows.push({
         minuto: seconds / 60,

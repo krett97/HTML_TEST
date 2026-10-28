@@ -1,0 +1,13 @@
+[
+  { "id": "fuerza",         "condicion": { "roturas": 3 } },
+  { "id": "valor",          "condicion": { "roturas": 12 } },
+  { "id": "aliado:gatito",  "condicion": { "roturas": 30 } },
+  { "id": "aliado:raton",   "condicion": { "objeto": "control" } },
+  { "id": "herramientas",   "condicion": { "objeto": "florero" } },
+  { "id": "aliado:perro",   "condicion": { "objeto": "papel" } },
+  { "id": "laboratorio",    "condicion": { "objeto": "lampara" } },
+  { "id": "aliado:perico",  "condicion": { "objeto": "consola" } },
+  { "id": "aliado:cuervo",  "condicion": { "objeto": "mesa" } },
+  { "id": "aliado:mapache", "condicion": { "objeto": "tostadora" } },
+  { "id": "aliado:cabra",   "condicion": { "objeto": "lavadora" } }
+]

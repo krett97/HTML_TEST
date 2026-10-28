@@ -26,4 +26,13 @@ export function normalizeState(state: GameState, data: GameData): void {
   if (blocked !== -1) state.nivelValor = Math.min(state.nivelValor, blocked * nivelesPorObjeto - 1);
   if (state.danioObjeto.lt(0)) state.danioObjeto = ZERO;
   normalizeAllies(state, data);
+
+  const unlockIds = new Set(data.unlocks.map((u) => u.id));
+  state.desbloqueos = [...new Set(state.desbloqueos.filter((id) => unlockIds.has(id)))];
+  const researchIds = new Set(data.research.map((r) => r.id));
+  const lab = state.laboratorio;
+  lab.hechas = [...new Set(lab.hechas.filter((id) => researchIds.has(id)))];
+  if (lab.actual && (!researchIds.has(lab.actual.id) || typeof lab.actual.fin !== 'number' || lab.hechas.includes(lab.actual.id))) {
+    lab.actual = null;
+  }
 }

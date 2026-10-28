@@ -1,18 +1,17 @@
 // Aliados: mascotas que golpean solas cada cierto tiempo, sin que el jugador toque.
 import type { AllyDef, GameData } from './data';
-import { objectIndexFor } from './economy';
 import { applyModifiers, collectModifiers } from './modifiers';
 import { num, type Decimal } from './num';
 import type { GameState } from './state';
+import { hasUnlock } from './unlocks';
 
 export function allyLevel(state: GameState, allyId: string): number {
   return state.aliados.find((a) => a.id === allyId)?.nivel ?? 0;
 }
 
-/** Disponible para comprar: el dueño ya llegó al objeto que lo desbloquea. */
-export function allyUnlocked(state: GameState, data: GameData, ally: AllyDef): boolean {
-  const unlockIndex = data.objects.findIndex((o) => o.id === ally.desbloqueo);
-  return objectIndexFor(state.nivelValor, data) >= unlockIndex;
+/** Disponible para adoptar: ya se descubrió (unlocks.json, "aliado:<id>"). */
+export function allyUnlocked(state: GameState, _data: GameData, ally: AllyDef): boolean {
+  return hasUnlock(state, `aliado:${ally.id}`);
 }
 
 /** Daño de cada golpe: base × nivel, y ×multHito cada `hitoCada` niveles. */

@@ -38,7 +38,15 @@ const COLORS = {
 };
 
 /** Color de las chispitas que deja cada aliado al golpear. */
-const ALLY_SPARK: Record<string, number> = { gatito: 0xb8b0c0, perro: 0xa8693a, perico: 0x4caf50, mapache: 0x8a8296 };
+const ALLY_SPARK: Record<string, number> = {
+  gatito: 0xb8b0c0,
+  raton: 0xb8b0c0,
+  perro: 0xa8693a,
+  perico: 0x4caf50,
+  cuervo: 0x45405a,
+  mapache: 0x8a8296,
+  cabra: 0xfff1e0,
+};
 
 interface AllyVisual {
   sprite: Phaser.GameObjects.Image;
@@ -92,6 +100,11 @@ export class MainScene extends Phaser.Scene {
       this.controller.events.on('herramienta', ({ toolId }) => this.onNewTool(toolId)),
       this.controller.events.on('aliado', ({ allyId, result }) => this.onAllyHit(allyId, result)),
       this.controller.events.on('aliadoNuevo', ({ allyId }) => this.onNewAlly(allyId)),
+      this.controller.events.on('descubrimiento', ({ unlockId }) => this.onDiscovery(unlockId)),
+      this.controller.events.on('investigacion', ({ researchId }) => {
+        const tr = get(t);
+        this.toast(tr('avisos.investigacion', { nombre: tr(`laboratorio.proyectos.${researchId}`) }));
+      }),
       this.controller.events.on('reset', () => {
         this.placeObject();
         this.refreshAllies();
@@ -254,10 +267,18 @@ export class MainScene extends Phaser.Scene {
         return { x: this.cat.x + 1, y: this.cat.y - 8 };
       case 'perro':
         return { x: 1, y: floorY + 5 };
+      case 'raton':
+        return { x: 66, y: floorY + 4 };
       case 'perico': {
         const pictureY = this.tableTop - 70;
         return pictureY >= 18 ? { x: 125, y: pictureY + 1 } : { x: 132, y: this.tableTop - 34 };
       }
+      case 'cuervo': {
+        const windowY = this.tableTop - 96;
+        return windowY >= 16 ? { x: 40, y: windowY + 1 } : { x: 100, y: this.tableTop - 40 };
+      }
+      case 'cabra':
+        return { x: 162, y: floorY + 5 };
       default:
         return { x: 127, y: floorY + 5 };
     }
@@ -283,6 +304,16 @@ export class MainScene extends Phaser.Scene {
     this.toast(get(t)('avisos.aliadoNuevo', { aliado: ally }));
     const def = this.allyDef(allyId);
     if (def.sonido.voz) this.controller.playSound(def.sonido.voz, { tono: def.sonido.tono });
+  }
+
+  /** Algo nuevo se puede usar: aviso con su nombre (o el del aliado). */
+  private onDiscovery(unlockId: string): void {
+    const tr = get(t);
+    if (unlockId.startsWith('aliado:')) {
+      this.toast(tr('avisos.aliadoDisponible', { aliado: tr(`aliados.${unlockId.slice(7)}`) }));
+    } else {
+      this.toast(tr('avisos.descubrimiento', { nombre: tr(`descubrimientos.${unlockId}`) }));
+    }
   }
 
   private allyDef(allyId: string): AllyDef {
@@ -322,14 +353,18 @@ export class MainScene extends Phaser.Scene {
     let target = { dx: 0, dy: -6 };
     if (allyId === 'gatito') {
       target = { dx: this.object.x - this.object.width / 2 - 13 - rest.x, dy: -3 };
-    } else if (allyId === 'perico') {
+    } else if (allyId === 'perico' || allyId === 'cuervo') {
+      // Vuelan hasta el objeto y regresan.
       target = { dx: this.object.x - 5 - rest.x, dy: this.object.y - this.object.height - 2 - rest.y };
+    } else if (allyId === 'cabra') {
+      // Embiste la pata de la mesa.
+      target = { dx: -8, dy: 0 };
     }
     this.tweens.add({
       targets: visual.hop,
       dx: target.dx,
       dy: target.dy,
-      duration: allyId === 'perico' ? 140 : 90,
+      duration: allyId === 'perico' || allyId === 'cuervo' ? 140 : 90,
       ease: 'Quad.out',
       yoyo: true,
       hold: 40,

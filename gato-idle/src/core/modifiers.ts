@@ -30,6 +30,10 @@ export function collectModifiers(state: GameState, data: GameData): Modifier[] {
     if (!ownsTool(state, tool)) continue;
     for (const effect of tool.efectos) mods.push({ ...effect, fuente: `herramienta:${tool.id}` });
   }
+  for (const research of data.research) {
+    if (!state.laboratorio.hechas.includes(research.id)) continue;
+    for (const effect of research.efectos) mods.push({ ...effect, fuente: `investigacion:${research.id}` });
+  }
   return mods;
 }
 

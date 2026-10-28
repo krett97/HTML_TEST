@@ -3,28 +3,52 @@
   import { useGame } from './context';
   import Mejoras from './tabs/Mejoras.svelte';
   import Aliados from './tabs/Aliados.svelte';
-  import Mudanza from './tabs/Mudanza.svelte';
+  import Laboratorio from './tabs/Laboratorio.svelte';
   import Ajustes from './tabs/Ajustes.svelte';
+  import NewBadge from './NewBadge.svelte';
 
-  const TABS = [
+  const ALL_TABS = [
     { id: 'mejoras', icon: '🐾', component: Mejoras },
     { id: 'aliados', icon: '🐱', component: Aliados },
-    { id: 'mudanza', icon: '📦', component: Mudanza },
+    { id: 'laboratorio', icon: '🧪', component: Laboratorio },
     { id: 'ajustes', icon: '⚙️', component: Ajustes },
   ] as const;
+  type TabId = (typeof ALL_TABS)[number]['id'];
 
   const view = useGame().view;
 
-  let active = $state<(typeof TABS)[number]['id']>('mejoras');
-  const Current = $derived(TABS.find((tab) => tab.id === active)!.component);
+  // Las pestañas aparecen conforme se descubren.
+  const tabs = $derived(
+    ALL_TABS.filter(
+      (tab) =>
+        (tab.id !== 'aliados' || $view.funciones.aliados) && (tab.id !== 'laboratorio' || $view.funciones.laboratorio),
+    ),
+  );
+
+  let active = $state<TabId>('mejoras');
+  const Current = $derived((tabs.find((tab) => tab.id === active) ?? tabs[0]!).component);
+
+  function hasDot(id: TabId): boolean {
+    if (id === active) return false;
+    if (id === 'mejoras') return $view.hayCompra;
+    if (id === 'aliados') return $view.hayCompraAliado;
+    if (id === 'laboratorio') return !$view.laboratorio.actual && $view.laboratorio.proyectos.some((p) => p.estado === 'disponible' && p.alcanza);
+    return false;
+  }
+
+  function isNew(id: TabId): boolean {
+    if (id === 'aliados') return $view.nuevos.some((n) => n.startsWith('aliado:'));
+    if (id === 'laboratorio') return $view.nuevos.includes('laboratorio');
+    return false;
+  }
 </script>
 
 <section class="panel">
   <div class="content" role="tabpanel">
     <Current />
   </div>
-  <div class="tabs" role="tablist">
-    {#each TABS as tab (tab.id)}
+  <div class="tabs" role="tablist" style:grid-template-columns="repeat({tabs.length}, 1fr)">
+    {#each tabs as tab (tab.id)}
       <button
         type="button"
         role="tab"
@@ -35,11 +59,12 @@
       >
         <span class="tab-icon" aria-hidden="true">
           {tab.icon}
-          {#if tab.id !== active && ((tab.id === 'mejoras' && $view.hayCompra) || (tab.id === 'aliados' && $view.hayCompraAliado))}
+          {#if hasDot(tab.id)}
             <span class="dot" data-testid="aviso-{tab.id}"></span>
           {/if}
         </span>
         <span class="label">{$t(`tabs.${tab.id}`)}</span>
+        {#if isNew(tab.id) && tab.id !== active}<span class="new"><NewBadge /></span>{/if}
       </button>
     {/each}
   </div>
@@ -62,11 +87,11 @@
   }
   .tabs {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
     border-top: 2px solid var(--line);
     background: var(--bg);
   }
   .tab {
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -93,6 +118,11 @@
   }
   .tab-icon {
     position: relative;
+  }
+  .new {
+    position: absolute;
+    top: 2px;
+    right: 2px;
   }
   /* Hay algo que comprar en Mejoras. */
   .dot {

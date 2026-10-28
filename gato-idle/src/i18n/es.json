@@ -10,7 +10,7 @@
   "tabs": {
     "mejoras": "Mejoras",
     "aliados": "Aliados",
-    "mudanza": "Mudanza",
+    "laboratorio": "Laboratorio",
     "ajustes": "Ajustes"
   },
   "objetos": {
@@ -64,17 +64,6 @@
     "tuya": "Tuya",
     "bloqueada": "Al llegar a: {objeto}"
   },
-  "personal": {
-    "titulo": "Personal del canal",
-    "camarografo": "Camarógrafo",
-    "editor": "Editor",
-    "seguros": "Agente de seguros",
-    "cm": "Community manager",
-    "pronto": "Próximamente"
-  },
-  "mudanza": {
-    "pronto": "La mudanza llega en la fase 4: te mudas a una casa más cara y tus seguidores se quedan contigo."
-  },
   "ajustes": {
     "sonido": "Sonido",
     "musica": "Música",
@@ -106,7 +95,10 @@
   "avisos": {
     "objetoNuevo": "¡El dueño compró: {objeto}!",
     "herramienta": "¡Nueva herramienta: {herramienta}!",
-    "aliadoNuevo": "¡Llegó {aliado}!"
+    "aliadoNuevo": "¡Llegó {aliado}!",
+    "descubrimiento": "¡Nuevo: {nombre}!",
+    "aliadoDisponible": "¡Nuevo aliado: {aliado}!",
+    "investigacion": "Investigación terminada: {nombre}"
   },
   "aliados": {
     "gatito": "Gatito bebé",
@@ -117,13 +109,62 @@
       "gatito": "Rasguña",
       "perro": "Muerde",
       "perico": "Picotea",
-      "mapache": "Saquea"
+      "mapache": "Saquea",
+      "raton": "Mordisquea",
+      "cuervo": "Picotea",
+      "cabra": "Embiste"
     },
     "titulo": "Destruyen solos, aunque no toques",
     "total": "Daño automático: {dps} por segundo",
     "efecto": "{accion} cada {segundos} s · daño {actual} → {siguiente}",
     "efectoNuevo": "{accion} cada {segundos} s · daño {siguiente}",
-    "bloqueado": "Llega con: {objeto}",
-    "adoptar": "Adoptar"
+    "adoptar": "Adoptar",
+    "raton": "Ratón",
+    "cuervo": "Cuervo",
+    "cabra": "Cabra",
+    "oculto": "???",
+    "pista": "Un nuevo aliado"
+  },
+  "descubrimientos": {
+    "proximo": "Próximo descubrimiento",
+    "misterio": "???",
+    "pistaFuncion": "Algo nuevo para el gato",
+    "pistaAliado": "Un nuevo aliado",
+    "roturas": "Tira {n} objetos más",
+    "objeto": "Llega a: {objeto}",
+    "nuevo": "¡Nuevo!",
+    "todo": "Ya descubriste todo lo de esta versión. Siguen: la mudanza y el personal del canal.",
+    "fuerza": "Fuerza",
+    "valor": "Valor",
+    "herramientas": "Herramientas",
+    "laboratorio": "Laboratorio de gatitos"
+  },
+  "laboratorio": {
+    "titulo": "Laboratorio de gatitos",
+    "intro": "Gatitos con bata analizan al dueño. Cada investigación tarda tiempo real y sigue aunque cierres el juego.",
+    "investigar": "Investigar",
+    "enCurso": "Investigando: {nombre}",
+    "falta": "Faltan {tiempo}",
+    "ocupado": "Hay otra en curso",
+    "hecha": "Hecha",
+    "dura": "Tarda {tiempo}",
+    "requiere": "Al llegar a: {objeto}",
+    "oculta": "Investigación secreta",
+    "stats": {
+      "danio": "daño",
+      "vistas": "vistas",
+      "danioAliados": "daño de aliados"
+    },
+    "proyectos": {
+      "mirada": "Estudio de la mirada inocente",
+      "fisioterapia": "Fisioterapia de pata",
+      "psicologia": "Psicología del dueño",
+      "entrenamiento": "Entrenamiento de aliados",
+      "patrones": "Análisis de las compras del dueño",
+      "kungfu": "Kung fu felino",
+      "sindicato": "Sindicato de mascotas",
+      "gravedad": "Gravedad aplicada"
+    },
+    "despues": "Después de terminar la anterior"
   }
 }

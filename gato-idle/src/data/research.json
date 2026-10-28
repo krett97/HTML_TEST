@@ -1,0 +1,10 @@
+[
+  { "id": "mirada",        "requiere": "lampara",     "costo": 5000,       "duracion": 60,     "efectos": [{ "stat": "vistas",       "op": "mult", "valor": 1.25 }] },
+  { "id": "fisioterapia",  "requiere": "lampara",     "costo": 20000,      "duracion": 300,    "efectos": [{ "stat": "danio",        "op": "mult", "valor": 1.25 }] },
+  { "id": "psicologia",    "requiere": "consola",     "costo": 80000,      "duracion": 1200,   "efectos": [{ "stat": "vistas",       "op": "mult", "valor": 1.5 }] },
+  { "id": "entrenamiento", "requiere": "tv",          "costo": 300000,     "duracion": 3600,   "efectos": [{ "stat": "danioAliados", "op": "mult", "valor": 1.5 }] },
+  { "id": "patrones",      "requiere": "librero",     "costo": 2000000,    "duracion": 14400,  "efectos": [{ "stat": "vistas",       "op": "mult", "valor": 2 }] },
+  { "id": "kungfu",        "requiere": "cafetera",    "costo": 20000000,   "duracion": 43200,  "efectos": [{ "stat": "danio",        "op": "mult", "valor": 2 }] },
+  { "id": "sindicato",     "requiere": "computadora", "costo": 300000000,  "duracion": 86400,  "efectos": [{ "stat": "danioAliados", "op": "mult", "valor": 2 }] },
+  { "id": "gravedad",      "requiere": "refri",       "costo": 5000000000, "duracion": 259200, "efectos": [{ "stat": "danio",        "op": "mult", "valor": 3 }] }
+]

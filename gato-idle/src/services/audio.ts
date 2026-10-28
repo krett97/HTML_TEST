@@ -238,6 +238,20 @@ const RECIPES: Record<SoundId, (v: Voice) => void> = {
     noise(v, { filter: 'bandpass', f: 1600, q: 3, dur: 0.08, vol: 0.3 });
   },
 
+  chirrido: (v) => {
+    for (const at of [0, 0.07, 0.14]) tone(v, { f: 3200, f2: 4200, at, dur: 0.04, vol: 0.1 });
+  },
+  graznido: (v) => {
+    for (const at of [0, 0.22]) {
+      tone(v, { type: 'sawtooth', f: 520, f2: 380, at, dur: 0.16, vol: 0.12 });
+      noise(v, { filter: 'bandpass', f: 1400, q: 2, at, dur: 0.15, vol: 0.35, tremolo: 55 });
+    }
+  },
+  balido: (v) => {
+    tone(v, { type: 'sawtooth', f: 330, f2: 300, dur: 0.45, vol: 0.12, attack: 0.03, vibrato: [11, 30] });
+    noise(v, { filter: 'bandpass', f: 1100, q: 3, dur: 0.4, vol: 0.2, tremolo: 11 });
+  },
+
   // ---- Interfaz ----
   compra: (v) => {
     tone(v, { type: 'square', f: 988, dur: 0.06, vol: 0.08 });
@@ -245,6 +259,10 @@ const RECIPES: Record<SoundId, (v: Voice) => void> = {
   },
   herramienta: (v) => {
     [523, 659, 784, 1047].forEach((f, i) => tone(v, { type: 'square', f, at: i * 0.08, dur: 0.16, vol: 0.07 }));
+  },
+  descubrimiento: (v) => {
+    [659, 784, 988, 1319].forEach((f, i) => tone(v, { type: 'triangle', f, at: i * 0.07, dur: 0.25, vol: 0.12 }));
+    tone(v, { f: 2637, at: 0.3, dur: 0.5, vol: 0.06, vibrato: [6, 20] });
   },
   'objeto-nuevo': (v) => {
     tone(v, { f: 400, f2: 900, dur: 0.09, vol: 0.2 });

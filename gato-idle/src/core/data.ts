@@ -29,8 +29,6 @@ export interface ObjectDef {
 /** Mascota que destruye sola: golpea cada `intervalo` segundos. */
 export interface AllyDef {
   id: string;
-  /** Aparece al llegar a este objeto (id de objects.json). */
-  desbloqueo: string;
   costoBase: Decimal;
   crecimiento: number;
   /** Daño de cada golpe por nivel. */
@@ -43,6 +41,26 @@ export interface AllyDef {
     tono: number;
     volumen: number;
   };
+}
+
+/** Funciones que se van descubriendo: "fuerza", "valor", "herramientas", "laboratorio", "aliado:<id>". */
+export const FEATURES = ['fuerza', 'valor', 'herramientas', 'laboratorio'] as const;
+
+/** Un descubrimiento: se desbloquea al cumplir su condición, en el orden de unlocks.json. */
+export interface UnlockDef {
+  id: string;
+  condicion: { roturas: number } | { objeto: string };
+}
+
+/** Investigación del laboratorio: tarda tiempo real y da una mejora permanente. */
+export interface ResearchDef {
+  id: string;
+  /** Hay que haber llegado a este objeto (además de terminar la anterior). */
+  requiere: string;
+  costo: Decimal;
+  /** Segundos. */
+  duracion: number;
+  efectos: Effect[];
 }
 
 export interface ToolDef {
@@ -85,6 +103,8 @@ export interface GameData {
   objects: ObjectDef[];
   tools: ToolDef[];
   allies: AllyDef[];
+  unlocks: UnlockDef[];
+  research: ResearchDef[];
   balance: Balance;
 }
 
@@ -92,6 +112,8 @@ export interface RawGameData {
   objects: unknown;
   tools: unknown;
   allies: unknown;
+  unlocks: unknown;
+  research: unknown;
   balance: unknown;
 }
 
@@ -217,14 +239,9 @@ export function parseGameData(raw: RawGameData): GameData {
   const objectIds = new Set(objects.map((o) => o.id));
   const allies: AllyDef[] = asArray('allies.json', raw.allies).map((item) => {
     const id = str('allies.json', item, 'id');
-    const desbloqueo = str('allies.json', item, 'desbloqueo');
-    if (!objectIds.has(desbloqueo)) {
-      throw new DataError('allies.json', `"${id}": desbloqueo "${desbloqueo}" no existe en objects.json`);
-    }
     const rawSound = (item.sonido ?? {}) as Raw;
     return {
       id,
-      desbloqueo,
       costoBase: positive('allies.json', item, 'costoBase'),
       crecimiento: positive('allies.json', item, 'crecimiento').toNumber(),
       danioBase: positive('allies.json', item, 'danioBase').toNumber(),
@@ -238,6 +255,37 @@ export function parseGameData(raw: RawGameData): GameData {
     };
   });
   uniqueIds('allies.json', allies);
+
+  const allyIds = new Set(allies.map((a) => a.id));
+  const unlocks: UnlockDef[] = asArray('unlocks.json', raw.unlocks).map((item) => {
+    const id = str('unlocks.json', item, 'id');
+    const known = (FEATURES as readonly string[]).includes(id) || (id.startsWith('aliado:') && allyIds.has(id.slice(7)));
+    if (!known) throw new DataError('unlocks.json', `"${id}" no es una función ni un aliado conocido`);
+    const cond = (item.condicion ?? {}) as Raw;
+    if (typeof cond.roturas === 'number' && cond.roturas >= 0) return { id, condicion: { roturas: cond.roturas } };
+    if (typeof cond.objeto === 'string' && objectIds.has(cond.objeto)) return { id, condicion: { objeto: cond.objeto } };
+    throw new DataError('unlocks.json', `"${id}": la condición debe ser { "roturas": n } o { "objeto": id existente }`);
+  });
+  uniqueIds('unlocks.json', unlocks);
+  for (const ally of allies) {
+    if (!unlocks.some((u) => u.id === `aliado:${ally.id}`)) {
+      throw new DataError('unlocks.json', `falta cuándo se desbloquea el aliado "${ally.id}"`);
+    }
+  }
+
+  const research: ResearchDef[] = asArray('research.json', raw.research).map((item) => {
+    const id = str('research.json', item, 'id');
+    const requiere = str('research.json', item, 'requiere');
+    if (!objectIds.has(requiere)) throw new DataError('research.json', `"${id}": requiere "${requiere}" no existe en objects.json`);
+    return {
+      id,
+      requiere,
+      costo: positive('research.json', item, 'costo'),
+      duracion: positive('research.json', item, 'duracion').toNumber(),
+      efectos: effects('research.json', item),
+    };
+  });
+  uniqueIds('research.json', research);
 
   const file = 'balance.json';
   const b = (raw.balance ?? {}) as Raw;
@@ -269,5 +317,5 @@ export function parseGameData(raw: RawGameData): GameData {
     },
   };
 
-  return { objects, tools, allies, balance };
+  return { objects, tools, allies, unlocks, research, balance };
 }
