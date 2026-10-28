@@ -3,7 +3,17 @@
 // sus eventos (escena) o su `view` (UI).
 import { writable, type Readable, type Writable } from 'svelte/store';
 import { hit, tap, type HitResult } from '../core/actions';
-import { allyCost, allyHitDamage, allyLevel, allyUnlocked, alliesDps, buyAlly } from '../core/allies';
+import {
+  allyCost,
+  allyHitDamage,
+  allyLevel,
+  allyUnlocked,
+  allyUpgradeGain,
+  alliesDps,
+  bestAllyPurchase,
+  buyAlly,
+} from '../core/allies';
+import { sponsorReward } from '../core/income';
 import type { AllyDef, GameData, ToolDef } from '../core/data';
 import type { Effect } from '../core/modifiers';
 import { finishResearch, researchRemaining, researchStatus, startResearch, type ResearchStatus } from '../core/research';
@@ -56,6 +66,8 @@ export interface GameEvents {
   descubrimiento: { unlockId: string };
   /** Terminó una investigación del laboratorio. */
   investigacion: { researchId: string };
+  /** Se cobró un patrocinio (anuncio visto completo). */
+  patrocinio: { dinero: Decimal };
   /** La partida se reinició: la escena vuelve a poner el objeto al inicio. */
   reset: undefined;
 }
@@ -83,6 +95,10 @@ export interface AllyView {
   danio: string;
   danioSiguiente: string;
   intervalo: number;
+  /** Daño por segundo que suma la siguiente compra. */
+  ganancia: string;
+  /** Es la compra de aliado que más daño da por cada peso. */
+  mejor: boolean;
 }
 
 export interface ResearchView {
@@ -150,6 +166,8 @@ export interface ViewModel {
   hayCompra: boolean;
   /** Qué partes del juego ya se descubrieron. */
   funciones: { fuerza: boolean; valor: boolean; herramientas: boolean; laboratorio: boolean; aliados: boolean };
+  /** Oferta de patrocinio en pantalla: ver un anuncio a cambio de dinero. */
+  patrocinio: { visible: boolean; recompensa: string };
   /** Descubrimientos recientes (para la etiqueta "¡Nuevo!"). */
   nuevos: string[];
   proximo: NextUnlockView | null;
@@ -198,6 +216,10 @@ export class Game {
   /** Descubrimientos recientes y cuándo ocurrieron (no se guarda). */
   private readonly recentUnlocks = new Map<string, number>();
   private lastSecond = 0;
+  /** Cuándo aparece la siguiente oferta de patrocinio y hasta cuándo sigue visible (ms, performance.now). */
+  private sponsorAt = 0;
+  private sponsorUntil = 0;
+  private sponsorBusy = false;
 
   constructor(
     readonly data: GameData,
@@ -299,6 +321,30 @@ export class Game {
     void this.save();
   }
 
+  /** Ver el anuncio del patrocinio; si se ve completo, paga. */
+  async claimSponsor(): Promise<boolean> {
+    if (this.sponsorBusy || !this.sponsorVisible()) return false;
+    this.sponsorBusy = true;
+    this.sponsorUntil = 0;
+    this.markDirty();
+    const result = await this.services.ads.showRewarded('dinero');
+    this.sponsorBusy = false;
+    this.sponsorAt = performance.now() + this.data.balance.patrocinio.cadaSegundos * 1000;
+    if (!result.rewarded) return false;
+    const dinero = sponsorReward(this.state, this.data);
+    this.state.dinero = this.state.dinero.add(dinero);
+    this.state.dineroPartida = this.state.dineroPartida.add(dinero);
+    this.events.emit('patrocinio', { dinero });
+    this.playSound('compra');
+    this.markDirty();
+    void this.save();
+    return true;
+  }
+
+  private sponsorVisible(): boolean {
+    return hasUnlock(this.state, 'patrocinios') && performance.now() < this.sponsorUntil;
+  }
+
   async showRewarded(placement: RewardedPlacement): Promise<AdResult> {
     return this.services.ads.showRewarded(placement);
   }
@@ -357,7 +403,23 @@ export class Game {
     this.lastTick = now;
     this.runAllies(dt);
     this.runDiscoveries(now);
+    this.runSponsor(now);
     if (this.dirty) this.refreshView();
+  }
+
+  /** La oferta aparece cada `cadaSegundos` y se queda `visibleSegundos`. */
+  private runSponsor(now: number): void {
+    if (!hasUnlock(this.state, 'patrocinios') || this.sponsorBusy) return;
+    const { cadaSegundos, visibleSegundos } = this.data.balance.patrocinio;
+    if (this.sponsorAt === 0) this.sponsorAt = now + 20_000; // la primera, pronto, para que se conozca
+    if (now >= this.sponsorAt && now >= this.sponsorUntil) {
+      this.sponsorUntil = now + visibleSegundos * 1000;
+      this.sponsorAt = now + cadaSegundos * 1000;
+      this.markDirty();
+    } else if (this.sponsorUntil !== 0 && now >= this.sponsorUntil) {
+      this.sponsorUntil = 0;
+      this.markDirty();
+    }
   }
 
   private runDiscoveries(now: number): void {
@@ -436,6 +498,8 @@ export class Game {
       danio: fmt(allyHitDamage(nivel, ally, s, this.data)),
       danioSiguiente: fmt(allyHitDamage(nivel + 1, ally, s, this.data)),
       intervalo: ally.intervalo,
+      ganancia: fmt(allyUpgradeGain(s, this.data, ally)),
+      mejor: false,
     };
   }
 
@@ -472,6 +536,8 @@ export class Game {
     const puedeValor = !preview.requiredTool && s.dinero.gte(costoValor);
     const puedeHerramienta = herramientas.some((t) => t.estado === 'disponible' && t.alcanza);
     const aliados = d.allies.map((ally) => this.allyView(ally, fmt));
+    const best = bestAllyPurchase(s, d);
+    for (const ally of aliados) ally.mejor = ally.id === best && aliados.filter((a) => a.desbloqueado).length > 1;
     const next = nextUnlock(s, d);
     const now = Date.now();
     const current = s.laboratorio.actual;
@@ -518,6 +584,7 @@ export class Game {
         aliados: s.desbloqueos.some((id) => id.startsWith('aliado:')),
       },
       nuevos: [...this.recentUnlocks.keys()],
+      patrocinio: { visible: this.sponsorVisible() && !this.sponsorBusy, recompensa: fmt(sponsorReward(s, d)) },
       proximo: next && {
         id: next.unlock.id,
         tipo: next.unlock.id.startsWith('aliado:') ? 'aliado' : 'funcion',

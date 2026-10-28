@@ -17,8 +17,20 @@
     return shown.filter((p) => p.estado !== 'en-curso');
   });
 
+  const adopted = $derived($view.aliados.filter((a) => a.nivel > 0).length);
+
   function describe(effects: Effect[]): string {
-    return effects.map((e) => `×${e.valor} ${$t(`laboratorio.stats.${e.stat}`)}`).join(' · ');
+    return effects
+      .map((e) =>
+        e.escala === 'aliados'
+          ? $t('laboratorio.porAliado', {
+              pct: Math.round(e.valor * 100),
+              stat: $t(`laboratorio.stats.${e.stat}`),
+              ahora: Math.round((1 + e.valor * adopted) * 100) / 100,
+            })
+          : `×${e.valor} ${$t(`laboratorio.stats.${e.stat}`)}`,
+      )
+      .join(' · ');
   }
 </script>
 

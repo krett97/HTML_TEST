@@ -31,7 +31,7 @@ describe('descubrimientos', () => {
     expect(checkUnlocks(state, gameData).map((u) => u.id)).toEqual(['valor']);
     state.stats.roturas = 30;
     state.nivelValor = 15; // control remoto
-    expect(checkUnlocks(state, gameData).map((u) => u.id)).toEqual(['aliado:gatito', 'aliado:raton']);
+    expect(checkUnlocks(state, gameData).map((u) => u.id)).toEqual(['patrocinios', 'aliado:gatito', 'aliado:raton']);
     expect(nextUnlock(state, gameData)?.unlock.id).toBe('herramientas');
     // No se repiten.
     expect(checkUnlocks(state, gameData)).toEqual([]);

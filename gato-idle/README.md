@@ -5,7 +5,7 @@ Idle de un gato que tira las cosas de su dueño, de un vaso a la Luna. Celular p
 - Diseño completo: [`docs/DISENO.md`](docs/DISENO.md)
 - Prompt original: [`docs/prompt-original.md`](docs/prompt-original.md)
 
-**Estado:** versión 0.4.0. Al empezar solo se puede dar manotazos; Fuerza, Valor, 7 aliados (gatito bebé, ratón, perro, perico, cuervo, mapache, cabra), herramientas y el Laboratorio de gatitos se van descubriendo conforme se avanza. 27 objetos, cada uno con su sonido. El progreso se guarda.
+**Estado:** versión 0.5.0. Al empezar solo se puede dar manotazos; Fuerza, Valor, patrocinios (dinero por ver un anuncio cada 90 s), 7 aliados (gatito bebé, ratón, perro, perico, cuervo, mapache, cabra; cada uno mejor que el anterior), herramientas y el Laboratorio de gatitos se van descubriendo conforme se avanza. 27 objetos, cada uno con su sonido. El progreso se guarda.
 
 ## Requisitos
 
@@ -65,7 +65,7 @@ apk-prueba/    APK de prueba sin Gradle (visor WebView)
 
 ## Cómo cambiar cosas sin tocar la lógica
 
-- **Balance** (vida y vistas de cada objeto, herramientas y sus efectos, costos de Fuerza y Valor, tarifa por vista, tope de toques): `src/data/*.json`. Después de cambiarlo, corre `npm run simular` para ver cómo cambia el ritmo. Si escribes algo inválido (un id repetido, una herramienta que no existe), el juego se detiene al arrancar con un mensaje que dice qué archivo y qué objeto corregir.
+- **Balance** (vida y vistas de cada objeto, herramientas y sus efectos, costos de Fuerza y Valor, tarifa por vista, tope de toques, frecuencia y tamaño del patrocinio): `src/data/*.json`. Después de cambiarlo, corre `npm run simular` para ver cómo cambia el ritmo. Si escribes algo inválido (un id repetido, una herramienta que no existe), el juego se detiene al arrancar con un mensaje que dice qué archivo y qué objeto corregir.
 - **Textos**: `src/i18n/es.json` y `en.json`. Las pruebas verifican que ambos tengan las mismas claves.
 - **Nombre del juego**: `app.title` en los dos JSON de textos, `appName` en `capacitor.config.ts` y `<title>` en `index.html`.
 - **Arte**: hoy se dibuja en código (`src/game/placeholders.ts`). Para usar los sprites de PixelApp, se cargan los PNG con las mismas claves que `sprite` en `objects.json`.

@@ -15,6 +15,13 @@
   {#if $view.toques === 0}
     <p class="hint">{$t('hud.toca')}</p>
   {/if}
+  {#if $view.patrocinio.visible}
+    <button type="button" class="sponsor" onclick={() => game.claimSponsor()} data-testid="patrocinio">
+      <span class="sponsor-tag">📺 {$t('patrocinio.titulo')}</span>
+      <strong>+${$view.patrocinio.recompensa}</strong>
+      <span class="sponsor-tag">{$t('patrocinio.ver')}</span>
+    </button>
+  {/if}
 </section>
 
 <style>
@@ -51,6 +58,53 @@
     text-shadow: 0 2px 0 var(--line);
     pointer-events: none;
     animation: bob 1s ease-in-out infinite alternate;
+  }
+  /* Oferta de patrocinio: arriba a la derecha, salta para llamar la atención. */
+  .sponsor {
+    position: absolute;
+    z-index: 4;
+    top: 12px;
+    right: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    padding: 6px 10px;
+    border: 2px solid var(--line);
+    border-radius: 6px;
+    background: var(--gold);
+    box-shadow: 0 3px 0 var(--line);
+    color: var(--line);
+    font: inherit;
+    cursor: pointer;
+    animation: llamar 1.2s ease-in-out infinite;
+  }
+  .sponsor strong {
+    font-size: 20px;
+  }
+  .sponsor-tag {
+    font-size: 11px;
+  }
+  .sponsor:active {
+    transform: translateY(2px);
+  }
+  @keyframes llamar {
+    0%,
+    70%,
+    100% {
+      rotate: 0deg;
+    }
+    80% {
+      rotate: -6deg;
+    }
+    90% {
+      rotate: 6deg;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .sponsor {
+      animation: none;
+    }
   }
   @keyframes bob {
     to {

@@ -162,6 +162,7 @@ Cada sistema hace algo distinto: Cheshire baja la probabilidad de que te vea, el
 |---|---|
 | **Zoomies** | ×3 a todo el daño (toques y automáticos) por 3 min |
 | **Video patrocinado** | ×2 ingresos por 30 min, acumulable hasta 4 h (para jugadores idle) |
+| **Patrocinio** (implementado, 0.5.0) | Dinero al instante; la oferta aparece en la pantalla principal cada 90 s (ver sección 21) |
 | **Los dueños se fueron de vacaciones** | Ganancias offline ×2 (en la pantalla de "mientras no estabas") |
 | **Caja de cartón** | Caja con premio al azar, cada ~10 min. El gato se mete en la caja. |
 | **Échale la culpa al perro** | Recupera el progreso perdido en el evento del dueño |
@@ -341,15 +342,16 @@ El jugador siempre debe sentir que avanza y que está a punto de desbloquear alg
 |---|---|---|
 | Fuerza | 3 roturas | 0.1 |
 | Valor | 12 roturas | 0.2 |
+| Patrocinios (anuncio por dinero) | 20 roturas | 0.2 |
 | Gatito bebé (pestaña Aliados) | 30 roturas | 0.3 |
 | Ratón | llegar al control remoto | 2.2 |
 | Herramientas | llegar al florero | 3.1 |
 | Perro | llegar al papel de baño | 5.1 |
-| Laboratorio de gatitos | llegar a la lámpara | 10.5 |
-| Perico | llegar a la consola | 12 |
-| Cuervo | llegar a la mesa de centro | 14.8 |
-| Mapache | llegar a la tostadora | 18.9 |
-| Cabra | llegar a la lavadora | 28.5 |
+| Laboratorio de gatitos | llegar a la lámpara | 10.4 |
+| Perico | llegar a la consola | 11.8 |
+| Cuervo | llegar a la mesa de centro | 14.5 |
+| Mapache | llegar a la tostadora | 18.7 |
+| Cabra | llegar a la lavadora | 27.1 |
 
 ### Laboratorio de gatitos
 
@@ -359,6 +361,7 @@ Gatitos con bata analizan al dueño. Cada investigación cuesta dinero, **tarda 
 |---|---|---|
 | Estudio de la mirada inocente | ×1.25 vistas | 1 min |
 | Fisioterapia de pata | ×1.25 daño | 5 min |
+| Vida en manada (desde la consola) | +10 % daño de aliados **por cada aliado adoptado** | 10 min |
 | Psicología del dueño | ×1.5 vistas | 20 min |
 | Entrenamiento de aliados | ×1.5 daño de aliados | 1 h |
 | Análisis de las compras del dueño | ×2 vistas | 4 h |
@@ -367,3 +370,42 @@ Gatitos con bata analizan al dueño. Cada investigación cuesta dinero, **tarda 
 | Gravedad aplicada | ×3 daño | 3 días |
 
 Ideas para más adelante: acelerar una investigación con un anuncio recompensado, y más descubrimientos de largo plazo (la mudanza, el personal del canal, gatos legendarios).
+
+## 21. Aliados cada vez mejores y patrocinio por anuncio (versión 0.5.0)
+
+### Escalera de aliados
+
+Cada aliado nuevo es mucho mejor que el anterior, aunque cueste más: subir de nivel al recién llegado suele ser la mejor compra. Todos crecen igual (costo ×1.18 por nivel), así que lo que los distingue es el daño por segundo que da cada nivel:
+
+| Aliado | Costo inicial | Daño por golpe (nivel 1) | Ritmo | Daño/s por nivel |
+|---|---|---|---|---|
+| Gatito bebé | $8 | 1 | 1 s | 1 |
+| Ratón | $150 | 4 | 1.5 s | 2.7 |
+| Perro | $900 | 20 | 2 s | 10 |
+| Perico | $40K | 60 | 0.8 s | 75 |
+| Cuervo | $450K | 450 | 1.2 s | 375 |
+| Mapache | $6M | 2,400 | 1.5 s | 1,600 |
+| Cabra | $50M | 12,000 | 2.5 s | 4,800 |
+
+En la pestaña Aliados, cada tarjeta dice cuánto daño por segundo suma la siguiente compra (**"+10 daño/s"**), y la que da más daño por cada peso lleva la etiqueta **"★ Mejor compra"** (`bestAllyPurchase` en `src/core/allies.ts`).
+
+### Vida en manada (laboratorio)
+
+Multiplica el daño de los aliados por **1 + 0.1 × aliados adoptados**: con gatito y perro, ×1.2; con los 7, ×1.7. Se declara como un modificador con `"escala": "aliados"`, así que cualquier investigación futura puede escalar igual.
+
+### Patrocinio: dinero por ver un anuncio
+
+Cada **90 s** aparece en la pantalla principal un botón dorado **"📺 Patrocinio +$X"** que dura 25 s (la primera oferta llega 20 s después de descubrirlo). Si el jugador ve el anuncio completo, recibe:
+
+```
+recompensa = máx( ingreso por segundo × 60 ,  dinero por rotura × 100 )
+
+ingreso por segundo = roturas por segundo × dinero por rotura
+roturas por segundo = mín( daño por segundo / vida del objeto ,  5 toques/s + golpes de aliados por segundo )
+daño por segundo    = daño del toque × 5 toques/s + daño automático de los aliados
+```
+
+- Es **un minuto de juego activo** a 5 toques por segundo: toma en cuenta lo que vale el objeto y lo que se tarda en romperlo, incluidos los aliados.
+- La segunda parte es un **piso de 100 roturas**: aunque el objeto se rompa de un toque y no haya aliados, el anuncio vale al menos 100 veces lo que da romperlo.
+- Ejemplo: un objeto que se rompe de un toque y da $10 → 5 roturas por segundo × $10 × 60 s = **$3,000**, por encima de los $1,000 mínimos y cerca de los $2,500 deseados. Si el objeto tarda varios toques, la parte de tiempo baja y el piso de $1,000 lo protege.
+- Los parámetros están en `balance.json` (`patrocinio`: cada cuántos segundos, cuánto dura visible, segundos de juego, toques por segundo y roturas mínimas). La fórmula está en `src/core/income.ts` y la usa también el simulador.

@@ -61,8 +61,8 @@ describe('aliados', () => {
   it('el daño por segundo suma a todos según su ritmo', () => {
     const state = newState();
     state.aliados = [{ id: 'gatito', nivel: 3 }, { id: 'perro', nivel: 1 }];
-    // gatito: 3 de daño cada 1 s; perro: 12 cada 2 s.
-    expect(alliesDps(state, gameData).toNumber()).toBeCloseTo(3 + 6);
+    // gatito: 3 de daño cada 1 s; perro: 20 cada 2 s.
+    expect(alliesDps(state, gameData).toNumber()).toBeCloseTo(3 + 10);
   });
 
   it('un guardado con aliados raros se corrige', () => {

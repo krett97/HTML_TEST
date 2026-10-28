@@ -123,7 +123,9 @@
     "cuervo": "Cuervo",
     "cabra": "Cabra",
     "oculto": "???",
-    "pista": "Un nuevo aliado"
+    "pista": "Un nuevo aliado",
+    "ganancia": "+{dps} daño/s",
+    "mejor": "★ Mejor compra"
   },
   "descubrimientos": {
     "proximo": "Próximo descubrimiento",
@@ -137,7 +139,8 @@
     "fuerza": "Fuerza",
     "valor": "Valor",
     "herramientas": "Herramientas",
-    "laboratorio": "Laboratorio de gatitos"
+    "laboratorio": "Laboratorio de gatitos",
+    "patrocinios": "Patrocinios"
   },
   "laboratorio": {
     "titulo": "Laboratorio de gatitos",
@@ -163,8 +166,15 @@
       "patrones": "Análisis de las compras del dueño",
       "kungfu": "Kung fu felino",
       "sindicato": "Sindicato de mascotas",
-      "gravedad": "Gravedad aplicada"
+      "gravedad": "Gravedad aplicada",
+      "manada": "Vida en manada"
     },
-    "despues": "Después de terminar la anterior"
+    "despues": "Después de terminar la anterior",
+    "porAliado": "+{pct} % {stat} por cada aliado (ahora ×{ahora})"
+  },
+  "patrocinio": {
+    "titulo": "Patrocinio",
+    "ver": "Ver anuncio",
+    "gracias": "¡Patrocinio! +${dinero}"
   }
 }

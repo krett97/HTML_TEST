@@ -1,9 +1,9 @@
 [
   { "id": "gatito",  "costoBase": 8,        "crecimiento": 1.18, "danioBase": 1,    "intervalo": 1,   "sonido": { "golpe": "rasguno",  "voz": "miau",     "tono": 1.7, "volumen": 0.45 } },
-  { "id": "raton",   "costoBase": 150,      "crecimiento": 1.18, "danioBase": 3,    "intervalo": 1.5, "sonido": { "golpe": "plastico", "voz": "chirrido", "tono": 1.8, "volumen": 0.4 } },
-  { "id": "perro",   "costoBase": 900,      "crecimiento": 1.18, "danioBase": 12,   "intervalo": 2,   "sonido": { "golpe": "madera",   "voz": "guau",     "tono": 1.3, "volumen": 0.5 } },
+  { "id": "raton",   "costoBase": 150,      "crecimiento": 1.18, "danioBase": 4,    "intervalo": 1.5, "sonido": { "golpe": "plastico", "voz": "chirrido", "tono": 1.8, "volumen": 0.4 } },
+  { "id": "perro",   "costoBase": 900,      "crecimiento": 1.18, "danioBase": 20,   "intervalo": 2,   "sonido": { "golpe": "madera",   "voz": "guau",     "tono": 1.3, "volumen": 0.5 } },
   { "id": "perico",  "costoBase": 40000,    "crecimiento": 1.18, "danioBase": 60,   "intervalo": 0.8, "sonido": { "golpe": "plastico", "voz": "pio",      "tono": 1.6, "volumen": 0.45 } },
-  { "id": "cuervo",  "costoBase": 150000,   "crecimiento": 1.18, "danioBase": 150,  "intervalo": 1.2, "sonido": { "golpe": "madera",   "voz": "graznido", "tono": 1.5, "volumen": 0.45 } },
-  { "id": "mapache", "costoBase": 2000000,  "crecimiento": 1.18, "danioBase": 800,  "intervalo": 1.5, "sonido": { "golpe": "metal",    "voz": "chillido", "tono": 1.4, "volumen": 0.45 } },
-  { "id": "cabra",   "costoBase": 15000000, "crecimiento": 1.18, "danioBase": 4000, "intervalo": 2.5, "sonido": { "golpe": "madera",   "voz": "balido",   "tono": 0.9, "volumen": 0.55 } }
+  { "id": "cuervo",  "costoBase": 450000,   "crecimiento": 1.18, "danioBase": 450,  "intervalo": 1.2, "sonido": { "golpe": "madera",   "voz": "graznido", "tono": 1.5, "volumen": 0.45 } },
+  { "id": "mapache", "costoBase": 6000000,  "crecimiento": 1.18, "danioBase": 2400, "intervalo": 1.5, "sonido": { "golpe": "metal",    "voz": "chillido", "tono": 1.4, "volumen": 0.45 } },
+  { "id": "cabra",   "costoBase": 50000000, "crecimiento": 1.18, "danioBase": 12000, "intervalo": 2.5, "sonido": { "golpe": "madera",   "voz": "balido",   "tono": 0.9, "volumen": 0.55 } }
 ]

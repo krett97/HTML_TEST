@@ -22,6 +22,7 @@ import {
 } from '../src/core/economy';
 import { normalizeState } from '../src/core/normalize';
 import { checkUnlocks, hasUnlock, nextUnlock } from '../src/core/unlocks';
+import { breaksPerSecond, incomePerSecond } from '../src/core/income';
 import { allyCost, allyLevel, allyUnlocked, alliesDps, buyAlly } from '../src/core/allies';
 import { formatNum } from '../src/core/format';
 import { num } from '../src/core/num';
@@ -31,22 +32,13 @@ import { gameData } from '../src/data';
 const TAPS_PER_SECOND = Number(process.argv[2] ?? 5) || 5;
 const MAX_MINUTES = 120;
 
-/** Golpes por segundo de los aliados. */
-function allyHitsPerSecond(state: GameState, data: GameData): number {
-  return data.allies.reduce((sum, ally) => sum + (allyLevel(state, ally.id) > 0 ? 1 / ally.intervalo : 0), 0);
-}
-
-/** Objetos rotos por segundo tocando a ritmo constante, más lo que rompen los aliados. */
-function breaksPerSecond(state: GameState, data: GameData): number {
-  const hp = currentObject(state, data).hp.toNumber();
-  const dps = tapDamage(state, data).toNumber() * TAPS_PER_SECOND + alliesDps(state, data).toNumber();
-  // Cada golpe rompe a lo mucho un objeto.
-  return Math.min(dps / hp, TAPS_PER_SECOND + allyHitsPerSecond(state, data));
+function breaks(state: GameState, data: GameData): number {
+  return breaksPerSecond(state, data, TAPS_PER_SECOND);
 }
 
 /** Dinero por segundo. */
 function income(state: GameState, data: GameData): number {
-  return breaksPerSecond(state, data) * moneyPerBreak(state, data).toNumber();
+  return incomePerSecond(state, data, TAPS_PER_SECOND).toNumber();
 }
 
 function clone(state: GameState): GameState {
@@ -128,7 +120,7 @@ export function simulate(data: GameData, maxMinutes = MAX_MINUTES): { rows: SimR
     if (options(state, data).length === 0) {
       const next = nextUnlock(state, data);
       const missing = next && 'roturas' in next.unlock.condicion ? next.target - next.current : 1;
-      const wait = missing / breaksPerSecond(state, data);
+      const wait = missing / breaks(state, data);
       seconds += wait;
       state.dinero = state.dinero.add(income(state, data) * wait);
       state.stats.roturas += missing;
@@ -140,7 +132,7 @@ export function simulate(data: GameData, maxMinutes = MAX_MINUTES): { rows: SimR
     const wait = Math.max(0, option.cost - state.dinero.toNumber()) / rate;
     seconds += wait;
     state.dinero = state.dinero.add(rate * wait);
-    state.stats.roturas += Math.floor(breaksPerSecond(state, data) * wait);
+    state.stats.roturas += Math.floor(breaks(state, data) * wait);
     // Evita quedarse a una fracción de centavo por redondeo.
     if (state.dinero.lt(option.cost)) state.dinero = num(option.cost);
     const before = state.dinero;

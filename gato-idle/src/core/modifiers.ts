@@ -4,6 +4,7 @@
 import type { GameData } from './data';
 import { ownsTool } from './tools';
 import type { Decimal } from './num';
+
 import type { GameState } from './state';
 
 export const STATS = ['danio', 'vistas', 'danioAliados'] as const;
@@ -12,11 +13,15 @@ export type Stat = (typeof STATS)[number];
 export const OPS = ['suma', 'mult'] as const;
 export type Op = (typeof OPS)[number];
 
-/** Como aparece en los JSON: { "stat": "danio", "op": "mult", "valor": 5 }. */
+/**
+ * Como aparece en los JSON: { "stat": "danio", "op": "mult", "valor": 5 }.
+ * Con "escala": "aliados", el efecto crece con los aliados adoptados: ×(1 + valor × aliados).
+ */
 export interface Effect {
   stat: Stat;
   op: Op;
   valor: number;
+  escala?: 'aliados';
 }
 
 export interface Modifier extends Effect {
@@ -32,9 +37,23 @@ export function collectModifiers(state: GameState, data: GameData): Modifier[] {
   }
   for (const research of data.research) {
     if (!state.laboratorio.hechas.includes(research.id)) continue;
-    for (const effect of research.efectos) mods.push({ ...effect, fuente: `investigacion:${research.id}` });
+    for (const effect of research.efectos) {
+      mods.push({ ...resolveEffect(effect, state), fuente: `investigacion:${research.id}` });
+    }
   }
   return mods;
+}
+
+/** Cuántos aliados distintos se han adoptado. */
+export function adoptedAllies(state: GameState): number {
+  return state.aliados.filter((a) => a.nivel > 0).length;
+}
+
+/** Convierte un efecto que escala ("por cada aliado") en su valor de ahora. */
+export function resolveEffect(effect: Effect, state: GameState): Effect {
+  if (effect.escala !== 'aliados') return effect;
+  const count = adoptedAllies(state);
+  return { stat: effect.stat, op: effect.op, valor: effect.op === 'mult' ? 1 + effect.valor * count : effect.valor * count };
 }
 
 /** Primero las sumas y después las multiplicaciones: (base + Σ suma) × Π mult. */

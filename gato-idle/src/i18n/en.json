@@ -123,7 +123,9 @@
     "cuervo": "Crow",
     "cabra": "Goat",
     "oculto": "???",
-    "pista": "A new ally"
+    "pista": "A new ally",
+    "ganancia": "+{dps} dmg/s",
+    "mejor": "★ Best buy"
   },
   "descubrimientos": {
     "proximo": "Next discovery",
@@ -137,7 +139,8 @@
     "fuerza": "Strength",
     "valor": "Value",
     "herramientas": "Tools",
-    "laboratorio": "Kitten lab"
+    "laboratorio": "Kitten lab",
+    "patrocinios": "Sponsorships"
   },
   "laboratorio": {
     "titulo": "Kitten lab",
@@ -163,8 +166,15 @@
       "patrones": "Owner shopping analysis",
       "kungfu": "Feline kung fu",
       "sindicato": "Pet union",
-      "gravedad": "Applied gravity"
+      "gravedad": "Applied gravity",
+      "manada": "Pack life"
     },
-    "despues": "After the previous one is done"
+    "despues": "After the previous one is done",
+    "porAliado": "+{pct}% {stat} per ally (now ×{ahora})"
+  },
+  "patrocinio": {
+    "titulo": "Sponsor",
+    "ver": "Watch ad",
+    "gracias": "Sponsored! +${dinero}"
   }
 }

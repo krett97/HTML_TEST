@@ -19,5 +19,12 @@
     "hitoCada": 25,
     "multHito": 2,
     "probabilidadVoz": 0.15
+  },
+  "patrocinio": {
+    "cadaSegundos": 90,
+    "visibleSegundos": 25,
+    "segundosDeJuego": 60,
+    "toquesPorSegundo": 5,
+    "roturasMinimas": 100
   }
 }

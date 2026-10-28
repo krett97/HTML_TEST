@@ -101,6 +101,10 @@ export class MainScene extends Phaser.Scene {
       this.controller.events.on('aliado', ({ allyId, result }) => this.onAllyHit(allyId, result)),
       this.controller.events.on('aliadoNuevo', ({ allyId }) => this.onNewAlly(allyId)),
       this.controller.events.on('descubrimiento', ({ unlockId }) => this.onDiscovery(unlockId)),
+      this.controller.events.on('patrocinio', ({ dinero }) => {
+        this.toast(get(t)('patrocinio.gracias', { dinero: this.controller.formatMoney(dinero) }));
+        this.floatText(this.object.x, this.object.y - this.object.height - 10, `+$${this.controller.formatMoney(dinero)}`, 'flotante');
+      }),
       this.controller.events.on('investigacion', ({ researchId }) => {
         const tr = get(t);
         this.toast(tr('avisos.investigacion', { nombre: tr(`laboratorio.proyectos.${researchId}`) }));

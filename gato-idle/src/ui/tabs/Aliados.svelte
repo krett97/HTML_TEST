@@ -36,6 +36,10 @@
           {#if ally.nivel > 0}<span class="level">{$t('mejoras.nivel', { n: ally.nivel })}</span>{/if}
           {#if $view.nuevos.includes(`aliado:${ally.id}`)}<NewBadge />{/if}
         </div>
+        <div class="gain">
+          <span class="gold">{$t('aliados.ganancia', { dps: ally.ganancia })}</span>
+          {#if ally.mejor}<span class="best" data-testid="mejor-{ally.id}">{$t('aliados.mejor')}</span>{/if}
+        </div>
         <div class="effect">
           {#if ally.nivel > 0}
             {$t('aliados.efecto', {
@@ -143,5 +147,19 @@
   }
   .fresh {
     border-color: var(--gold);
+  }
+  .gain {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    font-size: 13px;
+  }
+  .best {
+    padding: 0 5px;
+    border-radius: 4px;
+    background: var(--good);
+    color: var(--line);
+    font-weight: 700;
+    font-size: 12px;
   }
 </style>

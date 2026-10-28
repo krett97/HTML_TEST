@@ -44,7 +44,7 @@ export interface AllyDef {
 }
 
 /** Funciones que se van descubriendo: "fuerza", "valor", "herramientas", "laboratorio", "aliado:<id>". */
-export const FEATURES = ['fuerza', 'valor', 'herramientas', 'laboratorio'] as const;
+export const FEATURES = ['fuerza', 'valor', 'patrocinios', 'herramientas', 'laboratorio'] as const;
 
 /** Un descubrimiento: se desbloquea al cumplir su condición, en el orden de unlocks.json. */
 export interface UnlockDef {
@@ -89,6 +89,17 @@ export interface Balance {
     /** El primer nivel de cada objeto cuesta lo que pagan tantas roturas de ese objeto. */
     costoEnRoturas: number;
     crecimiento: number;
+  };
+  patrocinio: {
+    /** Cada cuánto aparece la oferta (s) y cuánto se queda en pantalla (s). */
+    cadaSegundos: number;
+    visibleSegundos: number;
+    /** Paga lo que el jugador ganaría en tantos segundos de juego activo… */
+    segundosDeJuego: number;
+    /** …a este ritmo de toques… */
+    toquesPorSegundo: number;
+    /** …y nunca menos que tantas roturas del objeto actual. */
+    roturasMinimas: number;
   };
   aliados: {
     /** Cada tantos niveles de un aliado, su daño se multiplica por `multHito`. */
@@ -165,7 +176,10 @@ function effects(file: string, item: Raw): Effect[] {
     if (typeof raw.valor !== 'number' || !Number.isFinite(raw.valor)) {
       throw new DataError(file, `${where}: "valor" debe ser un número`);
     }
-    return { stat: raw.stat, op: raw.op, valor: raw.valor } as Effect;
+    if (raw.escala !== undefined && raw.escala !== 'aliados') {
+      throw new DataError(file, `${where}: escala "${String(raw.escala)}" no existe (aliados)`);
+    }
+    return { stat: raw.stat, op: raw.op, valor: raw.valor, ...(raw.escala ? { escala: raw.escala } : {}) } as Effect;
   });
 }
 
@@ -293,6 +307,7 @@ export function parseGameData(raw: RawGameData): GameData {
   const fuerza = section(file, b, 'fuerza');
   const valor = section(file, b, 'valor');
   const aliados = section(file, b, 'aliados');
+  const patrocinio = section(file, b, 'patrocinio');
   const balance: Balance = {
     tarifaPorVista: n(b, 'tarifaPorVista'),
     toquesMaxPorSegundo: n(b, 'toquesMaxPorSegundo'),
@@ -309,6 +324,13 @@ export function parseGameData(raw: RawGameData): GameData {
       vistasPorNivel: n(valor, 'vistasPorNivel'),
       costoEnRoturas: n(valor, 'costoEnRoturas'),
       crecimiento: n(valor, 'crecimiento'),
+    },
+    patrocinio: {
+      cadaSegundos: n(patrocinio, 'cadaSegundos'),
+      visibleSegundos: n(patrocinio, 'visibleSegundos'),
+      segundosDeJuego: n(patrocinio, 'segundosDeJuego'),
+      toquesPorSegundo: n(patrocinio, 'toquesPorSegundo'),
+      roturasMinimas: n(patrocinio, 'roturasMinimas'),
     },
     aliados: {
       hitoCada: Math.max(1, Math.floor(n(aliados, 'hitoCada'))),

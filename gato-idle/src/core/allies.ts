@@ -35,6 +35,32 @@ export function alliesDps(state: GameState, data: GameData): Decimal {
   return total;
 }
 
+/** Cuánto daño por segundo sumaría el siguiente nivel (o adoptarlo), con todos los bonos. */
+export function allyUpgradeGain(state: GameState, data: GameData, ally: AllyDef): Decimal {
+  const after: GameState = {
+    ...state,
+    aliados: allyLevel(state, ally.id) > 0
+      ? state.aliados.map((a) => (a.id === ally.id ? { ...a, nivel: a.nivel + 1 } : a))
+      : [...state.aliados, { id: ally.id, nivel: 1 }],
+  };
+  return alliesDps(after, data).sub(alliesDps(state, data));
+}
+
+/** El aliado cuya siguiente compra da más daño por cada peso. */
+export function bestAllyPurchase(state: GameState, data: GameData): string | null {
+  let best: string | null = null;
+  let bestRatio = -1;
+  for (const ally of data.allies) {
+    if (!allyUnlocked(state, data, ally)) continue;
+    const ratio = allyUpgradeGain(state, data, ally).div(allyCost(state, data, ally)).toNumber();
+    if (ratio > bestRatio) {
+      bestRatio = ratio;
+      best = ally.id;
+    }
+  }
+  return best;
+}
+
 export function buyAlly(state: GameState, data: GameData, allyId: string): boolean {
   const ally = data.allies.find((a) => a.id === allyId);
   if (!ally || !allyUnlocked(state, data, ally)) return false;
