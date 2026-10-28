@@ -10,7 +10,7 @@ export function hasUnlock(state: GameState, id: string): boolean {
 
 export interface UnlockProgress {
   unlock: UnlockDef;
-  /** Cuánto lleva y cuánto pide (roturas, o posición en la lista de objetos). */
+  /** Cuánto lleva y cuánto pide (roturas, o niveles de Valor para llegar al objeto). */
   current: number;
   target: number;
 }
@@ -19,9 +19,13 @@ export function unlockProgress(state: GameState, data: GameData, unlock: UnlockD
   if ('roturas' in unlock.condicion) {
     return { unlock, current: Math.min(state.stats.roturas, unlock.condicion.roturas), target: unlock.condicion.roturas };
   }
+  // Se mide en niveles de Valor (el objeto llega con el nivel índice × nivelesPorObjeto), así la
+  // barra avanza con cada compra de Valor. Al jugador no se le dice qué objeto es: solo "mejora el Valor".
   const objectId = unlock.condicion.objeto;
-  const target = data.objects.findIndex((o) => o.id === objectId);
-  return { unlock, current: Math.min(objectIndexFor(state.nivelValor, data), target), target };
+  const index = data.objects.findIndex((o) => o.id === objectId);
+  const target = index * data.balance.valor.nivelesPorObjeto;
+  const reached = objectIndexFor(state.nivelValor, data) >= index;
+  return { unlock, current: reached ? target : Math.min(state.nivelValor, target), target };
 }
 
 function met(state: GameState, data: GameData, unlock: UnlockDef): boolean {

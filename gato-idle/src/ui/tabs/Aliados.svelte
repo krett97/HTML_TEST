@@ -79,7 +79,7 @@
         <div class="effect">
           🔒 {$t('aliados.pista')} ·
           {teaser.condicion.objeto
-            ? $t('descubrimientos.objeto', { objeto: $t(`objetos.${teaser.condicion.objeto}`) })
+            ? $t('descubrimientos.objeto')
             : $t('descubrimientos.roturas', { n: Math.max(0, (teaser.condicion.roturas ?? 0) - $view.roturas) })}
         </div>
       </div>

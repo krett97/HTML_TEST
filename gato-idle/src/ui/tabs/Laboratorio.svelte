@@ -61,7 +61,7 @@
           {#if project.estado === 'bloqueada'}
             <div class="name">{$t('laboratorio.oculta')}</div>
             <div class="effect">
-              {project.alcanzado ? $t('laboratorio.despues') : $t('laboratorio.requiere', { objeto: $t(`objetos.${project.requiere}`) })}
+              {project.alcanzado ? $t('laboratorio.despues') : $t('laboratorio.requiere')}
             </div>
           {:else}
             <div class="name">{$t(`laboratorio.proyectos.${project.id}`)}</div>

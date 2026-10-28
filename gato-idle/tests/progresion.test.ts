@@ -104,3 +104,22 @@ describe('formatDuration', () => {
     expect(formatDuration(seconds)).toBe(text);
   });
 });
+
+describe('progreso hacia un descubrimiento por objeto', () => {
+  it('se mide en niveles de Valor, así la barra avanza con cada compra', async () => {
+    const { unlockProgress } = await import('../src/core/unlocks');
+    const { createInitialState } = await import('../src/core/state');
+    const { normalizeState } = await import('../src/core/normalize');
+    const { gameData } = await import('../src/data');
+    const state = createInitialState(0);
+    normalizeState(state, gameData);
+    state.herramientas = ['garras', 'carrito', 'aspiradora'];
+    const perro = gameData.unlocks.find((u) => u.id === 'aliado:perro')!; // papel de baño, objeto 6
+    state.nivelValor = 12;
+    expect(unlockProgress(state, gameData, perro)).toMatchObject({ current: 12, target: 30 });
+    state.nivelValor = 13;
+    expect(unlockProgress(state, gameData, perro).current).toBe(13);
+    state.nivelValor = 40;
+    expect(unlockProgress(state, gameData, perro)).toMatchObject({ current: 30, target: 30 });
+  });
+});

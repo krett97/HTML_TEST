@@ -17,7 +17,7 @@
         ·
         {next.condicion === 'roturas'
           ? $t('descubrimientos.roturas', { n: remaining })
-          : $t('descubrimientos.objeto', { objeto: $t(`objetos.${next.objeto}`) })}
+          : $t('descubrimientos.objeto')}
       </div>
       <div class="bar" role="progressbar" aria-valuenow={Math.round((next.actual / Math.max(1, next.meta)) * 100)}>
         <div class="fill" style:width="{(next.actual / Math.max(1, next.meta)) * 100}%"></div>

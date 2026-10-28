@@ -339,7 +339,7 @@ Cada fase responde una pregunta. Se pasa a la siguiente cuando se cumple su crit
 El jugador siempre debe sentir que avanza y que está a punto de desbloquear algo. Al principio solo puede dar manotazos; todo lo demás se va **descubriendo**: rápido al inicio y cada vez más espaciado, hasta investigaciones que tardan días.
 
 - **`unlocks.json`** define el orden y la condición de cada descubrimiento (romper N objetos o llegar a un objeto). Agregar uno nuevo es agregar una línea.
-- Siempre se ve la tarjeta **"Próximo descubrimiento"**, con su barra de progreso y qué falta ("Tira 3 objetos más", "Llega a: Lámpara"), sin revelar qué es.
+- Siempre se ve la tarjeta **"Próximo descubrimiento"**, con su barra de progreso y qué falta ("Tira 3 objetos más" o **"Mejora el Valor"**), sin revelar qué es. **Nunca se dice a qué objeto hay que llegar** (ni en esa tarjeta, ni en el aliado oculto, el laboratorio o las herramientas): solo que hay que mejorar el Valor, y la barra avanza con cada nivel de Valor.
 - Al descubrir algo: aviso, sonido y la etiqueta **"¡Nuevo!"** en la tarjeta o la pestaña. Las pestañas aparecen solo cuando se descubren.
 - Los aliados futuros se ven como **"???"** hasta descubrirlos.
 

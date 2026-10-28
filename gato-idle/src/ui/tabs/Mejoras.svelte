@@ -10,9 +10,6 @@
   const TOOL_ICONS: Record<string, string> = { pata: '🐾', garras: '🗡️', carrito: '🏎️', aspiradora: '🤖' };
 
   /** Nombre del primer objeto que desbloquea una herramienta. */
-  function firstObject(objetos: string[]): string {
-    return objetos[0] ? $t(`objetos.${objetos[0]}`) : '';
-  }
 </script>
 
 <div class="stack">
@@ -137,7 +134,7 @@
             ${tool.costo}
           </button>
         {:else}
-          <span class="tag muted">🔒 {$t('mejoras.bloqueada', { objeto: firstObject(tool.objetos) })}</span>
+          <span class="tag muted">🔒 {$t('mejoras.bloqueada')}</span>
         {/if}
       </li>
     {/each}

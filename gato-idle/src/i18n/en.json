@@ -62,7 +62,7 @@
     "herramientas": "Tools",
     "multiplicador": "×{mult} damage",
     "tuya": "Yours",
-    "bloqueada": "Unlocks at: {objeto}"
+    "bloqueada": "Upgrade Value to unlock it"
   },
   "ajustes": {
     "sonido": "Sound",
@@ -133,7 +133,7 @@
     "pistaFuncion": "Something new for the cat",
     "pistaAliado": "A new ally",
     "roturas": "Knock off {n} more items",
-    "objeto": "Reach: {objeto}",
+    "objeto": "Upgrade Value",
     "nuevo": "New!",
     "todo": "You've discovered everything in this version. Coming next: moving out and the channel staff.",
     "fuerza": "Strength",
@@ -151,7 +151,7 @@
     "ocupado": "Another one is running",
     "hecha": "Done",
     "dura": "Takes {tiempo}",
-    "requiere": "Unlocks at: {objeto}",
+    "requiere": "Upgrade Value to unlock it",
     "oculta": "Secret research",
     "stats": {
       "danio": "damage",
