@@ -63,7 +63,9 @@
     "criticoMax": "Crit {actual}% (maxed)",
     "danioCritico": "Silly hat",
     "danioCriticoEfecto": "Swipe {actual} → {siguiente}",
-    "zarpazo": "SWIPE!"
+    "zarpazo": "SWIPE!",
+    "lentes": "Boss shades",
+    "lentesEfecto": "Allies {actual} → {siguiente}"
   },
   "ajustes": {
     "sonido": "Sound",
@@ -100,7 +102,8 @@
     "aliadoDisponible": "New ally: {aliado}!",
     "investigacion": "Research done: {nombre}",
     "garras": "Steel claws! Critical swipes unlocked",
-    "sombrero": "Hat on! Swipes hit harder"
+    "sombrero": "Hat on! Swipes hit harder",
+    "lentes": "Boss shades on! The gang hits harder"
   },
   "aliados": {
     "gatito": "Baby kitten",
@@ -143,7 +146,8 @@
     "laboratorio": "Cat research",
     "patrocinios": "Sponsorships",
     "critico": "Sharp claws",
-    "danioCritico": "Silly hat"
+    "danioCritico": "Silly hat",
+    "lentes": "Boss shades"
   },
   "laboratorio": {
     "titulo": "Cat research",

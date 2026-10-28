@@ -27,6 +27,11 @@
     "costoBase": 2000,
     "crecimiento": 1.4
   },
+  "lentes": {
+    "multPorNivel": 0.1,
+    "costoBase": 50000,
+    "crecimiento": 1.5
+  },
   "aliados": {
     "hitoCada": 25,
     "multHito": 2,

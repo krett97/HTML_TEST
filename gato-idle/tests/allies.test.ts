@@ -77,3 +77,21 @@ describe('aliados', () => {
     expect(state.aliados).toEqual([{ id: 'gatito', nivel: 2 }]);
   });
 });
+
+describe('Lentes de jefe', () => {
+  it('multiplican el daño de todos los aliados: ×(1 + 0.1 × nivel)', async () => {
+    const { buyLentes, lentesCost } = await import('../src/core/economy');
+    const { lentesMultiplier } = await import('../src/core/modifiers');
+    const state = createInitialState(0);
+    normalizeState(state, gameData);
+    const gatito = gameData.allies.find((a) => a.id === 'gatito')!;
+    const cabra = gameData.allies.find((a) => a.id === 'cabra')!;
+    const before = [allyHitDamage(10, gatito, state, gameData).toNumber(), allyHitDamage(10, cabra, state, gameData).toNumber()];
+    state.dinero = lentesCost(state, gameData).mul(10);
+    expect(buyLentes(state, gameData)).toBe(true);
+    state.nivelLentes = 5;
+    expect(lentesMultiplier(state, gameData)).toBeCloseTo(1.5);
+    expect(allyHitDamage(10, gatito, state, gameData).toNumber()).toBeCloseTo(before[0]! * 1.5);
+    expect(allyHitDamage(10, cabra, state, gameData).toNumber()).toBeCloseTo(before[1]! * 1.5);
+  });
+});

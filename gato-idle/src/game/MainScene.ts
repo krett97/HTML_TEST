@@ -5,7 +5,7 @@ import { get } from 'svelte/store';
 import type { HitResult } from '../core/actions';
 import { allyLevel } from '../core/allies';
 import type { AllyDef, ObjectDef } from '../core/data';
-import type { Game } from '../app/game';
+import type { Game, LookChange } from '../app/game';
 import { t } from '../i18n';
 import { createPlaceholders } from './placeholders';
 import { FLOOR_H, SCENE_WIDTH } from './sceneSize';
@@ -18,9 +18,12 @@ const TABLE_LEFT = 18;
 const TABLE_RIGHT = 160;
 const START_X = 74;
 const CAT_W = 20;
-/** Dónde va el sombrero respecto al gato (origen abajo a la izquierda): centrado en la cabeza, tapando las orejas. */
+/** Dónde va el sombrero respecto al gato (origen abajo a la izquierda): centrado en la cabeza, con las puntas de las orejas asomando. */
 const HAT_X = 15;
-const HAT_Y = -14;
+const HAT_Y = -15;
+/** Los lentes van sobre el ojo: la barra en la fila 2 del dibujo del gato y el lente tapando el ojo. */
+const GLASSES_X = 10;
+const GLASSES_Y = -14;
 /** Inclinación máxima de los objetos que se "vuelcan", justo antes de caer. */
 const MAX_TILT = 22;
 /** Rasguños visibles en los objetos que se "rasgan". */
@@ -64,6 +67,7 @@ export class MainScene extends Phaser.Scene {
   private vehicle!: Phaser.GameObjects.Image;
   private paw!: Phaser.GameObjects.Image;
   private hat!: Phaser.GameObjects.Image;
+  private glasses!: Phaser.GameObjects.Image;
   private object!: Phaser.GameObjects.Image;
   private objectDef!: ObjectDef;
   private look: ToolLook = toolLook('pata');
@@ -86,6 +90,7 @@ export class MainScene extends Phaser.Scene {
     this.cat = this.add.image(0, 0, 'gato').setOrigin(0, 1).setDepth(2);
     this.vehicle = this.add.image(0, 0, 'carrito').setOrigin(0.5, 1).setDepth(2.5).setVisible(false);
     this.hat = this.add.image(0, 0, 'sombrero').setOrigin(0.5, 1).setDepth(2.8).setVisible(false);
+    this.glasses = this.add.image(0, 0, 'lentes').setOrigin(0, 0).setDepth(2.75).setVisible(false);
     this.object = this.add.image(0, 0, '__DEFAULT').setOrigin(0.5, 1).setDepth(3);
     this.scratches = this.add.graphics().setDepth(3.5);
     for (const ally of this.controller.data.allies) {
@@ -138,6 +143,7 @@ export class MainScene extends Phaser.Scene {
   /** Cada cuadro: el sombrero va en la cabeza del gato y los aliados siguen su lugar (el gatito, en el lomo). */
   update(): void {
     this.hat.setPosition(this.cat.x + HAT_X, this.cat.y + HAT_Y);
+    this.glasses.setPosition(this.cat.x + GLASSES_X, this.cat.y + GLASSES_Y + ((this.glasses.getData('drop') as number | undefined) ?? 0));
     for (const [id, visual] of this.allies) {
       if (!visual.sprite.visible) continue;
       const base = this.allyRest(id);
@@ -219,6 +225,7 @@ export class MainScene extends Phaser.Scene {
     const mejoras = this.controller.catLook();
     this.paw.setTexture(mejoras.garras ? 'garra' : 'pata');
     this.hat.setVisible(mejoras.sombrero);
+    this.glasses.setVisible(mejoras.lentes);
     this.vehicle.setVisible(this.look.vehicle !== null);
     if (this.look.vehicle) this.vehicle.setTexture(this.look.vehicle);
     this.cat.y = this.tableTop - this.look.lift;
@@ -412,8 +419,8 @@ export class MainScene extends Phaser.Scene {
     this.tweens.add({ targets: this.cat, y: this.cat.y - 6, duration: 120, yoyo: true, ease: 'Quad.out' });
   }
 
-  /** Compró la primera Garra afilada o el primer Sombrero: se lo pone, salta y presume. */
-  private onNewLook(cambio: 'garras' | 'sombrero'): void {
+  /** Compró su primera Garra afilada, Sombrero o Lentes: se lo pone, salta y presume. */
+  private onNewLook(cambio: LookChange): void {
     this.applyLook();
     this.toast(get(t)(`avisos.${cambio}`));
     this.controller.playSound('herramienta');
@@ -421,6 +428,11 @@ export class MainScene extends Phaser.Scene {
     if (cambio === 'sombrero') {
       this.hat.setScale(0);
       this.tweens.add({ targets: this.hat, scale: 1, duration: 260, ease: 'Back.out' });
+    }
+    if (cambio === 'lentes') {
+      // Los lentes caen desde arriba y se acomodan (deal with it).
+      this.glasses.setData('drop', -12);
+      this.tweens.add({ targets: this.glasses.data.values, drop: 0, duration: 420, ease: 'Bounce.out' });
     }
   }
 

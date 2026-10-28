@@ -63,7 +63,9 @@
     "criticoMax": "Crítico {actual}% (al máximo)",
     "danioCritico": "Sombrero ridículo",
     "danioCriticoEfecto": "Zarpazo {actual} → {siguiente}",
-    "zarpazo": "¡ZARPAZO!"
+    "zarpazo": "¡ZARPAZO!",
+    "lentes": "Lentes de jefe",
+    "lentesEfecto": "Aliados {actual} → {siguiente}"
   },
   "ajustes": {
     "sonido": "Sonido",
@@ -100,7 +102,8 @@
     "aliadoDisponible": "¡Nuevo aliado: {aliado}!",
     "investigacion": "Investigación terminada: {nombre}",
     "garras": "¡Garras de acero! Ahora hay zarpazos críticos",
-    "sombrero": "¡Sombrero puesto! Los zarpazos pegan más fuerte"
+    "sombrero": "¡Sombrero puesto! Los zarpazos pegan más fuerte",
+    "lentes": "¡Lentes de jefe! La pandilla pega más fuerte"
   },
   "aliados": {
     "gatito": "Gatito bebé",
@@ -143,7 +146,8 @@
     "laboratorio": "Investigación gatuna",
     "patrocinios": "Patrocinios",
     "critico": "Garras afiladas",
-    "danioCritico": "Sombrero ridículo"
+    "danioCritico": "Sombrero ridículo",
+    "lentes": "Lentes de jefe"
   },
   "laboratorio": {
     "titulo": "Investigación gatuna",

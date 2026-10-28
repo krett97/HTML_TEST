@@ -137,6 +137,27 @@
   </div>
   {/if}
 
+  {#if $view.funciones.lentes}
+  <div class="card upgrade" class:fresh={$view.nuevos.includes('lentes')}>
+    <span class="icon" aria-hidden="true">🕶️</span>
+    <div class="info">
+      <div class="name">
+        {$t('mejoras.lentes')} <span class="level">{$t('mejoras.nivel', { n: $view.lentes.nivel })}</span>
+        {#if $view.nuevos.includes('lentes')}<NewBadge />{/if}
+      </div>
+      <div class="effect">{$t('mejoras.lentesEfecto', { actual: $view.lentes.mult, siguiente: $view.lentes.multSiguiente })}</div>
+    </div>
+    <button
+      type="button"
+      class="btn btn--accent buy"
+      disabled={!$view.lentes.alcanza}
+      onclick={() => game.buyLentes()}
+      data-testid="comprar-lentes"
+    >
+      ${$view.lentes.costo}
+    </button>
+  </div>
+  {/if}
 </div>
 
 <style>

@@ -44,7 +44,7 @@ export interface AllyDef {
 }
 
 /** Funciones que se van descubriendo: "fuerza", "valor", "critico", "laboratorio", "aliado:<id>"… */
-export const FEATURES = ['fuerza', 'valor', 'patrocinios', 'critico', 'danioCritico', 'laboratorio'] as const;
+export const FEATURES = ['fuerza', 'valor', 'patrocinios', 'critico', 'danioCritico', 'lentes', 'laboratorio'] as const;
 
 /** Un descubrimiento: se desbloquea al cumplir su condición, en el orden de unlocks.json. */
 export interface UnlockDef {
@@ -103,6 +103,12 @@ export interface Balance {
   danioCritico: {
     /** Un crítico multiplica el daño por multBase + nivel × multPorNivel. */
     multBase: number;
+    multPorNivel: number;
+    costoBase: number;
+    crecimiento: number;
+  };
+  lentes: {
+    /** Lentes de jefe: el daño de todos los aliados se multiplica por 1 + nivel × multPorNivel. */
     multPorNivel: number;
     costoBase: number;
     crecimiento: number;
@@ -321,6 +327,7 @@ export function parseGameData(raw: RawGameData): GameData {
   const patrocinio = section(file, b, 'patrocinio');
   const critico = section(file, b, 'critico');
   const danioCritico = section(file, b, 'danioCritico');
+  const lentes = section(file, b, 'lentes');
   const balance: Balance = {
     tarifaPorVista: n(b, 'tarifaPorVista'),
     toquesMaxPorSegundo: n(b, 'toquesMaxPorSegundo'),
@@ -349,6 +356,11 @@ export function parseGameData(raw: RawGameData): GameData {
       multPorNivel: n(danioCritico, 'multPorNivel'),
       costoBase: n(danioCritico, 'costoBase'),
       crecimiento: n(danioCritico, 'crecimiento'),
+    },
+    lentes: {
+      multPorNivel: n(lentes, 'multPorNivel'),
+      costoBase: n(lentes, 'costoBase'),
+      crecimiento: n(lentes, 'crecimiento'),
     },
     patrocinio: {
       cadaSegundos: n(patrocinio, 'cadaSegundos'),

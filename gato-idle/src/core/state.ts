@@ -41,6 +41,8 @@ export interface GameState {
   /** Niveles de "Prob. de crítico" y "Daño crítico" (ver economy.ts). */
   nivelCritico: number;
   nivelDanioCritico: number;
+  /** Nivel de "Lentes de jefe" (más daño para todos los aliados). */
+  nivelLentes: number;
   /** Nivel de cada aliado comprado (los que no aparecen están en 0). */
   aliados: { id: string; nivel: number }[];
   /** Descubrimientos ya conseguidos (ids de unlocks.json), en orden. */
@@ -72,6 +74,7 @@ export function createInitialState(now: number): GameState {
     nivelValor: 0,
     nivelCritico: 0,
     nivelDanioCritico: 0,
+    nivelLentes: 0,
     aliados: [],
     desbloqueos: [],
     laboratorio: { hechas: [], actual: null },

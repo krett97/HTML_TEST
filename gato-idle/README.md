@@ -5,7 +5,7 @@ Idle de un gato que tira las cosas de su dueño, de un vaso a la Luna. Celular p
 - Diseño completo: [`docs/DISENO.md`](docs/DISENO.md)
 - Prompt original: [`docs/prompt-original.md`](docs/prompt-original.md)
 
-**Estado:** versión 0.7.0. Al empezar solo se puede dar manotazos; Fuerza, Valor, patrocinios (dinero por ver un anuncio cada 90 s), **críticos** (Garras afiladas y Sombrero ridículo, que también cambian el aspecto del gato), 7 aliados (gatito bebé, ratón, perro, perico, cuervo, mapache, cabra; cada uno mejor que el anterior) y la Investigación gatuna se van descubriendo conforme se avanza. 27 objetos, cada uno con su sonido. El progreso se guarda. Botón 🛠 (arriba a la derecha) con el **modo pruebas**: dinero infinito, daño ∞, avanzar como jugador hasta cualquier objeto y puntos de guardado.
+**Estado:** versión 0.8.0. Al empezar solo se puede dar manotazos; Fuerza, Valor, patrocinios (dinero por ver un anuncio cada 90 s), **críticos** (Garras afiladas y Sombrero ridículo), **Lentes de jefe** (más daño para los aliados) —las tres cambian el aspecto del gato—, 7 aliados (gatito bebé, ratón, perro, perico, cuervo, mapache, cabra; cada uno mejor que el anterior) y la Investigación gatuna se van descubriendo conforme se avanza. 27 objetos, cada uno con su sonido. El progreso se guarda. Botón 🛠 (arriba a la derecha) con el **modo pruebas**: dinero infinito, daño ∞, avanzar como jugador hasta cualquier objeto y puntos de guardado.
 
 ## Requisitos
 

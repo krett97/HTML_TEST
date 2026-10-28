@@ -60,10 +60,10 @@ export const PAW = [
 
 // Garras afiladas (mejora de crítico): la misma pata con garras de acero que brillan.
 export const CLAW = [
-  'kkkkkkkkkk....',
+  'kkkkkkkkkk.mm.',
   'oooooowwwkmMm.',
-  'oooooowpwkmMmm',
-  'kkkkkkkkkk....',
+  'oooooowpwkmMMm',
+  'kkkkkkkkkk.mm.',
 ];
 
 // Sombrero ridículo (mejora de daño crítico): chistera morada con flor, un poco grande para el gato.
@@ -199,11 +199,19 @@ export const GOAT = [
   '..kkk....kkk....',
 ];
 
+// Lentes de jefe (mejora de aliados): lentes oscuros "deal with it", de perfil, con brillo.
+export const GLASSES = [
+  'kkkkkkkkkk',
+  '...knnnMnk',
+  '....knnnk.',
+];
+
 export const SPRITES = {
   gato: CAT,
   pata: PAW,
   garra: CLAW,
   sombrero: HAT,
+  lentes: GLASSES,
   carrito: CAR,
   aspiradora: VACUUM,
   aliado_gatito: KITTEN,
