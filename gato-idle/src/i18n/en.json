@@ -66,7 +66,10 @@
     "danioCriticoEfecto": "Swipe {actual} → {siguiente}",
     "zarpazo": "SWIPE!",
     "saco": "Boss suit",
-    "sacoEfecto": "Allies {actual} → {siguiente}"
+    "sacoEfecto": "Allies {actual} → {siguiente}",
+    "superZarpazo": "SUPER SWIPE!",
+    "embestida": "RAM!",
+    "comprar": "Buy"
   },
   "ajustes": {
     "sonido": "Sound",
@@ -102,9 +105,6 @@
     "descubrimiento": "New: {nombre}!",
     "aliadoDisponible": "New ally: {aliado}!",
     "investigacion": "Research done: {nombre}",
-    "garras": "Steel claws! Critical swipes unlocked",
-    "sombrero": "Hat on! Swipes hit harder",
-    "saco": "Boss suit on! The gang hits harder",
     "dueno": "The owner caught you!",
     "duenoGraba": "…and instead of scolding you, started recording! 📱",
     "videoSubido": "📤 Video uploaded! +{seguidores} followers",
@@ -264,6 +264,20 @@
       "recolectora": "Picks up the pieces: +{actual}% → +{siguiente}% money",
       "pandilla": "Kitten, mouse and dog start at level {actual} → {siguiente}",
       "express": "Research takes {actual}% → {siguiente}% less"
+    }
+  },
+  "vineta": {
+    "garras": {
+      "titulo": "STEEL CLAWS!",
+      "texto": "Critical swipes unlocked"
+    },
+    "sombrero": {
+      "titulo": "SO FANCY!",
+      "texto": "With the hat, swipes hit harder"
+    },
+    "saco": {
+      "titulo": "THE BOSS IS HERE!",
+      "texto": "The gang hits harder"
     }
   }
 }

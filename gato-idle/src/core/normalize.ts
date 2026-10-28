@@ -1,4 +1,5 @@
 import { normalizeAllies } from './allies';
+import { BUY_AMOUNTS } from './bulk';
 import { normalizeCanal } from './canal';
 import { normalizeSkills } from './skills';
 import type { GameData } from './data';
@@ -21,6 +22,7 @@ export function normalizeState(state: GameState, data: GameData): void {
   state.nivelCritico = Math.min(Math.max(0, Math.floor(state.nivelCritico)), Math.ceil(probMax / probPorNivel));
   if (state.danioObjeto.lt(0)) state.danioObjeto = ZERO;
   normalizeAllies(state, data);
+  if (!BUY_AMOUNTS.includes(state.ajustes.compra)) state.ajustes.compra = 1;
   normalizeSkills(state, data);
   normalizeCanal(state);
   state.stats.roturasPartida = Math.max(0, Math.floor(state.stats.roturasPartida));

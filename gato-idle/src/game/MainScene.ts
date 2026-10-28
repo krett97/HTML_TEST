@@ -10,7 +10,10 @@ import { t } from '../i18n';
 import { createPlaceholders } from './placeholders';
 import { FLOOR_H, SCENE_WIDTH } from './sceneSize';
 import { drawRoom, drawSurface, PICTURE_ABOVE_FLOOR, placeOf, WINDOW_ABOVE_FLOOR, type Place } from './places';
+import { catPortrait } from './catPortrait';
 import { toolLook, type ToolLook } from './sprites';
+import { ALLY_ICONS, ALLY_NUMBER_COLORS } from '../ui/allyIcons';
+import type { Decimal } from '../core/num';
 
 // Medidas en píxeles virtuales. La escena se ancla abajo: si hay más alto, crece la pared.
 // La superficie (alto, inicio y orilla) depende del lugar del objeto: ver places.ts.
@@ -21,6 +24,10 @@ const HAT_X = 15;
 const HAT_Y = -15;
 /** Inclinación máxima de los objetos que se "vuelcan", justo antes de caer. */
 const MAX_TILT = 22;
+/** Números flotantes a la vez, como máximo (con 15 toques por segundo y 7 aliados se juntan muchos). */
+const MAX_NUMBERS = 28;
+/** Un aliado muestra su número a lo mucho cada tanto (ms). */
+const ALLY_NUMBER_GAP = 140;
 /** Rasguños visibles en los objetos que se "rasgan". */
 const MAX_SCRATCHES = 5;
 
@@ -57,6 +64,7 @@ export class MainScene extends Phaser.Scene {
   private objectDef!: ObjectDef;
   private look: ToolLook = toolLook('pata');
   private readonly allies = new Map<string, AllyVisual>();
+  private readonly lastAllyNumber = new Map<string, number>();
   private unsubscribers: (() => void)[] = [];
 
   constructor(private readonly controller: Game) {
@@ -107,7 +115,7 @@ export class MainScene extends Phaser.Scene {
       this.controller.events.on('descubrimiento', ({ unlockId }) => this.onDiscovery(unlockId)),
       this.controller.events.on('patrocinio', ({ dinero }) => {
         this.toast(get(t)('patrocinio.gracias', { dinero: this.controller.formatMoney(dinero) }));
-        this.floatText(this.object.x, this.object.y - this.object.height - 10, `+$${this.controller.formatMoney(dinero)}`, 'flotante');
+        this.popNumber(this.object.x, this.object.y - this.object.height - 10, 'dinero grande', `+$${this.controller.formatMoney(dinero)}`);
       }),
       this.controller.events.on('video', ({ video }) => this.onVideo(video.seguidores, video.viral)),
       this.controller.events.on('investigacion', ({ researchId }) => {
@@ -249,12 +257,14 @@ export class MainScene extends Phaser.Scene {
 
   private onHit(result: HitResult): void {
     this.swipePaw();
+    this.tapNumber(result);
     if (result.critico) this.criticalHit();
+    else if (result.embestida) this.rammingHit();
     const sound = this.objectDef.sonido;
     if (result.broke) {
       this.controller.playSound(sound.rotura, { tono: sound.tono });
       this.breakObject();
-      if (result.reward) this.floatText(this.place.surface.right - 10, this.surfaceTop - 20, `+$${this.controller.formatMoney(result.reward.dinero)}`, 'flotante');
+      if (result.reward) this.moneyNumber(result.reward.dinero);
     } else {
       this.controller.playSound(sound.golpe, { tono: sound.tono, minGapMs: 45 });
       this.pushObject(result.progress);
@@ -343,13 +353,13 @@ export class MainScene extends Phaser.Scene {
     if (result.broke) {
       this.controller.playSound(sound.rotura, { tono: sound.tono });
       this.breakObject();
-      if (result.reward) this.floatText(this.place.surface.right - 10, this.surfaceTop - 20, `+$${this.controller.formatMoney(result.reward.dinero)}`, 'flotante');
+      if (result.reward) this.moneyNumber(result.reward.dinero);
     } else {
       this.controller.playSound(sound.golpe, { tono: sound.tono, volumen: 0.45, minGapMs: 60 });
       this.pushObject(result.progress);
       this.sparks(ALLY_SPARK[allyId] ?? 0xffffff);
-      this.floatText(this.object.x, this.object.y - this.object.height, this.controller.formatMoney(result.damage), 'flotante chico');
     }
+    this.allyNumber(allyId, result.damage);
   }
 
   /** Saltito hacia el objeto: el gatito brinca, el perico vuela, perro y mapache dan un brinco. */
@@ -377,6 +387,21 @@ export class MainScene extends Phaser.Scene {
       yoyo: true,
       hold: 40,
     });
+  }
+
+  /** Explosión de chispas en el objeto (críticos y embestidas). */
+  private burst(tint: number, count: number): void {
+    const { x, y } = this.numberAnchor();
+    const emitter = this.add.particles(x, y + this.object.height / 2, 'px', {
+      speed: { min: 60, max: 140 },
+      lifespan: 420,
+      scale: { start: 1.6, end: 0.3 },
+      tint,
+      emitting: false,
+    });
+    emitter.setDepth(5);
+    emitter.explode(count);
+    this.time.delayedCall(500, () => emitter.destroy());
   }
 
   private sparks(tint: number): void {
@@ -409,7 +434,7 @@ export class MainScene extends Phaser.Scene {
   /** Compró su primera Garra afilada, Sombrero o Saco: se lo pone, salta y presume. */
   private onNewLook(cambio: LookChange): void {
     this.applyLook();
-    this.toast(get(t)(`avisos.${cambio}`));
+    this.comicPanel(cambio);
     this.controller.playSound('herramienta');
     this.tweens.add({ targets: this.cat, y: this.cat.y - 6, duration: 120, yoyo: true, ease: 'Quad.out' });
     if (cambio === 'sombrero') {
@@ -462,13 +487,129 @@ export class MainScene extends Phaser.Scene {
     }
   }
 
+  /**
+   * Viñeta de cómic (2.5 s) que cruza la escena: el gato con su nuevo aspecto y un globo de texto.
+   * No bloquea los toques. Arte provisional: cuando llegue el de PixelLab se cambia el retrato.
+   */
+  private comicPanel(cambio: LookChange): void {
+    const host = this.game.canvas.parentElement;
+    if (!host) return;
+    host.querySelector(':scope > .vineta')?.remove();
+    const tr = get(t);
+    const el = document.createElement('div');
+    el.className = `vineta vineta--${cambio}`;
+    el.dataset.testid = 'vineta';
+    const panel = document.createElement('div');
+    panel.className = 'vineta-panel';
+    const img = document.createElement('img');
+    img.className = 'vineta-gato';
+    img.alt = '';
+    img.src = catPortrait(this.controller.catLook());
+    const text = document.createElement('div');
+    text.className = 'vineta-texto';
+    const title = document.createElement('strong');
+    title.className = 'vineta-globo';
+    title.textContent = tr(`vineta.${cambio}.titulo`);
+    const sub = document.createElement('span');
+    sub.className = 'vineta-sub';
+    sub.textContent = tr(`vineta.${cambio}.texto`);
+    text.append(title, sub);
+    panel.append(img, text);
+    el.append(panel);
+    el.addEventListener('animationend', (event) => {
+      if (event.target === el) el.remove();
+    });
+    host.append(el);
+  }
+
   // ---- Animaciones ----
 
-  /** "¡ZARPAZO!": texto rojo, tajo de acero y sacudida. */
+  /** Zarpazo crítico: tajo de acero, chispas doradas y sacudida (el número lo pone tapNumber). */
   private criticalHit(): void {
     this.controller.playSound('critico', { minGapMs: 60 });
-    this.floatText(this.object.x, this.object.y - this.object.height - 4, get(t)('mejoras.zarpazo'), 'flotante critico');
-    this.cameras.main.shake(80, 0.008);
+    this.burst(0xffd36e, 14);
+    this.cameras.main.shake(90, 0.01);
+  }
+
+  /** Embestida del carrito: motor, chispas azules y sacudida. */
+  private rammingHit(): void {
+    this.controller.playSound('motor', { minGapMs: 120 });
+    this.burst(0x6fd3ff, 12);
+    this.cameras.main.shake(110, 0.012);
+  }
+
+  // ---- Números de daño ----
+
+  /** Arriba del objeto, donde salen los números. */
+  private numberAnchor(): { x: number; y: number } {
+    return { x: this.object.x, y: this.object.y - this.object.height - 2 };
+  }
+
+  /** Qué tanto del objeto se llevó el golpe (0 a 1): los golpes grandes se ven más grandes. */
+  private damageRatio(damage: Decimal): number {
+    return Math.min(1, damage.div(this.objectDef.hp).toNumber());
+  }
+
+  /** El manotazo del gato: número que salta en arco; el crítico y la embestida, enormes y con letrero. */
+  private tapNumber(result: HitResult): void {
+    const tr = get(t);
+    const { x, y } = this.numberAnchor();
+    const ratio = this.damageRatio(result.damage);
+    const text = this.controller.formatMoney(result.damage);
+    if (result.critico || result.embestida) {
+      const label = result.critico && result.embestida ? tr('mejoras.superZarpazo') : result.critico ? tr('mejoras.zarpazo') : tr('mejoras.embestida');
+      this.popNumber(x, y - 4, result.critico ? 'critico' : 'embestida', text, { label, size: 30 + ratio * 10 });
+    } else {
+      this.popNumber(x, y, 'toque', text, { size: 17 + ratio * 13 });
+    }
+  }
+
+  /** Golpe de un aliado: número de su color con su ícono (no más de uno cada ALLY_NUMBER_GAP por aliado). */
+  private allyNumber(allyId: string, damage: Decimal): void {
+    const now = this.time.now;
+    if (now - (this.lastAllyNumber.get(allyId) ?? -Infinity) < ALLY_NUMBER_GAP) return;
+    this.lastAllyNumber.set(allyId, now);
+    const { x, y } = this.numberAnchor();
+    this.popNumber(x, y, 'aliado', this.controller.formatMoney(damage), {
+      icon: ALLY_ICONS[allyId],
+      color: ALLY_NUMBER_COLORS[allyId],
+      size: 13 + this.damageRatio(damage) * 9,
+    });
+  }
+
+  /** Dinero de una rotura, en la orilla por donde cayó el objeto. */
+  private moneyNumber(dinero: Decimal): void {
+    this.popNumber(this.place.surface.right - 10, this.surfaceTop - 18, 'dinero', `+$${this.controller.formatMoney(dinero)}`);
+  }
+
+  /** Crea el número (HTML, para que se lea nítido) con un desvío y giro al azar. */
+  private popNumber(x: number, y: number, kind: string, text: string, opts: { label?: string; icon?: string; color?: string; size?: number } = {}): void {
+    const parent = this.game.canvas.parentElement;
+    if (!parent) return;
+    const live = parent.querySelectorAll(':scope > .num');
+    if (live.length >= MAX_NUMBERS) live[0]!.remove();
+    const el = document.createElement('div');
+    el.className = `num ${kind}`;
+    if (opts.label) {
+      const label = document.createElement('span');
+      label.className = 'num-label';
+      label.textContent = opts.label;
+      el.append(label);
+    }
+    const value = document.createElement('span');
+    value.textContent = opts.icon ? `${opts.icon}${text}` : text;
+    el.append(value);
+    const pos = this.toCss(x, y);
+    el.style.left = `${pos.left}px`;
+    el.style.top = `${pos.top}px`;
+    el.style.setProperty('--dx', `${Phaser.Math.Between(-26, 26)}px`);
+    el.style.setProperty('--rot', `${Phaser.Math.Between(-12, 12)}deg`);
+    if (opts.color) el.style.setProperty('--c', opts.color);
+    if (opts.size) el.style.setProperty('--size', `${Math.round(opts.size)}px`);
+    el.addEventListener('animationend', (event) => {
+      if (event.target === el) el.remove();
+    });
+    parent.append(el);
   }
 
   private swipePaw(): void {
@@ -599,10 +740,6 @@ export class MainScene extends Phaser.Scene {
     }
     el.addEventListener('animationend', () => el.remove());
     parent.appendChild(el);
-  }
-
-  private floatText(x: number, y: number, text: string, className: string): void {
-    this.overlay(text, className, this.toCss(x, y));
   }
 
   /** Los avisos se apilan en una columna para que dos seguidos no se encimen. */

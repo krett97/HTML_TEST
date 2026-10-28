@@ -3,12 +3,14 @@
   import { useGame } from '../context';
   import NewBadge from '../NewBadge.svelte';
   import NextDiscovery from '../NextDiscovery.svelte';
+  import BuyAmount from '../BuyAmount.svelte';
 
   const game = useGame();
   const view = game.view;
 </script>
 
 <div class="stack">
+  {#if $view.funciones.fuerza}<BuyAmount />{/if}
   <div class="card current">
     <div class="row">
       <span class="muted">{$t('mejoras.enLaMesa')}</span>
@@ -47,6 +49,7 @@
       onclick={() => game.buyFuerza()}
       data-testid="comprar-fuerza"
     >
+      {#if $view.fuerza.cantidad > 1}<span class="qty">×{$view.fuerza.cantidad}</span>{/if}
       ${$view.fuerza.costo}
     </button>
   </div>
@@ -82,6 +85,7 @@
       onclick={() => game.buyValor()}
       data-testid="comprar-valor"
     >
+      {#if $view.valor.cantidad > 1}<span class="qty">×{$view.valor.cantidad}</span>{/if}
       ${$view.valor.costo}
     </button>
   </div>
@@ -108,6 +112,7 @@
       onclick={() => game.buyCritChance()}
       data-testid="comprar-critico"
     >
+      {#if !$view.critico.maximo}{#if $view.critico.cantidad > 1}<span class="qty">×{$view.critico.cantidad}</span>{/if}{/if}
       {$view.critico.maximo ? '✓' : `$${$view.critico.costo}`}
     </button>
   </div>
@@ -132,6 +137,7 @@
       onclick={() => game.buyCritDamage()}
       data-testid="comprar-danio-critico"
     >
+      {#if $view.danioCritico.cantidad > 1}<span class="qty">×{$view.danioCritico.cantidad}</span>{/if}
       ${$view.danioCritico.costo}
     </button>
   </div>
@@ -154,6 +160,7 @@
       onclick={() => game.buySaco()}
       data-testid="comprar-saco"
     >
+      {#if $view.saco.cantidad > 1}<span class="qty">×{$view.saco.cantidad}</span>{/if}
       ${$view.saco.costo}
     </button>
   </div>
@@ -236,7 +243,12 @@
   }
   .buy {
     min-width: 84px;
+    flex-direction: column;
+    gap: 0;
     font-variant-numeric: tabular-nums;
+  }
+  .qty {
+    font-size: 12px;
   }
   .fresh {
     border-color: var(--gold);

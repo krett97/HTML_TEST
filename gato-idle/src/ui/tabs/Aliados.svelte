@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { ALLY_ICONS } from '../allyIcons';
+  import BuyAmount from '../BuyAmount.svelte';
   import { t } from '../../i18n';
   import { useGame } from '../context';
   import NewBadge from '../NewBadge.svelte';
@@ -6,15 +8,6 @@
   const game = useGame();
   const view = game.view;
 
-  const ICONS: Record<string, string> = {
-    gatito: '🐱',
-    raton: '🐭',
-    perro: '🐶',
-    perico: '🦜',
-    cuervo: '🐦‍⬛',
-    mapache: '🦝',
-    cabra: '🐐',
-  };
 
   const unlocked = $derived($view.aliados.filter((a) => a.desbloqueado));
   /** Solo se asoma el siguiente, sin nombre: lo demás es sorpresa. */
@@ -22,6 +15,7 @@
 </script>
 
 <div class="stack">
+  <BuyAmount />
   <div class="card summary">
     <span class="muted">{$t('aliados.titulo')}</span>
     <strong class="gold" data-testid="dps">{$t('aliados.total', { dps: $view.dpsAliados })}</strong>
@@ -29,7 +23,7 @@
 
   {#each unlocked as ally (ally.id)}
     <div class="card upgrade" class:fresh={$view.nuevos.includes(`aliado:${ally.id}`)}>
-      <span class="icon" aria-hidden="true">{ICONS[ally.id] ?? '🐾'}</span>
+      <span class="icon" aria-hidden="true">{ALLY_ICONS[ally.id] ?? '🐾'}</span>
       <div class="info">
         <div class="name">
           {$t(`aliados.${ally.id}`)}
@@ -66,6 +60,7 @@
         aria-label="{ally.nivel > 0 ? $t('mejoras.nivel', { n: ally.nivel + 1 }) : $t('aliados.adoptar')} {$t(`aliados.${ally.id}`)} ${ally.costo}"
       >
         {#if ally.nivel === 0}<span class="adopt">{$t('aliados.adoptar')}</span>{/if}
+        {#if ally.cantidad > 1}<span class="qty">×{ally.cantidad}</span>{/if}
         ${ally.costo}
       </button>
     </div>
@@ -140,6 +135,9 @@
     flex-direction: column;
     gap: 0;
     font-variant-numeric: tabular-nums;
+  }
+  .qty {
+    font-size: 12px;
   }
   .adopt {
     font-size: 12px;

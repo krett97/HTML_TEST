@@ -10,6 +10,8 @@ export interface Settings {
   notacion: Notation;
   /** null = usar el idioma del dispositivo. */
   idioma: Locale | null;
+  /** Cuántos niveles compra cada botón de Mejoras y Aliados (selector ×1 / ×10). */
+  compra: number;
 }
 
 /** Trucos del modo pruebas (solo para desarrollo; ver src/core/pruebas.ts). */
@@ -112,6 +114,7 @@ export function createInitialState(now: number): GameState {
       vibracion: true,
       notacion: 'letras',
       idioma: null,
+      compra: 1,
     },
     pruebas: pruebasIniciales(),
     ultimaVez: now,

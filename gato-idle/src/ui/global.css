@@ -137,62 +137,176 @@ select {
   cursor: pointer;
 }
 
-/* Textos sobre la escena (los crea MainScene). */
-.flotante {
+/* Números de daño y dinero sobre la escena (los crea MainScene.popNumber). */
+.num {
+  --c: var(--text);
+  --size: 18px;
+  --dx: 0px;
+  --rot: 0deg;
   position: absolute;
   z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   transform: translate(-50%, -100%);
-  color: var(--gold);
-  font-size: 20px;
+  color: var(--c);
+  font-size: var(--size);
   font-weight: 700;
+  line-height: 1;
   white-space: nowrap;
+  /* Contorno grueso de pixel art y sombra abajo, para leerse sobre cualquier cuarto. */
   text-shadow:
-    0 2px 0 var(--line),
     2px 0 0 var(--line),
     -2px 0 0 var(--line),
-    0 -2px 0 var(--line);
+    0 2px 0 var(--line),
+    0 -2px 0 var(--line),
+    2px 2px 0 var(--line),
+    -2px 2px 0 var(--line),
+    2px -2px 0 var(--line),
+    -2px -2px 0 var(--line),
+    0 5px 0 rgba(18, 11, 22, 0.55);
   pointer-events: none;
-  animation: flotar 900ms ease-out forwards;
+  animation: num-arco 750ms cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
 }
-/* Zarpazo crítico: grande, rojo y con sacudida. */
-.flotante.critico {
-  font-size: 24px;
-  color: var(--danger);
-  animation: zarpazo 800ms ease-out forwards;
-}
-@keyframes zarpazo {
+/* Sale con "pop", se va en arco hacia un lado y se desvanece. */
+@keyframes num-arco {
   0% {
+    opacity: 0;
+    scale: 0.3;
+    translate: 0 6px;
+  }
+  15% {
     opacity: 1;
-    scale: 0.6;
-    rotate: -8deg;
+    scale: 1.35;
+    translate: calc(var(--dx) * 0.2) -8px;
+    rotate: var(--rot);
   }
-  20% {
-    scale: 1.25;
-    rotate: 6deg;
-  }
-  40% {
+  30% {
     scale: 1;
-    rotate: -3deg;
+  }
+  70% {
+    opacity: 1;
+    translate: calc(var(--dx) * 0.8) -30px;
   }
   100% {
     opacity: 0;
-    translate: 0 -30px;
+    scale: 0.85;
+    translate: var(--dx) -40px;
+    rotate: var(--rot);
+  }
+}
+.num.toque {
+  --c: #fff1e0;
+}
+.num.aliado {
+  animation-duration: 620ms;
+}
+.num-label {
+  margin-bottom: 2px;
+  font-size: 0.42em;
+  letter-spacing: 1px;
+  color: var(--gold);
+}
+/* Crítico: rojo, enorme, con estrella dorada girando detrás y sacudida. */
+.num.critico {
+  --c: #ff5f3d;
+  animation: num-golpazo 1050ms ease-out forwards;
+}
+.num.embestida {
+  --c: #6fd3ff;
+  animation: num-golpazo 950ms ease-out forwards;
+}
+.num.embestida .num-label {
+  color: var(--text);
+}
+.num.critico::before,
+.num.embestida::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  left: 50%;
+  top: 62%;
+  width: 2.6em;
+  height: 2.6em;
+  translate: -50% -50%;
+  background: #ffd36e;
+  clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+  animation: num-estrella 1050ms linear forwards;
+}
+.num.embestida::before {
+  background: #2e6f8e;
+}
+@keyframes num-golpazo {
+  0% {
+    opacity: 0;
+    scale: 0.2;
+    rotate: -15deg;
+  }
+  12% {
+    opacity: 1;
+    scale: 1.5;
+    rotate: 8deg;
+  }
+  22% {
+    scale: 0.9;
+    rotate: -4deg;
+  }
+  32% {
+    scale: 1.1;
+    rotate: 2deg;
+  }
+  42% {
+    scale: 1;
     rotate: 0deg;
   }
-}
-.flotante.chico {
-  font-size: 13px;
-  color: var(--text);
-  animation-duration: 600ms;
-}
-@keyframes flotar {
-  from {
+  80% {
     opacity: 1;
-    translate: 0 0;
+    translate: calc(var(--dx) * 0.3) -16px;
   }
-  to {
+  100% {
     opacity: 0;
-    translate: 0 -44px;
+    translate: calc(var(--dx) * 0.5) -28px;
+  }
+}
+@keyframes num-estrella {
+  0% {
+    opacity: 0.95;
+    scale: 0.4;
+    rotate: 0deg;
+  }
+  30% {
+    scale: 1.15;
+  }
+  100% {
+    opacity: 0;
+    scale: 1.35;
+    rotate: 140deg;
+  }
+}
+/* Dinero: dorado, rebota y sube despacio. */
+.num.dinero {
+  --c: var(--gold);
+  --size: 20px;
+  animation: num-dinero 1000ms ease-out forwards;
+}
+.num.dinero.grande {
+  --size: 28px;
+}
+@keyframes num-dinero {
+  0% {
+    opacity: 0;
+    scale: 0.4;
+  }
+  20% {
+    opacity: 1;
+    scale: 1.3;
+  }
+  35% {
+    scale: 1;
+  }
+  100% {
+    opacity: 0;
+    translate: 0 -48px;
   }
 }
 
@@ -239,9 +353,130 @@ select {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .flotante,
+  .num,
+  .num::before,
+  .vineta-panel::before,
+  .vineta-gato,
   .aviso {
     animation-timing-function: steps(1, end);
+  }
+}
+
+/* Viñeta de cómic al estrenar Garras, Sombrero o Saco (la crea MainScene.comicPanel). */
+.vineta {
+  --fondo: #ffd36e;
+  position: absolute;
+  z-index: 5;
+  left: 0;
+  right: 0;
+  top: 50%;
+  display: flex;
+  justify-content: center;
+  translate: 0 -50%;
+  pointer-events: none;
+  animation: vineta-cruza 2500ms cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+}
+.vineta--garras {
+  --fondo: #9fd8f0;
+}
+.vineta--sombrero {
+  --fondo: #c9a6ff;
+}
+.vineta--saco {
+  --fondo: #ff9a8a;
+}
+.vineta-panel {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: min(92%, 420px);
+  padding: 10px 14px;
+  border: 4px solid var(--line);
+  rotate: -4deg;
+  overflow: hidden;
+  /* Puntitos de historieta sobre el color de la mejora. */
+  background:
+    radial-gradient(circle, rgba(18, 11, 22, 0.22) 1.6px, transparent 1.8px) 0 0 / 8px 8px,
+    var(--fondo);
+  box-shadow: 6px 6px 0 var(--line);
+}
+/* Líneas de velocidad saliendo del gato. */
+.vineta-panel::before {
+  content: '';
+  position: absolute;
+  inset: -60%;
+  background: repeating-conic-gradient(from 0deg at 28% 50%, rgba(255, 255, 255, 0.55) 0deg 4deg, transparent 4deg 16deg);
+  animation: vineta-lineas 2500ms linear forwards;
+}
+.vineta-gato {
+  position: relative;
+  width: 136px;
+  height: auto;
+  image-rendering: pixelated;
+  animation: vineta-pose 2500ms ease-out forwards;
+}
+.vineta-texto {
+  position: relative;
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.vineta-globo {
+  justify-self: start;
+  padding: 6px 10px;
+  border: 3px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--line);
+  font-size: 20px;
+  line-height: 1.05;
+  rotate: 3deg;
+  box-shadow: 3px 3px 0 var(--line);
+}
+.vineta-sub {
+  color: var(--line);
+  font-size: 14px;
+  font-weight: 700;
+}
+@keyframes vineta-cruza {
+  0% {
+    translate: -120% -50%;
+  }
+  12% {
+    translate: 3% -50%;
+  }
+  18% {
+    translate: 0 -50%;
+  }
+  86% {
+    translate: 0 -50%;
+    opacity: 1;
+  }
+  100% {
+    translate: 120% -50%;
+    opacity: 1;
+  }
+}
+@keyframes vineta-pose {
+  0%,
+  15% {
+    scale: 0.6;
+    rotate: -10deg;
+  }
+  25% {
+    scale: 1.15;
+    rotate: 6deg;
+  }
+  35%,
+  100% {
+    scale: 1;
+    rotate: 0deg;
+  }
+}
+@keyframes vineta-lineas {
+  to {
+    rotate: 25deg;
   }
 }
 

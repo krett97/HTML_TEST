@@ -66,7 +66,10 @@
     "danioCriticoEfecto": "Zarpazo {actual} → {siguiente}",
     "zarpazo": "¡ZARPAZO!",
     "saco": "Saco de jefe",
-    "sacoEfecto": "Aliados {actual} → {siguiente}"
+    "sacoEfecto": "Aliados {actual} → {siguiente}",
+    "superZarpazo": "¡SÚPER ZARPAZO!",
+    "embestida": "¡EMBESTIDA!",
+    "comprar": "Comprar"
   },
   "ajustes": {
     "sonido": "Sonido",
@@ -102,9 +105,6 @@
     "descubrimiento": "¡Nuevo: {nombre}!",
     "aliadoDisponible": "¡Nuevo aliado: {aliado}!",
     "investigacion": "Investigación terminada: {nombre}",
-    "garras": "¡Garras de acero! Ahora hay zarpazos críticos",
-    "sombrero": "¡Sombrero puesto! Los zarpazos pegan más fuerte",
-    "saco": "¡Saco de jefe! La pandilla pega más fuerte",
     "dueno": "¡El dueño te cachó!",
     "duenoGraba": "…y en vez de regañarte, ¡empezó a grabar! 📱",
     "videoSubido": "📤 ¡Video subido! +{seguidores} seguidores",
@@ -264,6 +264,20 @@
       "recolectora": "Recoge los pedazos: +{actual}% → +{siguiente}% de dinero",
       "pandilla": "Gatito, ratón y perro empiezan en nivel {actual} → {siguiente}",
       "express": "Las investigaciones tardan {actual}% → {siguiente}% menos"
+    }
+  },
+  "vineta": {
+    "garras": {
+      "titulo": "¡GARRAS DE ACERO!",
+      "texto": "Ahora hay zarpazos críticos"
+    },
+    "sombrero": {
+      "titulo": "¡QUÉ ELEGANCIA!",
+      "texto": "Con sombrero, los zarpazos pegan más fuerte"
+    },
+    "saco": {
+      "titulo": "¡LLEGÓ EL JEFE!",
+      "texto": "La pandilla pega más fuerte"
     }
   }
 }

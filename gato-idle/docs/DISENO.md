@@ -1,6 +1,6 @@
 # Swat to the Moon — Documento de diseño
 
-> **Versión 0.10** · Actualiza el prompt original ([`prompt-original.md`](prompt-original.md)) con las mejoras del análisis.
+> **Versión 0.11** · Actualiza el prompt original ([`prompt-original.md`](prompt-original.md)) con las mejoras del análisis.
 > **Nombre provisional.** *Knock It Off!* ya está en uso (Spin Master vende un juego físico con ese nombre para jugar con tu gato, y hay varios juegos en itch.io). *Swat to the Moon* aún no está verificado en Play Store ni en registros de marca (USPTO / IMPI). El nombre visible se cambia en un solo lugar: `src/i18n/*.json` → `app.title` y `capacitor.config.ts` → `appName`.
 
 ---
@@ -602,3 +602,27 @@ Las vueltas se acortan porque hoy el contenido termina en el refri. Con la mudan
 
 - **Mudanza:** al juntar cierta cantidad de seguidores, el dueño se muda a una casa más grande, con cuartos nuevos (§26) y objetos nuevos.
 - Arte del dueño (hoy es un dibujo provisional al doble de tamaño), animación de "subiendo video" y miniaturas de los videos.
+
+## 28. Números más visuales, comprar ×10 y viñetas de cómic (versión 0.11.0)
+
+### Números de daño (`MainScene.popNumber`, estilos `.num` en `global.css`)
+
+| Golpe | Cómo se ve |
+|---|---|
+| Manotazo del gato | número crema que sale con "pop", se va en arco hacia un lado y se desvanece; más grande cuanto más daño hizo respecto a la vida del objeto |
+| Aliado | número del color del aliado con su ícono (🐶 20, 🐱 4…), más chico; a lo mucho uno cada 0.14 s por aliado |
+| **Crítico** | letrero "¡ZARPAZO!" y el número enorme en rojo, con una estrella dorada girando detrás, rebote exagerado, chispas doradas y sacudida |
+| Embestida (habilidad) | "¡EMBESTIDA!" en azul con estrella azul, motor y sacudida; crítico + embestida = "¡SÚPER ZARPAZO!" |
+| Dinero de una rotura | "+$X" dorado en la orilla por donde cayó, rebota y sube despacio |
+
+Contorno grueso de pixel art para leerse sobre cualquier cuarto, y máximo 28 números a la vez (con 15 toques por segundo y 7 aliados se juntan muchos). Con "reducir movimiento" del sistema, las animaciones van por pasos.
+
+### Comprar ×1 / ×10
+
+Arriba de Mejoras y de Aliados hay un selector **Comprar ×1 | ×10** (se guarda en los ajustes). Con ×10 cada botón muestra "×10" y el costo de los 10 niveles juntos, y el efecto ya con los 10 ("Daño 11 → 42"). Se compran todos o ninguno; si hay tope (la probabilidad de crítico al 50 %), compra los que queden. Valor ×10 puede cruzar de objeto. Lógica en `src/core/bulk.ts` (simula la compra nivel por nivel sobre una copia, porque cada nivel cuesta distinto).
+
+### Viñeta de cómic al estrenar Garras, Sombrero o Saco
+
+El **primer nivel** de cada una lanza una viñeta de ~2.5 s que cruza la mitad de la escena: recuadro inclinado con puntitos de historieta y líneas de velocidad del color de la mejora (azul acero, morado, rojo), el gato ampliado **con su nuevo aspecto** y un globo de texto ("¡GARRAS DE ACERO!", "¡QUÉ ELEGANCIA!", "¡LLEGÓ EL JEFE!"). No bloquea los toques. Hoy el gato de la viñeta es el mismo pixel art ampliado; **con PixelLab se dibuja una ilustración propia para cada viñeta** (pose y expresión de cómic).
+
+Recordatorio: estas mejoras no están desde el inicio; se descubren al subir el Valor (Garras ~min 3, Sombrero ~min 6, Saco ~min 12; ver §20).

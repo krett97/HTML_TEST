@@ -14,6 +14,7 @@ import {
   buyAlly,
 } from '../core/allies';
 import { playUntil, type PlayGoal } from '../core/bot';
+import { afterBulk, buyBulk, planBulk } from '../core/bulk';
 import { followerMultiplier, uploadVideo, videoPreview } from '../core/canal';
 import { incomePerSecond, sponsorReward } from '../core/income';
 import { buySkill, canAffordSkill, rammingMultiplier, researchDuration, skillCost, skillLevel, skillMaxed } from '../core/skills';
@@ -100,12 +101,17 @@ export interface CatLook {
 
 export type LookChange = keyof CatLook;
 
+/** Mejoras de la pestaña Mejoras que se compran por niveles. */
+export type UpgradeId = 'fuerza' | 'valor' | 'critico' | 'danioCritico' | 'saco';
+
 export interface AllyView {
   id: string;
   nivel: number;
   desbloqueado: boolean;
   /** Qué hace falta para descubrirlo. */
   condicion: { roturas?: number; objeto?: string };
+  /** Niveles que compra el botón (1 o 10). */
+  cantidad: number;
   costo: string;
   alcanza: boolean;
   danio: string;
@@ -153,8 +159,11 @@ export interface ViewModel {
   danio: string;
   vistas: string;
   ganancia: string;
+  /** Niveles que compra cada botón ahora (1 o 10; menos si se llega a un tope). Cada mejora trae su `cantidad`. */
+  compra: number;
   fuerza: {
     nivel: number;
+    cantidad: number;
     costo: string;
     alcanza: boolean;
     danioSiguiente: string;
@@ -166,18 +175,19 @@ export interface ViewModel {
     enObjeto: number;
     porObjeto: number;
     ultimoObjeto: boolean;
+    cantidad: number;
     costo: string;
     alcanza: boolean;
     gananciaSiguiente: string;
-    /** El objeto que compra el dueño con el siguiente nivel, si cambia. */
+    /** El objeto que compra el dueño con la siguiente compra, si cambia. */
     nuevoObjeto: string | null;
   };
   /** Garras afiladas: probabilidad de crítico, en %. */
-  critico: { nivel: number; costo: string; alcanza: boolean; prob: number; probSiguiente: number; maximo: boolean };
+  critico: { nivel: number; cantidad: number; costo: string; alcanza: boolean; prob: number; probSiguiente: number; maximo: boolean };
   /** Sombrero: por cuánto multiplica un crítico. */
-  danioCritico: { nivel: number; costo: string; alcanza: boolean; mult: string; multSiguiente: string };
+  danioCritico: { nivel: number; cantidad: number; costo: string; alcanza: boolean; mult: string; multSiguiente: string };
   /** Saco de jefe: por cuánto se multiplica el daño de todos los aliados. */
-  saco: { nivel: number; costo: string; alcanza: boolean; mult: string; multSiguiente: string };
+  saco: { nivel: number; cantidad: number; costo: string; alcanza: boolean; mult: string; multSiguiente: string };
   herramientaActual: string;
   /** Algo se puede comprar ahora (punto en la pestaña Mejoras). */
   hayCompra: boolean;
@@ -337,51 +347,80 @@ export class Game {
     this.markDirty();
   }
 
+  /** Cuántos niveles compra cada botón (selector ×1 / ×10). */
+  private get buyAmount(): number {
+    return this.state.ajustes.compra;
+  }
+
+  /** Compra `buyAmount` niveles de una mejora de la pestaña Mejoras (todos o ninguno). */
+  private buyUpgrade(id: UpgradeId): number {
+    const { cost, buy } = this.upgrade(id);
+    return buyBulk(this.state, this.buyAmount, cost, buy);
+  }
+
+  private upgrade(id: UpgradeId): { cost: (s: GameState) => Decimal; buy: (s: GameState) => boolean } {
+    const d = this.data;
+    switch (id) {
+      case 'fuerza':
+        return { cost: (s) => fuerzaCost(s, d), buy: (s) => buyFuerza(s, d) };
+      case 'valor':
+        return { cost: (s) => valorCost(s, d), buy: (s) => buyValor(s, d).bought };
+      case 'critico':
+        return { cost: (s) => critChanceCost(s, d), buy: (s) => buyCritChance(s, d) };
+      case 'danioCritico':
+        return { cost: (s) => critDamageCost(s, d), buy: (s) => buyCritDamage(s, d) };
+      case 'saco':
+        return { cost: (s) => sacoCost(s, d), buy: (s) => buySaco(s, d) };
+    }
+  }
+
   buyFuerza(): boolean {
-    return this.afterPurchase(buyFuerza(this.state, this.data));
+    return this.afterPurchase(this.buyUpgrade('fuerza') > 0);
   }
 
   buyValor(): boolean {
-    const before = currentObject(this.state, this.data).herramienta;
-    const result = buyValor(this.state, this.data);
-    if (result.newObject) {
-      this.events.emit('objeto', { objectId: result.newObject.id });
+    const before = currentObject(this.state, this.data);
+    const bought = this.buyUpgrade('valor') > 0;
+    const after = currentObject(this.state, this.data);
+    if (after !== before) {
+      this.events.emit('objeto', { objectId: after.id });
       // El gato se sube solo al carrito o a la aspiradora al llegar a esos objetos.
-      if (result.newObject.herramienta !== before) {
-        this.events.emit('herramienta', { toolId: result.newObject.herramienta });
+      if (after.herramienta !== before.herramienta) {
+        this.events.emit('herramienta', { toolId: after.herramienta });
         this.playSound('herramienta');
       }
     }
-    return this.afterPurchase(result.bought);
+    return this.afterPurchase(bought);
   }
 
   /** Garras afiladas: +probabilidad de crítico. */
   buyCritChance(): boolean {
-    const first = this.state.nivelCritico === 0;
-    const bought = buyCritChance(this.state, this.data);
-    if (bought && first) this.events.emit('aspecto', { cambio: 'garras' });
-    return this.afterPurchase(bought);
+    return this.buyLookUpgrade('critico', 'garras', () => this.state.nivelCritico);
   }
 
   /** Saco de jefe: +daño de todos los aliados. */
   buySaco(): boolean {
-    const first = this.state.nivelSaco === 0;
-    const bought = buySaco(this.state, this.data);
-    if (bought && first) this.events.emit('aspecto', { cambio: 'saco' });
-    return this.afterPurchase(bought);
+    return this.buyLookUpgrade('saco', 'saco', () => this.state.nivelSaco);
   }
 
   /** Sombrero: +daño de los críticos. */
   buyCritDamage(): boolean {
-    const first = this.state.nivelDanioCritico === 0;
-    const bought = buyCritDamage(this.state, this.data);
-    if (bought && first) this.events.emit('aspecto', { cambio: 'sombrero' });
+    return this.buyLookUpgrade('danioCritico', 'sombrero', () => this.state.nivelDanioCritico);
+  }
+
+  /** Las mejoras que cambian el aspecto del gato avisan la primera vez (viñeta de cómic en la escena). */
+  private buyLookUpgrade(id: UpgradeId, cambio: LookChange, level: () => number): boolean {
+    const first = level() === 0;
+    const bought = this.buyUpgrade(id) > 0;
+    if (bought && first) this.events.emit('aspecto', { cambio });
     return this.afterPurchase(bought);
   }
 
   buyAlly(allyId: string): boolean {
+    const ally = this.data.allies.find((a) => a.id === allyId);
+    if (!ally) return false;
     const isNew = allyLevel(this.state, allyId) === 0;
-    const bought = buyAlly(this.state, this.data, allyId);
+    const bought = buyBulk(this.state, this.buyAmount, (s) => allyCost(s, this.data, ally), (s) => buyAlly(s, this.data, allyId)) > 0;
     if (bought && isNew) {
       this.allyTimers.set(allyId, 0);
       this.events.emit('aliadoNuevo', { allyId });
@@ -420,7 +459,7 @@ export class Game {
     this.state.ajustes[key] = value;
     if (key === 'idioma') this.applyLocale();
     if (key === 'sonido') this.services.audio.enabled = Boolean(value);
-    this.markDirty();
+    this.refreshView();
     void this.save();
   }
 
@@ -706,18 +745,21 @@ export class Game {
   private allyView(ally: AllyDef, fmt: (value: Decimal) => string): AllyView {
     const s = this.state;
     const nivel = allyLevel(s, ally.id);
-    const costo = allyCost(s, this.data, ally);
+    const buy = (state: GameState) => buyAlly(state, this.data, ally.id);
+    const plan = planBulk(s, this.buyAmount, (state) => allyCost(state, this.data, ally), buy);
+    const after = afterBulk(s, plan.count, buy);
     return {
       id: ally.id,
       nivel,
       desbloqueado: allyUnlocked(s, this.data, ally),
       condicion: { ...this.data.unlocks.find((u) => u.id === `aliado:${ally.id}`)!.condicion },
-      costo: fmt(costo),
-      alcanza: canAfford(s, costo),
+      cantidad: plan.count,
+      costo: fmt(plan.total),
+      alcanza: plan.count > 0 && canAfford(s, plan.total),
       danio: fmt(allyHitDamage(nivel, ally, s, this.data)),
-      danioSiguiente: fmt(allyHitDamage(nivel + 1, ally, s, this.data)),
+      danioSiguiente: fmt(allyHitDamage(nivel + plan.count, ally, s, this.data)),
       intervalo: ally.intervalo,
-      ganancia: fmt(allyUpgradeGain(s, this.data, ally)),
+      ganancia: fmt(alliesDps(after, this.data).sub(alliesDps(s, this.data))),
       mejor: false,
     };
   }
@@ -784,26 +826,28 @@ export class Game {
     const s = this.state;
     const d = this.data;
     const fmt = (value: Decimal) => formatNum(value, s.ajustes.notacion);
-    // Para mostrar "qué cambia", se calcula sobre una copia con un nivel más.
-    const withFuerza = { ...s, nivelFuerza: s.nivelFuerza + 1 };
-    const withValor = { ...s, nivelValor: s.nivelValor + 1 };
-
-    const costoFuerza = fuerzaCost(s, d);
-    const costoValor = valorCost(s, d);
-    const costoCritico = critChanceCost(s, d);
-    const costoDanioCritico = critDamageCost(s, d);
-    const costoSaco = sacoCost(s, d);
-    const nuevoObjeto = valorNextObject(s, d);
+    // Cada mejora: cuántos niveles compra el botón (×1 / ×10), cuánto cuestan juntos y cómo queda
+    // el estado después (para mostrar "qué cambia").
+    const plan = (id: UpgradeId) => {
+      const { cost, buy } = this.upgrade(id);
+      const p = planBulk(s, this.buyAmount, cost, buy);
+      return { cantidad: p.count, costo: fmt(p.total), alcanza: p.count > 0 && canAfford(s, p.total), after: afterBulk(s, p.count, buy) };
+    };
+    const fuerza = plan('fuerza');
+    const valor = plan('valor');
+    const critico = plan('critico');
+    const danioCritico = plan('danioCritico');
+    const saco = plan('saco');
     const object = currentObject(s, d);
-    const critMax = critChanceMaxed(s, d);
+    const nuevoObjeto = currentObject(valor.after, d);
     const pct = (p: number) => Math.round(p * 1000) / 10;
     const mult = (m: number) => `×${Math.round(m * 100) / 100}`;
 
-    const puedeFuerza = canAfford(s, costoFuerza);
-    const puedeValor = canAfford(s, costoValor);
-    const puedeCritico = !critMax && canAfford(s, costoCritico);
-    const puedeDanioCritico = canAfford(s, costoDanioCritico);
-    const puedeSaco = canAfford(s, costoSaco);
+    const puedeFuerza = fuerza.alcanza;
+    const puedeValor = valor.alcanza;
+    const puedeCritico = critico.alcanza;
+    const puedeDanioCritico = danioCritico.alcanza;
+    const puedeSaco = saco.alcanza;
     const aliados = d.allies.map((ally) => this.allyView(ally, fmt));
     const best = bestAllyPurchase(s, d);
     for (const ally of aliados) ally.mejor = ally.id === best && aliados.filter((a) => a.desbloqueado).length > 1;
@@ -822,44 +866,50 @@ export class Game {
       danio: fmt(tapDamage(s, d)),
       vistas: fmt(viewsPerBreak(s, d)),
       ganancia: fmt(moneyPerBreak(s, d)),
+      compra: this.buyAmount,
       fuerza: {
         nivel: s.nivelFuerza,
-        costo: fmt(costoFuerza),
+        cantidad: fuerza.cantidad,
+        costo: fuerza.costo,
         alcanza: puedeFuerza,
-        danioSiguiente: fmt(tapDamage(withFuerza, d)),
-        golpesSiguiente: tapsToBreak(withFuerza, d),
+        danioSiguiente: fmt(tapDamage(fuerza.after, d)),
+        golpesSiguiente: tapsToBreak(fuerza.after, d),
       },
       valor: {
         nivel: s.nivelValor,
         enObjeto: valorStepsInObject(s, d),
         porObjeto: d.balance.valor.nivelesPorObjeto,
         ultimoObjeto: object === d.objects[d.objects.length - 1],
-        costo: fmt(costoValor),
+        cantidad: valor.cantidad,
+        costo: valor.costo,
         alcanza: puedeValor,
-        gananciaSiguiente: fmt(moneyPerBreak(withValor, d)),
-        nuevoObjeto: nuevoObjeto?.id ?? null,
+        gananciaSiguiente: fmt(moneyPerBreak(valor.after, d)),
+        nuevoObjeto: nuevoObjeto !== object ? nuevoObjeto.id : null,
       },
       critico: {
         nivel: s.nivelCritico,
-        costo: fmt(costoCritico),
+        cantidad: critico.cantidad,
+        costo: critico.costo,
         alcanza: puedeCritico,
         prob: pct(critChance(s, d)),
-        probSiguiente: pct(critChance({ ...s, nivelCritico: s.nivelCritico + 1 }, d)),
-        maximo: critMax,
+        probSiguiente: pct(critChance(critico.after, d)),
+        maximo: critChanceMaxed(s, d),
       },
       danioCritico: {
         nivel: s.nivelDanioCritico,
-        costo: fmt(costoDanioCritico),
+        cantidad: danioCritico.cantidad,
+        costo: danioCritico.costo,
         alcanza: puedeDanioCritico,
         mult: mult(critMultiplier(s, d)),
-        multSiguiente: mult(critMultiplier({ ...s, nivelDanioCritico: s.nivelDanioCritico + 1 }, d)),
+        multSiguiente: mult(critMultiplier(danioCritico.after, d)),
       },
       saco: {
         nivel: s.nivelSaco,
-        costo: fmt(costoSaco),
+        cantidad: saco.cantidad,
+        costo: saco.costo,
         alcanza: puedeSaco,
         mult: mult(sacoMultiplier(s, d)),
-        multSiguiente: mult(sacoMultiplier({ ...s, nivelSaco: s.nivelSaco + 1 }, d)),
+        multSiguiente: mult(sacoMultiplier(saco.after, d)),
       },
       herramientaActual: object.herramienta,
       hayCompra:
