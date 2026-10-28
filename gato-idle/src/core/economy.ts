@@ -5,6 +5,7 @@ import { applyModifiers, collectModifiers } from './modifiers';
 import { nextTool, ownsTool } from './tools';
 import { num, ZERO, type Decimal } from './num';
 import type { GameState } from './state';
+import { pay } from './wallet';
 
 // ---- Objeto en la mesa ----
 
@@ -36,7 +37,10 @@ export function baseDamage(nivelFuerza: number, data: GameData): Decimal {
 }
 
 export function tapDamage(state: GameState, data: GameData): Decimal {
-  return applyModifiers(baseDamage(state.nivelFuerza, data), 'danio', collectModifiers(state, data));
+  // Modo pruebas: daño infinito tira cualquier objeto de un manotazo.
+  if (state.pruebas.danioInfinito) return currentObject(state, data).hp;
+  const damage = applyModifiers(baseDamage(state.nivelFuerza, data), 'danio', collectModifiers(state, data));
+  return state.pruebas.multDanio === 1 ? damage : damage.mul(state.pruebas.multDanio);
 }
 
 /** Manotazos que necesita el objeto actual desde cero. */
@@ -86,12 +90,6 @@ export function valorPreview(state: GameState, data: GameData): ValorPreview {
 }
 
 // ---- Compras ----
-
-function pay(state: GameState, cost: Decimal): boolean {
-  if (state.dinero.lt(cost)) return false;
-  state.dinero = state.dinero.sub(cost);
-  return true;
-}
 
 export function buyFuerza(state: GameState, data: GameData): boolean {
   if (!pay(state, fuerzaCost(state, data))) return false;

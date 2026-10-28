@@ -1,6 +1,6 @@
 # Swat to the Moon — Documento de diseño
 
-> **Versión 0.5** · Actualiza el prompt original ([`prompt-original.md`](prompt-original.md)) con las mejoras del análisis.
+> **Versión 0.6** · Actualiza el prompt original ([`prompt-original.md`](prompt-original.md)) con las mejoras del análisis.
 > **Nombre provisional.** *Knock It Off!* ya está en uso (Spin Master vende un juego físico con ese nombre para jugar con tu gato, y hay varios juegos en itch.io). *Swat to the Moon* aún no está verificado en Play Store ni en registros de marca (USPTO / IMPI). El nombre visible se cambia en un solo lugar: `src/i18n/*.json` → `app.title` y `capacitor.config.ts` → `appName`.
 
 ---
@@ -13,6 +13,7 @@
 - **El secreto del gato.** El gato sabe lo que hace: es el director creativo del canal y el dueño solo es el camarógrafo. **El dueño no lo sabe.** Cree que son accidentes, y el gato tiene que mantener la ilusión (ver §8, "¡Llegó el dueño!").
 - **Escalada del dueño:** streamer en cuarto rentado → influencer famoso → celebridad → magnate → compra islas → compra la Luna.
 - **Tono:** caricaturesco y absurdo, sin violencia. Nadie sale lastimado; solo se rompen cosas.
+- **Principio clave: que sea cómico.** Todo lo que se agregue (objetos, aliados, mejoras, textos, sonidos, animaciones) tiene que hacer reír o sonreír. Ver §22.
 - **Lo que nos distingue:** "gato que tira cosas" ya existe (*Cat Tap*, *Catlateral Damage*, *Knock It Over, Again?*). Lo nuestro es **la escalada (de un vaso a la Luna) y la sátira del influencer**. Eso debe verse en el nombre, el ícono y las capturas de la tienda.
 
 ## 2. Plataformas
@@ -178,6 +179,8 @@ Cada sistema hace algo distinto: Cheshire baja la probabilidad de que te vea, el
 
 ## 10. Humor y contenido
 
+> Las reglas generales del humor están en §22. Aquí, el contenido concreto.
+
 - Cada rotura genera un **título de video** de plantilla ("MI GATO TIRÓ LA TV 😱 (NO CLICKBAIT)") y **comentarios falsos** en un feed. Es solo texto en JSON y refuerza la premisa.
 - Frases del agente de seguros, cada vez más desesperado.
 - El título del dueño cambia con la fama (streamer en cuarto rentado → … → dueño de la Luna).
@@ -283,15 +286,17 @@ Fuera del MVP: herramientas 5–8, otras mascotas, paseador y abogado, 7 vidas, 
 
 ## 16. Plan por fases
 
-| Fase | Entrega | Estado |
-|---|---|---|
-| 0. Esqueleto | Proyecto, escena placeholder con toque, UI con pestañas, servicios falsos, guardado versionado, números grandes, Android | ✅ |
-| 1. "¿Es divertido tocar?" | Manotazo → desliza → cae → rompe; números flotantes y avisos ✅. Falta: sonido, tutorial, mejor animación del gato | Parcial |
-| 2. Economía | Fuerza/Valor, 11 objetos y 4 herramientas, estilos de rotura (empujar, rasgar, volcar), modificadores, simulador | ✅ |
-| 3. Idle | 4 empleados, offline, autoguardado completo | |
-| 4. Meta | Mudanza, Schrödinger, Cheshire, evento del dueño | |
-| 5. Anuncios y Android | AdMob de prueba, 5 recompensas, consentimiento, ajustes, APK | |
-| 6. Pulido | Tutorial, inglés, layout de PC, balance con testers | |
+Cada fase responde una pregunta. Se pasa a la siguiente cuando se cumple su criterio de salida: lo revisan las pruebas automáticas y el simulador, y al final **lo decide el dueño del proyecto jugando en el celular**. Las fases no son estrictamente en orden: si algo de una fase posterior hace falta antes (como los aliados o el modo pruebas), se adelanta.
+
+| Fase | Pregunta | Entrega | Se pasa cuando | Estado |
+|---|---|---|---|---|
+| 0. Esqueleto | ¿Funciona la base? | Proyecto, escena con toque, pestañas, servicios falsos, guardado versionado, números grandes, Android | Se instala en el celular, se toca y el progreso sobrevive al cerrar la app | ✅ |
+| 1. ¿Es divertido tocar? | ¿Dan ganas de seguir tocando sin mejoras? | Manotazo → desliza → cae → rompe; números flotantes, avisos y sonido por objeto ✅. Falta: animación del gato con expresión y un mini tutorial | Tocar se siente bien por sí solo (sonido, vibración, animación) y alguien que no conoce el juego entiende qué hacer sin explicación | Casi |
+| 2. Economía | ¿Hay siempre una compra que valga la pena? | Fuerza, Valor, 27 objetos, 4 herramientas, modificadores, laboratorio, simulador | El simulador llega al último objeto sin atorarse y sin tramos de más de ~3 min sin novedad | ✅ |
+| 3. Idle | ¿El juego avanza sin mí? | Aliados ✅ y autoguardado ✅. Falta: **ganancias offline** (al volver: "mientras no estabas ganaste $X") y el personal del canal | Al cerrar el juego un rato y volver, hay una recompensa que dé gusto, y los aliados cargan buena parte del daño | Parcial |
+| 4. Meta (reinicios) | ¿Hay razón para jugar días? | **La mudanza** (empezar de cero con un bono permanente), gatos legendarios, evento "¡Llegó el dueño!" | Una mudanza deja al jugador más fuerte y la segunda vuelta es claramente más rápida | Pendiente |
+| 5. Anuncios y Android | ¿Puede ganar dinero sin molestar? | Patrocinio con anuncio falso ✅, APK de prueba ✅. Falta: AdMob con IDs de prueba, las otras 4 recompensas, consentimiento de privacidad (requisito de Google) | Los anuncios de prueba de Google se ven y pagan en el celular, y la app cumple las políticas de Play | Parcial |
+| 6. Pulido | ¿Está listo para publicar? | Arte de PixelApp, tutorial, layout de PC, balance con testers. Inglés ✅, modo pruebas ✅ | Un grupo de testers juega una semana y el ritmo, el humor y los anuncios se sienten bien | Pendiente |
 
 ## 17. Google Play (planear desde ya)
 
@@ -409,3 +414,47 @@ daño por segundo    = daño del toque × 5 toques/s + daño automático de los 
 - La segunda parte es un **piso de 100 roturas**: aunque el objeto se rompa de un toque y no haya aliados, el anuncio vale al menos 100 veces lo que da romperlo.
 - Ejemplo: un objeto que se rompe de un toque y da $10 → 5 roturas por segundo × $10 × 60 s = **$3,000**, por encima de los $1,000 mínimos y cerca de los $2,500 deseados. Si el objeto tarda varios toques, la parte de tiempo baja y el piso de $1,000 lo protege.
 - Los parámetros están en `balance.json` (`patrocinio`: cada cuántos segundos, cuánto dura visible, segundos de juego, toques por segundo y roturas mínimas). La fórmula está en `src/core/income.ts` y la usa también el simulador.
+
+## 22. Principio de diseño: que sea cómico (versión 0.6.0)
+
+Es la otra idea clave, junto con "siempre hay algo nuevo por descubrir" (§20). El jugador vuelve porque el juego le hace gracia, no solo por los números. Antes de agregar cualquier cosa, preguntarse **"¿qué tiene de gracioso esto?"**; si no tiene nada, buscarle el chiste o replantearlo.
+
+### Reglas
+
+- **El gato es inocente… en apariencia.** Después de cada destrozo pone cara de "yo no fui", mira a la cámara, se lame la pata. El chiste es que todos sabemos que sí fue.
+- **Escalada absurda.** Cada objeto es más ridículo de tirar que el anterior: de un vaso a un refri, y al final la Luna. Que el jugador piense "¿cómo va a tirar ESO?".
+- **Comedia física (slapstick).** Anticipación antes del golpe, objetos que tiemblan en la orilla, rebotes exagerados, piezas que salen volando, el dueño que llega tarde. Mejor exagerado que realista.
+- **Sonidos caricaturescos.** Golpes con "boing", vidrio que se rompe de más, voces de los aliados fuera de lugar (el balido de la cabra en medio del silencio).
+- **Aliados con personalidad.** Cada uno tiene su manía: el perro siempre se lleva la culpa, el ratón mordisquea cables, el perico repite lo que dice el dueño, el cuervo se roba lo brillante, el mapache saquea la cocina, la cabra embiste sin razón.
+- **Textos con chiste.** Avisos, investigaciones ("Estudio de la mirada inocente", "Sindicato de mascotas"), nombres de mejoras, títulos de video y comentarios falsos. Cortos, y que se entiendan aunque no se lean completos.
+- **La sátira del influencer.** El dueño convierte cada desastre en contenido: miniaturas con caras exageradas, "NO CLICKBAIT", patrocinios absurdos.
+- **Nunca cruel.** Nadie sale lastimado, ni el dueño ni los animales; solo se rompen cosas.
+
+### Para la fase de diseño con PixelApp
+
+Lo que necesita arte con expresión (no solo un sprite quieto):
+
+| Quién | Estados mínimos |
+|---|---|
+| Gato | quieto, manotazo (anticipación + golpe), cara inocente, celebración, regañado |
+| Dueño | grabando, sorprendido, enojado, emocionado por las vistas |
+| Cada aliado | quieto, ataque, su manía (gesto propio) |
+| Cada objeto | normal, tambaleándose en la orilla, cayendo, roto en pedazos |
+
+Ya cumple con esto (en código, con arte provisional): los textos del modo pruebas ("El dueño ni se dio cuenta"), los nombres del laboratorio, las voces de los aliados y los sonidos por objeto. Pendiente: animaciones con expresión, el dueño en escena, títulos de video y comentarios falsos (§10).
+
+## 23. Modo pruebas (versión 0.6.0)
+
+Como el juego es largo, hace falta probar etapas avanzadas sin empezar de cero. El botón **🛠** de la barra superior (a la derecha del dinero) abre el panel:
+
+| Sección | Qué hace |
+|---|---|
+| Dinero | **Dinero infinito** (todo gratis; el contador muestra ∞) y botones para recibir 1 min, 10 min o 1 h de ganancias |
+| Daño del manotazo | ×1, ×10, ×100, ×1000 o **∞** (tira cualquier objeto de un toque). Los aliados pegan normal |
+| Avanzar como jugador | +5 min, +30 min o **"Jugar hasta…"** un objeto. Lo hace un jugador automático (el mismo del simulador, `src/core/bot.ts`), así que la partida queda como la de alguien que jugó de verdad: con su Fuerza, Valor, herramientas, aliados y descubrimientos. El laboratorio avanza el mismo tiempo |
+| Atajos | Descubrir el siguiente o todo, +10 niveles a los aliados, terminar la investigación en curso o todas, mostrar el patrocinio ya |
+| Puntos de guardado | 3 copias aparte de la partida: guardar una etapa y volver a ella cuando se quiera |
+
+- Con algún truco prendido, el botón 🛠 se pone **rojo** para no olvidarlo; "Apagar todos los trucos" los quita.
+- Los trucos se guardan con la partida (`pruebas` en el estado) y las compras pasan todas por `src/core/wallet.ts`.
+- **Versión de tienda:** compilar con `PRUEBAS=no` (por ejemplo `PRUEBAS=no npm run build`). El botón desaparece y los trucos se apagan al cargar.

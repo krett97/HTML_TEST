@@ -4,6 +4,7 @@ import { applyModifiers, collectModifiers } from './modifiers';
 import { num, type Decimal } from './num';
 import type { GameState } from './state';
 import { hasUnlock } from './unlocks';
+import { pay } from './wallet';
 
 export function allyLevel(state: GameState, allyId: string): number {
   return state.aliados.find((a) => a.id === allyId)?.nivel ?? 0;
@@ -64,9 +65,7 @@ export function bestAllyPurchase(state: GameState, data: GameData): string | nul
 export function buyAlly(state: GameState, data: GameData, allyId: string): boolean {
   const ally = data.allies.find((a) => a.id === allyId);
   if (!ally || !allyUnlocked(state, data, ally)) return false;
-  const cost = allyCost(state, data, ally);
-  if (state.dinero.lt(cost)) return false;
-  state.dinero = state.dinero.sub(cost);
+  if (!pay(state, allyCost(state, data, ally))) return false;
   const entry = state.aliados.find((a) => a.id === allyId);
   if (entry) entry.nivel += 1;
   else state.aliados.push({ id: allyId, nivel: 1 });

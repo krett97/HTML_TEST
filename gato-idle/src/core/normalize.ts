@@ -26,6 +26,8 @@ export function normalizeState(state: GameState, data: GameData): void {
   if (blocked !== -1) state.nivelValor = Math.min(state.nivelValor, blocked * nivelesPorObjeto - 1);
   if (state.danioObjeto.lt(0)) state.danioObjeto = ZERO;
   normalizeAllies(state, data);
+  const pruebas = state.pruebas;
+  if (!Number.isFinite(pruebas.multDanio) || pruebas.multDanio < 1) pruebas.multDanio = 1;
 
   const unlockIds = new Set(data.unlocks.map((u) => u.id));
   state.desbloqueos = [...new Set(state.desbloqueos.filter((id) => unlockIds.has(id)))];

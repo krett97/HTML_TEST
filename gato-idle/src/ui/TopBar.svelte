@@ -1,15 +1,21 @@
 <script lang="ts">
   import { t } from '../i18n';
   import { useGame } from './context';
+  import Pruebas from './Pruebas.svelte';
 
   const view = useGame().view;
 </script>
 
 <header class="top">
   <div class="title">{$t('app.title')}</div>
-  <div class="money" aria-label={$t('hud.dinero')}>
-    <span class="coin" aria-hidden="true">$</span>
-    <span data-testid="dinero">{$view.dinero}</span>
+  <div class="right">
+    <div class="money" aria-label={$t('hud.dinero')}>
+      <span class="coin" aria-hidden="true">$</span>
+      <span data-testid="dinero">{$view.dinero}</span>
+    </div>
+    {#if $view.pruebas.disponible}
+      <Pruebas />
+    {/if}
   </div>
 </header>
 
@@ -29,6 +35,11 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+  .right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
   }
   .money {
     display: flex;

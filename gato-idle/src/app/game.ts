@@ -13,7 +13,11 @@ import {
   bestAllyPurchase,
   buyAlly,
 } from '../core/allies';
-import { sponsorReward } from '../core/income';
+import { playUntil, type PlayGoal } from '../core/bot';
+import { incomePerSecond, sponsorReward } from '../core/income';
+import { addAllyLevels, advanceClock, completeAllResearch, discoverAll, discoverNext, finishResearchNow } from '../core/pruebas';
+import { deserialize, serialize } from '../core/save';
+import { canAfford } from '../core/wallet';
 import type { AllyDef, GameData, ToolDef } from '../core/data';
 import type { Effect } from '../core/modifiers';
 import { finishResearch, researchRemaining, researchStatus, startResearch, type ResearchStatus } from '../core/research';
@@ -40,7 +44,7 @@ import { normalizeState } from '../core/normalize';
 import { formatNum } from '../core/format';
 import { RateLimiter } from '../core/limiter';
 import type { Decimal } from '../core/num';
-import { createInitialState, type GameState, type Settings } from '../core/state';
+import { createInitialState, pruebasIniciales, type GameState, type Pruebas, type Settings } from '../core/state';
 import { detectLocale, isLocale, locale } from '../i18n';
 import type { SoundId } from '../core/sounds';
 import type { AdResult, AdsService, RewardedPlacement } from '../services/ads';
@@ -68,7 +72,7 @@ export interface GameEvents {
   investigacion: { researchId: string };
   /** Se cobró un patrocinio (anuncio visto completo). */
   patrocinio: { dinero: Decimal };
-  /** La partida se reinició: la escena vuelve a poner el objeto al inicio. */
+  /** La partida cambió de golpe (se reinició o se usó el modo pruebas): la escena se redibuja. */
   reset: undefined;
 }
 
@@ -182,6 +186,15 @@ export interface ViewModel {
   ajustes: Settings;
   ultimoGuardado: number | null;
   guardadoPersistente: boolean;
+  /** Modo pruebas: si existe en esta versión, los trucos y si alguno está prendido. */
+  pruebas: Pruebas & { disponible: boolean; activas: boolean };
+}
+
+/** Un punto de guardado del modo pruebas. */
+export interface TestSlot {
+  objetoId: string;
+  dinero: string;
+  guardado: number;
 }
 
 export interface GameServices {
@@ -197,6 +210,9 @@ const MAX_TICK_MS = 3000;
 const MAX_HITS_PER_TICK = 4;
 /** Cuánto tiempo se marca algo recién descubierto con "¡Nuevo!". */
 const NEW_BADGE_MS = 45_000;
+/** Puntos de guardado del modo pruebas (aparte de la partida). */
+const TEST_SLOTS = 3;
+const testSlotKey = (slot: number) => `gato-idle.prueba.${slot}`;
 
 export class Game {
   readonly events = new Emitter<GameEvents>();
@@ -244,6 +260,7 @@ export class Game {
       this.lastSavedAt = loaded.savedAt;
     }
     normalizeState(this.state, this.data);
+    if (!__PRUEBAS__) this.state.pruebas = pruebasIniciales();
     // Lo que ya se había ganado antes de esta versión se descubre en silencio.
     checkUnlocks(this.state, this.data);
     if (!isLocale(this.state.ajustes.idioma)) this.state.ajustes.idioma = null;
@@ -370,6 +387,110 @@ export class Game {
     await this.save();
   }
 
+  // ---- Modo pruebas (panel 🛠) ----
+
+  setPrueba<K extends keyof Pruebas>(key: K, value: Pruebas[K]): void {
+    this.state.pruebas[key] = value;
+    this.afterTest();
+  }
+
+  /** Da el dinero que se ganaría en `seconds` segundos jugando activo. */
+  testMoney(seconds: number): Decimal {
+    const dinero = incomePerSecond(this.state, this.data, 5).mul(seconds).floor();
+    this.state.dinero = this.state.dinero.add(dinero);
+    this.state.dineroPartida = this.state.dineroPartida.add(dinero);
+    this.afterTest();
+    return dinero;
+  }
+
+  /** Juega como un jugador real hasta un objeto o durante un tiempo. Devuelve los segundos jugados. */
+  testAdvance(goal: PlayGoal): number {
+    const before = new Set(this.state.desbloqueos);
+    const seconds = playUntil(this.state, this.data, goal);
+    // El laboratorio también avanza ese tiempo.
+    advanceClock(this.state, seconds);
+    this.markNew(this.state.desbloqueos.filter((id) => !before.has(id)));
+    this.afterTest(true);
+    return seconds;
+  }
+
+  testDiscover(all: boolean): number {
+    const fresh = all ? discoverAll(this.state, this.data) : [discoverNext(this.state, this.data)].filter((id) => id !== null);
+    this.markNew(fresh);
+    this.afterTest(true);
+    return fresh.length;
+  }
+
+  testResearch(all: boolean): void {
+    if (all) completeAllResearch(this.state, this.data);
+    else finishResearchNow(this.state, Date.now());
+    this.afterTest();
+  }
+
+  testAllies(levels: number): void {
+    addAllyLevels(this.state, this.data, levels);
+    this.afterTest(true);
+  }
+
+  /** Muestra la oferta de patrocinio ahora. */
+  testSponsor(): void {
+    if (!hasUnlock(this.state, 'patrocinios')) {
+      this.state.desbloqueos.push('patrocinios');
+      this.markNew(['patrocinios']);
+    }
+    const now = performance.now();
+    this.sponsorAt = now;
+    this.sponsorUntil = 0;
+    this.runSponsor(now);
+    this.afterTest();
+  }
+
+  async testSlots(): Promise<(TestSlot | null)[]> {
+    const slots: (TestSlot | null)[] = [];
+    for (let slot = 1; slot <= TEST_SLOTS; slot++) {
+      const text = await this.services.store.get(testSlotKey(slot));
+      const loaded = text === null ? null : deserialize(text, Date.now());
+      slots.push(
+        loaded?.ok
+          ? { objetoId: currentObject(loaded.state, this.data).id, dinero: this.formatMoney(loaded.state.dinero), guardado: loaded.savedAt }
+          : null,
+      );
+    }
+    return slots;
+  }
+
+  async saveTestSlot(slot: number): Promise<void> {
+    await this.services.store.set(testSlotKey(slot), serialize(this.state, Date.now()));
+  }
+
+  async loadTestSlot(slot: number): Promise<boolean> {
+    const text = await this.services.store.get(testSlotKey(slot));
+    const loaded = text === null ? null : deserialize(text, Date.now());
+    if (!loaded?.ok) return false;
+    const ajustes = this.state.ajustes;
+    this.state = loaded.state;
+    this.state.ajustes = ajustes;
+    normalizeState(this.state, this.data);
+    this.allyTimers.clear();
+    this.recentUnlocks.clear();
+    this.afterTest(true);
+    return true;
+  }
+
+  private markNew(ids: string[]): void {
+    const now = performance.now();
+    for (const id of ids) this.recentUnlocks.set(id, now);
+  }
+
+  /** Después de un truco: la escena se redibuja si cambió algo visible, y se guarda. */
+  private afterTest(redraw = false): void {
+    normalizeState(this.state, this.data);
+    if (redraw) this.events.emit('reset', undefined);
+    this.markDirty();
+    this.refreshView();
+    void this.save();
+  }
+
   // ---- Consultas para la escena ----
 
   currentObjectId(): string {
@@ -494,7 +615,7 @@ export class Game {
       desbloqueado: allyUnlocked(s, this.data, ally),
       condicion: { ...this.data.unlocks.find((u) => u.id === `aliado:${ally.id}`)!.condicion },
       costo: fmt(costo),
-      alcanza: s.dinero.gte(costo),
+      alcanza: canAfford(s, costo),
       danio: fmt(allyHitDamage(nivel, ally, s, this.data)),
       danioSiguiente: fmt(allyHitDamage(nivel + 1, ally, s, this.data)),
       intervalo: ally.intervalo,
@@ -512,7 +633,7 @@ export class Game {
       id: tool.id,
       estado: ownsTool(s, tool) ? 'comprada' : toolAvailable(s, this.data, tool.id) ? 'disponible' : 'bloqueada',
       costo: formatNum(tool.costo, s.ajustes.notacion),
-      alcanza: s.dinero.gte(tool.costo),
+      alcanza: canAfford(s, tool.costo),
       mult,
       objetos: this.data.objects.filter((o) => o.herramienta === tool.id).map((o) => o.id),
     };
@@ -532,8 +653,8 @@ export class Game {
     const object = currentObject(s, d);
     const herramientas = d.tools.map((tool) => this.toolView(tool));
 
-    const puedeFuerza = s.dinero.gte(costoFuerza);
-    const puedeValor = !preview.requiredTool && s.dinero.gte(costoValor);
+    const puedeFuerza = canAfford(s, costoFuerza);
+    const puedeValor = !preview.requiredTool && canAfford(s, costoValor);
     const puedeHerramienta = herramientas.some((t) => t.estado === 'disponible' && t.alcanza);
     const aliados = d.allies.map((ally) => this.allyView(ally, fmt));
     const best = bestAllyPurchase(s, d);
@@ -544,7 +665,7 @@ export class Game {
     const currentDef = current ? d.research.find((r) => r.id === current.id) : undefined;
 
     return {
-      dinero: fmt(s.dinero),
+      dinero: s.pruebas.dineroInfinito ? '∞' : fmt(s.dinero),
       objetoId: object.id,
       progreso: this.progress(),
       toques: s.stats.toques,
@@ -571,7 +692,7 @@ export class Game {
         nuevoObjeto: preview.nextObject?.id ?? null,
         requiere: preview.requiredTool?.id ?? null,
         costoHerramienta: preview.requiredTool ? fmt(preview.requiredTool.costo) : '',
-        alcanzaHerramienta: preview.requiredTool ? s.dinero.gte(preview.requiredTool.costo) : false,
+        alcanzaHerramienta: preview.requiredTool ? canAfford(s, preview.requiredTool.costo) : false,
       },
       herramientaActual: object.herramienta,
       herramientas,
@@ -599,7 +720,7 @@ export class Game {
           id: r.id,
           estado: researchStatus(s, d, r),
           costo: fmt(r.costo),
-          alcanza: s.dinero.gte(r.costo),
+          alcanza: canAfford(s, r.costo),
           duracion: r.duracion,
           efectos: r.efectos,
           requiere: r.requiere,
@@ -612,6 +733,11 @@ export class Game {
       ajustes: { ...s.ajustes },
       ultimoGuardado: this.lastSavedAt,
       guardadoPersistente: this.services.store.persistent,
+      pruebas: {
+        ...s.pruebas,
+        disponible: __PRUEBAS__,
+        activas: s.pruebas.dineroInfinito || s.pruebas.danioInfinito || s.pruebas.multDanio !== 1,
+      },
     };
   }
 }

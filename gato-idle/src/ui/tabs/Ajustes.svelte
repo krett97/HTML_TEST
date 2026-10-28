@@ -128,34 +128,6 @@
     border-radius: 4px;
     background: var(--bg);
   }
-  .switch {
-    appearance: none;
-    position: relative;
-    width: 46px;
-    height: 26px;
-    margin: 0;
-    border: 2px solid var(--line);
-    border-radius: 4px;
-    background: var(--bg);
-    cursor: pointer;
-  }
-  .switch::after {
-    content: '';
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 18px;
-    height: 18px;
-    background: var(--muted);
-    transition: transform 120ms;
-  }
-  .switch:checked {
-    background: var(--good);
-  }
-  .switch:checked::after {
-    background: var(--text);
-    transform: translateX(20px);
-  }
   h3 {
     margin: 18px 2px 6px;
     font-size: 15px;

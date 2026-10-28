@@ -13,6 +13,8 @@ export default defineConfig(({ mode }) => {
     plugins: [svelte()],
     define: {
       __APP_VERSION__: JSON.stringify(pkg.version),
+      // La versión de tienda se compila con PRUEBAS=no para quitar el panel de pruebas.
+      __PRUEBAS__: JSON.stringify(process.env.PRUEBAS !== 'no'),
     },
     build: {
       target: 'es2022',

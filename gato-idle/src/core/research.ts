@@ -4,6 +4,7 @@ import type { GameData, ResearchDef } from './data';
 import { objectIndexFor } from './economy';
 import type { GameState } from './state';
 import { hasUnlock } from './unlocks';
+import { canAfford, pay } from './wallet';
 
 export type ResearchStatus = 'hecha' | 'en-curso' | 'disponible' | 'bloqueada';
 
@@ -20,8 +21,8 @@ export function researchStatus(state: GameState, data: GameData, research: Resea
 export function startResearch(state: GameState, data: GameData, researchId: string, now: number): boolean {
   const research = data.research.find((r) => r.id === researchId);
   if (!research || !hasUnlock(state, 'laboratorio') || state.laboratorio.actual) return false;
-  if (researchStatus(state, data, research) !== 'disponible' || state.dinero.lt(research.costo)) return false;
-  state.dinero = state.dinero.sub(research.costo);
+  if (researchStatus(state, data, research) !== 'disponible' || !canAfford(state, research.costo)) return false;
+  pay(state, research.costo);
   state.laboratorio.actual = { id: research.id, fin: now + research.duracion * 1000 };
   return true;
 }
