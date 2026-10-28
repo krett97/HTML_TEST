@@ -9,8 +9,9 @@
   { "id": "danioCritico",   "condicion": { "objeto": "cortinas" } },
   { "id": "laboratorio",    "condicion": { "objeto": "lampara" } },
   { "id": "aliado:perico",  "condicion": { "objeto": "consola" } },
-  { "id": "saco",         "condicion": { "objeto": "tv" } },
+  { "id": "saco",           "condicion": { "objeto": "tv" } },
   { "id": "aliado:cuervo",  "condicion": { "objeto": "mesa" } },
   { "id": "aliado:mapache", "condicion": { "objeto": "tostadora" } },
+  { "id": "canal",          "condicion": { "objeto": "cafetera" } },
   { "id": "aliado:cabra",   "condicion": { "objeto": "lavadora" } }
 ]

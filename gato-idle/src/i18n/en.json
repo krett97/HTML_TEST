@@ -11,7 +11,8 @@
     "mejoras": "Upgrades",
     "aliados": "Allies",
     "laboratorio": "Research",
-    "ajustes": "Settings"
+    "ajustes": "Settings",
+    "canal": "Channel"
   },
   "objetos": {
     "vaso": "Glass",
@@ -103,7 +104,11 @@
     "investigacion": "Research done: {nombre}",
     "garras": "Steel claws! Critical swipes unlocked",
     "sombrero": "Hat on! Swipes hit harder",
-    "saco": "Boss suit on! The gang hits harder"
+    "saco": "Boss suit on! The gang hits harder",
+    "dueno": "The owner caught you!",
+    "duenoGraba": "…and instead of scolding you, started recording! 📱",
+    "videoSubido": "📤 Video uploaded! +{seguidores} followers",
+    "viral": "🔥 IT WENT VIRAL! 🔥"
   },
   "aliados": {
     "gatito": "Baby kitten",
@@ -147,7 +152,8 @@
     "patrocinios": "Sponsorships",
     "critico": "Sharp claws",
     "danioCritico": "Silly hat",
-    "saco": "Boss suit"
+    "saco": "Boss suit",
+    "canal": "The owner's channel"
   },
   "laboratorio": {
     "titulo": "Cat research",
@@ -217,6 +223,47 @@
     "puntoGuardado": "Point {n} saved.",
     "puntoCargado": "Back to point {n}.",
     "apagar": "Turn off all cheats",
-    "apagados": "Cheats off. Playing fair now."
+    "apagados": "Cheats off. Playing fair now.",
+    "canal": "+10 followers and +2K views"
+  },
+  "canal": {
+    "titulo": "Owner's channel",
+    "seguidores": "Followers",
+    "bono": "+{pct}% money, forever",
+    "visualizaciones": "Views",
+    "grabando": "Now recording",
+    "resumen": "{n} things broken · now at: {objeto}",
+    "siSubes": "Upload now: +{seguidores} followers · +{visualizaciones} views",
+    "faltaMas": "Not enough for a video yet: upgrade Value",
+    "subir": "📤 Upload video",
+    "confirmar": "Sure? Tap again to upload",
+    "explica": "Uploading sends you back to the glass. You keep followers, views, skills, research and discoveries.",
+    "habilidades": "Skills",
+    "habilidadesIntro": "Bought with views, kept forever.",
+    "videos": "Uploaded videos",
+    "sinVideos": "No videos yet. Go break stuff!",
+    "videoStats": "+{seguidores} followers · {visualizaciones} views",
+    "viral": "🔥 Viral",
+    "max": "Max",
+    "titulos": {
+      "0": "MY CAT VS. {objeto} 😱 (NOT CLICKBAIT)",
+      "1": "{objeto} vs. my cat: you won't believe the ending",
+      "2": "My cat destroyed {n} things and has no regrets 💀",
+      "3": "POV: your cat has a gang",
+      "4": "Reacting to my cat vs. {objeto} (crying)",
+      "5": "Accident? My cat and {objeto} 🤔 #cats #viral"
+    },
+    "nombres": {
+      "embestida": "RC car ram",
+      "recolectora": "Collector vacuum",
+      "pandilla": "Veteran gang",
+      "express": "Express research"
+    },
+    "efectos": {
+      "embestida": "Every 10 swats, one hits {actual} → {siguiente}",
+      "recolectora": "Picks up the pieces: +{actual}% → +{siguiente}% money",
+      "pandilla": "Kitten, mouse and dog start at level {actual} → {siguiente}",
+      "express": "Research takes {actual}% → {siguiente}% less"
+    }
   }
 }

@@ -4,6 +4,7 @@ import type { GameData, ObjectDef } from './data';
 import { applyModifiers, collectModifiers } from './modifiers';
 import { num, ZERO, type Decimal } from './num';
 import type { GameState } from './state';
+import { rammingMultiplier } from './skills';
 import { pay } from './wallet';
 
 // ---- Objeto en la mesa ----
@@ -64,9 +65,10 @@ export function critFactor(state: GameState, data: GameData): number {
   return 1 + critChance(state, data) * (critMultiplier(state, data) - 1);
 }
 
-/** Daño promedio de un manotazo, contando los críticos. */
+/** Daño promedio de un manotazo, contando los críticos y la embestida (una de cada `embestidaCada`). */
 export function expectedTapDamage(state: GameState, data: GameData): Decimal {
-  return tapDamage(state, data).mul(critFactor(state, data));
+  const ramming = 1 + (rammingMultiplier(state, data) - 1) / data.balance.canal.embestidaCada;
+  return tapDamage(state, data).mul(critFactor(state, data) * ramming);
 }
 
 export function critChanceMaxed(state: GameState, data: GameData): boolean {

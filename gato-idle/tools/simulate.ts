@@ -5,11 +5,13 @@
 //   npm run simular -- 3       (3 toques por segundo)
 import { pathToFileURL } from 'node:url';
 import { alliesDps } from '../src/core/allies';
-import { botStep } from '../src/core/bot';
+import { botStep, playUntil } from '../src/core/bot';
+import { uploadVideo } from '../src/core/canal';
 import type { GameData } from '../src/core/data';
 import { currentObject, moneyPerBreak, tapDamage, tapsToBreak, valorStepsInObject } from '../src/core/economy';
 import { formatNum } from '../src/core/format';
 import { normalizeState } from '../src/core/normalize';
+import { buySkill, skillCost } from '../src/core/skills';
 import { createInitialState, type GameState } from '../src/core/state';
 import { gameData } from '../src/data';
 
@@ -71,6 +73,48 @@ export function simulate(data: GameData, maxMinutes = MAX_MINUTES): { rows: SimR
   return { rows, counts };
 }
 
+export interface RunRow {
+  vuelta: number;
+  /** Minuto (desde el inicio de la vuelta) en que llega a cada objeto. */
+  minutos: Record<string, number>;
+  seguidores: number;
+  visualizaciones: string;
+  habilidades: string;
+}
+
+/**
+ * Varias vueltas seguidas: juega hasta el refri, sube el video y gasta las visualizaciones en la
+ * habilidad más barata (embestida, recolectora o pandilla). Responde "¿cuánto más rápida es la
+ * segunda vuelta?".
+ */
+export function simulateRuns(data: GameData, runs = 4): RunRow[] {
+  const state = createInitialState(0);
+  normalizeState(state, data);
+  const rows: RunRow[] = [];
+  const marks = ['lampara', 'tostadora', 'lavadora', data.objects.at(-1)!.id];
+  for (let vuelta = 1; vuelta <= runs; vuelta++) {
+    const minutos: Record<string, number> = {};
+    let seconds = 0;
+    for (const objeto of marks) {
+      seconds += playUntil(state, data, { objeto }, TAPS_PER_SECOND);
+      minutos[objeto] = seconds / 60;
+    }
+    const video = uploadVideo(state, data, 0, () => 0.5)!;
+    for (;;) {
+      const options = data.skills.filter((d) => d.id !== 'express').sort((a, b) => skillCost(state, a).cmp(skillCost(state, b)));
+      if (!options.some((d) => buySkill(state, data, d.id))) break;
+    }
+    rows.push({
+      vuelta,
+      minutos,
+      seguidores: video.seguidores,
+      visualizaciones: formatNum(video.visualizaciones),
+      habilidades: state.habilidades.map((h) => `${h.id} ${h.nivel}`).join(', '),
+    });
+  }
+  return rows;
+}
+
 function main(): void {
   const { rows: simRows, counts } = simulate(gameData);
   const rows = simRows.map((r) => [r.minuto.toFixed(1), r.hito, String(r.fuerza), String(r.valor), String(r.golpes), r.pagoPorRotura, `${r.aliadosPct}%`]);
@@ -82,6 +126,12 @@ function main(): void {
   console.log(widths.map((w) => '-'.repeat(w)).join('  '));
   for (const row of rows) console.log(line(row));
   console.log(`\nCompras: ${Object.entries(counts).map(([k, v]) => `${k} ×${v}`).join(', ')}`);
+
+  console.log('\nVueltas (sube el video al llegar al último objeto y gasta en habilidades):');
+  for (const run of simulateRuns(gameData)) {
+    const marks = Object.entries(run.minutos).map(([obj, min]) => `${obj} ${min.toFixed(1)}`).join(' · ');
+    console.log(`  ${run.vuelta}. ${marks} → +${run.seguidores} seguidores, +${run.visualizaciones} visualizaciones | ${run.habilidades}`);
+  }
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) main();

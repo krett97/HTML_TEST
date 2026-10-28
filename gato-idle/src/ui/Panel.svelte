@@ -4,6 +4,7 @@
   import Mejoras from './tabs/Mejoras.svelte';
   import Aliados from './tabs/Aliados.svelte';
   import Laboratorio from './tabs/Laboratorio.svelte';
+  import Canal from './tabs/Canal.svelte';
   import Ajustes from './tabs/Ajustes.svelte';
   import NewBadge from './NewBadge.svelte';
 
@@ -11,6 +12,7 @@
     { id: 'mejoras', icon: '🐾', component: Mejoras },
     { id: 'aliados', icon: '🐱', component: Aliados },
     { id: 'laboratorio', icon: '🧪', component: Laboratorio },
+    { id: 'canal', icon: '📱', component: Canal },
     { id: 'ajustes', icon: '⚙️', component: Ajustes },
   ] as const;
   type TabId = (typeof ALL_TABS)[number]['id'];
@@ -21,7 +23,9 @@
   const tabs = $derived(
     ALL_TABS.filter(
       (tab) =>
-        (tab.id !== 'aliados' || $view.funciones.aliados) && (tab.id !== 'laboratorio' || $view.funciones.laboratorio),
+        (tab.id !== 'aliados' || $view.funciones.aliados) &&
+        (tab.id !== 'laboratorio' || $view.funciones.laboratorio) &&
+        (tab.id !== 'canal' || $view.funciones.canal),
     ),
   );
 
@@ -33,12 +37,14 @@
     if (id === 'mejoras') return $view.hayCompra;
     if (id === 'aliados') return $view.hayCompraAliado;
     if (id === 'laboratorio') return !$view.laboratorio.actual && $view.laboratorio.proyectos.some((p) => p.estado === 'disponible' && p.alcanza);
+    if (id === 'canal') return $view.canal.grabando.listo || $view.canal.hayCompra;
     return false;
   }
 
   function isNew(id: TabId): boolean {
     if (id === 'aliados') return $view.nuevos.some((n) => n.startsWith('aliado:'));
     if (id === 'laboratorio') return $view.nuevos.includes('laboratorio');
+    if (id === 'canal') return $view.nuevos.includes('canal');
     return false;
   }
 </script>
@@ -102,7 +108,7 @@
     border-right: 2px solid var(--line);
     background: transparent;
     color: var(--muted);
-    font-size: 13px;
+    font-size: 12px;
     cursor: pointer;
   }
   .tab:last-child {
@@ -114,6 +120,9 @@
     box-shadow: inset 0 3px 0 var(--accent);
   }
   .label {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
   }
   .tab-icon {

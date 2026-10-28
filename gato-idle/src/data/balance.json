@@ -43,5 +43,14 @@
     "segundosDeJuego": 60,
     "toquesPorSegundo": 5,
     "roturasMinimas": 100
+  },
+  "canal": {
+    "escalaSeguidores": 2000000,
+    "bonoPorSeguidor": 0.02,
+    "visualizacionesPorSeguidor": 100,
+    "probabilidadViral": 0.15,
+    "multViral": 2,
+    "objetoMinimo": "lavadora",
+    "embestidaCada": 10
   }
 }

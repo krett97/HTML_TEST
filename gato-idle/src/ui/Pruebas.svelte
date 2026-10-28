@@ -174,6 +174,7 @@
           >
           <button type="button" class="btn" onclick={() => game.testResearch(true)}>{$t('pruebas.todasInvestigaciones')}</button>
           <button type="button" class="btn" onclick={() => game.testSponsor()}>{$t('pruebas.patrocinio')}</button>
+          <button type="button" class="btn" onclick={() => game.testCanal(10, 2000)}>{$t('pruebas.canal')}</button>
         </div>
       </section>
 

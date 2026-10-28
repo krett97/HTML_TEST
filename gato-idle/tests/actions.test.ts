@@ -28,7 +28,7 @@ describe('manotazo', () => {
     expect(last.reward?.dinero.eq(1)).toBe(true);
     expect(state.dinero.eq(1)).toBe(true);
     expect(state.dineroPartida.eq(1)).toBe(true);
-    expect(state.stats).toEqual({ toques: 5, roturas: 1 });
+    expect(state.stats).toEqual({ toques: 5, roturas: 1, roturasPartida: 1 });
     expect(objectProgress(state, gameData)).toBe(0);
   });
 });

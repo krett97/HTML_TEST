@@ -1,4 +1,6 @@
 import { normalizeAllies } from './allies';
+import { normalizeCanal } from './canal';
+import { normalizeSkills } from './skills';
 import type { GameData } from './data';
 import { ZERO } from './num';
 import type { GameState } from './state';
@@ -19,6 +21,9 @@ export function normalizeState(state: GameState, data: GameData): void {
   state.nivelCritico = Math.min(Math.max(0, Math.floor(state.nivelCritico)), Math.ceil(probMax / probPorNivel));
   if (state.danioObjeto.lt(0)) state.danioObjeto = ZERO;
   normalizeAllies(state, data);
+  normalizeSkills(state, data);
+  normalizeCanal(state);
+  state.stats.roturasPartida = Math.max(0, Math.floor(state.stats.roturasPartida));
   const pruebas = state.pruebas;
   if (!Number.isFinite(pruebas.multDanio) || pruebas.multDanio < 1) pruebas.multDanio = 1;
 

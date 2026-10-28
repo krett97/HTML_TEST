@@ -42,7 +42,7 @@ describe('guardado', () => {
     const text = JSON.stringify({ v: SAVE_VERSION, t: NOW, s: { dinero: { $d: '250' } } });
     const { state } = load(text);
     expect(state.dinero.eq(250)).toBe(true);
-    expect(state.stats).toEqual({ toques: 0, roturas: 0 });
+    expect(state.stats).toEqual({ toques: 0, roturas: 0, roturasPartida: 0 });
     expect(state.ajustes.vibracion).toBe(true);
   });
 

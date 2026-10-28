@@ -52,6 +52,7 @@ export class MainScene extends Phaser.Scene {
   private vehicle!: Phaser.GameObjects.Image;
   private paw!: Phaser.GameObjects.Image;
   private hat!: Phaser.GameObjects.Image;
+  private owner!: Phaser.GameObjects.Image;
   private object!: Phaser.GameObjects.Image;
   private objectDef!: ObjectDef;
   private look: ToolLook = toolLook('pata');
@@ -82,6 +83,7 @@ export class MainScene extends Phaser.Scene {
     this.cat = this.add.image(0, 0, 'gato').setOrigin(0, 1).setDepth(2);
     this.vehicle = this.add.image(0, 0, 'carrito').setOrigin(0.5, 1).setDepth(2.5).setVisible(false);
     this.hat = this.add.image(0, 0, 'sombrero').setOrigin(0.5, 1).setDepth(2.8).setVisible(false);
+    this.owner = this.add.image(0, 0, 'duenio').setOrigin(0.5, 1).setScale(2).setDepth(4.5).setVisible(false);
     this.object = this.add.image(0, 0, '__DEFAULT').setOrigin(0.5, 1).setDepth(3);
     this.scratches = this.add.graphics().setDepth(3.5);
     for (const ally of this.controller.data.allies) {
@@ -107,6 +109,7 @@ export class MainScene extends Phaser.Scene {
         this.toast(get(t)('patrocinio.gracias', { dinero: this.controller.formatMoney(dinero) }));
         this.floatText(this.object.x, this.object.y - this.object.height - 10, `+$${this.controller.formatMoney(dinero)}`, 'flotante');
       }),
+      this.controller.events.on('video', ({ video }) => this.onVideo(video.seguidores, video.viral)),
       this.controller.events.on('investigacion', ({ researchId }) => {
         const tr = get(t);
         this.toast(tr('avisos.investigacion', { nombre: tr(`laboratorio.proyectos.${researchId}`) }));
@@ -310,6 +313,10 @@ export class MainScene extends Phaser.Scene {
   /** Algo nuevo se puede usar: aviso con su nombre (o el del aliado). */
   private onDiscovery(unlockId: string): void {
     const tr = get(t);
+    if (unlockId === 'canal') {
+      this.ownerCameo();
+      return;
+    }
     if (unlockId.startsWith('aliado:')) {
       this.toast(tr('avisos.aliadoDisponible', { aliado: tr(`aliados.${unlockId.slice(7)}`) }));
     } else {
@@ -412,6 +419,46 @@ export class MainScene extends Phaser.Scene {
     if (cambio === 'saco') {
       // Se acomoda el saco: se estira y vuelve, muy profesional.
       this.tweens.add({ targets: this.cat, scaleX: 1.15, duration: 90, yoyo: true, repeat: 1, ease: 'Sine.inOut' });
+    }
+  }
+
+  /** El dueño entra, cacha al gato… y en vez de regañarlo, saca el celular y graba. */
+  private ownerCameo(): void {
+    const tr = get(t);
+    const floorY = this.floorY;
+    const outX = SCENE_WIDTH + 30;
+    this.tweens.killTweensOf(this.owner);
+    this.owner.setPosition(outX, floorY + 2).setFlipX(false).setVisible(true);
+    this.tweens.chain({
+      targets: this.owner,
+      tweens: [
+        { x: SCENE_WIDTH - 22, duration: 600, ease: 'Sine.out' },
+        { y: floorY - 4, duration: 90, yoyo: true, ease: 'Quad.out' }, // brinco de sorpresa
+        { x: SCENE_WIDTH - 22, duration: 2200 }, // se queda grabando
+        { x: outX, duration: 500, ease: 'Sine.in' },
+      ],
+      onComplete: () => this.owner.setVisible(false),
+    });
+    this.time.delayedCall(650, () => {
+      this.toast(tr('avisos.dueno'));
+      this.controller.playSound('objeto-nuevo');
+    });
+    this.time.delayedCall(1500, () => {
+      this.toast(tr('avisos.duenoGraba'));
+      this.cameras.main.flash(120, 255, 241, 224); // flash del celular
+    });
+  }
+
+  /** Se subió el video: festejo, y si se hizo viral, confeti y sacudida. */
+  private onVideo(seguidores: number, viral: boolean): void {
+    const tr = get(t);
+    this.toast(tr('avisos.videoSubido', { seguidores }));
+    this.cameras.main.flash(160, 255, 241, 224);
+    if (viral) {
+      this.toast(tr('avisos.viral'));
+      this.cameras.main.shake(300, 0.015);
+      const colors = [0xe5534b, 0xffd36e, 0x5ec4a8, 0x8e5bd1];
+      colors.forEach((color, i) => this.time.delayedCall(i * 120, () => this.shatter(30 + i * 40, this.surfaceTop - 40, color, 24, 200)));
     }
   }
 

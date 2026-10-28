@@ -11,7 +11,8 @@
     "mejoras": "Mejoras",
     "aliados": "Aliados",
     "laboratorio": "Investigación",
-    "ajustes": "Ajustes"
+    "ajustes": "Ajustes",
+    "canal": "Canal"
   },
   "objetos": {
     "vaso": "Vaso",
@@ -103,7 +104,11 @@
     "investigacion": "Investigación terminada: {nombre}",
     "garras": "¡Garras de acero! Ahora hay zarpazos críticos",
     "sombrero": "¡Sombrero puesto! Los zarpazos pegan más fuerte",
-    "saco": "¡Saco de jefe! La pandilla pega más fuerte"
+    "saco": "¡Saco de jefe! La pandilla pega más fuerte",
+    "dueno": "¡El dueño te cachó!",
+    "duenoGraba": "…y en vez de regañarte, ¡empezó a grabar! 📱",
+    "videoSubido": "📤 ¡Video subido! +{seguidores} seguidores",
+    "viral": "🔥 ¡SE HIZO VIRAL! 🔥"
   },
   "aliados": {
     "gatito": "Gatito bebé",
@@ -147,7 +152,8 @@
     "patrocinios": "Patrocinios",
     "critico": "Garras afiladas",
     "danioCritico": "Sombrero ridículo",
-    "saco": "Saco de jefe"
+    "saco": "Saco de jefe",
+    "canal": "El canal del dueño"
   },
   "laboratorio": {
     "titulo": "Investigación gatuna",
@@ -217,6 +223,47 @@
     "puntoGuardado": "Punto {n} guardado.",
     "puntoCargado": "Volviste al punto {n}.",
     "apagar": "Apagar todos los trucos",
-    "apagados": "Trucos apagados. Ahora sí, a jugar limpio."
+    "apagados": "Trucos apagados. Ahora sí, a jugar limpio.",
+    "canal": "+10 seguidores y +2K visualizaciones"
+  },
+  "canal": {
+    "titulo": "Canal del dueño",
+    "seguidores": "Seguidores",
+    "bono": "+{pct}% de dinero, para siempre",
+    "visualizaciones": "Visualizaciones",
+    "grabando": "Video en grabación",
+    "resumen": "{n} cosas rotas · va en: {objeto}",
+    "siSubes": "Si lo subes ahora: +{seguidores} seguidores · +{visualizaciones} visualizaciones",
+    "faltaMas": "Todavía no da para video: mejora el Valor",
+    "subir": "📤 Subir video",
+    "confirmar": "¿Seguro? Toca otra vez para subirlo",
+    "explica": "Al subirlo la partida vuelve al vaso. Conservas seguidores, visualizaciones, habilidades, investigaciones y descubrimientos.",
+    "habilidades": "Habilidades",
+    "habilidadesIntro": "Se compran con visualizaciones y se quedan para siempre.",
+    "videos": "Videos subidos",
+    "sinVideos": "Aún no hay videos. ¡A romper cosas!",
+    "videoStats": "+{seguidores} seguidores · {visualizaciones} visualizaciones",
+    "viral": "🔥 Viral",
+    "max": "Máx.",
+    "titulos": {
+      "0": "MI GATO VS. {objeto} 😱 (NO CLICKBAIT)",
+      "1": "{objeto} vs. mi gato: no vas a creer el final",
+      "2": "Mi gato destruyó {n} cosas y no se arrepiente 💀",
+      "3": "POV: tu gato tiene una pandilla",
+      "4": "Reaccionando a mi gato contra: {objeto} (llorando)",
+      "5": "¿Accidente? Mi gato y {objeto} 🤔 #gatos #viral"
+    },
+    "nombres": {
+      "embestida": "Embestida del carrito",
+      "recolectora": "Aspiradora recolectora",
+      "pandilla": "Pandilla veterana",
+      "express": "Investigación express"
+    },
+    "efectos": {
+      "embestida": "Cada 10 manotazos, uno pega {actual} → {siguiente}",
+      "recolectora": "Recoge los pedazos: +{actual}% → +{siguiente}% de dinero",
+      "pandilla": "Gatito, ratón y perro empiezan en nivel {actual} → {siguiente}",
+      "express": "Las investigaciones tardan {actual}% → {siguiente}% menos"
+    }
   }
 }

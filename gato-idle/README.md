@@ -5,7 +5,7 @@ Idle de un gato que tira las cosas de su dueño, de un vaso a la Luna. Celular p
 - Diseño completo: [`docs/DISENO.md`](docs/DISENO.md)
 - Prompt original: [`docs/prompt-original.md`](docs/prompt-original.md)
 
-**Estado:** versión 0.9.0. Al empezar solo se puede dar manotazos; Fuerza, Valor, patrocinios (dinero por ver un anuncio cada 90 s), **críticos** (Garras afiladas y Sombrero ridículo), **Saco de jefe** (más daño para los aliados) —las tres cambian el aspecto del gato—, 7 aliados (gatito bebé, ratón, perro, perico, cuervo, mapache, cabra; cada uno mejor que el anterior) y la Investigación gatuna se van descubriendo conforme se avanza. 27 objetos, cada uno con su sonido y en su cuarto (cocina, sala, baño, recámara, cuarto de lavado). El progreso se guarda. Botón 🛠 (arriba a la derecha) con el **modo pruebas**: dinero infinito, daño ∞, avanzar como jugador hasta cualquier objeto y puntos de guardado.
+**Estado:** versión 0.10.0. Al empezar solo se puede dar manotazos; Fuerza, Valor, patrocinios (dinero por ver un anuncio cada 90 s), **críticos** (Garras afiladas y Sombrero ridículo), **Saco de jefe** (más daño para los aliados) —las tres cambian el aspecto del gato—, 7 aliados (gatito bebé, ratón, perro, perico, cuervo, mapache, cabra; cada uno mejor que el anterior) la Investigación gatuna y el **Canal del dueño** se van descubriendo conforme se avanza. A media partida el dueño cacha al gato y empieza a grabar: **subir el video** es el reinicio, y deja seguidores (bono permanente) y visualizaciones para comprar Habilidades. 27 objetos, cada uno con su sonido y en su cuarto (cocina, sala, baño, recámara, cuarto de lavado). El progreso se guarda. Botón 🛠 (arriba a la derecha) con el **modo pruebas**: dinero infinito, daño ∞, avanzar como jugador hasta cualquier objeto y puntos de guardado.
 
 ## Requisitos
 
@@ -20,7 +20,7 @@ Idle de un gato que tira las cosas de su dueño, de un vaso a la Luna. Celular p
 | `npm run dev` | Abre el juego en `http://localhost:5173` y recarga al guardar cambios |
 | `npm run dev:host` | Igual, pero accesible desde tu celular en la misma red Wi-Fi (usa la dirección "Network" que imprime) |
 | `npm test` | Pruebas de la lógica (números, economía, guardado, datos) |
-| `npm run simular` | Simula a un jugador y muestra en qué minuto llega a cada objeto (`npm run simular -- 3` para 3 toques por segundo) |
+| `npm run simular` | Simula a un jugador: en qué minuto llega a cada objeto y cuánto más rápidas son las vueltas después de subir el video (`npm run simular -- 3` para 3 toques por segundo) |
 | `npm run check` | Revisión de tipos de TypeScript y Svelte |
 | `npm run build` | Build de producción en `dist/` |
 | `npm run build:archivo` | Todo el juego en un solo HTML (`dist-archivo/swat-to-the-moon.html`) que se abre sin servidor |
@@ -53,7 +53,7 @@ Diferencias con la app real (`android/`): se instala como **"Swat (prueba)"** co
 ```
 src/
   core/        lógica pura (sin Phaser ni DOM): números grandes, estado, economía, modificadores, guardado
-  data/        balance en JSON: objects.json (con sonidos), tools.json (aspecto del gato por etapa), allies.json, unlocks.json (orden de descubrimientos), research.json (investigación gatuna), balance.json
+  data/        balance en JSON: objects.json (con sonidos), tools.json (aspecto del gato por etapa), allies.json, unlocks.json (orden de descubrimientos), research.json (investigación gatuna), habilidades.json (Canal), balance.json
   app/         une todo: bucle, autoguardado, eventos para la escena, datos para la UI
   game/        escena de Phaser, cuartos y superficies (places.ts), escalado de píxeles y arte provisional
   ui/          interfaz en Svelte: barra superior, escena, pestañas

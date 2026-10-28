@@ -26,6 +26,18 @@ export function pruebasIniciales(): Pruebas {
   return { dineroInfinito: false, multDanio: 1, danioInfinito: false };
 }
 
+/** Un video que subió el dueño (el título se arma con los textos del idioma: plantilla + objeto). */
+export interface VideoRecord {
+  plantilla: number;
+  /** El objeto más caro al que llegó la partida. */
+  objeto: string;
+  roturas: number;
+  seguidores: number;
+  visualizaciones: Decimal;
+  viral: boolean;
+  fecha: number;
+}
+
 /**
  * Todo lo que se guarda de una partida. Solo datos planos y Decimal: nada de funciones ni
  * referencias a Phaser o al DOM. Si agregas un campo, dale valor en createInitialState y las
@@ -58,7 +70,19 @@ export interface GameState {
   stats: {
     toques: number;
     roturas: number;
+    /** Roturas de la partida actual (el video en grabación). */
+    roturasPartida: number;
   };
+  /** El canal del dueño: lo que sobrevive al subir el video. */
+  canal: {
+    seguidores: number;
+    /** Se gastan en Habilidades. */
+    visualizaciones: Decimal;
+    /** Los más recientes primero. */
+    videos: VideoRecord[];
+  };
+  /** Habilidades del Canal compradas (se conservan al subir el video). */
+  habilidades: { id: string; nivel: number }[];
   ajustes: Settings;
   pruebas: Pruebas;
   /** Momento del último guardado (ms). Sirve para las ganancias offline (fase 3). */
@@ -79,7 +103,9 @@ export function createInitialState(now: number): GameState {
     desbloqueos: [],
     laboratorio: { hechas: [], actual: null },
     danioObjeto: ZERO,
-    stats: { toques: 0, roturas: 0 },
+    stats: { toques: 0, roturas: 0, roturasPartida: 0 },
+    canal: { seguidores: 0, visualizaciones: ZERO, videos: [] },
+    habilidades: [],
     ajustes: {
       sonido: true,
       musica: true,

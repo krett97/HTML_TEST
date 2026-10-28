@@ -15,6 +15,11 @@
   {#if $view.toques === 0}
     <p class="hint">{$t('hud.toca')}</p>
   {/if}
+  {#if $view.funciones.canal}
+    <!-- El dueño está grabando: la escena es el video. -->
+    <div class="visor" aria-hidden="true"></div>
+    <div class="rec" data-testid="rec"><span class="rec-dot"></span> REC</div>
+  {/if}
   {#if $view.patrocinio.visible}
     <button type="button" class="sponsor" onclick={() => game.claimSponsor()} data-testid="patrocinio">
       <span class="sponsor-tag">📺 {$t('patrocinio.titulo')}</span>
@@ -58,6 +63,50 @@
     text-shadow: 0 2px 0 var(--line);
     pointer-events: none;
     animation: bob 1s ease-in-out infinite alternate;
+  }
+  /* Marco de cámara (esquinas) y "● REC" parpadeando. */
+  .visor {
+    position: absolute;
+    inset: 8px;
+    z-index: 1;
+    pointer-events: none;
+    --c: rgba(255, 241, 224, 0.55);
+    background:
+      linear-gradient(var(--c), var(--c)) top left / 14px 2px,
+      linear-gradient(var(--c), var(--c)) top left / 2px 14px,
+      linear-gradient(var(--c), var(--c)) top right / 14px 2px,
+      linear-gradient(var(--c), var(--c)) top right / 2px 14px,
+      linear-gradient(var(--c), var(--c)) bottom left / 14px 2px,
+      linear-gradient(var(--c), var(--c)) bottom left / 2px 14px,
+      linear-gradient(var(--c), var(--c)) bottom right / 14px 2px,
+      linear-gradient(var(--c), var(--c)) bottom right / 2px 14px;
+    background-repeat: no-repeat;
+  }
+  .rec {
+    position: absolute;
+    z-index: 2;
+    top: 14px;
+    left: 16px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 700;
+    text-shadow: 0 1px 0 var(--line);
+    pointer-events: none;
+  }
+  .rec-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--danger);
+    animation: parpadeo 1s steps(2, start) infinite;
+  }
+  @keyframes parpadeo {
+    to {
+      visibility: hidden;
+    }
   }
   /* Oferta de patrocinio: arriba a la derecha, salta para llamar la atención. */
   .sponsor {

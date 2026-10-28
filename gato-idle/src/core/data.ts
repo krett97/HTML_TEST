@@ -63,8 +63,12 @@ export const PLACES = [
 ] as const;
 export type PlaceId = (typeof PLACES)[number];
 
+/** Habilidades que el código sabe aplicar (core/skills.ts). */
+export const SKILLS = ['embestida', 'recolectora', 'pandilla', 'express'] as const;
+export type SkillId = (typeof SKILLS)[number];
+
 /** Funciones que se van descubriendo: "fuerza", "valor", "critico", "laboratorio", "aliado:<id>"… */
-export const FEATURES = ['fuerza', 'valor', 'patrocinios', 'critico', 'danioCritico', 'saco', 'laboratorio'] as const;
+export const FEATURES = ['fuerza', 'valor', 'patrocinios', 'critico', 'danioCritico', 'saco', 'laboratorio', 'canal'] as const;
 
 /** Un descubrimiento: se desbloquea al cumplir su condición, en el orden de unlocks.json. */
 export interface UnlockDef {
@@ -88,6 +92,18 @@ export interface ResearchDef {
  * compran: el gato las usa solo al llegar a esos objetos y solo cambian cómo se ve. Las compras
  * con efecto volverán como "Habilidades" en los reinicios (fase 4).
  */
+/**
+ * Habilidad del Canal: se compra con visualizaciones y se conserva al subir el video.
+ * `valor` es lo que da cada nivel (ver core/skills.ts para qué significa en cada una).
+ */
+export interface SkillDef {
+  id: string;
+  costoBase: Decimal;
+  crecimiento: number;
+  max: number;
+  valor: number;
+}
+
 export interface ToolDef {
   id: string;
 }
@@ -133,6 +149,20 @@ export interface Balance {
     costoBase: number;
     crecimiento: number;
   };
+  canal: {
+    /** Seguidores por video = ⌊√(dinero ganado en la partida / escalaSeguidores)⌋. */
+    escalaSeguidores: number;
+    /** Cada seguidor da +2 % de dinero, para siempre. */
+    bonoPorSeguidor: number;
+    visualizacionesPorSeguidor: number;
+    /** Probabilidad de que el video se haga viral y cuánto multiplica. */
+    probabilidadViral: number;
+    multViral: number;
+    /** Desde este objeto se puede subir el video. */
+    objetoMinimo: string;
+    /** La embestida de la habilidad llega cada tantos manotazos. */
+    embestidaCada: number;
+  };
   patrocinio: {
     /** Cada cuánto aparece la oferta (s) y cuánto se queda en pantalla (s). */
     cadaSegundos: number;
@@ -159,6 +189,7 @@ export interface GameData {
   allies: AllyDef[];
   unlocks: UnlockDef[];
   research: ResearchDef[];
+  skills: SkillDef[];
   balance: Balance;
 }
 
@@ -169,6 +200,7 @@ export interface RawGameData {
   unlocks: unknown;
   research: unknown;
   balance: unknown;
+  habilidades: unknown;
 }
 
 type Raw = Record<string, unknown>;
@@ -350,6 +382,9 @@ export function parseGameData(raw: RawGameData): GameData {
   const valor = section(file, b, 'valor');
   const aliados = section(file, b, 'aliados');
   const patrocinio = section(file, b, 'patrocinio');
+  const canal = section(file, b, 'canal');
+  const objetoMinimo = str(file, canal, 'objetoMinimo');
+  if (!objectIds.has(objetoMinimo)) throw new DataError(file, `canal.objetoMinimo "${objetoMinimo}" no existe en objects.json`);
   const critico = section(file, b, 'critico');
   const danioCritico = section(file, b, 'danioCritico');
   const saco = section(file, b, 'saco');
@@ -387,6 +422,15 @@ export function parseGameData(raw: RawGameData): GameData {
       costoBase: n(saco, 'costoBase'),
       crecimiento: n(saco, 'crecimiento'),
     },
+    canal: {
+      escalaSeguidores: n(canal, 'escalaSeguidores'),
+      bonoPorSeguidor: n(canal, 'bonoPorSeguidor'),
+      visualizacionesPorSeguidor: n(canal, 'visualizacionesPorSeguidor'),
+      probabilidadViral: Math.min(1, n(canal, 'probabilidadViral')),
+      multViral: n(canal, 'multViral'),
+      objetoMinimo,
+      embestidaCada: Math.max(1, Math.floor(n(canal, 'embestidaCada'))),
+    },
     patrocinio: {
       cadaSegundos: n(patrocinio, 'cadaSegundos'),
       visibleSegundos: n(patrocinio, 'visibleSegundos'),
@@ -401,5 +445,17 @@ export function parseGameData(raw: RawGameData): GameData {
     },
   };
 
-  return { objects, tools, allies, unlocks, research, balance };
+  const skills: SkillDef[] = asArray('habilidades.json', raw.habilidades).map((item) => ({
+    id: str('habilidades.json', item, 'id'),
+    costoBase: positive('habilidades.json', item, 'costoBase'),
+    crecimiento: positive('habilidades.json', item, 'crecimiento').toNumber(),
+    max: Math.max(1, Math.floor(positive('habilidades.json', item, 'max').toNumber())),
+    valor: positive('habilidades.json', item, 'valor').toNumber(),
+  }));
+  uniqueIds('habilidades.json', skills);
+  for (const id of SKILLS) {
+    if (!skills.some((s) => s.id === id)) throw new DataError('habilidades.json', `falta la habilidad "${id}"`);
+  }
+
+  return { objects, tools, allies, unlocks, research, skills, balance };
 }

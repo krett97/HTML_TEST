@@ -1,6 +1,6 @@
 # Swat to the Moon — Documento de diseño
 
-> **Versión 0.9** · Actualiza el prompt original ([`prompt-original.md`](prompt-original.md)) con las mejoras del análisis.
+> **Versión 0.10** · Actualiza el prompt original ([`prompt-original.md`](prompt-original.md)) con las mejoras del análisis.
 > **Nombre provisional.** *Knock It Off!* ya está en uso (Spin Master vende un juego físico con ese nombre para jugar con tu gato, y hay varios juegos en itch.io). *Swat to the Moon* aún no está verificado en Play Store ni en registros de marca (USPTO / IMPI). El nombre visible se cambia en un solo lugar: `src/i18n/*.json` → `app.title` y `capacitor.config.ts` → `appName`.
 
 ---
@@ -120,7 +120,9 @@ Modelo tipo *Tap Titans*: los objetos tienen vida y el personal aporta **daño a
 
 ## 7. Reinicios y gatos legendarios
 
-### La mudanza (prestigio 1, en el MVP)
+### Subir el video (el reinicio, implementado en 0.10.0) y la mudanza
+
+> Desde la 0.10.0 el reinicio es **subir el video que grabó el dueño** (ver §27). La mudanza a una casa más grande queda como la siguiente capa, cuando se junten suficientes seguidores. Lo de abajo es el plan original de la mudanza.
 
 - **Qué es una partida:** va del vaso hacia la Luna. La mudanza te regresa al vaso.
 - **Se pierde:** dinero, Fuerza, Valor, críticos, aliados y personal.
@@ -299,7 +301,7 @@ Cada fase responde una pregunta. Se pasa a la siguiente cuando se cumple su crit
 | 1. ¿Es divertido tocar? | ¿Dan ganas de seguir tocando sin mejoras? | Manotazo → desliza → cae → rompe; números flotantes, avisos y sonido por objeto ✅. Falta: animación del gato con expresión y un mini tutorial | Tocar se siente bien por sí solo (sonido, vibración, animación) y alguien que no conoce el juego entiende qué hacer sin explicación | Casi |
 | 2. Economía | ¿Hay siempre una compra que valga la pena? | Fuerza, Valor, críticos, 27 objetos, modificadores, investigación gatuna, simulador | El simulador llega al último objeto sin atorarse y sin tramos de más de ~3 min sin novedad | ✅ |
 | 3. Idle | ¿El juego avanza sin mí? | Aliados ✅ y autoguardado ✅. Falta: **ganancias offline** (al volver: "mientras no estabas ganaste $X") y el personal del canal | Al cerrar el juego un rato y volver, hay una recompensa que dé gusto, y los aliados cargan buena parte del daño | Parcial |
-| 4. Meta (reinicios) | ¿Hay razón para jugar días? | **La mudanza** (empezar de cero con un bono permanente), **Habilidades** (carrito, aspiradora…), gatos legendarios, evento "¡Llegó el dueño!" | Una mudanza deja al jugador más fuerte y la segunda vuelta es claramente más rápida | Pendiente |
+| 4. Meta (reinicios) | ¿Hay razón para jugar días? | **Subir el video** (reinicio con seguidores y visualizaciones) ✅, **Habilidades** ✅. Falta: mudanza a casas más grandes, gatos legendarios, evento "¡Llegó el dueño!" | Subir el video deja al jugador más fuerte y la segunda vuelta es claramente más rápida (simulador: 2.4×) | Parcial |
 | 5. Anuncios y Android | ¿Puede ganar dinero sin molestar? | Patrocinio con anuncio falso ✅, APK de prueba ✅. Falta: AdMob con IDs de prueba, las otras 4 recompensas, consentimiento de privacidad (requisito de Google) | Los anuncios de prueba de Google se ven y pagan en el celular, y la app cumple las políticas de Play | Parcial |
 | 6. Pulido | ¿Está listo para publicar? | Arte de PixelApp, tutorial, layout de PC, balance con testers. Inglés ✅, modo pruebas ✅ | Un grupo de testers juega una semana y el ritmo, el humor y los anuncios se sienten bien | Pendiente |
 
@@ -363,6 +365,7 @@ El jugador siempre debe sentir que avanza y que está a punto de desbloquear alg
 | Saco de jefe (daño de aliados) | llegar a la TV | 11.6 |
 | Cuervo | llegar a la mesa de centro | 13.0 |
 | Mapache | llegar a la tostadora | 17.1 |
+| **Canal del dueño** (el dueño cacha al gato y empieza a grabar) | llegar a la cafetera | 19.0 |
 | Cabra | llegar a la lavadora | 27.9 |
 
 (En el juego nunca se dice el objeto: solo "Mejora el Valor".)
@@ -546,3 +549,56 @@ Todo encima de la misma mesa se sentía repetitivo (y un sofá o un librero sobr
 - El cuadro y la ventana quedan en el mismo lugar en todos los cuartos, para que el perico y el cuervo tengan dónde pararse.
 - Cuando lleguen los reinicios (subir el video y mudarse), cada casa nueva tendrá sus propios cuartos.
 - Arte provisional con rectángulos; para PixelApp, la lista de cuartos y superficies de arriba es la lista de fondos que hay que dibujar.
+
+## 27. El canal del dueño y "Subir video": el reinicio (versión 0.10.0)
+
+### La historia
+
+Hacia el **minuto 19** (al llegar a la cafetera), **el dueño cacha al gato**: entra a la escena, se sorprende… y en vez de regañarlo saca el celular y empieza a grabar ("¡esto se va a hacer viral!"). Desde ahí la escena tiene marco de cámara y **● REC** parpadeando, y aparece la pestaña **Canal**. El dueño cree que son accidentes graciosos; el gato sigue poniendo cara de inocente (así se conserva el secreto de §1 y el evento de §8).
+
+### La mecánica: el reinicio es subir el video
+
+- La pestaña Canal muestra **el video en grabación** (la partida actual): cuántas cosas lleva rotas, a qué objeto llegó y la vista previa: "Si lo subes ahora: +24 seguidores · +2.4K visualizaciones".
+- Se puede subir desde la **lavadora** (`canal.objetoMinimo`); lo ideal es al llegar al refri. Subir pide dos toques.
+- Al subirlo sale el video con un **título chistoso** ("MI GATO VS. Refri 😱 (NO CLICKBAIT)", "Mi gato destruyó 412 cosas y no se arrepiente 💀"…), con 15 % de probabilidad de **hacerse viral** (×2 seguidores y visualizaciones, confeti y sacudida), y **la partida vuelve al vaso**.
+
+| Se pierde | Se conserva |
+|---|---|
+| dinero, Fuerza, Valor, Garras, Sombrero, Saco, aliados | seguidores, visualizaciones, habilidades, investigaciones (hechas y en curso), descubrimientos, ajustes, historial de videos |
+
+### Fórmulas (`balance.json` → `canal`, `src/core/canal.ts`)
+
+```
+seguidores del video      = ⌊ √(dinero ganado en la partida / 2,000,000) ⌋     (×2 si es viral)
+visualizaciones del video = seguidores × 100
+bono permanente           = dinero × (1 + 0.02 × seguidores totales)
+```
+
+La raíz cuadrada hace que esperar más dé más, pero cada vez menos: conviene subir el video en cuanto se llega al final, no quedarse horas en el refri. Una partida normal deja ~10 seguidores en la lavadora y ~24 en el refri (+48 % de dinero).
+
+### Habilidades (se compran con visualizaciones, `habilidades.json`, `src/core/skills.ts`)
+
+| Habilidad | Efecto por nivel | Costo | Tope |
+|---|---|---|---|
+| 🏎️ Embestida del carrito | cada 10 manotazos, uno pega ×(1 + 2 × nivel) | `200 × 2^nivel` | 10 |
+| 🤖 Aspiradora recolectora | +10 % de dinero | `200 × 2^nivel` | 20 |
+| 🐾 Pandilla veterana | gatito, ratón y perro empiezan cada partida en nivel 5 × nivel | `400 × 2.5^nivel` | 10 |
+| 🧪 Investigación express | las investigaciones tardan 10 % menos (máximo la mitad) | `200 × 2.5^nivel` | 5 |
+
+Son las ideas de las herramientas viejas (§4) convertidas en mejoras permanentes. La embestida entra al daño promedio como `1 + (mult − 1) / 10`, así que el simulador la mide igual que los críticos.
+
+### Balance (simulador: `npm run simular`, sección "Vueltas")
+
+| Vuelta | Llega al refri | Seguidores del video |
+|---|---|---|
+| 1 | min 36.2 | +24 |
+| 2 | min 14.8 (**2.4× más rápida**) | +23 |
+| 3 | min 10.1 | +23 |
+| 4 | min 7.4 | +22 |
+
+Las vueltas se acortan porque hoy el contenido termina en el refri. Con la mudanza (casas nuevas y objetos más grandes, hacia la Luna) cada vuelta llegará más lejos en lugar de solo más rápido.
+
+### Pendiente
+
+- **Mudanza:** al juntar cierta cantidad de seguidores, el dueño se muda a una casa más grande, con cuartos nuevos (§26) y objetos nuevos.
+- Arte del dueño (hoy es un dibujo provisional al doble de tamaño), animación de "subiendo video" y miniaturas de los videos.

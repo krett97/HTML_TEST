@@ -2,6 +2,7 @@
 // gatos legendarios, habilidades de la mudanza y anuncios) se declara como un efecto en los datos. Un solo lugar
 // calcula el valor final, así que agregar una fuente nueva no obliga a tocar las fórmulas.
 import type { GameData } from './data';
+import { skillAmount } from './skills';
 import type { Decimal } from './num';
 
 import type { GameState } from './state';
@@ -30,6 +31,12 @@ export interface Modifier extends Effect {
 
 export function collectModifiers(state: GameState, data: GameData): Modifier[] {
   const mods: Modifier[] = [];
+  // Canal: cada seguidor da +2 % de dinero; la aspiradora recolectora, más.
+  if (state.canal.seguidores > 0) {
+    mods.push({ stat: 'vistas', op: 'mult', valor: 1 + state.canal.seguidores * data.balance.canal.bonoPorSeguidor, fuente: 'canal:seguidores' });
+  }
+  const recolectora = skillAmount(state, data, 'recolectora');
+  if (recolectora > 0) mods.push({ stat: 'vistas', op: 'mult', valor: 1 + recolectora, fuente: 'habilidad:recolectora' });
   // Saco de jefe: el gato de traje dirige a la pandilla y todos los aliados pegan más.
   if (state.nivelSaco > 0) {
     mods.push({ stat: 'danioAliados', op: 'mult', valor: sacoMultiplier(state, data), fuente: 'mejora:saco' });

@@ -30,6 +30,9 @@ export const PALETTE: Record<string, string> = {
   U: '#6a3fa3', // sombrero, sombra
   j: '#34303f', // saco negro
   J: '#5a5470', // solapa del saco
+  h: '#f2c29b', // piel del dueño
+  H: '#3a2a20', // pelo del dueño
+  z: '#3a6298', // pantalón del dueño
 };
 
 // Gato naranja sentado, de perfil, mirando a la derecha (hacia la orilla).
@@ -222,6 +225,32 @@ export const GOAT = [
   '..kkk....kkk....',
 ];
 
+// El dueño (influencer), de perfil hacia el gato, con el celular grabando. Se dibuja al doble.
+export const OWNER = [
+  '.....kkkk...',
+  '....kHHHHk..',
+  '...kHHHHHHk.',
+  '...khhhhhHk.',
+  '...kehhhhhk.',
+  '...khhhhhk..',
+  '...kphhhhk..',
+  '....khhhk...',
+  '...krrrrrk..',
+  'kkkkrrrrrrk.',
+  'knGkhrrrrrrk',
+  'knGkhrrrrrrk',
+  'kkkk.krrrrrk',
+  '.....krrrrrk',
+  '.....krrrrrk',
+  '.....kzzzzzk',
+  '.....kzzzzzk',
+  '.....kzzkzzk',
+  '.....kzzkzzk',
+  '.....kzzkzzk',
+  '.....kzzkzzk',
+  '....kkkkkkkk',
+];
+
 /** Con saco, la manga del brazo también es negra. */
 function sleeve(rows: string[]): string[] {
   return rows.map((row) => row.slice(0, 6).replaceAll('o', 'j') + row.slice(6));
@@ -235,6 +264,7 @@ export const SPRITES = {
   pata_saco: sleeve(PAW),
   garra_saco: sleeve(CLAW),
   sombrero: HAT,
+  duenio: OWNER,
   carrito: CAR,
   aspiradora: VACUUM,
   aliado_gatito: KITTEN,

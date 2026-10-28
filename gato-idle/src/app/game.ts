@@ -14,11 +14,13 @@ import {
   buyAlly,
 } from '../core/allies';
 import { playUntil, type PlayGoal } from '../core/bot';
+import { followerMultiplier, uploadVideo, videoPreview } from '../core/canal';
 import { incomePerSecond, sponsorReward } from '../core/income';
+import { buySkill, canAffordSkill, rammingMultiplier, researchDuration, skillCost, skillLevel, skillMaxed } from '../core/skills';
 import { addAllyLevels, advanceClock, completeAllResearch, discoverAll, discoverNext, finishResearchNow } from '../core/pruebas';
 import { deserialize, serialize } from '../core/save';
 import { canAfford } from '../core/wallet';
-import type { AllyDef, GameData } from '../core/data';
+import type { AllyDef, GameData, SkillDef } from '../core/data';
 import { sacoMultiplier, type Effect } from '../core/modifiers';
 import { finishResearch, researchRemaining, researchStatus, startResearch, type ResearchStatus } from '../core/research';
 import { checkUnlocks, hasUnlock, nextUnlock } from '../core/unlocks';
@@ -49,8 +51,8 @@ import {
 import { normalizeState } from '../core/normalize';
 import { formatNum } from '../core/format';
 import { RateLimiter } from '../core/limiter';
-import type { Decimal } from '../core/num';
-import { createInitialState, pruebasIniciales, type GameState, type Pruebas, type Settings } from '../core/state';
+import { num, type Decimal } from '../core/num';
+import { createInitialState, pruebasIniciales, type GameState, type Pruebas, type Settings, type VideoRecord } from '../core/state';
 import { detectLocale, isLocale, locale } from '../i18n';
 import type { SoundId } from '../core/sounds';
 import type { AdResult, AdsService, RewardedPlacement } from '../services/ads';
@@ -78,6 +80,8 @@ export interface GameEvents {
   descubrimiento: { unlockId: string };
   /** Terminó una investigación del laboratorio. */
   investigacion: { researchId: string };
+  /** El dueño subió el video: la partida vuelve a empezar. */
+  video: { video: VideoRecord };
   /** Se cobró un patrocinio (anuncio visto completo). */
   patrocinio: { dinero: Decimal };
   /** La partida cambió de golpe (se reinició o se usó el modo pruebas): la escena se redibuja. */
@@ -178,7 +182,7 @@ export interface ViewModel {
   /** Algo se puede comprar ahora (punto en la pestaña Mejoras). */
   hayCompra: boolean;
   /** Qué partes del juego ya se descubrieron. */
-  funciones: { fuerza: boolean; valor: boolean; critico: boolean; danioCritico: boolean; saco: boolean; laboratorio: boolean; aliados: boolean };
+  funciones: { fuerza: boolean; valor: boolean; critico: boolean; danioCritico: boolean; saco: boolean; laboratorio: boolean; canal: boolean; aliados: boolean };
   /** Oferta de patrocinio en pantalla: ver un anuncio a cambio de dinero. */
   patrocinio: { visible: boolean; recompensa: string };
   /** Descubrimientos recientes (para la etiqueta "¡Nuevo!"). */
@@ -195,8 +199,40 @@ export interface ViewModel {
   ajustes: Settings;
   ultimoGuardado: number | null;
   guardadoPersistente: boolean;
+  canal: {
+    seguidores: string;
+    /** Bono de los seguidores al dinero, en %. */
+    bono: number;
+    visualizaciones: string;
+    /** El video en grabación (la partida actual). */
+    grabando: { roturas: number; objeto: string; seguidores: string; visualizaciones: string; listo: boolean };
+    videos: VideoView[];
+    habilidades: SkillView[];
+    hayCompra: boolean;
+  };
   /** Modo pruebas: si existe en esta versión, los trucos y si alguno está prendido. */
   pruebas: Pruebas & { disponible: boolean; activas: boolean };
+}
+
+export interface SkillView {
+  id: string;
+  nivel: number;
+  max: number;
+  maximo: boolean;
+  costo: string;
+  alcanza: boolean;
+  /** Lo que da ahora y con el siguiente nivel, ya como texto corto (×5, +30, 10…). */
+  actual: string;
+  siguiente: string;
+}
+
+export interface VideoView {
+  plantilla: number;
+  objeto: string;
+  roturas: number;
+  seguidores: string;
+  visualizaciones: string;
+  viral: boolean;
 }
 
 /** Un punto de guardado del modo pruebas. */
@@ -357,6 +393,24 @@ export class Game {
     return this.afterPurchase(startResearch(this.state, this.data, researchId, Date.now()));
   }
 
+  /** El dueño sube el video: cobra seguidores y visualizaciones, y la partida vuelve al vaso. */
+  uploadVideo(): VideoRecord | null {
+    const video = uploadVideo(this.state, this.data, Date.now());
+    if (!video) return null;
+    this.allyTimers.clear();
+    this.events.emit('video', { video });
+    this.events.emit('reset', undefined);
+    this.playSound('descubrimiento');
+    this.markDirty();
+    this.refreshView();
+    void this.save();
+    return video;
+  }
+
+  buySkill(id: string): boolean {
+    return this.afterPurchase(buySkill(this.state, this.data, id));
+  }
+
   /** Sonido respetando el ajuste "Sonido". */
   playSound(id: SoundId, options?: PlayOptions): void {
     this.services.audio.play(id, options);
@@ -462,6 +516,13 @@ export class Game {
   testAllies(levels: number): void {
     addAllyLevels(this.state, this.data, levels);
     this.afterTest(true);
+  }
+
+  /** Modo pruebas: seguidores y visualizaciones de regalo. */
+  testCanal(seguidores: number, visualizaciones: number): void {
+    this.state.canal.seguidores += seguidores;
+    this.state.canal.visualizaciones = this.state.canal.visualizaciones.add(visualizaciones);
+    this.afterTest();
   }
 
   /** Muestra la oferta de patrocinio ahora. */
@@ -661,6 +722,64 @@ export class Game {
     };
   }
 
+  private canalView(fmt: (value: Decimal) => string): ViewModel['canal'] {
+    const s = this.state;
+    const d = this.data;
+    const preview = videoPreview(s, d);
+    const habilidades = d.skills.map((def) => this.skillView(def, fmt));
+    return {
+      seguidores: fmt(num(s.canal.seguidores)),
+      bono: Math.round((followerMultiplier(s, d) - 1) * 100),
+      visualizaciones: fmt(s.canal.visualizaciones),
+      grabando: {
+        roturas: s.stats.roturasPartida,
+        objeto: currentObject(s, d).id,
+        seguidores: fmt(num(preview.seguidores)),
+        visualizaciones: fmt(preview.visualizaciones),
+        listo: preview.listo,
+      },
+      videos: s.canal.videos.map((v) => ({
+        plantilla: v.plantilla,
+        objeto: v.objeto,
+        roturas: v.roturas,
+        seguidores: fmt(num(v.seguidores)),
+        visualizaciones: fmt(v.visualizaciones),
+        viral: v.viral,
+      })),
+      habilidades,
+      hayCompra: habilidades.some((h) => h.alcanza),
+    };
+  }
+
+  private skillView(def: SkillDef, fmt: (value: Decimal) => string): SkillView {
+    const s = this.state;
+    const nivel = skillLevel(s, def.id);
+    const next = { ...s, habilidades: [...s.habilidades.filter((h) => h.id !== def.id), { id: def.id, nivel: nivel + 1 }] };
+    const show = (state: GameState): string => {
+      const amount = skillLevel(state, def.id) * def.valor;
+      switch (def.id) {
+        case 'embestida':
+          return `×${Math.round(rammingMultiplier(state, this.data) * 10) / 10}`;
+        case 'recolectora':
+        case 'express':
+          return `${Math.round(amount * 100)}`;
+        default:
+          return `${amount}`;
+      }
+    };
+    const maximo = skillMaxed(s, def);
+    return {
+      id: def.id,
+      nivel,
+      max: def.max,
+      maximo,
+      costo: fmt(skillCost(s, def)),
+      alcanza: !maximo && canAffordSkill(s, def),
+      actual: show(s),
+      siguiente: show(next),
+    };
+  }
+
   private buildView(): ViewModel {
     const s = this.state;
     const d = this.data;
@@ -756,6 +875,7 @@ export class Game {
         danioCritico: hasUnlock(s, 'danioCritico'),
         saco: hasUnlock(s, 'saco'),
         laboratorio: hasUnlock(s, 'laboratorio'),
+        canal: hasUnlock(s, 'canal'),
         aliados: s.desbloqueos.some((id) => id.startsWith('aliado:')),
       },
       nuevos: [...this.recentUnlocks.keys()],
@@ -775,12 +895,13 @@ export class Game {
           estado: researchStatus(s, d, r),
           costo: fmt(r.costo),
           alcanza: canAfford(s, r.costo),
-          duracion: r.duracion,
+          duracion: researchDuration(s, d, r),
           efectos: r.efectos,
           requiere: r.requiere,
           alcanzado: objectIndexFor(s.nivelValor, d) >= d.objects.findIndex((o) => o.id === r.requiere),
         })),
       },
+      canal: this.canalView(fmt),
       aliados,
       dpsAliados: fmt(alliesDps(s, d)),
       hayCompraAliado: aliados.some((a) => a.desbloqueado && a.alcanza),

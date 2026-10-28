@@ -1,6 +1,7 @@
 // El manotazo: modifica el estado y devuelve qué pasó, para que la escena lo anime.
 import type { GameData } from './data';
 import { critChance, critMultiplier, currentObject, moneyPerBreak, objectProgress, tapDamage, viewsPerBreak } from './economy';
+import { rammingMultiplier, skillLevel } from './skills';
 import { ZERO, type Decimal } from './num';
 import type { GameState } from './state';
 
@@ -12,6 +13,8 @@ export interface HitResult {
   broke: boolean;
   /** Fue un manotazo crítico ("¡ZARPAZO!"). */
   critico?: boolean;
+  /** Llegó la embestida del carrito (habilidad del Canal). */
+  embestida?: boolean;
   /** Solo si se rompió. */
   reward?: { vistas: Decimal; dinero: Decimal };
 }
@@ -30,6 +33,7 @@ export function hit(state: GameState, data: GameData, damage: Decimal): HitResul
   state.dinero = state.dinero.add(dinero);
   state.dineroPartida = state.dineroPartida.add(dinero);
   state.stats.roturas += 1;
+  state.stats.roturasPartida += 1;
   state.danioObjeto = ZERO;
   return { objectId: obj.id, damage, progress: 1, broke: true, reward: { vistas, dinero } };
 }
@@ -38,6 +42,8 @@ export function hit(state: GameState, data: GameData, damage: Decimal): HitResul
 export function tap(state: GameState, data: GameData, rng: () => number = Math.random): HitResult {
   state.stats.toques += 1;
   const critico = rng() < critChance(state, data);
-  const damage = critico ? tapDamage(state, data).mul(critMultiplier(state, data)) : tapDamage(state, data);
-  return { ...hit(state, data, damage), critico };
+  let damage = critico ? tapDamage(state, data).mul(critMultiplier(state, data)) : tapDamage(state, data);
+  const embestida = skillLevel(state, 'embestida') > 0 && state.stats.toques % data.balance.canal.embestidaCada === 0;
+  if (embestida) damage = damage.mul(rammingMultiplier(state, data));
+  return { ...hit(state, data, damage), critico, embestida };
 }

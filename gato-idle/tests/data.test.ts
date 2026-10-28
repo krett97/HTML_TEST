@@ -7,8 +7,9 @@ import balance from '../src/data/balance.json';
 import allies from '../src/data/allies.json';
 import unlocks from '../src/data/unlocks.json';
 import research from '../src/data/research.json';
+import habilidades from '../src/data/habilidades.json';
 
-const base = { objects, tools, allies, unlocks, research, balance };
+const base = { objects, tools, allies, unlocks, research, balance, habilidades };
 import es from '../src/i18n/es.json';
 import en from '../src/i18n/en.json';
 

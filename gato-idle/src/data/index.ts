@@ -5,5 +5,6 @@ import allies from './allies.json';
 import unlocks from './unlocks.json';
 import research from './research.json';
 import balance from './balance.json';
+import habilidades from './habilidades.json';
 
-export const gameData = parseGameData({ objects, tools, allies, unlocks, research, balance });
+export const gameData = parseGameData({ objects, tools, allies, unlocks, research, balance, habilidades });
