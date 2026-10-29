@@ -817,4 +817,4 @@ Al terminar la casa (llegar al **coche**, su último objeto) aparece en la escen
 Datos: `src/data/jefes.json` (casa, segundos, vida y premio en "roturas del último objeto", espera de la revancha y los efectos del trofeo). Lógica: `src/core/jefes.ts`; el trofeo entra al sistema de modificadores. Modo pruebas: "🥒 Pelear con el jefe" (en cualquier objeto) y el daño infinito también tumba al jefe.
 
 Siguientes jefes (uno por casa): **la Aspiradora Industrial**, **el Veterinario** (con el cono de la vergüenza) y **la Bañera**.
-
+- El perro, el ratón, el mapache y el gatito bebé ahora miran hacia el otro lado (0.20.1: se voltearon sus dibujos; el cuadro del manotazo del gatito ya miraba hacia el objeto).
