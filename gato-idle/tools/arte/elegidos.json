@@ -54,6 +54,6 @@
   "obj_silla": "silla_s3 → /resize ×1.5 (semilla 5)",
   "obj_parrilla": "parrilla_s3 → /resize ×1.5 (semilla 1)",
   "obj_bici": "bici_s1 → /resize ×1.5 (semilla 2)",
-  "obj_moto": "moto_s1",
-  "obj_coche": "coche_s3"
+  "obj_moto": "moto_s1 → /edit-image-pixen 140×104 \"redraw this exact red retro scooter bigger and more detailed, same design, same colors, side view\" (semilla 1)",
+  "obj_coche": "coche_s3 → /edit-image-pixen 256×108 \"redraw this exact yellow convertible car bigger with more detail, keep every part the same, side view\" (semilla 3)"
 }
