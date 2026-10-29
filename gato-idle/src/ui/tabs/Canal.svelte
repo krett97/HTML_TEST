@@ -2,11 +2,10 @@
   import { onDestroy } from 'svelte';
   import { t } from '../../i18n';
   import { useGame } from '../context';
+  import Arbol from './Arbol.svelte';
 
   const game = useGame();
   const view = game.view;
-
-  const SKILL_ICONS: Record<string, string> = { embestida: '🏎️', recolectora: '🤖', pandilla: '🐾', express: '🧪' };
 
   // Subir reinicia la partida: pide dos toques (sin diálogos del navegador).
   let confirming = $state(false);
@@ -24,6 +23,16 @@
     game.uploadVideo();
   }
 
+  // Con anuncio el video vale el doble; el anuncio mismo es la confirmación.
+  let watchingAd = $state(false);
+  async function uploadWithAd() {
+    clearTimeout(confirmTimer);
+    confirming = false;
+    watchingAd = true;
+    await game.uploadVideoWithAd();
+    watchingAd = false;
+  }
+
   function title(plantilla: number, objeto: string, roturas: number): string {
     return $t(`canal.titulos.${plantilla}`, { objeto: $t(`objetos.${objeto}`), n: roturas });
   }
@@ -31,6 +40,7 @@
 
 <div class="stack">
   <div class="card stats">
+    <div class="stat-title small gold">🏆 {$t('canal.record')}</div>
     <div class="stat">
       <span class="muted">{$t('canal.seguidores')}</span>
       <strong class="cifra" data-testid="seguidores">👥 {$view.canal.seguidores}</strong>
@@ -38,7 +48,8 @@
     </div>
     <div class="stat">
       <span class="muted">{$t('canal.visualizaciones')}</span>
-      <strong class="cifra" data-testid="visualizaciones">👁️ {$view.canal.visualizaciones}</strong>
+      <strong class="cifra" data-testid="visualizaciones">👁️ {$view.canal.totales}</strong>
+      <span class="small muted">{$t('canal.totalHistorico')}</span>
     </div>
   </div>
 
@@ -51,6 +62,7 @@
       <div class="small gold" data-testid="si-subes">
         {$t('canal.siSubes', { seguidores: $view.canal.grabando.seguidores, visualizaciones: $view.canal.grabando.visualizaciones })}
       </div>
+      <div class="small muted">{$t('canal.probViral', { pct: $view.canal.viral })}</div>
     {:else}
       <div class="small muted">🔒 {$t('canal.faltaMas')}</div>
     {/if}
@@ -65,6 +77,11 @@
     >
       {confirming ? $t('canal.confirmar') : $t('canal.subir')}
     </button>
+    {#if $view.canal.grabando.listo}
+      <button type="button" class="btn btn--gold upload doble" disabled={watchingAd} onclick={uploadWithAd} data-testid="subir-doble">
+        {$t('canal.subirDoble', { seguidores: $view.canal.grabando.seguidoresDoble, visualizaciones: $view.canal.grabando.visualizacionesDoble })}
+      </button>
+    {/if}
     <p class="small muted note">{$t('canal.explica')}</p>
   </div>
 
@@ -87,36 +104,7 @@
   {/if}
 
   <h3>{$t('canal.habilidades')}</h3>
-  <p class="small muted intro">{$t('canal.habilidadesIntro')}</p>
-  {#each $view.canal.habilidades as skill (skill.id)}
-    <div class="card upgrade" class:ready={skill.listo}>
-      <span class="icon" aria-hidden="true">{SKILL_ICONS[skill.id] ?? '✨'}</span>
-      <div class="info">
-        <div class="name">
-          {$t(`canal.nombres.${skill.id}`)}
-          <span class="level">{skill.maximo ? $t('canal.max') : `${skill.nivel}/${skill.max}`}</span>
-        </div>
-        <div class="effect">{$t(`canal.efectos.${skill.id}`, { actual: skill.actual, siguiente: skill.siguiente })}</div>
-        {#if !skill.maximo}
-          <!-- Meta del siguiente nivel: se desbloquea solo al juntar seguidores o visualizaciones. -->
-          <div class="goal" title={$t(`canal.meta.${skill.recurso}`, { tiene: skill.tiene, meta: skill.meta })}>
-            <span class="goal-icon" aria-hidden="true">{skill.recurso === 'seguidores' ? '👥' : '👁️'}</span>
-            <span class="goal-bar"><span class="goal-fill" style:width="{skill.progreso * 100}%"></span></span>
-            <span class="goal-text cifra">{skill.tiene}/{skill.meta}</span>
-          </div>
-        {/if}
-      </div>
-      <button
-        type="button"
-        class="btn btn--accent buy claim"
-        disabled={!skill.listo}
-        onclick={() => game.claimSkill(skill.id)}
-        data-testid="habilidad-{skill.id}"
-      >
-        {#if skill.maximo}✓{:else if skill.listo}{$t('canal.reclamar')}{:else}🔒{/if}
-      </button>
-    </div>
-  {/each}
+  <Arbol />
 
   <h3>{$t('canal.videos')}</h3>
   {#if $view.canal.videos.length === 0}
@@ -131,6 +119,7 @@
             <div class="small muted">
               {$t('canal.videoStats', { seguidores: video.seguidores, visualizaciones: video.visualizaciones })}
               {#if video.viral}<span class="viral">{$t('canal.viral')}</span>{/if}
+              {#if video.doble}<span class="viral">📺 ×2</span>{/if}
             </div>
           </div>
         </li>
@@ -161,6 +150,21 @@
   }
   .stat strong {
     font-size: 20px;
+  }
+  .stat-title {
+    grid-column: 1 / -1;
+    margin-bottom: -6px;
+    font-weight: 700;
+  }
+  .info {
+    min-width: 0;
+  }
+  .move {
+    border-color: var(--line);
+  }
+  .move.ready {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 2px rgba(255, 211, 110, 0.35);
   }
   .recording {
     display: grid;
@@ -203,36 +207,6 @@
   .intro {
     margin: 0 2px;
   }
-  .upgrade {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    align-items: center;
-    gap: 10px;
-  }
-  .icon {
-    font-size: 24px;
-    line-height: 1;
-  }
-  .info {
-    min-width: 0;
-  }
-  .name {
-    font-weight: 700;
-  }
-  .level {
-    margin-left: 4px;
-    color: var(--muted);
-    font-weight: 400;
-    font-size: 14px;
-  }
-  .effect {
-    font-size: 13px;
-    color: var(--muted);
-  }
-  .buy {
-    min-width: 84px;
-    font-variant-numeric: tabular-nums;
-  }
   .goal {
     display: grid;
     grid-template-columns: auto 1fr auto;
@@ -252,19 +226,6 @@
     height: 100%;
     background: var(--gold);
     transition: width 300ms ease-out;
-  }
-  /* Meta alcanzada: la tarjeta brilla y el botón "¡Reclamar!" late. */
-  .ready {
-    border-color: var(--gold);
-    box-shadow: 0 0 0 2px rgba(255, 211, 110, 0.35);
-  }
-  .ready .claim {
-    animation: reclamar 900ms ease-in-out infinite;
-  }
-  @keyframes reclamar {
-    50% {
-      scale: 1.07;
-    }
   }
   .move {
     display: grid;

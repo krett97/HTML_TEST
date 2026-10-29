@@ -2,7 +2,7 @@
 // AdMob en Android (fase 5), H5 Games Ads o el SDK del portal en web. Por ahora solo existe la
 // versión falsa, que muestra una pantalla de prueba y siempre da la recompensa si la ves completa.
 
-export type RewardedPlacement = 'zoomies' | 'patrocinio' | 'vacaciones' | 'caja' | 'culpa_perro' | 'dinero';
+export type RewardedPlacement = 'zoomies' | 'patrocinio' | 'vacaciones' | 'caja' | 'culpa_perro' | 'dinero' | 'arbol' | 'video';
 
 export interface AdResult {
   /** true solo si el jugador vio el anuncio completo y debe recibir la recompensa. */

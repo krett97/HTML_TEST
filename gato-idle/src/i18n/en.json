@@ -282,7 +282,7 @@
     "puntoCargado": "Back to point {n}.",
     "apagar": "Turn off all cheats",
     "apagados": "Cheats off. Playing fair now.",
-    "canal": "+10 followers and +25K views",
+    "canal": "+25 followers and +100K views",
     "offline": "Simulate 1 h away",
     "mudanza": "🚚 Unlock moving",
     "mudanzaLista": "Moving unlocked: upgrade Value on the last object.",
@@ -300,9 +300,8 @@
     "faltaMas": "Not enough for a video yet: upgrade Value",
     "subir": "📤 Upload video",
     "confirmar": "Sure? Tap again to upload",
-    "explica": "Uploading starts the run over: at the glass, or in the new house if the owner already moved. You keep followers, views, skills, research and discoveries.",
-    "habilidades": "Skills",
-    "habilidadesIntro": "They unlock on their own as you gather followers and views (never spent). When you hit the goal, claim it!",
+    "explica": "Uploading restarts the run: at the glass, or in the new house if the owner already moved. You keep followers, views, the tree, research and discoveries.",
+    "habilidades": "Channel tree",
     "videos": "Uploaded videos",
     "sinVideos": "No videos yet. Go break stuff!",
     "videoStats": "+{seguidores} followers · {visualizaciones} views",
@@ -317,26 +316,63 @@
       "5": "Accident? My cat and {objeto} 🤔 #cats #viral"
     },
     "nombres": {
-      "embestida": "RC car ram",
-      "recolectora": "Collector vacuum",
+      "embestida": "Cart ram",
+      "pesas": "Cat weights",
+      "garrasLargas": "Claw manicure",
       "pandilla": "Veteran gang",
-      "express": "Express research"
+      "croquetas": "Premium kibble",
+      "veterinario": "Friendly vet",
+      "recolectora": "Collector vacuum",
+      "express": "Express research",
+      "patrocinador": "Loyal sponsor",
+      "clickbait": "Clickbait",
+      "miniaturas": "Shocked-face thumbnails",
+      "hashtags": "#Hashtags"
     },
     "efectos": {
       "embestida": "Every 10 swats, one hits {actual} → {siguiente}",
-      "recolectora": "Picks up the pieces: +{actual}% → +{siguiente}% money",
+      "pesas": "Swats hit +{actual}% → +{siguiente}%",
+      "garrasLargas": "The claw mark lasts +{actual} → +{siguiente} s",
       "pandilla": "Kitten, mouse and dog start at level {actual} → {siguiente}",
-      "express": "Research takes {actual}% → {siguiente}% less"
+      "croquetas": "Allies hit +{actual}% → +{siguiente}%",
+      "veterinario": "Allies cost {actual}% → {siguiente}% less",
+      "recolectora": "Picks up the pieces: +{actual}% → +{siguiente}% money",
+      "express": "Research takes {actual}% → {siguiente}% less time",
+      "patrocinador": "Sponsors pay +{actual}% → +{siguiente}%",
+      "clickbait": "+{actual}% → +{siguiente}% chance to go viral",
+      "miniaturas": "Each video gives +{actual}% → +{siguiente}% views",
+      "hashtags": "Each video gives +{actual}% → +{siguiente}% followers"
     },
-    "reclamar": "Claim!",
     "meta": {
       "seguidores": "{tiene} of {meta} followers",
-      "visualizaciones": "{tiene} of {meta} views"
+      "visualizaciones": "{tiene} of {meta} total views"
     },
     "mudanza": {
       "titulo": "Moving: {casa}",
-      "explica": "With more followers and views, the owner moves to a bigger house (with more stuff to knock over). They are not spent.",
+      "explica": "With more followers and views, the owner moves to a bigger house (with more stuff to knock over). Total views count, even if you spend them on the tree.",
       "lista": "Ready! Reach the last object and keep upgrading Value: the owner moves and the run continues in the new house."
+    },
+    "record": "Channel record",
+    "totalHistorico": "earned in total",
+    "subirDoble": "📺 Upload ×2 with an ad: +{seguidores} · +{visualizaciones}",
+    "probViral": "{pct}% chance to go viral",
+    "ramas": {
+      "manotazo": "Swat",
+      "pandilla": "Gang",
+      "produccion": "Production",
+      "viral": "Viral"
+    },
+    "arbol": {
+      "paraGastar": "Views to spend",
+      "intro": "Pick your path: upgrades cost views. Followers open new floors and each upgrade needs the one above.",
+      "pisoBloqueado": "Opens at {meta} followers",
+      "requiere": "First level up “{padre}”",
+      "subir": "Level up",
+      "completa": "Maxed out!",
+      "reiniciar": "Reset tree",
+      "reiniciarExplica": "Refunds the {gastado} views you spent so you can pick another path. Costs {max} ads (progress is kept between sessions).",
+      "verAnuncio": "📺 Watch ad {n} of {max}",
+      "reiniciado": "Tree reset! You got {n} views back."
     }
   },
   "vineta": {

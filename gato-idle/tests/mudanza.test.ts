@@ -23,7 +23,7 @@ function atRefri() {
 
 function famous(state: ReturnType<typeof atRefri>) {
   state.canal.seguidores = casa.requisito!.seguidores;
-  state.canal.visualizaciones = casa.requisito!.visualizaciones;
+  state.canal.visualizacionesTotales = casa.requisito!.visualizaciones;
 }
 
 describe('mudanza', () => {

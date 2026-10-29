@@ -1,9 +1,15 @@
-// Garras marcadoras: cada zarpazo crítico del gato deja el objeto marcado `segundos` (rasguños
+// Garras marcadoras: cada zarpazo crítico del gato deja el objeto marcado unos segundos (rasguños
 // brillantes y "¡MARCADO!"); mientras dura, la pandilla pega un poco más. Premia tocar activo:
 // sin toques no hay críticos y la marca se cae sola (y no cuenta en lo que se gana sin jugar).
 import type { GameData } from './data';
 import { critChance } from './economy';
+import { skillAmount } from './skills';
 import type { GameState } from './state';
+
+/** Cuánto dura la marca (con la habilidad "garrasLargas", más). */
+export function markSeconds(state: GameState, data: GameData): number {
+  return data.balance.marca.segundos + skillAmount(state, data, 'garrasLargas');
+}
 
 /** Por cuánto se multiplica el daño de los aliados mientras el objeto está marcado. */
 export function markMultiplier(state: GameState, data: GameData): number {
@@ -18,7 +24,7 @@ export function markActive(state: GameState, now: number): boolean {
 export function applyMark(state: GameState, data: GameData, now: number): boolean {
   if (state.nivelMarca <= 0) return false;
   const fresh = !markActive(state, now);
-  state.marcaHasta = now + data.balance.marca.segundos * 1000;
+  state.marcaHasta = now + markSeconds(state, data) * 1000;
   return fresh;
 }
 
@@ -33,7 +39,7 @@ export function markRemaining(state: GameState, now: number): number {
  */
 export function markUptime(state: GameState, data: GameData, tapsPerSecond: number): number {
   if (state.nivelMarca <= 0 || tapsPerSecond <= 0) return 0;
-  const taps = data.balance.marca.segundos * tapsPerSecond;
+  const taps = markSeconds(state, data) * tapsPerSecond;
   return 1 - Math.pow(1 - critChance(state, data), taps);
 }
 

@@ -14,7 +14,7 @@ export function nextHome(state: GameState, data: GameData): HomeDef | null {
 export function moveUnlocked(state: GameState, data: GameData): boolean {
   const req = nextHome(state, data)?.requisito;
   if (!req) return false;
-  return state.canal.seguidores >= req.seguidores && state.canal.visualizaciones.gte(req.visualizaciones);
+  return state.canal.seguidores >= req.seguidores && state.canal.visualizacionesTotales.gte(req.visualizaciones);
 }
 
 /** Primer objeto (índice de objects.json) de una casa. */

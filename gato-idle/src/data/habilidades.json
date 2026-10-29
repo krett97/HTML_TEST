@@ -1,6 +1,17 @@
-[
-  { "id": "embestida",   "recurso": "seguidores",      "base": 6,     "crecimiento": 1.7, "max": 10, "valor": 2 },
-  { "id": "recolectora", "recurso": "visualizaciones", "base": 30000, "crecimiento": 1.7, "max": 20, "valor": 0.1 },
-  { "id": "pandilla",    "recurso": "seguidores",      "base": 15,    "crecimiento": 1.8, "max": 10, "valor": 5 },
-  { "id": "express",     "recurso": "visualizaciones", "base": 50000, "crecimiento": 2,   "max": 5,  "valor": 0.1 }
-]
+{
+  "pisos": [0, 50, 200],
+  "nodos": [
+    { "id": "embestida",    "rama": "manotazo",   "piso": 0, "costoBase": 10000,  "crecimiento": 1.45, "max": 10, "valor": 2 },
+    { "id": "pesas",        "rama": "manotazo",   "piso": 1, "costoBase": 50000,  "crecimiento": 1.5,  "max": 10, "valor": 0.1 },
+    { "id": "garrasLargas", "rama": "manotazo",   "piso": 2, "costoBase": 150000, "crecimiento": 1.6,  "max": 5,  "valor": 1 },
+    { "id": "pandilla",     "rama": "pandilla",   "piso": 0, "costoBase": 15000,  "crecimiento": 1.5,  "max": 10, "valor": 5 },
+    { "id": "croquetas",    "rama": "pandilla",   "piso": 1, "costoBase": 50000,  "crecimiento": 1.5,  "max": 10, "valor": 0.1 },
+    { "id": "veterinario",  "rama": "pandilla",   "piso": 2, "costoBase": 150000, "crecimiento": 1.6,  "max": 6,  "valor": 0.05 },
+    { "id": "recolectora",  "rama": "produccion", "piso": 0, "costoBase": 10000,  "crecimiento": 1.45, "max": 20, "valor": 0.1 },
+    { "id": "express",      "rama": "produccion", "piso": 1, "costoBase": 50000,  "crecimiento": 1.7,  "max": 5,  "valor": 0.1 },
+    { "id": "patrocinador", "rama": "produccion", "piso": 2, "costoBase": 150000, "crecimiento": 1.6,  "max": 4,  "valor": 0.25 },
+    { "id": "clickbait",    "rama": "viral",      "piso": 0, "costoBase": 15000,  "crecimiento": 1.6,  "max": 5,  "valor": 0.05 },
+    { "id": "miniaturas",   "rama": "viral",      "piso": 1, "costoBase": 50000,  "crecimiento": 1.5,  "max": 10, "valor": 0.1 },
+    { "id": "hashtags",     "rama": "viral",      "piso": 2, "costoBase": 150000, "crecimiento": 1.6,  "max": 10, "valor": 0.05 }
+  ]
+}

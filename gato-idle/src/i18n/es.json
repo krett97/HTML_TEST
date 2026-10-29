@@ -282,7 +282,7 @@
     "puntoCargado": "Volviste al punto {n}.",
     "apagar": "Apagar todos los trucos",
     "apagados": "Trucos apagados. Ahora sí, a jugar limpio.",
-    "canal": "+10 seguidores y +25K visualizaciones",
+    "canal": "+25 seguidores y +100K visualizaciones",
     "offline": "Simular 1 h fuera",
     "mudanza": "🚚 Desbloquear mudanza",
     "mudanzaLista": "Mudanza desbloqueada: mejora el Valor en el último objeto.",
@@ -300,9 +300,8 @@
     "faltaMas": "Todavía no da para video: mejora el Valor",
     "subir": "📤 Subir video",
     "confirmar": "¿Seguro? Toca otra vez para subirlo",
-    "explica": "Al subirlo la partida vuelve a empezar: en el vaso, o en la casa nueva si el dueño ya se mudó. Conservas seguidores, visualizaciones, habilidades, investigaciones y descubrimientos.",
-    "habilidades": "Habilidades",
-    "habilidadesIntro": "Se desbloquean solas al juntar seguidores y visualizaciones (nunca se gastan). Cuando llegues a la meta, ¡reclámala!",
+    "explica": "Al subirlo la partida vuelve a empezar: en el vaso, o en la casa nueva si el dueño ya se mudó. Conservas seguidores, visualizaciones, el árbol, investigaciones y descubrimientos.",
+    "habilidades": "Árbol del canal",
     "videos": "Videos subidos",
     "sinVideos": "Aún no hay videos. ¡A romper cosas!",
     "videoStats": "+{seguidores} seguidores · {visualizaciones} visualizaciones",
@@ -318,25 +317,62 @@
     },
     "nombres": {
       "embestida": "Embestida del carrito",
-      "recolectora": "Aspiradora recolectora",
+      "pesas": "Pesas de gato",
+      "garrasLargas": "Manicure de garras",
       "pandilla": "Pandilla veterana",
-      "express": "Investigación express"
+      "croquetas": "Croquetas premium",
+      "veterinario": "Veterinario amigo",
+      "recolectora": "Aspiradora recolectora",
+      "express": "Investigación express",
+      "patrocinador": "Patrocinador fiel",
+      "clickbait": "Clickbait",
+      "miniaturas": "Miniaturas con cara de susto",
+      "hashtags": "#Hashtags"
     },
     "efectos": {
       "embestida": "Cada 10 manotazos, uno pega {actual} → {siguiente}",
-      "recolectora": "Recoge los pedazos: +{actual}% → +{siguiente}% de dinero",
+      "pesas": "El manotazo pega +{actual}% → +{siguiente}%",
+      "garrasLargas": "La marca de las garras dura +{actual} → +{siguiente} s",
       "pandilla": "Gatito, ratón y perro empiezan en nivel {actual} → {siguiente}",
-      "express": "Las investigaciones tardan {actual}% → {siguiente}% menos"
+      "croquetas": "Los aliados pegan +{actual}% → +{siguiente}%",
+      "veterinario": "Los aliados cuestan {actual}% → {siguiente}% menos",
+      "recolectora": "Recoge los pedazos: +{actual}% → +{siguiente}% de dinero",
+      "express": "Las investigaciones tardan {actual}% → {siguiente}% menos",
+      "patrocinador": "Los patrocinios pagan +{actual}% → +{siguiente}%",
+      "clickbait": "+{actual}% → +{siguiente}% de probabilidad de hacerse viral",
+      "miniaturas": "Cada video da +{actual}% → +{siguiente}% visualizaciones",
+      "hashtags": "Cada video da +{actual}% → +{siguiente}% seguidores"
     },
-    "reclamar": "¡Reclamar!",
     "meta": {
       "seguidores": "{tiene} de {meta} seguidores",
-      "visualizaciones": "{tiene} de {meta} visualizaciones"
+      "visualizaciones": "{tiene} de {meta} visualizaciones en total"
     },
     "mudanza": {
       "titulo": "Mudanza: {casa}",
-      "explica": "Con más seguidores y visualizaciones, el dueño se muda a una casa más grande (con más cosas que tirar). No se gastan.",
+      "explica": "Con más seguidores y visualizaciones, el dueño se muda a una casa más grande (con más cosas que tirar). Cuenta el total de visualizaciones, aunque las gastes en el árbol.",
       "lista": "¡Listo! Llega al último objeto y sigue mejorando el Valor: el dueño se muda y la partida sigue en la casa nueva."
+    },
+    "record": "Récord del canal",
+    "totalHistorico": "juntadas en total",
+    "subirDoble": "📺 Subir ×2 con anuncio: +{seguidores} · +{visualizaciones}",
+    "probViral": "{pct}% de probabilidad de hacerse viral",
+    "ramas": {
+      "manotazo": "Manotazo",
+      "pandilla": "Pandilla",
+      "produccion": "Producción",
+      "viral": "Viral"
+    },
+    "arbol": {
+      "paraGastar": "Visualizaciones para gastar",
+      "intro": "Escoge tu ruta: las mejoras se pagan con visualizaciones. Los seguidores abren pisos nuevos y cada mejora pide la de arriba.",
+      "pisoBloqueado": "Se abre con {meta} seguidores",
+      "requiere": "Primero sube «{padre}»",
+      "subir": "Subir nivel",
+      "completa": "¡Al máximo!",
+      "reiniciar": "Reiniciar árbol",
+      "reiniciarExplica": "Te devuelve las {gastado} visualizaciones gastadas para escoger otra ruta. Cuesta ver {max} anuncios (se guardan aunque los veas en distintos momentos).",
+      "verAnuncio": "📺 Ver anuncio {n} de {max}",
+      "reiniciado": "¡Árbol reiniciado! Te devolvieron {n} visualizaciones."
     }
   },
   "vineta": {

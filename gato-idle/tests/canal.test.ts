@@ -8,7 +8,10 @@ import { normalizeState } from '../src/core/normalize';
 import { num } from '../src/core/num';
 import { startResearch } from '../src/core/research';
 import { deserialize, serialize } from '../src/core/save';
-import { claimSkill, skillClaimable, skillLevel, skillRequirement } from '../src/core/skills';
+import { allyCost } from '../src/core/allies';
+import { sponsorReward } from '../src/core/income';
+import { markSeconds } from '../src/core/marca';
+import { buySkill, RESET_ADS, skillAvailable, skillBuyable, skillCost, skillCostAt, skillLevel, treeSpent, watchResetAd } from '../src/core/skills';
 import { createInitialState } from '../src/core/state';
 import { gameData } from '../src/data';
 
@@ -88,35 +91,93 @@ describe('Canal: subir el video es el reinicio', () => {
   });
 });
 
-describe('Habilidades', () => {
-  it('se desbloquean al llegar a la meta de seguidores o visualizaciones, sin gastar nada', () => {
+const skill = (id: string) => gameData.skills.find((s) => s.id === id)!;
+
+describe('Árbol de habilidades', () => {
+  it('se compran con visualizaciones, que sí se gastan', () => {
     const state = newState();
-    const embestida = gameData.skills.find((s) => s.id === 'embestida')!;
-    expect(embestida.recurso).toBe('seguidores');
-    expect(claimSkill(state, gameData, 'embestida')).toBe(false);
-    state.canal.seguidores = skillRequirement(embestida, 1);
-    expect(skillClaimable(state, embestida)).toBe(true);
-    expect(claimSkill(state, gameData, 'embestida')).toBe(true);
-    // No se gasta: los seguidores siguen ahí, pero el nivel 2 pide más.
-    expect(state.canal.seguidores).toBe(skillRequirement(embestida, 1));
-    expect(skillClaimable(state, embestida)).toBe(false);
-    state.canal.seguidores = skillRequirement(embestida, 3);
-    expect(claimSkill(state, gameData, 'embestida')).toBe(true);
-    expect(claimSkill(state, gameData, 'embestida')).toBe(true);
-    expect(skillLevel(state, 'embestida')).toBe(3);
-    state.habilidades = [{ id: 'embestida', nivel: embestida.max }];
-    state.canal.seguidores = 1e9;
-    expect(claimSkill(state, gameData, 'embestida')).toBe(false);
+    const embestida = skill('embestida');
+    expect(buySkill(state, gameData, 'embestida')).toBe(false);
+    state.canal.visualizaciones = skillCostAt(embestida, 1).add(5);
+    state.canal.visualizacionesTotales = state.canal.visualizaciones;
+    expect(buySkill(state, gameData, 'embestida')).toBe(true);
+    expect(state.canal.visualizaciones.eq(5)).toBe(true);
+    // El total histórico no baja al gastar.
+    expect(state.canal.visualizacionesTotales.gt(5)).toBe(true);
+    expect(skillCost(state, embestida).eq(skillCostAt(embestida, 2))).toBe(true);
+    expect(skillBuyable(state, gameData, embestida)).toBe(false);
+    state.canal.visualizaciones = num(1e15);
+    while (buySkill(state, gameData, 'embestida'));
+    expect(skillLevel(state, 'embestida')).toBe(embestida.max);
   });
 
-  it('las de visualizaciones miran el total de visualizaciones', () => {
+  it('los pisos se abren con seguidores y piden la habilidad de arriba en su rama', () => {
     const state = newState();
-    const recolectora = gameData.skills.find((s) => s.id === 'recolectora')!;
-    expect(recolectora.recurso).toBe('visualizaciones');
-    state.canal.seguidores = 1e9;
-    expect(skillClaimable(state, recolectora)).toBe(false);
-    state.canal.visualizaciones = num(skillRequirement(recolectora, 1));
-    expect(claimSkill(state, gameData, 'recolectora')).toBe(true);
+    state.canal.visualizaciones = num(1e15);
+    const pesas = skill('pesas');
+    expect(pesas.piso).toBe(1);
+    // Sin seguidores para el piso 2, no.
+    state.habilidades = [{ id: 'embestida', nivel: 1 }];
+    expect(skillAvailable(state, gameData, pesas)).toBe(false);
+    state.canal.seguidores = gameData.skillFloors[1]!;
+    expect(skillAvailable(state, gameData, pesas)).toBe(true);
+    // Con seguidores pero sin la de arriba (embestida), tampoco.
+    state.habilidades = [{ id: 'recolectora', nivel: 3 }];
+    expect(buySkill(state, gameData, 'pesas')).toBe(false);
+    expect(buySkill(state, gameData, 'embestida')).toBe(true);
+    expect(buySkill(state, gameData, 'pesas')).toBe(true);
+  });
+
+  it('reiniciar el árbol pide 3 anuncios y devuelve todo lo gastado', () => {
+    const state = newState();
+    state.canal.seguidores = 1e6;
+    state.canal.visualizaciones = num(2_000_000);
+    for (const id of ['embestida', 'embestida', 'pesas', 'clickbait']) expect(buySkill(state, gameData, id)).toBe(true);
+    const spent = treeSpent(state, gameData);
+    expect(state.canal.visualizaciones.add(spent).eq(2_000_000)).toBe(true);
+    for (let i = 1; i < RESET_ADS; i++) expect(watchResetAd(state, gameData)).toBe(null);
+    expect(state.canal.anunciosReinicio).toBe(RESET_ADS - 1);
+    expect(watchResetAd(state, gameData)!.eq(spent)).toBe(true);
+    expect(state.habilidades).toEqual([]);
+    expect(state.canal.visualizaciones.eq(2_000_000)).toBe(true);
+    expect(state.canal.anunciosReinicio).toBe(0);
+    // Con el árbol vacío no hay nada que reiniciar.
+    expect(watchResetAd(state, gameData)).toBe(null);
+    expect(state.canal.anunciosReinicio).toBe(0);
+  });
+
+  it('cada rama hace lo suyo', () => {
+    const base = newState();
+    base.nivelValor = 60;
+    base.desbloqueos.push('canal');
+    base.dineroPartida = num(1e12);
+    base.stats.vistasVideo = 1000;
+    const withSkill = (id: string, nivel: number) => {
+      const s = newState();
+      Object.assign(s, { nivelValor: base.nivelValor, dineroPartida: base.dineroPartida, desbloqueos: [...base.desbloqueos] });
+      s.stats.vistasVideo = base.stats.vistasVideo;
+      s.habilidades = [{ id, nivel }];
+      return s;
+    };
+    expect(tapDamage(withSkill('pesas', 2), gameData).gt(tapDamage(base, gameData))).toBe(true);
+    expect(markSeconds(withSkill('garrasLargas', 3), gameData)).toBe(gameData.balance.marca.segundos + 3);
+    const gatito = gameData.allies.find((a) => a.id === 'gatito')!;
+    expect(allyCost(withSkill('veterinario', 2), gameData, gatito).lt(allyCost(base, gameData, gatito))).toBe(true);
+    expect(sponsorReward(withSkill('patrocinador', 1), gameData).gt(sponsorReward(base, gameData))).toBe(true);
+    expect(videoPreview(withSkill('miniaturas', 5), gameData).visualizaciones.toNumber()).toBe(videoPreview(base, gameData).visualizaciones.toNumber() * 1.5);
+    expect(videoPreview(withSkill('hashtags', 10), gameData).seguidores).toBe(Math.floor(videoPreview(base, gameData).seguidores * 1.5));
+  });
+
+  it('un guardado de antes del árbol conserva lo que tenía y su total histórico', () => {
+    const state = newState();
+    state.canal.visualizaciones = num(700_000);
+    state.habilidades = [{ id: 'recolectora', nivel: 4 }];
+    const text = serialize(state, 1).replace(/"visualizacionesTotales":\{[^}]*\},?/, '');
+    const loaded = deserialize(text, 2);
+    if (!loaded.ok) throw new Error('no cargó');
+    normalizeState(loaded.state, gameData);
+    expect(loaded.state.canal.visualizacionesTotales.eq(700_000)).toBe(true);
+    expect(loaded.ok && loaded.state.habilidades).toEqual([{ id: 'recolectora', nivel: 4 }]);
   });
 
   it('más seguidores, más visualizaciones por video', () => {
@@ -165,9 +226,13 @@ describe('Habilidades', () => {
     const state = newState();
     state.canal.seguidores = 33;
     state.canal.visualizaciones = num(1234);
+    state.canal.visualizacionesTotales = num(5000);
+    state.canal.anunciosReinicio = 2;
     state.habilidades = [{ id: 'recolectora', nivel: 4 }];
     const loaded = deserialize(serialize(state, 1), 2);
     expect(loaded.ok && loaded.state.canal.seguidores).toBe(33);
+    expect(loaded.ok && loaded.state.canal.visualizacionesTotales.eq(5000)).toBe(true);
+    expect(loaded.ok && loaded.state.canal.anunciosReinicio).toBe(2);
     expect(loaded.ok && loaded.state.canal.visualizaciones.eq(1234)).toBe(true);
     expect(loaded.ok && loaded.state.habilidades).toEqual([{ id: 'recolectora', nivel: 4 }]);
   });

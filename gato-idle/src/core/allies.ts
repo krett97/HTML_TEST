@@ -5,6 +5,7 @@ import { num, type Decimal } from './num';
 import type { GameState } from './state';
 import { hasUnlock } from './unlocks';
 import { pay } from './wallet';
+import { skillAmount } from './skills';
 
 export function allyLevel(state: GameState, allyId: string): number {
   return state.aliados.find((a) => a.id === allyId)?.nivel ?? 0;
@@ -24,7 +25,9 @@ export function allyHitDamage(level: number, ally: AllyDef, state: GameState, da
 }
 
 export function allyCost(state: GameState, data: GameData, ally: AllyDef): Decimal {
-  return ally.costoBase.mul(num(ally.crecimiento).pow(allyLevel(state, ally.id))).floor();
+  // Habilidad "veterinario": la pandilla sale más barata.
+  const discount = 1 - skillAmount(state, data, 'veterinario');
+  return ally.costoBase.mul(num(ally.crecimiento).pow(allyLevel(state, ally.id))).mul(discount).floor();
 }
 
 /** Daño por segundo de todos los aliados juntos. */

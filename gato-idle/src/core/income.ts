@@ -5,6 +5,7 @@ import { currentObject, expectedTapDamage, moneyPerBreak } from './economy';
 import { expectedMarkMultiplier } from './marca';
 import type { Decimal } from './num';
 import type { GameState } from './state';
+import { skillAmount } from './skills';
 
 /** Golpes por segundo de los aliados adoptados. */
 export function allyHitsPerSecond(state: GameState, data: GameData): number {
@@ -36,6 +37,7 @@ export function sponsorReward(state: GameState, data: GameData): Decimal {
   const { segundosDeJuego, toquesPorSegundo, roturasMinimas } = data.balance.patrocinio;
   const played = incomePerSecond(state, data, toquesPorSegundo).mul(segundosDeJuego);
   const floor = moneyPerBreak(state, data).mul(roturasMinimas);
-  return (played.gt(floor) ? played : floor).floor();
+  const patrocinador = 1 + skillAmount(state, data, 'patrocinador');
+  return (played.gt(floor) ? played : floor).mul(patrocinador).floor();
 }
 

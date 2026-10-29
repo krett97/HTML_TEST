@@ -3,7 +3,7 @@
 // sus eventos (escena) o su `view` (UI).
 import { writable, type Readable, type Writable } from 'svelte/store';
 import { hit, rollTap, tap, type HitResult } from '../core/actions';
-import { applyMark, markActive, markMultiplier, markRemaining } from '../core/marca';
+import { applyMark, markActive, markMultiplier, markRemaining, markSeconds } from '../core/marca';
 import { bossDef, bossHere, damageBoss, endFight, rematchIn, startFight, type BossFight } from '../core/jefes';
 import {
   allyCost,
@@ -17,11 +17,25 @@ import {
 } from '../core/allies';
 import { playUntil, type PlayGoal } from '../core/bot';
 import { afterBulk, buyBulk, planBulk } from '../core/bulk';
-import { followerMultiplier, uploadVideo, videoPreview } from '../core/canal';
+import { AD_VIDEO_MULT, followerMultiplier, uploadVideo, videoPreview, viralChance } from '../core/canal';
 import { claimOffline, offlineEarnings } from '../core/offline';
 import { formatDuration } from '../core/time';
 import { incomePerSecond, sponsorReward } from '../core/income';
-import { claimSkill, rammingMultiplier, researchDuration, resourceTotal, skillClaimable, skillLevel, skillMaxed, skillRequirement } from '../core/skills';
+import {
+  buySkill,
+  floorOpen,
+  rammingMultiplier,
+  researchDuration,
+  RESET_ADS,
+  skillAvailable,
+  skillBuyable,
+  skillCost,
+  skillLevel,
+  skillMaxed,
+  skillParent,
+  treeSpent,
+  watchResetAd,
+} from '../core/skills';
 import { addAllyLevels, advanceClock, completeAllResearch, discoverAll, discoverNext, finishResearchNow } from '../core/pruebas';
 import { deserialize, serialize } from '../core/save';
 import { canAfford } from '../core/wallet';
@@ -95,6 +109,8 @@ export interface GameEvents {
   investigacion: { researchId: string };
   /** El dueño subió el video: la partida vuelve a empezar. */
   video: { video: VideoRecord };
+  /** Se reinició el árbol del Canal: se devolvieron estas visualizaciones. */
+  arbolReiniciado: { visualizaciones: Decimal };
   /** Empezó o terminó la pelea contra un jefe (jefes.json). */
   jefe:
     | { fase: 'inicio'; id: string; primeraVez: boolean }
@@ -275,11 +291,35 @@ export interface ViewModel {
     seguidores: string;
     /** Bono de los seguidores al dinero, en %. */
     bono: number;
+    /** Visualizaciones para gastar en el árbol, y las de toda la historia del canal (récord). */
     visualizaciones: string;
+    totales: string;
+    /** Probabilidad de que el siguiente video se haga viral, en %. */
+    viral: number;
     /** El video en grabación (la partida actual). */
-    grabando: { roturas: number; objeto: string; seguidores: string; visualizaciones: string; listo: boolean };
+    grabando: {
+      roturas: number;
+      objeto: string;
+      seguidores: string;
+      visualizaciones: string;
+      /** Lo mismo viendo el anuncio (×AD_VIDEO_MULT). */
+      seguidoresDoble: string;
+      visualizacionesDoble: string;
+      listo: boolean;
+    };
     videos: VideoView[];
-    habilidades: SkillView[];
+    arbol: {
+      habilidades: SkillView[];
+      /** Seguidores que pide cada piso y si ya se abrió. */
+      pisos: { meta: string; abierto: boolean }[];
+      /** Visualizaciones metidas en el árbol (lo que devuelve reiniciarlo). */
+      gastado: string;
+      /** No hay nada comprado (no hay qué reiniciar). */
+      vacio: boolean;
+      /** Anuncios vistos y cuántos pide reiniciarlo. */
+      anuncios: number;
+      anunciosMax: number;
+    };
     hayCompra: boolean;
     /** La siguiente casa y cuánto falta en el Canal para mudarse (null: ya no hay más casas). */
     mudanza: {
@@ -298,24 +338,27 @@ export interface ViewModel {
 
 export interface SkillView {
   id: string;
+  rama: string;
+  piso: number;
   nivel: number;
   max: number;
   maximo: boolean;
-  /** Con qué se desbloquea: seguidores o visualizaciones. */
-  recurso: 'seguidores' | 'visualizaciones';
-  /** Cuánto lleva y cuánto pide el siguiente nivel. */
-  tiene: string;
-  meta: string;
-  /** Avance hacia el siguiente nivel (0 a 1). */
-  progreso: number;
-  /** Ya se puede reclamar el siguiente nivel. */
-  listo: boolean;
-  /** Lo que da ahora y con el siguiente nivel, ya como texto corto (×5, +30, 10…). */
+  /** Su piso ya se abrió. */
+  pisoAbierto: boolean;
+  /** Ya se puede subir (piso abierto y la de arriba con nivel). */
+  disponible: boolean;
+  /** La habilidad de arriba en su rama (null en el primer piso). */
+  padre: string | null;
+  costo: string;
+  /** Alcanzan las visualizaciones para el siguiente nivel. */
+  alcanza: boolean;
+  /** Lo que da ahora y con el siguiente nivel, ya como texto corto (×5, 30, 10…). */
   actual: string;
   siguiente: string;
 }
 
 export interface VideoView {
+  doble: boolean;
   plantilla: number;
   objeto: string;
   roturas: number;
@@ -634,9 +677,20 @@ export class Game {
     return this.afterPurchase(startResearch(this.state, this.data, researchId, Date.now()));
   }
 
+  /** El dueño sube el video con anuncio: el video vale el doble. Si lo cierra antes, no se sube. */
+  async uploadVideoWithAd(): Promise<VideoRecord | null> {
+    if (this.videoAdBusy || !videoPreview(this.state, this.data).listo) return null;
+    this.videoAdBusy = true;
+    const result = await this.services.ads.showRewarded('video');
+    this.videoAdBusy = false;
+    return result.rewarded ? this.uploadVideo(true) : null;
+  }
+
+  private videoAdBusy = false;
+
   /** El dueño sube el video: cobra seguidores y visualizaciones, y la partida vuelve al vaso. */
-  uploadVideo(): VideoRecord | null {
-    const video = uploadVideo(this.state, this.data, Date.now());
+  uploadVideo(doble = false): VideoRecord | null {
+    const video = uploadVideo(this.state, this.data, Date.now(), Math.random, doble);
     if (!video) return null;
     this.fight = null;
     this.allyTimers.clear();
@@ -650,9 +704,31 @@ export class Game {
     return video;
   }
 
-  /** Reclama el siguiente nivel de una habilidad cuya meta ya se alcanzó. */
-  claimSkill(id: string): boolean {
-    return this.afterPurchase(claimSkill(this.state, this.data, id));
+  /** Compra el siguiente nivel de una habilidad del árbol con visualizaciones. */
+  buySkill(id: string): boolean {
+    return this.afterPurchase(buySkill(this.state, this.data, id));
+  }
+
+  /**
+   * Reiniciar el árbol cuesta ver RESET_ADS anuncios (se cuentan aunque se vean en distintos
+   * momentos). Con el último se devuelven todas las visualizaciones gastadas.
+   */
+  async watchTreeResetAd(): Promise<boolean> {
+    if (this.treeAdBusy || this.state.habilidades.length === 0) return false;
+    this.treeAdBusy = true;
+    const result = await this.services.ads.showRewarded('arbol');
+    this.treeAdBusy = false;
+    if (!result.rewarded) return false;
+    const refund = watchResetAd(this.state, this.data);
+    if (refund) {
+      // La pandilla de la habilidad se queda como está: el árbol nuevo se nota al subir el siguiente video.
+      this.events.emit('arbolReiniciado', { visualizaciones: refund });
+      this.playSound('descubrimiento');
+    }
+    this.markDirty();
+    this.refreshView();
+    void this.save();
+    return true;
   }
 
   // ---- Mientras no estabas ----
@@ -719,6 +795,8 @@ export class Game {
     this.refreshView();
     void this.save();
   }
+
+  private treeAdBusy = false;
 
   /** Ver el anuncio del patrocinio; si se ve completo, paga. */
   async claimSponsor(): Promise<boolean> {
@@ -821,7 +899,7 @@ export class Game {
     if (!req) return false;
     const canal = this.state.canal;
     canal.seguidores = Math.max(canal.seguidores, req.seguidores);
-    if (canal.visualizaciones.lt(req.visualizaciones)) canal.visualizaciones = req.visualizaciones;
+    if (canal.visualizacionesTotales.lt(req.visualizaciones)) canal.visualizacionesTotales = req.visualizaciones;
     this.checkMove();
     this.afterTest();
     return true;
@@ -842,6 +920,7 @@ export class Game {
   testCanal(seguidores: number, visualizaciones: number): void {
     this.state.canal.seguidores += seguidores;
     this.state.canal.visualizaciones = this.state.canal.visualizaciones.add(visualizaciones);
+    this.state.canal.visualizacionesTotales = this.state.canal.visualizacionesTotales.add(visualizaciones);
     this.checkMove();
     this.afterTest();
   }
@@ -1139,11 +1218,15 @@ export class Game {
       seguidores: fmt(num(s.canal.seguidores)),
       bono: Math.round((followerMultiplier(s, d) - 1) * 100),
       visualizaciones: fmt(s.canal.visualizaciones),
+      totales: fmt(s.canal.visualizacionesTotales),
+      viral: Math.round(viralChance(s, d) * 100),
       grabando: {
         roturas: s.stats.roturasPartida,
         objeto: currentObject(s, d).id,
         seguidores: fmt(num(preview.seguidores)),
         visualizaciones: fmt(preview.visualizaciones),
+        seguidoresDoble: fmt(num(preview.seguidores * AD_VIDEO_MULT)),
+        visualizacionesDoble: fmt(preview.visualizaciones.mul(AD_VIDEO_MULT)),
         listo: preview.listo,
       },
       videos: s.canal.videos.map((v) => ({
@@ -1153,9 +1236,17 @@ export class Game {
         seguidores: fmt(num(v.seguidores)),
         visualizaciones: fmt(v.visualizaciones),
         viral: v.viral,
+        doble: Boolean(v.doble),
       })),
-      habilidades,
-      hayCompra: habilidades.some((h) => h.listo),
+      arbol: {
+        habilidades,
+        pisos: d.skillFloors.map((meta, piso) => ({ meta: fmt(num(meta)), abierto: floorOpen(s, d, piso) })),
+        gastado: fmt(treeSpent(s, d)),
+        vacio: s.habilidades.length === 0,
+        anuncios: s.canal.anunciosReinicio,
+        anunciosMax: RESET_ADS,
+      },
+      hayCompra: habilidades.some((h) => h.alcanza),
       mudanza: this.moveView(fmt),
     };
   }
@@ -1191,42 +1282,42 @@ export class Game {
       desbloqueada: moveUnlocked(s, this.data),
       seguidores: { tiene: fmt(num(s.canal.seguidores)), meta: fmt(num(seguidores)), progreso: Math.min(1, s.canal.seguidores / seguidores) },
       visualizaciones: {
-        tiene: fmt(s.canal.visualizaciones),
+        tiene: fmt(s.canal.visualizacionesTotales),
         meta: fmt(visualizaciones),
-        progreso: Math.min(1, s.canal.visualizaciones.div(visualizaciones).toNumber()),
+        progreso: Math.min(1, s.canal.visualizacionesTotales.div(visualizaciones).toNumber()),
       },
     };
   }
 
   private skillView(def: SkillDef, fmt: (value: Decimal) => string): SkillView {
     const s = this.state;
+    const d = this.data;
     const nivel = skillLevel(s, def.id);
     const next = { ...s, habilidades: [...s.habilidades.filter((h) => h.id !== def.id), { id: def.id, nivel: nivel + 1 }] };
     const show = (state: GameState): string => {
       const amount = skillLevel(state, def.id) * def.valor;
       switch (def.id) {
         case 'embestida':
-          return `×${Math.round(rammingMultiplier(state, this.data) * 10) / 10}`;
-        case 'recolectora':
-        case 'express':
-          return `${Math.round(amount * 100)}`;
-        default:
+          return `×${Math.round(rammingMultiplier(state, d) * 10) / 10}`;
+        case 'pandilla':
+        case 'garrasLargas':
           return `${amount}`;
+        default:
+          return `${Math.round(amount * 100)}`;
       }
     };
-    const maximo = skillMaxed(s, def);
-    const tiene = resourceTotal(s, def.recurso);
-    const meta = skillRequirement(def, nivel + 1);
     return {
       id: def.id,
+      rama: def.rama,
+      piso: def.piso,
       nivel,
       max: def.max,
-      maximo,
-      recurso: def.recurso,
-      tiene: fmt(num(Math.min(tiene, meta))),
-      meta: fmt(num(meta)),
-      progreso: maximo ? 1 : Math.min(1, tiene / meta),
-      listo: skillClaimable(s, def),
+      maximo: skillMaxed(s, def),
+      pisoAbierto: floorOpen(s, d, def.piso),
+      disponible: skillAvailable(s, d, def),
+      padre: skillParent(d, def)?.id ?? null,
+      costo: fmt(skillCost(s, def)),
+      alcanza: skillBuyable(s, d, def),
       actual: show(s),
       siguiente: show(next),
     };
@@ -1334,10 +1425,10 @@ export class Game {
         alcanza: puedeMarca,
         mult: mult(markMultiplier(s, d)),
         multSiguiente: mult(markMultiplier(marca.after, d)),
-        segundos: d.balance.marca.segundos,
+        segundos: markSeconds(s, d),
       },
       marcaActiva: markActive(s, Date.now())
-        ? { restante: markRemaining(s, Date.now()), segundos: d.balance.marca.segundos, mult: mult(markMultiplier(s, d)) }
+        ? { restante: markRemaining(s, Date.now()), segundos: markSeconds(s, d), mult: mult(markMultiplier(s, d)) }
         : null,
       herramientaActual: object.herramienta,
       hayCompra:

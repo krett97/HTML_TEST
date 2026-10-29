@@ -35,8 +35,13 @@ export function collectModifiers(state: GameState, data: GameData): Modifier[] {
   if (state.canal.seguidores > 0) {
     mods.push({ stat: 'vistas', op: 'mult', valor: 1 + state.canal.seguidores * data.balance.canal.bonoPorSeguidor, fuente: 'canal:seguidores' });
   }
+  // Árbol del Canal.
   const recolectora = skillAmount(state, data, 'recolectora');
   if (recolectora > 0) mods.push({ stat: 'vistas', op: 'mult', valor: 1 + recolectora, fuente: 'habilidad:recolectora' });
+  const pesas = skillAmount(state, data, 'pesas');
+  if (pesas > 0) mods.push({ stat: 'danio', op: 'mult', valor: 1 + pesas, fuente: 'habilidad:pesas' });
+  const croquetas = skillAmount(state, data, 'croquetas');
+  if (croquetas > 0) mods.push({ stat: 'danioAliados', op: 'mult', valor: 1 + croquetas, fuente: 'habilidad:croquetas' });
   // Saco de jefe: el gato de traje dirige a la pandilla y todos los aliados pegan más.
   if (state.nivelSaco > 0) {
     mods.push({ stat: 'danioAliados', op: 'mult', valor: sacoMultiplier(state, data), fuente: 'mejora:saco' });

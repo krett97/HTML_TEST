@@ -98,8 +98,21 @@ export const PLACES = [
 ] as const;
 export type PlaceId = (typeof PLACES)[number];
 
-/** Habilidades que el código sabe aplicar (core/skills.ts). */
-export const SKILLS = ['embestida', 'recolectora', 'pandilla', 'express'] as const;
+/** Habilidades del árbol del Canal que el código sabe aplicar (core/skills.ts). */
+export const SKILLS = [
+  'embestida',
+  'pesas',
+  'garrasLargas',
+  'pandilla',
+  'croquetas',
+  'veterinario',
+  'recolectora',
+  'express',
+  'patrocinador',
+  'clickbait',
+  'miniaturas',
+  'hashtags',
+] as const;
 export type SkillId = (typeof SKILLS)[number];
 
 /** Funciones que se van descubriendo: "fuerza", "valor", "critico", "laboratorio", "aliado:<id>"… */
@@ -127,22 +140,24 @@ export interface ResearchDef {
  * compran: el gato las usa solo al llegar a esos objetos y solo cambian cómo se ve. Las compras
  * con efecto volverán como "Habilidades" en los reinicios (fase 4).
  */
+/** Ramas del árbol del Canal, de izquierda a derecha. */
+export const BRANCHES = ['manotazo', 'pandilla', 'produccion', 'viral'] as const;
+export type Branch = (typeof BRANCHES)[number];
+
 /**
- * Habilidad del Canal: no se compra, se desbloquea por niveles al juntar seguidores o
- * visualizaciones (totales, nunca se gastan). Nivel n pide ⌈base × crecimiento^(n−1)⌉ del `recurso`.
- * `valor` es lo que da cada nivel (ver core/skills.ts para qué significa en cada una).
+ * Habilidad del árbol del Canal: se compra con visualizaciones (se gastan). Está en una rama y un
+ * piso; el piso se abre al juntar seguidores y pide el nivel 1 de la habilidad de arriba en su rama.
+ * El nivel n cuesta ⌊costoBase × crecimiento^(n−1)⌋. `valor` es lo que da cada nivel (ver core/skills.ts).
  */
 export interface SkillDef {
   id: string;
-  recurso: SkillResource;
-  base: number;
+  rama: Branch;
+  piso: number;
+  costoBase: Decimal;
   crecimiento: number;
   max: number;
   valor: number;
 }
-
-export const SKILL_RESOURCES = ['seguidores', 'visualizaciones'] as const;
-export type SkillResource = (typeof SKILL_RESOURCES)[number];
 
 export interface ToolDef {
   id: string;
@@ -251,6 +266,8 @@ export interface GameData {
   unlocks: UnlockDef[];
   research: ResearchDef[];
   skills: SkillDef[];
+  /** Seguidores que abren cada piso del árbol (el primero, 0). */
+  skillFloors: number[];
   balance: Balance;
 }
 
@@ -344,11 +361,11 @@ function section(file: string, parent: Raw, key: string): Raw {
   return { id: key, ...(value as Raw) };
 }
 
-function skillResource(value: string, id: string): SkillResource {
-  if (!(SKILL_RESOURCES as readonly string[]).includes(value)) {
-    throw new DataError('habilidades.json', `"${id}": recurso "${value}" no es válido (${SKILL_RESOURCES.join(', ')})`);
+function branch(value: string, id: string): Branch {
+  if (!(BRANCHES as readonly string[]).includes(value)) {
+    throw new DataError('habilidades.json', `"${id}": rama "${value}" no es válida (${BRANCHES.join(', ')})`);
   }
-  return value as SkillResource;
+  return value as Branch;
 }
 
 function uniqueIds(file: string, items: { id: string }[]): void {
@@ -578,18 +595,42 @@ export function parseGameData(raw: RawGameData): GameData {
     },
   };
 
-  const skills: SkillDef[] = asArray('habilidades.json', raw.habilidades).map((item) => ({
-    id: str('habilidades.json', item, 'id'),
-    recurso: skillResource(str('habilidades.json', item, 'recurso'), String(item.id)),
-    base: positive('habilidades.json', item, 'base').toNumber(),
-    crecimiento: positive('habilidades.json', item, 'crecimiento').toNumber(),
-    max: Math.max(1, Math.floor(positive('habilidades.json', item, 'max').toNumber())),
-    valor: positive('habilidades.json', item, 'valor').toNumber(),
-  }));
+  const tree = raw.habilidades as Raw | null;
+  if (!tree || typeof tree !== 'object') throw new DataError('habilidades.json', 'debe ser un objeto con "pisos" y "nodos"');
+  const skillFloors = (asArray('habilidades.json', tree.pisos) as unknown[]).map((v, i) => {
+    if (typeof v !== 'number' || !(v >= 0)) throw new DataError('habilidades.json', `pisos[${i}] debe ser un número ≥ 0`);
+    return v;
+  });
+  if (skillFloors[0] !== 0 || skillFloors.some((v, i) => i > 0 && v <= skillFloors[i - 1]!)) {
+    throw new DataError('habilidades.json', 'los pisos empiezan en 0 y piden cada vez más seguidores');
+  }
+  const skills: SkillDef[] = asArray('habilidades.json', tree.nodos).map((item) => {
+    const id = str('habilidades.json', item, 'id');
+    const piso = Math.floor(Number(item.piso));
+    if (!(piso >= 0 && piso < skillFloors.length)) throw new DataError('habilidades.json', `"${id}": piso ${String(item.piso)} no existe`);
+    return {
+      id,
+      rama: branch(str('habilidades.json', item, 'rama'), id),
+      piso,
+      costoBase: positive('habilidades.json', item, 'costoBase'),
+      crecimiento: positive('habilidades.json', item, 'crecimiento').toNumber(),
+      max: Math.max(1, Math.floor(positive('habilidades.json', item, 'max').toNumber())),
+      valor: positive('habilidades.json', item, 'valor').toNumber(),
+    };
+  });
   uniqueIds('habilidades.json', skills);
   for (const id of SKILLS) {
     if (!skills.some((s) => s.id === id)) throw new DataError('habilidades.json', `falta la habilidad "${id}"`);
   }
+  // Una habilidad por rama y piso, y sin huecos: cada una cuelga de la de arriba.
+  for (const skill of skills) {
+    if (skills.some((o) => o !== skill && o.rama === skill.rama && o.piso === skill.piso)) {
+      throw new DataError('habilidades.json', `"${skill.id}": ya hay otra habilidad en la rama ${skill.rama}, piso ${skill.piso}`);
+    }
+    if (skill.piso > 0 && !skills.some((o) => o.rama === skill.rama && o.piso === skill.piso - 1)) {
+      throw new DataError('habilidades.json', `"${skill.id}": falta la habilidad de arriba en la rama ${skill.rama}`);
+    }
+  }
 
-  return { objects, homes, bosses, tools, allies, unlocks, research, skills, balance };
+  return { objects, homes, bosses, tools, allies, unlocks, research, skills, skillFloors, balance };
 }

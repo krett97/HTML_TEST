@@ -121,6 +121,12 @@ select {
   background: var(--bg);
   color: var(--muted);
 }
+/* Con anuncio: dorado, para que se note que vale más. */
+.btn--gold {
+  background: var(--gold);
+  color: var(--line);
+  font-weight: 700;
+}
 .btn--danger {
   background: var(--danger);
   color: var(--text);

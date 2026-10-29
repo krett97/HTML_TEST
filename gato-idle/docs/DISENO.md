@@ -662,7 +662,7 @@ Además de Garras, Sombrero y Saco (§28), ahora también tienen viñeta de cóm
 
 **Todas las viñetas salen solo la primera vez en la partida guardada** (`vistos` en el estado). Después de subir el video se vuelven a adoptar los aliados y a comprar los objetos; ahí sale el aviso corto de siempre, para no interrumpir cada vuelta. Con PixelLab cada viñeta tendrá su ilustración propia (hoy es el sprite ampliado).
 
-## 31. Habilidades por metas: seguidores y visualizaciones que nunca se gastan (versión 0.14.0)
+## 31. Habilidades por metas: seguidores y visualizaciones que nunca se gastan (versión 0.14.0; reemplazado por el árbol, §40)
 
 Antes las visualizaciones se gastaban en habilidades y el jugador tenía que escoger. Ahora:
 
@@ -830,4 +830,35 @@ Idea del jugador: con sus garras, el gato deja el objeto "marcado" y la pandilla
 - Simulador: el jugador llega al tope cerca del refri; el ritmo casi no cambia (refri 35.5 min) y al Pepino Gigante se le quita ~90 % al llegar (antes ~74 %): premio por jugar activo.
 
 Datos: `balance.json` → `marca` (segundos, multPorNivel, max, costo). Lógica: `src/core/marca.ts`.
+
+## 40. Árbol del canal y video ×2 con anuncio (versión 0.22.0)
+
+El jugador quería **escoger** qué desbloquear, con ramas. Las habilidades por metas (§31) no dejaban escoger: todo llegaba solo. Para que se entienda, cada número del canal tiene un solo trabajo:
+
+| | Qué es | ¿Baja? | Para qué sirve |
+|---|---|---|---|
+| **Seguidores** | El récord del canal (suma de todos los videos) | Nunca | Bono permanente de dinero y **abrir pisos** del árbol (0, 50 y 200) |
+| **Visualizaciones** | La "moneda" del canal | Sí, al gastarlas | **Comprar** niveles del árbol |
+| **Visualizaciones en total** | El récord de visualizaciones | Nunca | La mudanza (80 seguidores y 500K en total), para que gastar no la retrase |
+
+**Dónde se ve cada cosa.** Arriba de la pestaña, "Récord del canal": seguidores y visualizaciones en total. En la tarjeta del video: lo que da si lo subes ahora, con y sin anuncio, y la probabilidad de viral. En el árbol: las visualizaciones para gastar y los seguidores (que abren pisos).
+
+**El árbol** (`habilidades.json`, `core/skills.ts`, `ui/tabs/Arbol.svelte`): 4 ramas en columnas y 3 pisos. Cada habilidad pide el nivel 1 de la de arriba en su rama; los pisos cerrados se ven con niebla y "???" (descubrimiento progresivo), solo dicen cuántos seguidores faltan. Al tocar una habilidad sale su ficha con lo que da ahora → con el siguiente nivel y el botón "Subir nivel · 👁️ costo". Las 4 habilidades de antes quedan dentro del árbol, con sus niveles.
+
+| Rama | Piso 1 | Piso 2 | Piso 3 |
+|---|---|---|---|
+| 🐱 Manotazo | Embestida del carrito | Pesas de gato (+10 % daño del manotazo) | Manicure de garras (+1 s de marca) |
+| 🐶 Pandilla | Pandilla veterana | Croquetas premium (+10 % daño de aliados) | Veterinario amigo (aliados −5 %) |
+| 🎬 Producción | Aspiradora recolectora | Investigación express | Patrocinador fiel (+25 % patrocinios) |
+| 🔥 Viral | Clickbait (+5 % viral) | Miniaturas con cara de susto (+10 % visualizaciones) | #Hashtags (+5 % seguidores) |
+
+Costos: nivel n = costoBase × crecimiento^(n−1); piso 1 desde 10K–15K, piso 2 desde 50K, piso 3 desde 150K.
+
+**Reiniciar el árbol** cuesta ver **3 anuncios** (el contador se guarda, se pueden ver en distintos momentos) y devuelve todo lo gastado para escoger otra ruta.
+
+**Video ×2 con anuncio.** Cada video da un poco menos que antes (seguidores ×0.8: `escalaSeguidores` 80000 → 156250; visualizaciones ×0.8: `visualizacionesPorVista` 1 → 0.8) y junto a "Subir video" aparece "📺 Subir ×2 con anuncio". Si se cierra el anuncio antes, no se sube nada.
+
+**Guardados viejos:** conservan sus niveles; las visualizaciones que tenían quedan para gastar y cuentan como total histórico.
+
+Simulador (5 toques/s, sin anuncios, gastando en lo más barato): la mudanza llega tras la vuelta 5 (antes, la 4); con anuncios llega antes. Vuelta 2 al refri en 17 min, vuelta 5 en 5.4 min.
 

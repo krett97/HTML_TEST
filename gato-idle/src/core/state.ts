@@ -37,6 +37,8 @@ export interface VideoRecord {
   seguidores: number;
   visualizaciones: Decimal;
   viral: boolean;
+  /** Se vio el anuncio para duplicarlo. */
+  doble?: boolean;
   fecha: number;
 }
 
@@ -86,9 +88,14 @@ export interface GameState {
   };
   /** El canal del dueño: lo que sobrevive al subir el video. */
   canal: {
-    /** Seguidores y visualizaciones son totales que solo crecen: las Habilidades se desbloquean con ellos. */
+    /** Récord del canal: solo crece. Da el bono de dinero y abre los pisos del árbol. */
     seguidores: number;
+    /** Visualizaciones para gastar en el árbol de habilidades. */
     visualizaciones: Decimal;
+    /** Todas las visualizaciones que ha juntado el canal (récord; no baja al gastar). */
+    visualizacionesTotales: Decimal;
+    /** Anuncios ya vistos para reiniciar el árbol (al llegar a RESET_ADS se reinicia). */
+    anunciosReinicio: number;
     /** Los más recientes primero. */
     videos: VideoRecord[];
   };
@@ -96,7 +103,7 @@ export interface GameState {
   offline: { segundos: number; ausente: number; tope: boolean; roturas: number; dinero: Decimal } | null;
   /** Lo que ya se presentó con viñeta de cómic ("objeto:plato", "aliado:perro", "aspecto:garras"): solo la primera vez. */
   vistos: string[];
-  /** Habilidades del Canal compradas (se conservan al subir el video). */
+  /** Niveles comprados del árbol de habilidades del Canal (se conservan al subir el video). */
   habilidades: { id: string; nivel: number }[];
   ajustes: Settings;
   pruebas: Pruebas;
@@ -123,7 +130,7 @@ export function createInitialState(now: number): GameState {
     casa: 0,
     jefes: { derrotados: [], revancha: 0 },
     stats: { toques: 0, roturas: 0, roturasPartida: 0, vistasVideo: 0 },
-    canal: { seguidores: 0, visualizaciones: ZERO, videos: [] },
+    canal: { seguidores: 0, visualizaciones: ZERO, visualizacionesTotales: ZERO, anunciosReinicio: 0, videos: [] },
     habilidades: [],
     vistos: [],
     offline: null,

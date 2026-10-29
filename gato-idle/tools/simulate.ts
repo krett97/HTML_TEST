@@ -16,7 +16,7 @@ import { expectedTapDamage } from '../src/core/economy';
 import { formatNum } from '../src/core/format';
 import { normalizeState } from '../src/core/normalize';
 import { deserialize, serialize } from '../src/core/save';
-import { claimSkill } from '../src/core/skills';
+import { buySkill, skillBuyable, skillCost } from '../src/core/skills';
 import { createInitialState, type GameState } from '../src/core/state';
 import { gameData } from '../src/data';
 
@@ -119,10 +119,20 @@ function bossCheck(state: GameState, data: GameData): string | null {
 /** Objetos que se marcan en cada vuelta (los que caen entre el inicio y el último alcanzable). */
 const RUN_MARKS = ['lampara', 'tostadora', 'lavadora', 'refri', 'maceta', 'aro', 'silla', 'parrilla', 'moto', 'coche'];
 
+/** Gasta las visualizaciones en el árbol: siempre el nivel más barato que pueda pagar. */
+function buyCheapestSkills(state: GameState, data: GameData): void {
+  for (;;) {
+    const options = data.skills.filter((d) => skillBuyable(state, data, d));
+    if (options.length === 0) return;
+    options.sort((a, b) => skillCost(state, a).cmp(skillCost(state, b)));
+    buySkill(state, data, options[0]!.id);
+  }
+}
+
 /**
  * Varias vueltas seguidas: juega hasta el último objeto al que puede llegar (el refri, o el coche
- * si ya se desbloqueó la mudanza), sube el video y reclama las habilidades que ya alcanzó con sus
- * seguidores y visualizaciones. Responde "¿cuánto más rápida es la segunda vuelta?" y "¿cuándo
+ * si ya se desbloqueó la mudanza), sube el video y gasta las visualizaciones en el árbol
+ * (lo más barato primero). Responde "¿cuánto más rápida es la segunda vuelta?" y "¿cuándo
  * se muda?".
  */
 export function simulateRuns(data: GameData, runs = 10): RunRow[] {
@@ -146,8 +156,7 @@ export function simulateRuns(data: GameData, runs = 10): RunRow[] {
     const casa = data.homes[state.casa]!.id;
     const jefe = bossCheck(state, data);
     const video = uploadVideo(state, data, 0, () => 0.5)!;
-    // Reclama todos los niveles de habilidad que ya alcanzó.
-    while (data.skills.some((d) => claimSkill(state, data, d.id)));
+    buyCheapestSkills(state, data);
     rows.push({
       vuelta,
       casa,
@@ -156,7 +165,7 @@ export function simulateRuns(data: GameData, runs = 10): RunRow[] {
       seguidores: video.seguidores,
       visualizaciones: formatNum(video.visualizaciones),
       totalSeguidores: state.canal.seguidores,
-      totalVisualizaciones: formatNum(state.canal.visualizaciones),
+      totalVisualizaciones: `${formatNum(state.canal.visualizacionesTotales)} (sobran ${formatNum(state.canal.visualizaciones)})`,
       habilidades: state.habilidades.map((h) => `${h.id} ${h.nivel}`).join(', '),
     });
   }
@@ -175,7 +184,7 @@ function main(): void {
   for (const row of rows) console.log(line(row));
   console.log(`\nCompras: ${Object.entries(counts).map(([k, v]) => `${k} ×${v}`).join(', ')}`);
 
-  console.log('\nVueltas (sube el video al llegar al último objeto alcanzable y reclama habilidades):');
+  console.log('\nVueltas (sube el video al llegar al último objeto alcanzable y compra en el árbol):');
   for (const run of simulateRuns(gameData)) {
     const marks = Object.entries(run.minutos).map(([obj, min]) => `${obj} ${min.toFixed(1)}`).join(' · ');
     if (run.jefe) console.log(`     jefe (vida quitada al llegar → +2 min → +5 min): ${run.jefe}`);
