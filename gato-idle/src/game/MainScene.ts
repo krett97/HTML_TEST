@@ -24,11 +24,11 @@ const CAT_W = 19;
 /** Escala de las imágenes: el arte trae ART píxeles por unidad y la cámara amplía ×ART. */
 const S = 1 / ART;
 /** Dónde va el sombrero respecto al gato (origen abajo a la izquierda): encima de la cabeza, tapando la uva. */
-const HAT_X = 9.5;
+const HAT_X = 11.5;
 const HAT_Y = -14;
 /** Cuánto dura el cuadro del manotazo (ms) y cuánto se mueve la cabeza (y el sombrero) en ese cuadro. */
 const SWAT_MS = 75;
-const SWAT_HAT = { dx: 0.5, dy: 2 };
+const SWAT_HAT = { dx: -1.5, dy: 2 };
 /** Inclinación máxima de los objetos que se "vuelcan", justo antes de caer. */
 const MAX_TILT = 22;
 /** Frases de la viñeta de objeto nuevo (vineta.objeto.frases.0 … N-1). */

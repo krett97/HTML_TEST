@@ -772,3 +772,4 @@ Antes, al golpear, el gato se quedaba quieto y una pata se deslizaba desde atrá
 - **El gatito bebé brinca en arco** hasta el objeto, suelta su manotazo (llorando) y regresa a su lugar. Cualquier aliado que tenga un cuadro `aliado_<id>_golpe` hace lo mismo; los demás siguen con sus saltitos.
 - La viñeta de cómic de las mejoras del gato usa el cuadro del manotazo (luce las garras).
 - Los cuadros se hicieron editando el dibujo con *edit-image-pixen* (misma cara y colores); las cuatro variantes (normal, garras, saco, saco + garras) parten del mismo cuadro y se recortan con el mismo marco para que no salten. Recetas en `tools/arte/elegidos.json`; herramienta `tools/arte/editar.py`.
+- El gato sentado mira hacia el objeto (a la derecha), igual que en el manotazo (0.18.1: se volteó el dibujo de PixelLab y se recolocó el sombrero).
