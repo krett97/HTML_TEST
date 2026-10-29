@@ -862,3 +862,5 @@ Costos: nivel n = costoBase × crecimiento^(n−1); piso 1 desde 10K–15K, piso
 
 Simulador (5 toques/s, sin anuncios, gastando en lo más barato): la mudanza llega tras la vuelta 5 (antes, la 4); con anuncios llega antes. Vuelta 2 al refri en 17 min, vuelta 5 en 5.4 min.
 
+
+**0.22.1:** el mapache vuelve a mirar hacia el objeto (está a su derecha, así que su dibujo original ya lo veía).
