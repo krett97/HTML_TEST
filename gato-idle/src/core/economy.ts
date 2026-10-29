@@ -124,6 +124,11 @@ export function critDamageCost(state: GameState, data: GameData): Decimal {
   return num(costoBase).mul(num(crecimiento).pow(state.nivelDanioCritico)).floor();
 }
 
+export function markCost(state: GameState, data: GameData): Decimal {
+  const { costoBase, crecimiento } = data.balance.marca;
+  return num(costoBase).mul(num(crecimiento).pow(state.nivelMarca)).floor();
+}
+
 export function sacoCost(state: GameState, data: GameData): Decimal {
   const { costoBase, crecimiento } = data.balance.saco;
   return num(costoBase).mul(num(crecimiento).pow(state.nivelSaco)).floor();
@@ -172,6 +177,16 @@ export function buyCritChance(state: GameState, data: GameData): boolean {
 export function buySaco(state: GameState, data: GameData): boolean {
   if (!pay(state, sacoCost(state, data))) return false;
   state.nivelSaco += 1;
+  return true;
+}
+
+export function markMaxed(state: GameState, data: GameData): boolean {
+  return state.nivelMarca >= data.balance.marca.max;
+}
+
+export function buyMark(state: GameState, data: GameData): boolean {
+  if (markMaxed(state, data) || !pay(state, markCost(state, data))) return false;
+  state.nivelMarca += 1;
   return true;
 }
 

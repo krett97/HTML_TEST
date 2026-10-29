@@ -8,6 +8,9 @@ import {
   buyCritDamage,
   buyFuerza,
   buySaco,
+  buyMark,
+  markCost,
+  markMaxed,
   buyValor,
   critChanceCost,
   critChanceMaxed,
@@ -48,6 +51,9 @@ function options(state: GameState, data: GameData): Option[] {
   }
   if (hasUnlock(state, 'danioCritico')) {
     list.push({ name: 'danioCritico', cost: critDamageCost(state, data).toNumber(), apply: (s) => void buyCritDamage(s, data) });
+  }
+  if (hasUnlock(state, 'marca') && !markMaxed(state, data)) {
+    list.push({ name: 'marca', cost: markCost(state, data).toNumber(), apply: (s) => void buyMark(s, data) });
   }
   if (hasUnlock(state, 'saco')) {
     list.push({ name: 'saco', cost: sacoCost(state, data).toNumber(), apply: (s) => void buySaco(s, data) });

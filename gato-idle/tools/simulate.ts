@@ -11,6 +11,7 @@ import type { GameData } from '../src/core/data';
 import { currentObject, moneyPerBreak, objectIndex, tapDamage, tapsToBreak, valorStepsInObject } from '../src/core/economy';
 import { lastObjectIndex } from '../src/core/mudanza';
 import { bossHere, bossHp } from '../src/core/jefes';
+import { expectedMarkMultiplier } from '../src/core/marca';
 import { expectedTapDamage } from '../src/core/economy';
 import { formatNum } from '../src/core/format';
 import { normalizeState } from '../src/core/normalize';
@@ -97,7 +98,7 @@ export interface RunRow {
 function bossShare(state: GameState, data: GameData): number {
   const boss = bossHere(state, data);
   if (!boss) return 0;
-  const dps = expectedTapDamage(state, data).mul(TAPS_PER_SECOND).add(alliesDps(state, data));
+  const dps = expectedTapDamage(state, data).mul(TAPS_PER_SECOND).add(alliesDps(state, data).mul(expectedMarkMultiplier(state, data, TAPS_PER_SECOND)));
   return dps.mul(boss.segundos).div(bossHp(data, boss)).toNumber() * 100;
 }
 

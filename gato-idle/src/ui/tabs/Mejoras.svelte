@@ -179,6 +179,35 @@
     </button>
   </div>
   {/if}
+
+  {#if $view.funciones.marca}
+  <div class="card upgrade" class:fresh={$view.nuevos.includes('marca')}>
+    <span class="icon" aria-hidden="true">💢</span>
+    <div class="info">
+      <div class="name">
+        {$t('mejoras.marca')} <span class="level">{$view.marca.maximo ? $t('mejoras.max') : $t('mejoras.nivel', { n: $view.marca.nivel })}</span>
+        {#if $view.nuevos.includes('marca')}<NewBadge />{/if}
+      </div>
+      <div class="effect">
+        {$view.marca.maximo
+          ? $t('mejoras.marcaMax', { s: $view.marca.segundos, actual: $view.marca.mult })
+          : $t('mejoras.marcaEfecto', { s: $view.marca.segundos, actual: $view.marca.mult, siguiente: $view.marca.multSiguiente })}
+      </div>
+    </div>
+    <button
+      type="button"
+      class="btn btn--accent buy cifra"
+      disabled={!$view.marca.alcanza}
+      onclick={() => game.buyMark()}
+      data-testid="comprar-marca"
+    >
+      {#if $view.marca.maximo}✓{:else}
+        {#if $view.marca.cantidad > 1}<span class="qty">×{$view.marca.cantidad}</span>{/if}
+        <span class="price"><Coin />{$view.marca.costo}</span>
+      {/if}
+    </button>
+  </div>
+  {/if}
 </div>
 
 <style>

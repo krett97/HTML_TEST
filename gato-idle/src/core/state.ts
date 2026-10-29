@@ -57,6 +57,9 @@ export interface GameState {
   nivelDanioCritico: number;
   /** Nivel de "Saco de jefe" (más daño para todos los aliados). */
   nivelSaco: number;
+  /** Nivel de "Garras marcadoras" y hasta cuándo dura la marca del último crítico (ms de reloj). */
+  nivelMarca: number;
+  marcaHasta: number;
   /** Nivel de cada aliado comprado (los que no aparecen están en 0). */
   aliados: { id: string; nivel: number }[];
   /** Descubrimientos ya conseguidos (ids de unlocks.json), en orden. */
@@ -111,6 +114,8 @@ export function createInitialState(now: number): GameState {
     nivelCritico: 0,
     nivelDanioCritico: 0,
     nivelSaco: 0,
+    nivelMarca: 0,
+    marcaHasta: 0,
     aliados: [],
     desbloqueos: [],
     laboratorio: { hechas: [], actual: null },

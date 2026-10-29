@@ -55,6 +55,8 @@ const MAX_SCRATCHES = 5;
 const COLORS = {
   scratch: 0x2b1d2f,
 };
+/** Color de los números de la pandilla mientras el objeto está marcado. */
+const MARKED_COLOR = '#ff4d5e';
 
 /** Color de las chispitas que deja cada aliado al golpear. */
 const ALLY_SPARK: Record<string, number> = {
@@ -76,6 +78,8 @@ interface AllyVisual {
 export class MainScene extends Phaser.Scene {
   private background!: Phaser.GameObjects.Graphics;
   private scratches!: Phaser.GameObjects.Graphics;
+  /** Rasguños brillantes de las Garras marcadoras (se dibujan cada cuadro mientras dura la marca). */
+  private markScratches!: Phaser.GameObjects.Graphics;
   private cat!: Phaser.GameObjects.Image;
   private vehicle!: Phaser.GameObjects.Image;
   private hat!: Phaser.GameObjects.Image;
@@ -141,6 +145,7 @@ export class MainScene extends Phaser.Scene {
     this.owner = this.add.image(0, 0, 'duenio').setOrigin(0.5, 1).setScale(S).setDepth(4.5).setVisible(false);
     this.object = this.add.image(0, 0, '__DEFAULT').setOrigin(0.5, 1).setScale(S).setDepth(3);
     this.scratches = this.add.graphics().setDepth(3.5);
+    this.markScratches = this.add.graphics().setDepth(3.6);
     for (const ally of this.controller.data.allies) {
       const sprite = this.add.image(0, 0, `aliado_${ally.id}`).setOrigin(0, 1).setScale(S).setDepth(2.2);
       this.allies.set(ally.id, { sprite, hop: { dx: 0, dy: 0 } });
@@ -157,7 +162,8 @@ export class MainScene extends Phaser.Scene {
       this.controller.events.on('objeto', ({ objectId, primeraVez }) => this.onNewObject(objectId, primeraVez)),
       this.controller.events.on('herramienta', ({ toolId }) => this.onNewTool(toolId)),
       this.controller.events.on('aspecto', ({ cambio, primeraVez }) => this.onNewLook(cambio, primeraVez)),
-      this.controller.events.on('aliado', ({ allyId, result }) => this.onAllyHit(allyId, result)),
+      this.controller.events.on('aliado', ({ allyId, result, marcado }) => this.onAllyHit(allyId, result, marcado)),
+      this.controller.events.on('marca', ({ nueva }) => this.onMark(nueva)),
       this.controller.events.on('aliadoNuevo', ({ allyId, primeraVez }) => this.onNewAlly(allyId, primeraVez)),
       this.controller.events.on('descubrimiento', ({ unlockId }) => this.onDiscovery(unlockId)),
       this.controller.events.on('patrocinio', ({ dinero }) => {
@@ -204,6 +210,7 @@ export class MainScene extends Phaser.Scene {
 
   /** Cada cuadro: el sombrero va en la cabeza del gato y los aliados siguen su lugar (el gatito, junto al gato). */
   update(): void {
+    this.drawMarkScratches();
     const swat = this.swatting ? SWAT_HAT : { dx: 0, dy: 0 };
     this.cat.setAngle(this.lean.angle);
     this.hat.setPosition(this.cat.x + HAT_X + swat.dx, this.cat.y + HAT_Y + swat.dy).setAngle(this.lean.angle);
@@ -211,6 +218,42 @@ export class MainScene extends Phaser.Scene {
       if (!visual.sprite.visible) continue;
       const base = this.allyRest(id);
       visual.sprite.setPosition(Math.round(base.x + visual.hop.dx), Math.round(base.y + visual.hop.dy));
+    }
+  }
+
+  // ---- Garras marcadoras ----
+
+  /** Un crítico marcó el objeto: letrero "¡MARCADO!" (solo si no lo estaba, para no llenar la pantalla). */
+  private onMark(nueva: boolean): void {
+    if (!nueva) return;
+    // A un lado del objeto, para no encimarse con el "¡ZARPAZO!" que sale arriba.
+    const x = this.object.x + this.widthOf(this.object) / 2 + 14;
+    const y = this.object.y - this.heightOf(this.object) / 2;
+    this.popNumber(x, y, 'marcado-aviso', get(t)('hud.marcado'), { size: 20 });
+    this.controller.playSound('rasguno', { tono: 1.4, minGapMs: 200 });
+  }
+
+  /** Tres zarpazos rojos que laten sobre el objeto mientras dura la marca. */
+  private drawMarkScratches(): void {
+    const g = this.markScratches.clear();
+    if (!this.controller.isMarked() || !this.object.visible || this.object.scale === 0) return;
+    const w = this.widthOf(this.object);
+    const h = this.heightOf(this.object);
+    const left = this.object.x - w / 2;
+    const top = this.object.y - h;
+    const pulse = 0.7 + 0.3 * Math.sin(this.time.now / 90);
+    const size = Math.max(8, Math.min(24, Math.min(w * 1.2, h) * 0.7));
+    const gap = Math.max(4, Math.round(size / 3.5));
+    // Tres zarpazos diagonales, centrados en el objeto, con borde oscuro y centro brillante.
+    const x0 = left + w / 2 - (size * 0.5 + 2 * gap) / 2;
+    const y0 = top + h / 2 - size / 2;
+    for (let line = 0; line < 3; line++) {
+      for (let step = 0; step < size; step += 0.5) {
+        const px = x0 + line * gap + step * 0.5;
+        const py = y0 + step;
+        g.fillStyle(0x7a0f1e, 0.85 * pulse).fillRect(px - 0.5, py, 2, 0.5);
+        g.fillStyle(0xff4d5e, pulse).fillRect(px, py, 1, 0.5);
+      }
     }
   }
 
@@ -295,13 +338,13 @@ export class MainScene extends Phaser.Scene {
     else this.toast(tr('jefe.aparece', { jefe }));
   }
 
-  private onBossHit(event: { damage: Decimal; critico: boolean; embestida: boolean; aliado: string | null }): void {
+  private onBossHit(event: { damage: Decimal; critico: boolean; embestida: boolean; aliado: string | null; marcado: boolean }): void {
     if (event.aliado) {
       const visual = this.allies.get(event.aliado);
       if (visual?.sprite.visible) this.allyAttack(event.aliado, visual);
       const { golpe, tono, volumen } = this.allyDef(event.aliado).sonido;
       this.controller.playSound(golpe, { tono, volumen, minGapMs: 60 });
-      this.allyNumber(event.aliado, event.damage);
+      this.allyNumber(event.aliado, event.damage, event.marcado);
     } else {
       this.swat();
       this.tapNumber(event);
@@ -484,7 +527,7 @@ export class MainScene extends Phaser.Scene {
     return this.controller.data.allies.find((a) => a.id === allyId)!;
   }
 
-  private onAllyHit(allyId: string, result: HitResult): void {
+  private onAllyHit(allyId: string, result: HitResult, marcado: boolean): void {
     const visual = this.allies.get(allyId);
     const def = this.allyDef(allyId);
     if (visual?.sprite.visible) this.allyAttack(allyId, visual);
@@ -505,7 +548,7 @@ export class MainScene extends Phaser.Scene {
       this.pushObject(result.progress);
       this.sparks(ALLY_SPARK[allyId] ?? 0xffffff);
     }
-    this.allyNumber(allyId, result.damage);
+    this.allyNumber(allyId, result.damage, marcado);
   }
 
   /** Saltito hacia el objeto: el gatito brinca, el perico vuela, perro y mapache dan un brinco. */
@@ -748,14 +791,15 @@ export class MainScene extends Phaser.Scene {
   }
 
   /** Golpe de un aliado: número de su color con su ícono (no más de uno cada ALLY_NUMBER_GAP por aliado). */
-  private allyNumber(allyId: string, damage: Decimal): void {
+  /** Golpe de un aliado; con el objeto marcado, el número sale rojo. */
+  private allyNumber(allyId: string, damage: Decimal, marcado = false): void {
     const now = this.time.now;
     if (now - (this.lastAllyNumber.get(allyId) ?? -Infinity) < ALLY_NUMBER_GAP) return;
     this.lastAllyNumber.set(allyId, now);
     const { x, y } = this.numberAnchor();
-    this.popNumber(x, y, 'aliado', this.controller.formatMoney(damage), {
+    this.popNumber(x, y, marcado ? 'aliado marcado' : 'aliado', this.controller.formatMoney(damage), {
       icon: ALLY_ICONS[allyId],
-      color: ALLY_NUMBER_COLORS[allyId],
+      color: marcado ? MARKED_COLOR : ALLY_NUMBER_COLORS[allyId],
       size: 13 + this.damageRatio(damage) * 9,
     });
   }

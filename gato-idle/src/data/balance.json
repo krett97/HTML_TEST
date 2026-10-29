@@ -32,6 +32,13 @@
     "costoBase": 50000,
     "crecimiento": 1.5
   },
+  "marca": {
+    "segundos": 10,
+    "multPorNivel": 0.03,
+    "max": 10,
+    "costoBase": 200000,
+    "crecimiento": 2.2
+  },
   "aliados": {
     "hitoCada": 25,
     "multHito": 2,

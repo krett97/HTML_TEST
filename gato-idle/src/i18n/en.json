@@ -9,7 +9,8 @@
     "dps": "dmg/s",
     "dpsGato": "Cat",
     "dpsAliados": "Gang",
-    "racha": "ON FIRE!"
+    "racha": "ON FIRE!",
+    "marcado": "MARKED!"
   },
   "tutorial": {
     "tocar": "Psst, human. Tap the screen and I'll swat whatever is on the table.",
@@ -120,7 +121,11 @@
     "embestida": "RAM!",
     "comprar": "Buy",
     "valorMudanza": "🚚 Moving day! The owner gets a new house: {objeto}",
-    "esperaMudanza": "The owner has no room for more stuff… Get followers and views so they can move (📱 Channel)."
+    "esperaMudanza": "The owner has no room for more stuff… Get followers and views so they can move (📱 Channel).",
+    "marca": "Marking claws",
+    "marcaEfecto": "A crit marks the object for {s} s: gang {actual} → {siguiente}",
+    "marcaMax": "A crit marks the object for {s} s: gang {actual} (max)",
+    "max": "Max"
   },
   "ajustes": {
     "sonido": "Sound",
@@ -205,7 +210,8 @@
     "critico": "Sharp claws",
     "danioCritico": "Silly hat",
     "saco": "Boss suit",
-    "canal": "The owner's channel"
+    "canal": "The owner's channel",
+    "marca": "Marking claws"
   },
   "laboratorio": {
     "titulo": "Cat research",
@@ -380,6 +386,10 @@
     "mudanza": {
       "titulo": "WE ARE MOVING!",
       "texto": "The owner got famous: new house, new stuff to knock over"
+    },
+    "marca": {
+      "titulo": "MARKING CLAWS!",
+      "texto": "Every critical swat marks the object: the gang hits harder"
     }
   },
   "offline": {

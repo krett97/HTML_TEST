@@ -2,6 +2,7 @@
 import { allyLevel, alliesDps } from './allies';
 import type { GameData } from './data';
 import { currentObject, expectedTapDamage, moneyPerBreak } from './economy';
+import { expectedMarkMultiplier } from './marca';
 import type { Decimal } from './num';
 import type { GameState } from './state';
 
@@ -14,7 +15,9 @@ export function allyHitsPerSecond(state: GameState, data: GameData): number {
 export function breaksPerSecond(state: GameState, data: GameData, tapsPerSecond: number): number {
   const hp = currentObject(state, data).hp.toNumber();
   // Los críticos cuentan por su promedio (ver critFactor).
-  const dps = expectedTapDamage(state, data).toNumber() * tapsPerSecond + alliesDps(state, data).toNumber();
+  // La marca de las Garras marcadoras cuenta por el tiempo que dura en promedio (ver markUptime).
+  const allies = alliesDps(state, data).toNumber() * expectedMarkMultiplier(state, data, tapsPerSecond);
+  const dps = expectedTapDamage(state, data).toNumber() * tapsPerSecond + allies;
   // Cada golpe rompe a lo mucho un objeto.
   return Math.min(dps / hp, tapsPerSecond + allyHitsPerSecond(state, data));
 }

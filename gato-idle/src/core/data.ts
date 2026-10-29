@@ -103,7 +103,7 @@ export const SKILLS = ['embestida', 'recolectora', 'pandilla', 'express'] as con
 export type SkillId = (typeof SKILLS)[number];
 
 /** Funciones que se van descubriendo: "fuerza", "valor", "critico", "laboratorio", "aliado:<id>"… */
-export const FEATURES = ['fuerza', 'valor', 'patrocinios', 'critico', 'danioCritico', 'saco', 'laboratorio', 'canal'] as const;
+export const FEATURES = ['fuerza', 'valor', 'patrocinios', 'critico', 'danioCritico', 'saco', 'marca', 'laboratorio', 'canal'] as const;
 
 /** Un descubrimiento: se desbloquea al cumplir su condición, en el orden de unlocks.json. */
 export interface UnlockDef {
@@ -186,6 +186,14 @@ export interface Balance {
   saco: {
     /** Saco de jefe: el daño de todos los aliados se multiplica por 1 + nivel × multPorNivel. */
     multPorNivel: number;
+    costoBase: number;
+    crecimiento: number;
+  };
+  marca: {
+    /** Garras marcadoras: cada crítico marca el objeto `segundos`; mientras, los aliados pegan ×(1 + nivel × multPorNivel), hasta `max` niveles. */
+    segundos: number;
+    multPorNivel: number;
+    max: number;
     costoBase: number;
     crecimiento: number;
   };
@@ -498,6 +506,7 @@ export function parseGameData(raw: RawGameData): GameData {
   const critico = section(file, b, 'critico');
   const danioCritico = section(file, b, 'danioCritico');
   const saco = section(file, b, 'saco');
+  const marca = section(file, b, 'marca');
   const balance: Balance = {
     tarifaPorVista: n(b, 'tarifaPorVista'),
     toquesMaxPorSegundo: n(b, 'toquesMaxPorSegundo'),
@@ -531,6 +540,13 @@ export function parseGameData(raw: RawGameData): GameData {
       multPorNivel: n(saco, 'multPorNivel'),
       costoBase: n(saco, 'costoBase'),
       crecimiento: n(saco, 'crecimiento'),
+    },
+    marca: {
+      segundos: n(marca, 'segundos'),
+      multPorNivel: n(marca, 'multPorNivel'),
+      max: Math.max(1, Math.floor(n(marca, 'max'))),
+      costoBase: n(marca, 'costoBase'),
+      crecimiento: n(marca, 'crecimiento'),
     },
     canal: {
       escalaSeguidores: n(canal, 'escalaSeguidores'),

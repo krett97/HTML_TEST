@@ -41,6 +41,13 @@
         </div>
       {/if}
       {#if $view.dps.racha}<span class="dps-racha">{$t('hud.racha')}</span>{/if}
+      {#if $view.marcaActiva}
+        <!-- Garras marcadoras: cuánto le queda a la marca y cuánto más pega la pandilla. -->
+        <div class="marca" data-testid="marca">
+          <span class="marca-tag">💢 {$t('hud.marcado')} <span class="cifra">{$view.marcaActiva.mult}</span></span>
+          <span class="marca-bar"><span class="marca-fill" style:width="{($view.marcaActiva.restante / $view.marcaActiva.segundos) * 100}%"></span></span>
+        </div>
+      {/if}
     </div>
   {/if}
   {#if $view.jefe.pelea}
@@ -191,6 +198,28 @@
     text-align: right;
     font-size: 12px;
     color: var(--muted);
+  }
+  .marca {
+    display: grid;
+    gap: 2px;
+    margin-top: 2px;
+  }
+  .marca-tag {
+    font-size: 11px;
+    font-weight: 700;
+    color: #ff4d5e;
+    text-shadow: 0 1px 0 var(--line);
+  }
+  .marca-bar {
+    height: 5px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+  }
+  .marca-fill {
+    display: block;
+    height: 100%;
+    background: #ff4d5e;
+    transition: width 120ms linear;
   }
   /* Medidor de daño por segundo (arriba a la izquierda, debajo del REC). */
   .dps {

@@ -239,6 +239,17 @@ select {
 .num.aliado {
   animation-duration: 620ms;
 }
+/* Garras marcadoras: con el objeto marcado, los golpes de la pandilla salen rojos y brillan. */
+.num.aliado.marcado {
+  text-shadow:
+    0 2px 0 var(--line),
+    0 0 6px rgba(255, 77, 94, 0.8);
+}
+.num.marcado-aviso {
+  --c: #ff4d5e;
+  letter-spacing: 1px;
+  animation: num-golpazo 1050ms ease-out forwards;
+}
 .num-value {
   display: inline-flex;
   align-items: center;
@@ -448,6 +459,9 @@ select {
 }
 .vineta--trofeo {
   --fondo: #ffd36e;
+}
+.vineta--marca {
+  --fondo: #ff8a95;
 }
 .vineta-panel {
   position: relative;

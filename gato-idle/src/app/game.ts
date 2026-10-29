@@ -3,6 +3,7 @@
 // sus eventos (escena) o su `view` (UI).
 import { writable, type Readable, type Writable } from 'svelte/store';
 import { hit, rollTap, tap, type HitResult } from '../core/actions';
+import { applyMark, markActive, markMultiplier, markRemaining } from '../core/marca';
 import { bossDef, bossHere, damageBoss, endFight, rematchIn, startFight, type BossFight } from '../core/jefes';
 import {
   allyCost,
@@ -43,6 +44,9 @@ import {
   currentObject,
   fuerzaCost,
   sacoCost,
+  buyMark,
+  markCost,
+  markMaxed,
   objectIndex,
   moneyPerBreak,
   objectProgress,
@@ -80,7 +84,9 @@ export interface GameEvents {
   /** El gato cambió de aspecto por una mejora: garras (crítico), sombrero (daño crítico) o saco (aliados). */
   aspecto: { cambio: LookChange; primeraVez: boolean };
   /** Un aliado golpeó solo. */
-  aliado: { allyId: string; result: HitResult };
+  aliado: { allyId: string; result: HitResult; marcado: boolean };
+  /** Un zarpazo crítico marcó el objeto (Garras marcadoras). `nueva`: no estaba marcado. */
+  marca: { nueva: boolean };
   /** Se adoptó un aliado (primer nivel). `primeraVez`: nunca se había adoptado (viñeta). */
   aliadoNuevo: { allyId: string; primeraVez: boolean };
   /** Se descubrió algo nuevo (id de unlocks.json). */
@@ -94,7 +100,7 @@ export interface GameEvents {
     | { fase: 'inicio'; id: string; primeraVez: boolean }
     | { fase: 'fin'; id: string; gano: boolean; premio: Decimal; primeraVez: boolean };
   /** Un golpe al jefe: del gato (aliado null) o de un aliado. */
-  jefeGolpe: { damage: Decimal; critico: boolean; embestida: boolean; aliado: string | null };
+  jefeGolpe: { damage: Decimal; critico: boolean; embestida: boolean; aliado: string | null; marcado: boolean };
   /** El dueño se mudó a otra casa (casas.json). `primeraVez`: nunca se había mudado ahí (viñeta). */
   mudanza: { casa: string; primeraVez: boolean };
   /** Se cobraron las ganancias de mientras no estabas. */
@@ -115,10 +121,11 @@ export interface CatLook {
   saco: boolean;
 }
 
-export type LookChange = keyof CatLook;
+/** Las mejoras del gato que tienen viñeta: las que cambian su aspecto y las Garras marcadoras. */
+export type LookChange = keyof CatLook | 'marca';
 
 /** Mejoras de la pestaña Mejoras que se compran por niveles. */
-export type UpgradeId = 'fuerza' | 'valor' | 'critico' | 'danioCritico' | 'saco';
+export type UpgradeId = 'fuerza' | 'valor' | 'critico' | 'danioCritico' | 'saco' | 'marca';
 
 export interface AllyView {
   id: string;
@@ -208,11 +215,15 @@ export interface ViewModel {
   danioCritico: { nivel: number; cantidad: number; costo: string; alcanza: boolean; mult: string; multSiguiente: string };
   /** Saco de jefe: por cuánto se multiplica el daño de todos los aliados. */
   saco: { nivel: number; cantidad: number; costo: string; alcanza: boolean; mult: string; multSiguiente: string };
+  /** Garras marcadoras: cuánto más pega la pandilla mientras el objeto está marcado. */
+  marca: { nivel: number; max: number; maximo: boolean; cantidad: number; costo: string; alcanza: boolean; mult: string; multSiguiente: string; segundos: number };
+  /** La marca en curso: segundos que le quedan (para la barrita). */
+  marcaActiva: { restante: number; segundos: number; mult: string } | null;
   herramientaActual: string;
   /** Algo se puede comprar ahora (punto en la pestaña Mejoras). */
   hayCompra: boolean;
   /** Qué partes del juego ya se descubrieron. */
-  funciones: { fuerza: boolean; valor: boolean; critico: boolean; danioCritico: boolean; saco: boolean; laboratorio: boolean; canal: boolean; aliados: boolean };
+  funciones: { fuerza: boolean; valor: boolean; critico: boolean; danioCritico: boolean; saco: boolean; marca: boolean; laboratorio: boolean; canal: boolean; aliados: boolean };
   /** Ventana de bienvenida: lo que hizo la pandilla mientras no estabas. */
   offline: {
     visible: boolean;
@@ -368,6 +379,8 @@ export class Game {
   private offlineBusy = false;
   /** Pelea contra un jefe en curso (no se guarda: si se cierra el juego, se pierde sin premio ni espera). */
   private fight: BossFight | null = null;
+  /** Si en el último cuadro el objeto estaba marcado (para refrescar al acabarse la marca). */
+  private wasMarked = false;
 
   constructor(
     readonly data: GameData,
@@ -433,6 +446,7 @@ export class Game {
       const damage = this.state.pruebas.danioInfinito ? this.fight.vida : roll.damage;
       this.dpsMeter.add(performance.now(), damage, 'gato');
       this.haptic('ligera');
+      if (roll.critico) this.mark();
       this.hitBoss(damage, roll.critico, roll.embestida, null);
       return;
     }
@@ -440,7 +454,21 @@ export class Game {
     this.dpsMeter.add(performance.now(), result.damage, 'gato');
     this.haptic(result.broke ? 'media' : 'ligera');
     this.events.emit('hit', result);
+    if (result.critico) this.mark();
     this.markDirty();
+  }
+
+  /** Un zarpazo crítico marca el objeto (si ya se tienen las Garras marcadoras). */
+  private mark(): void {
+    if (this.state.nivelMarca <= 0) return;
+    this.events.emit('marca', { nueva: applyMark(this.state, this.data, Date.now()) });
+  }
+
+  /** Daño de un golpe de aliado, con el extra de la marca si el objeto está marcado. */
+  private allyDamage(ally: AllyDef, level: number): { damage: Decimal; marcado: boolean } {
+    const base = allyHitDamage(level, ally, this.state, this.data);
+    const marcado = markActive(this.state, Date.now());
+    return { damage: marcado ? base.mul(markMultiplier(this.state, this.data)) : base, marcado };
   }
 
   // ---- Jefes ----
@@ -460,11 +488,11 @@ export class Game {
     this.markDirty();
   }
 
-  private hitBoss(damage: Decimal, critico: boolean, embestida: boolean, aliado: string | null): void {
+  private hitBoss(damage: Decimal, critico: boolean, embestida: boolean, aliado: string | null, marcado = false): void {
     const fight = this.fight;
     if (!fight) return;
     const won = damageBoss(fight, damage);
-    this.events.emit('jefeGolpe', { damage, critico, embestida, aliado });
+    this.events.emit('jefeGolpe', { damage, critico, embestida, aliado, marcado });
     if (won) this.finishBoss();
     this.markDirty();
   }
@@ -525,6 +553,8 @@ export class Game {
         return { cost: (s) => critDamageCost(s, d), buy: (s) => buyCritDamage(s, d) };
       case 'saco':
         return { cost: (s) => sacoCost(s, d), buy: (s) => buySaco(s, d) };
+      case 'marca':
+        return { cost: (s) => markCost(s, d), buy: (s) => buyMark(s, d) };
     }
   }
 
@@ -563,6 +593,11 @@ export class Game {
   /** Garras afiladas: +probabilidad de crítico. */
   buyCritChance(): boolean {
     return this.buyLookUpgrade('critico', 'garras', () => this.state.nivelCritico);
+  }
+
+  /** Garras marcadoras: los críticos marcan el objeto y la pandilla pega un poco más mientras dura. */
+  buyMark(): boolean {
+    return this.buyLookUpgrade('marca', 'marca', () => this.state.nivelMarca);
   }
 
   /** Saco de jefe: +daño de todos los aliados. */
@@ -880,6 +915,11 @@ export class Game {
 
   // ---- Consultas para la escena ----
 
+  /** Si el objeto está marcado por las Garras marcadoras (la escena dibuja los rasguños). */
+  isMarked(): boolean {
+    return markActive(this.state, Date.now());
+  }
+
   /** El jefe contra el que se pelea ahora, o null. */
   bossFightId(): string | null {
     return this.fight?.id ?? null;
@@ -922,9 +962,15 @@ export class Game {
     this.runAllies(dt);
     this.runDiscoveries(now);
     this.runSponsor(now);
-    // Pelea contra el jefe: el reloj corre y la barra se actualiza.
-    if (this.fight) {
-      if (Date.now() >= this.fight.fin) this.finishBoss();
+    // Pelea contra el jefe (el reloj corre) o marca de las garras (la barrita baja): se actualiza
+    // seguido, y una vez más cuando la marca se acaba para quitar la barrita.
+    const marked = markActive(this.state, Date.now());
+    if (marked !== this.wasMarked) {
+      this.wasMarked = marked;
+      this.markDirty();
+    }
+    if (this.fight || marked) {
+      if (this.fight && Date.now() >= this.fight.fin) this.finishBoss();
       this.markDirty();
     } else if (this.state.jefes.revancha > Date.now() && now - this.lastSecond < TICK_MS) {
       this.markDirty();
@@ -1006,15 +1052,15 @@ export class Game {
   }
 
   private allyHit(ally: AllyDef, level: number): void {
+    const { damage, marcado } = this.allyDamage(ally, level);
     if (this.fight) {
-      const damage = allyHitDamage(level, ally, this.state, this.data);
       this.dpsMeter.add(performance.now(), damage, 'aliados');
-      this.hitBoss(damage, false, false, ally.id);
+      this.hitBoss(damage, false, false, ally.id, marcado);
       return;
     }
-    const result = hit(this.state, this.data, allyHitDamage(level, ally, this.state, this.data));
+    const result = hit(this.state, this.data, damage);
     this.dpsMeter.add(performance.now(), result.damage, 'aliados');
-    this.events.emit('aliado', { allyId: ally.id, result });
+    this.events.emit('aliado', { allyId: ally.id, result, marcado });
     this.markDirty();
   }
 
@@ -1202,6 +1248,7 @@ export class Game {
     const critico = plan('critico');
     const danioCritico = plan('danioCritico');
     const saco = plan('saco');
+    const marca = plan('marca');
     const object = currentObject(s, d);
     const nuevoObjeto = currentObject(valor.after, d);
     const pct = (p: number) => Math.round(p * 1000) / 10;
@@ -1212,6 +1259,7 @@ export class Game {
     const puedeCritico = critico.alcanza;
     const puedeDanioCritico = danioCritico.alcanza;
     const puedeSaco = saco.alcanza;
+    const puedeMarca = marca.alcanza;
     const aliados = d.allies.map((ally) => this.allyView(ally, fmt));
     const best = bestAllyPurchase(s, d);
     for (const ally of aliados) ally.mejor = ally.id === best && aliados.filter((a) => a.desbloqueado).length > 1;
@@ -1277,19 +1325,35 @@ export class Game {
         mult: mult(sacoMultiplier(s, d)),
         multSiguiente: mult(sacoMultiplier(saco.after, d)),
       },
+      marca: {
+        nivel: s.nivelMarca,
+        max: d.balance.marca.max,
+        maximo: markMaxed(s, d),
+        cantidad: marca.cantidad,
+        costo: marca.costo,
+        alcanza: puedeMarca,
+        mult: mult(markMultiplier(s, d)),
+        multSiguiente: mult(markMultiplier(marca.after, d)),
+        segundos: d.balance.marca.segundos,
+      },
+      marcaActiva: markActive(s, Date.now())
+        ? { restante: markRemaining(s, Date.now()), segundos: d.balance.marca.segundos, mult: mult(markMultiplier(s, d)) }
+        : null,
       herramientaActual: object.herramienta,
       hayCompra:
         (hasUnlock(s, 'fuerza') && puedeFuerza) ||
         (hasUnlock(s, 'valor') && puedeValor) ||
         (hasUnlock(s, 'critico') && puedeCritico) ||
         (hasUnlock(s, 'danioCritico') && puedeDanioCritico) ||
-        (hasUnlock(s, 'saco') && puedeSaco),
+        (hasUnlock(s, 'saco') && puedeSaco) ||
+        (hasUnlock(s, 'marca') && puedeMarca),
       funciones: {
         fuerza: hasUnlock(s, 'fuerza'),
         valor: hasUnlock(s, 'valor'),
         critico: hasUnlock(s, 'critico'),
         danioCritico: hasUnlock(s, 'danioCritico'),
         saco: hasUnlock(s, 'saco'),
+        marca: hasUnlock(s, 'marca'),
         laboratorio: hasUnlock(s, 'laboratorio'),
         canal: hasUnlock(s, 'canal'),
         aliados: s.desbloqueos.some((id) => id.startsWith('aliado:')),

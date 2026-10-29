@@ -818,3 +818,16 @@ Datos: `src/data/jefes.json` (casa, segundos, vida y premio en "roturas del últ
 
 Siguientes jefes (uno por casa): **la Aspiradora Industrial**, **el Veterinario** (con el cono de la vergüenza) y **la Bañera**.
 - El perro, el ratón, el mapache y el gatito bebé ahora miran hacia el otro lado (0.20.1: se voltearon sus dibujos; el cuadro del manotazo del gatito ya miraba hacia el objeto).
+
+## 39. Garras marcadoras: los críticos potencian a la pandilla (versión 0.21.0)
+
+Idea del jugador: con sus garras, el gato deja el objeto "marcado" y la pandilla le pega más. Une el juego activo (tocar) con la pandilla, que más adelante hace casi todo el daño.
+
+- **Se descubre** en el librero (después del cuervo) y se compra en Mejoras: **"💢 Garras marcadoras"**. El primer nivel tiene su viñeta ("¡GARRAS MARCADORAS! Cada zarpazo crítico marca el objeto: la pandilla pega más").
+- **Cómo funciona:** cada **zarpazo crítico** marca el objeto **10 segundos** (un crítico nuevo reinicia el reloj). Mientras dura: tres **rasguños rojos brillantes** laten sobre el objeto, sale el letrero **"¡MARCADO!"**, en el medidor de daño aparece una **barrita de 10 s** con el bono, y los números de la pandilla salen **en rojo**. También funciona contra el jefe.
+- **Bono chico:** **+3 % de daño de la pandilla por nivel**, con **tope de 10 niveles** (+30 % al máximo). Cada nivel cuesta ×2.2 el anterior.
+- Sin tocar no hay críticos ni marca, así que no cuenta en las ganancias de mientras no estás. El simulador la cuenta por el tiempo que dura en promedio (con 5 toques/s y críticos, casi siempre).
+- Simulador: el jugador llega al tope cerca del refri; el ritmo casi no cambia (refri 35.5 min) y al Pepino Gigante se le quita ~90 % al llegar (antes ~74 %): premio por jugar activo.
+
+Datos: `balance.json` → `marca` (segundos, multPorNivel, max, costo). Lógica: `src/core/marca.ts`.
+

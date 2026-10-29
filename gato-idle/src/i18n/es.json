@@ -9,7 +9,8 @@
     "dps": "daño/s",
     "dpsGato": "Gato",
     "dpsAliados": "Pandilla",
-    "racha": "¡EN RACHA!"
+    "racha": "¡EN RACHA!",
+    "marcado": "¡MARCADO!"
   },
   "tutorial": {
     "tocar": "Psst, humano. Toca la pantalla y le doy un manotazo a lo que esté en la mesa.",
@@ -120,7 +121,11 @@
     "embestida": "¡EMBESTIDA!",
     "comprar": "Comprar",
     "valorMudanza": "🚚 ¡Mudanza! El dueño estrena casa: {objeto}",
-    "esperaMudanza": "El dueño ya no tiene dónde poner más cosas… Junta seguidores y visualizaciones para mudarse (📱 Canal)."
+    "esperaMudanza": "El dueño ya no tiene dónde poner más cosas… Junta seguidores y visualizaciones para mudarse (📱 Canal).",
+    "marca": "Garras marcadoras",
+    "marcaEfecto": "Un crítico marca el objeto {s} s: pandilla {actual} → {siguiente}",
+    "marcaMax": "Un crítico marca el objeto {s} s: pandilla {actual} (máximo)",
+    "max": "Máx."
   },
   "ajustes": {
     "sonido": "Sonido",
@@ -205,7 +210,8 @@
     "critico": "Garras afiladas",
     "danioCritico": "Sombrero ridículo",
     "saco": "Saco de jefe",
-    "canal": "El canal del dueño"
+    "canal": "El canal del dueño",
+    "marca": "Garras marcadoras"
   },
   "laboratorio": {
     "titulo": "Investigación gatuna",
@@ -380,6 +386,10 @@
     "mudanza": {
       "titulo": "¡NOS MUDAMOS!",
       "texto": "El dueño se hizo famoso: casa nueva, cosas nuevas que tirar"
+    },
+    "marca": {
+      "titulo": "¡GARRAS MARCADORAS!",
+      "texto": "Cada zarpazo crítico marca el objeto: la pandilla pega más"
     }
   },
   "offline": {

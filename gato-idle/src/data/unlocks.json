@@ -11,6 +11,7 @@
   { "id": "aliado:perico",  "condicion": { "objeto": "consola" } },
   { "id": "saco",           "condicion": { "objeto": "tv" } },
   { "id": "aliado:cuervo",  "condicion": { "objeto": "mesa" } },
+  { "id": "marca",          "condicion": { "objeto": "librero" } },
   { "id": "aliado:mapache", "condicion": { "objeto": "tostadora" } },
   { "id": "canal",          "condicion": { "objeto": "cafetera" } },
   { "id": "aliado:cabra",   "condicion": { "objeto": "lavadora" } }

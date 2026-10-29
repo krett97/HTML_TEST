@@ -89,6 +89,8 @@ function restartRun(state: GameState, data: GameData): void {
   state.nivelCritico = 0;
   state.nivelDanioCritico = 0;
   state.nivelSaco = 0;
+  state.nivelMarca = 0;
+  state.marcaHasta = 0;
   state.danioObjeto = ZERO;
   state.stats.roturasPartida = 0;
   state.stats.vistasVideo = 0;
