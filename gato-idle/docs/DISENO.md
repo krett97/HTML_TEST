@@ -877,3 +877,12 @@ Al inicio todo se rompía en 1 o 2 golpes. Subir solo la vida no servía: la Fue
 - **Seguidores**: `escalaSeguidores` 156250 → 93000 (19 en el primer video, como en 0.22).
 
 Simulador (5 toques/s): de la taza a la tele, 2–5 golpes por objeto (antes 1–3); la lámpara a los 11.9 min (antes 8.5), el refri a los 33.7 (antes 35.5); primer video +19 seguidores y +77K visualizaciones, y la mudanza tras la vuelta 5, igual que antes.
+
+## 42. Cuartos con arte de PixelLab (versión 0.24.0)
+
+Los 8 cuartos dejan los rectángulos y usan arte de PixelLab (`src/assets/arte`): `pared_<cuarto>` y `piso_<cuarto>` (texturas de 64×64 que se repiten a lo ancho del canvas, `TileSprite`), `ventana_<cuarto>`, `cuadro_<cuarto>` (reloj, retrato del gato, espejo, el dueño con su celular, repisa de detergentes, botón de "play", tablero de herramientas) y `mueble_<cuarto>_<superficie>` (barra, mesa de centro, mueble de la tele, repisa e inodoro del baño, cama, escritorios, mesa del jardín, repisa del estudio). Lo que no tenga PNG se sigue dibujando con rectángulos (`game/places.ts`), con las mismas medidas.
+
+- **Texturas que se repiten:** pixflux dibuja "escenas" (sillones, lavadoras) cuando se le pide una textura. Funciona darle un patrón base ya repetible (`tools/arte/bases.py`: losetas, tablas, tapiz, espuma) como `init_image` con fuerza 60: PixelLab le pone detalle sin romper la repetición. Si queda una línea en la unión, `tools/arte/sincostura.py` recorre la imagen medio tamaño y PixelLab repinta la cruz del centro (inpaint). Las paredes muy brillantes (cocina, baño, recámara) se oscurecieron un poco para que el gato y los números resalten.
+- **Muebles a su tamaño natural:** estirar pixel art deja píxeles de distinto tamaño, así que cada mueble se usa tal cual (recortado a su contorno) y la superficie toma sus medidas: ancho y alto de la cubierta (`FURNITURE` en `places.ts`). La cama sobresale 13 por la cabecera. El cuervo y el perico se paran arriba de la ventana y del cuadro según el alto del dibujo.
+- **Jardín:** la barda es una franja junto al pasto y arriba sigue el cielo; el árbol (rama del cuervo) y la casita de pájaros siguen dibujados.
+- Recetas en `tools/arte/cuartos.json` y `tools/arte/muebles.json` (se generan con `tools/arte/generar.py`).

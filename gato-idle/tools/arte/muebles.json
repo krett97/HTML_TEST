@@ -1,0 +1,170 @@
+[
+ {
+  "name": "cocina_barra",
+  "desc": "long wooden kitchen counter with cabinet doors, small metal handles and a light grey stone countertop",
+  "w": 312,
+  "h": 100,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game sprite, straight side view, flat empty top surface with nothing on it, bold dark outline, cozy cartoon, vibrant colors, isolated, no shadow",
+  "transparent": true,
+  "guidance": 7
+ },
+ {
+  "name": "sala_mesa",
+  "desc": "long low wooden coffee table with short legs",
+  "w": 280,
+  "h": 56,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game sprite, straight side view, flat empty top surface with nothing on it, bold dark outline, cozy cartoon, vibrant colors, isolated, no shadow",
+  "transparent": true,
+  "guidance": 7
+ },
+ {
+  "name": "sala_mueble",
+  "desc": "long low wooden TV stand cabinet with two drawers and gold knobs",
+  "w": 272,
+  "h": 68,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game sprite, straight side view, flat empty top surface with nothing on it, bold dark outline, cozy cartoon, vibrant colors, isolated, no shadow",
+  "transparent": true,
+  "guidance": 7
+ },
+ {
+  "name": "bano_repisa",
+  "desc": "long thin white floating bathroom wall shelf with two small metal brackets",
+  "w": 248,
+  "h": 32,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game sprite, straight side view, flat empty top surface with nothing on it, bold dark outline, cozy cartoon, vibrant colors, isolated, no shadow",
+  "transparent": true,
+  "guidance": 7
+ },
+ {
+  "name": "bano_inodoro",
+  "desc": "white toilet seen from the side, with tank",
+  "w": 56,
+  "h": 64,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game sprite, straight side view, flat empty top surface with nothing on it, bold dark outline, cozy cartoon, vibrant colors, isolated, no shadow",
+  "transparent": true,
+  "guidance": 7
+ },
+ {
+  "name": "recamara_cama",
+  "desc": "long single bed seen from the side, wooden frame, low headboard on the left, white sheet, blue blanket and a pillow on the left",
+  "w": 304,
+  "h": 84,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game sprite, straight side view, flat empty top surface with nothing on it, bold dark outline, cozy cartoon, vibrant colors, isolated, no shadow",
+  "transparent": true,
+  "guidance": 7
+ },
+ {
+  "name": "recamara_escritorio",
+  "desc": "long grey wooden desk with drawers on the right side",
+  "w": 276,
+  "h": 80,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game sprite, straight side view, flat empty top surface with nothing on it, bold dark outline, cozy cartoon, vibrant colors, isolated, no shadow",
+  "transparent": true,
+  "guidance": 7
+ },
+ {
+  "name": "jardin_mesa",
+  "desc": "long white garden table, metal legs",
+  "w": 280,
+  "h": 56,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game sprite, straight side view, flat empty top surface with nothing on it, bold dark outline, cozy cartoon, vibrant colors, isolated, no shadow",
+  "transparent": true,
+  "guidance": 7
+ },
+ {
+  "name": "estudio_escritorio",
+  "desc": "long black gamer desk with pink neon led strip on the edge",
+  "w": 276,
+  "h": 80,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game sprite, straight side view, flat empty top surface with nothing on it, bold dark outline, cozy cartoon, vibrant colors, isolated, no shadow",
+  "transparent": true,
+  "guidance": 7
+ },
+ {
+  "name": "estudio_repisa",
+  "desc": "long thin black floating wall shelf with pink neon led light underneath",
+  "w": 248,
+  "h": 32,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game sprite, straight side view, flat empty top surface with nothing on it, bold dark outline, cozy cartoon, vibrant colors, isolated, no shadow",
+  "transparent": true,
+  "guidance": 7
+ },
+ {
+  "name": "estudio_escritorio",
+  "desc": "black gaming desk with a pink neon light strip along the front edge and a drawer unit on the right, whole desk visible with margin around it",
+  "w": 276,
+  "h": 84,
+  "seeds": [
+   4,
+   5,
+   6
+  ],
+  "style": ", pixel art game sprite, straight side view, flat empty top surface with nothing on it, bold dark outline, cozy cartoon, vibrant colors, isolated, no shadow",
+  "transparent": true,
+  "guidance": 7
+ },
+ {
+  "name": "estudio_repisa",
+  "desc": "black wooden wall shelf plank with pink glowing light under it, whole shelf visible with margin around it",
+  "w": 248,
+  "h": 40,
+  "seeds": [
+   4,
+   5,
+   6
+  ],
+  "style": ", pixel art game sprite, straight side view, flat empty top surface with nothing on it, bold dark outline, cozy cartoon, vibrant colors, isolated, no shadow",
+  "transparent": true,
+  "guidance": 7
+ }
+]

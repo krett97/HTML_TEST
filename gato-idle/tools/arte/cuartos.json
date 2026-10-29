@@ -1,0 +1,535 @@
+[
+ {
+  "name": "cocina_pared",
+  "desc": "teal kitchen wall tiles with small white grout lines",
+  "w": 64,
+  "h": 64,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art texture, flat front view, cozy cartoon game, seamless repeating pattern, fills the whole image",
+  "transparent": false
+ },
+ {
+  "name": "cocina_piso",
+  "desc": "grey and white checkered kitchen floor tiles",
+  "w": 64,
+  "h": 64,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art texture, flat front view, cozy cartoon game, seamless repeating pattern, fills the whole image",
+  "transparent": false
+ },
+ {
+  "name": "cocina_ventana",
+  "desc": "kitchen window with white frame, yellow curtains and blue sky outside",
+  "w": 96,
+  "h": 80,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game sprite, front view, bold outline, cozy cartoon, vibrant colors, isolated, no shadow"
+ },
+ {
+  "name": "cocina_cuadro",
+  "desc": "round white kitchen wall clock",
+  "w": 64,
+  "h": 48,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game sprite, front view, bold outline, cozy cartoon, vibrant colors, isolated, no shadow"
+ },
+ {
+  "name": "sala_pared",
+  "desc": "purple living room wallpaper with subtle diamond pattern",
+  "w": 64,
+  "h": 64,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art texture, flat front view, cozy cartoon game, seamless repeating pattern, fills the whole image",
+  "transparent": false
+ },
+ {
+  "name": "sala_piso",
+  "desc": "warm wooden floor planks",
+  "w": 64,
+  "h": 64,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art texture, flat front view, cozy cartoon game, seamless repeating pattern, fills the whole image",
+  "transparent": false
+ },
+ {
+  "name": "sala_ventana",
+  "desc": "living room window with wooden frame and blue sky outside",
+  "w": 96,
+  "h": 80,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game sprite, front view, bold outline, cozy cartoon, vibrant colors, isolated, no shadow"
+ },
+ {
+  "name": "sala_cuadro",
+  "desc": "framed painting of a fat orange cat in a gold frame",
+  "w": 64,
+  "h": 48,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game sprite, front view, bold outline, cozy cartoon, vibrant colors, isolated, no shadow"
+ },
+ {
+  "name": "bano_pared",
+  "desc": "light blue bathroom wall tiles",
+  "w": 64,
+  "h": 64,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art texture, flat front view, cozy cartoon game, seamless repeating pattern, fills the whole image",
+  "transparent": false
+ },
+ {
+  "name": "bano_piso",
+  "desc": "white and light grey bathroom floor tiles",
+  "w": 64,
+  "h": 64,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art texture, flat front view, cozy cartoon game, seamless repeating pattern, fills the whole image",
+  "transparent": false
+ },
+ {
+  "name": "bano_ventana",
+  "desc": "small frosted bathroom window with white frame",
+  "w": 96,
+  "h": 80,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game sprite, front view, bold outline, cozy cartoon, vibrant colors, isolated, no shadow"
+ },
+ {
+  "name": "bano_cuadro",
+  "desc": "round bathroom mirror with a white frame",
+  "w": 64,
+  "h": 48,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game sprite, front view, bold outline, cozy cartoon, vibrant colors, isolated, no shadow"
+ },
+ {
+  "name": "recamara_pared",
+  "desc": "pink bedroom wallpaper with tiny hearts",
+  "w": 64,
+  "h": 64,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art texture, flat front view, cozy cartoon game, seamless repeating pattern, fills the whole image",
+  "transparent": false
+ },
+ {
+  "name": "recamara_piso",
+  "desc": "soft maroon bedroom carpet",
+  "w": 64,
+  "h": 64,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art texture, flat front view, cozy cartoon game, seamless repeating pattern, fills the whole image",
+  "transparent": false
+ },
+ {
+  "name": "recamara_ventana",
+  "desc": "bedroom window with pink curtains and night sky with stars",
+  "w": 96,
+  "h": 80,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game sprite, front view, bold outline, cozy cartoon, vibrant colors, isolated, no shadow"
+ },
+ {
+  "name": "recamara_cuadro",
+  "desc": "framed selfie photo of a young man with a phone",
+  "w": 64,
+  "h": 48,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game sprite, front view, bold outline, cozy cartoon, vibrant colors, isolated, no shadow"
+ },
+ {
+  "name": "lavado_pared",
+  "desc": "grey concrete laundry room wall",
+  "w": 64,
+  "h": 64,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art texture, flat front view, cozy cartoon game, seamless repeating pattern, fills the whole image",
+  "transparent": false
+ },
+ {
+  "name": "lavado_piso",
+  "desc": "grey laundry room floor tiles",
+  "w": 64,
+  "h": 64,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art texture, flat front view, cozy cartoon game, seamless repeating pattern, fills the whole image",
+  "transparent": false
+ },
+ {
+  "name": "lavado_ventana",
+  "desc": "small laundry room window with grey frame",
+  "w": 96,
+  "h": 80,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game sprite, front view, bold outline, cozy cartoon, vibrant colors, isolated, no shadow"
+ },
+ {
+  "name": "lavado_cuadro",
+  "desc": "wooden wall shelf with colorful detergent bottles",
+  "w": 64,
+  "h": 48,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game sprite, front view, bold outline, cozy cartoon, vibrant colors, isolated, no shadow"
+ },
+ {
+  "name": "jardin_pared",
+  "desc": "wooden garden fence planks under a blue sky",
+  "w": 64,
+  "h": 64,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art texture, flat front view, cozy cartoon game, seamless repeating pattern, fills the whole image",
+  "transparent": false
+ },
+ {
+  "name": "jardin_piso",
+  "desc": "green grass lawn with small flowers",
+  "w": 64,
+  "h": 64,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art texture, flat front view, cozy cartoon game, seamless repeating pattern, fills the whole image",
+  "transparent": false
+ },
+ {
+  "name": "jardin_ventana",
+  "desc": "wooden birdhouse on a tree branch",
+  "w": 96,
+  "h": 80,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game sprite, front view, bold outline, cozy cartoon, vibrant colors, isolated, no shadow"
+ },
+ {
+  "name": "jardin_cuadro",
+  "desc": "wooden garden sign that says CAT",
+  "w": 64,
+  "h": 48,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game sprite, front view, bold outline, cozy cartoon, vibrant colors, isolated, no shadow"
+ },
+ {
+  "name": "estudio_pared",
+  "desc": "dark purple acoustic foam panels on a studio wall",
+  "w": 64,
+  "h": 64,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art texture, flat front view, cozy cartoon game, seamless repeating pattern, fills the whole image",
+  "transparent": false
+ },
+ {
+  "name": "estudio_piso",
+  "desc": "dark wooden studio floor",
+  "w": 64,
+  "h": 64,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art texture, flat front view, cozy cartoon game, seamless repeating pattern, fills the whole image",
+  "transparent": false
+ },
+ {
+  "name": "estudio_ventana",
+  "desc": "studio window with blinds and city lights at night",
+  "w": 96,
+  "h": 80,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game sprite, front view, bold outline, cozy cartoon, vibrant colors, isolated, no shadow"
+ },
+ {
+  "name": "estudio_cuadro",
+  "desc": "neon pink play button sign poster",
+  "w": 64,
+  "h": 48,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game sprite, front view, bold outline, cozy cartoon, vibrant colors, isolated, no shadow"
+ },
+ {
+  "name": "cochera_pared",
+  "desc": "grey cinder block garage wall",
+  "w": 64,
+  "h": 64,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art texture, flat front view, cozy cartoon game, seamless repeating pattern, fills the whole image",
+  "transparent": false
+ },
+ {
+  "name": "cochera_piso",
+  "desc": "grey concrete garage floor with oil stains",
+  "w": 64,
+  "h": 64,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art texture, flat front view, cozy cartoon game, seamless repeating pattern, fills the whole image",
+  "transparent": false
+ },
+ {
+  "name": "cochera_ventana",
+  "desc": "small high garage window with dusty glass",
+  "w": 96,
+  "h": 80,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game sprite, front view, bold outline, cozy cartoon, vibrant colors, isolated, no shadow"
+ },
+ {
+  "name": "cochera_cuadro",
+  "desc": "pegboard with hanging tools: hammer, wrench, screwdriver",
+  "w": 64,
+  "h": 48,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game sprite, front view, bold outline, cozy cartoon, vibrant colors, isolated, no shadow"
+ },
+ {
+  "name": "cocina_piso_k60",
+  "desc": "grey and dark grey checkered kitchen floor tiles with shine and grout",
+  "w": 64,
+  "h": 64,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art texture, flat front view, cozy cartoon game, seamless repeating tile, even lighting, no vignette, fills the whole image",
+  "transparent": false,
+  "init": "tools/arte/bases/base_cocina_piso.png",
+  "strength": 60,
+  "guidance": 6
+ },
+ {
+  "name": "sala_pared_k60",
+  "desc": "purple living room wallpaper with small diamond pattern, subtle shading",
+  "w": 64,
+  "h": 64,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art texture, flat front view, cozy cartoon game, seamless repeating tile, even lighting, no vignette, fills the whole image",
+  "transparent": false,
+  "init": "tools/arte/bases/base_sala_pared.png",
+  "strength": 60,
+  "guidance": 6
+ },
+ {
+  "name": "sala_piso_k60",
+  "desc": "warm wooden floor planks with wood grain",
+  "w": 64,
+  "h": 64,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art texture, flat front view, cozy cartoon game, seamless repeating tile, even lighting, no vignette, fills the whole image",
+  "transparent": false,
+  "init": "tools/arte/bases/base_sala_piso.png",
+  "strength": 60,
+  "guidance": 6
+ },
+ {
+  "name": "bano_piso_k60",
+  "desc": "blue grey bathroom floor tiles with grout and shine",
+  "w": 64,
+  "h": 64,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art texture, flat front view, cozy cartoon game, seamless repeating tile, even lighting, no vignette, fills the whole image",
+  "transparent": false,
+  "init": "tools/arte/bases/base_bano_piso.png",
+  "strength": 60,
+  "guidance": 6
+ },
+ {
+  "name": "recamara_piso_k60",
+  "desc": "soft mauve bedroom carpet with tiny dots",
+  "w": 64,
+  "h": 64,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art texture, flat front view, cozy cartoon game, seamless repeating tile, even lighting, no vignette, fills the whole image",
+  "transparent": false,
+  "init": "tools/arte/bases/base_recamara_piso.png",
+  "strength": 60,
+  "guidance": 6
+ },
+ {
+  "name": "lavado_pared_k60",
+  "desc": "dark grey laundry room wall tiles with grout",
+  "w": 64,
+  "h": 64,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art texture, flat front view, cozy cartoon game, seamless repeating tile, even lighting, no vignette, fills the whole image",
+  "transparent": false,
+  "init": "tools/arte/bases/base_lavado_pared.png",
+  "strength": 60,
+  "guidance": 6
+ },
+ {
+  "name": "lavado_piso_k60",
+  "desc": "grey stone floor tiles",
+  "w": 64,
+  "h": 64,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art texture, flat front view, cozy cartoon game, seamless repeating tile, even lighting, no vignette, fills the whole image",
+  "transparent": false,
+  "init": "tools/arte/bases/base_lavado_piso.png",
+  "strength": 60,
+  "guidance": 6
+ },
+ {
+  "name": "jardin_piso_k60",
+  "desc": "green garden grass with tiny blades and a few small flowers",
+  "w": 64,
+  "h": 64,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art texture, flat front view, cozy cartoon game, seamless repeating tile, even lighting, no vignette, fills the whole image",
+  "transparent": false,
+  "init": "tools/arte/bases/base_jardin_piso.png",
+  "strength": 60,
+  "guidance": 6
+ },
+ {
+  "name": "estudio_pared_k60",
+  "desc": "dark purple acoustic foam panels, studio wall",
+  "w": 64,
+  "h": 64,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art texture, flat front view, cozy cartoon game, seamless repeating tile, even lighting, no vignette, fills the whole image",
+  "transparent": false,
+  "init": "tools/arte/bases/base_estudio_pared.png",
+  "strength": 60,
+  "guidance": 6
+ },
+ {
+  "name": "estudio_piso_k60",
+  "desc": "dark wooden floor planks with wood grain",
+  "w": 64,
+  "h": 64,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art texture, flat front view, cozy cartoon game, seamless repeating tile, even lighting, no vignette, fills the whole image",
+  "transparent": false,
+  "init": "tools/arte/bases/base_estudio_piso.png",
+  "strength": 60,
+  "guidance": 6
+ },
+ {
+  "name": "cochera_piso_k60",
+  "desc": "grey concrete garage floor with small cracks and stains",
+  "w": 64,
+  "h": 64,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art texture, flat front view, cozy cartoon game, seamless repeating tile, even lighting, no vignette, fills the whole image",
+  "transparent": false,
+  "init": "tools/arte/bases/base_cochera_piso.png",
+  "strength": 60,
+  "guidance": 6
+ }
+]

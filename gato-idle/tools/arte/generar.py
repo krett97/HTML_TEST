@@ -1,6 +1,6 @@
 # Genera candidatos con PixelLab (pixflux, 1 generación cada uno) en paralelo y arma un montaje para elegir.
 # Uso: python3 -I tools/arte/generar.py tools/arte/personajes.json /tmp/salida
-# Lotes: [{"name", "desc", "w", "h", "seeds": [...], opcionales "style", "direction", "init", "strength"}]
+# Lotes: [{"name", "desc", "w", "h", "seeds": [...], opcionales "style", "direction", "init", "strength", "transparent", "guidance"}]
 # Los elegidos están en tools/arte/elegidos.json; se recortan y se copian a src/assets/arte.
 import base64, json, os, sys
 from concurrent.futures import ThreadPoolExecutor
@@ -15,7 +15,7 @@ def run(job, seed):
     path = f"{out}/{job['name']}_s{seed}.png"
     if os.path.exists(path): return path
     body = {'description': job['desc'] + job.get('style', STYLE), 'image_size': {'width': job['w'], 'height': job['h']},
-            'no_background': True, 'view': 'side', 'outline': 'single color black outline', 'seed': seed,
+            'no_background': job.get('transparent', True), 'view': job.get('view', 'side'), 'outline': 'single color black outline', 'seed': seed,
             'text_guidance_scale': job.get('guidance', 8)}
     if job.get('direction'): body['direction'] = job['direction']
     if job.get('init'):

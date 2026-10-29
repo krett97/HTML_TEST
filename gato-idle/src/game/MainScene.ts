@@ -10,7 +10,7 @@ import { t } from '../i18n';
 import { loadArt } from './art';
 import { createPlaceholders } from './placeholders';
 import { ART, FLOOR_H, SCENE_WIDTH } from './sceneSize';
-import { drawRoom, drawSurface, PICTURE_ABOVE_FLOOR, placeOf, WINDOW_ABOVE_FLOOR, type Place } from './places';
+import { drawRoom, drawSurface, furnitureArt, GARDEN_STRIP_H, PICTURE_ABOVE_FLOOR, placeOf, WINDOW_ABOVE_FLOOR, type Place, type RoomArt } from './places';
 import { catPortrait } from './catPortrait';
 import { toolLook, type ToolLook } from './sprites';
 import { ALLY_ICONS, ALLY_NUMBER_COLORS } from '../ui/allyIcons';
@@ -77,6 +77,15 @@ interface AllyVisual {
 
 export class MainScene extends Phaser.Scene {
   private background!: Phaser.GameObjects.Graphics;
+  /** Arte del cuarto (PixelLab): pared y piso que se repiten, ventana, cuadro y mueble. */
+  private room!: {
+    pared: Phaser.GameObjects.TileSprite;
+    piso: Phaser.GameObjects.TileSprite;
+    ventana: Phaser.GameObjects.Image;
+    cuadro: Phaser.GameObjects.Image;
+    mueble: Phaser.GameObjects.Image;
+    inodoro: Phaser.GameObjects.Image;
+  };
   private scratches!: Phaser.GameObjects.Graphics;
   /** Rasguños brillantes de las Garras marcadoras (se dibujan cada cuadro mientras dura la marca). */
   private markScratches!: Phaser.GameObjects.Graphics;
@@ -138,7 +147,10 @@ export class MainScene extends Phaser.Scene {
     createPlaceholders(this, this.controller.data.objects);
     this.cameras.main.setOrigin(0, 0).setZoom(ART);
 
-    this.background = this.add.graphics();
+    this.background = this.add.graphics().setDepth(-2);
+    const tile = () => this.add.tileSprite(0, 0, 1, 1, '__DEFAULT').setOrigin(0, 0).setTileScale(S).setDepth(-3).setVisible(false);
+    const piece = () => this.add.image(0, 0, '__DEFAULT').setOrigin(0.5, 1).setScale(S).setDepth(-1).setVisible(false);
+    this.room = { pared: tile(), piso: tile(), ventana: piece(), cuadro: piece(), mueble: piece().setOrigin(0, 0), inodoro: piece() };
     this.cat = this.add.image(0, 0, 'gato').setOrigin(0, 1).setScale(S).setDepth(2);
     this.vehicle = this.add.image(0, 0, 'carrito').setOrigin(0.5, 1).setScale(S).setDepth(2.5).setVisible(false);
     this.hat = this.add.image(0, 0, 'sombrero').setOrigin(0.5, 1).setScale(S).setDepth(2.8).setVisible(false);
@@ -262,8 +274,40 @@ export class MainScene extends Phaser.Scene {
 
   private drawBackground(): void {
     const g = this.background.clear();
-    drawRoom(g, this.place.room, this.cameras.main.scrollX, this.worldW, this.worldH, this.floorY);
-    drawSurface(g, this.place.surface, this.floorY, this.place.room);
+    const { room, surface } = this.place;
+    const left = this.cameras.main.scrollX;
+    const has = (key: string) => this.textures.exists(key);
+    const art: RoomArt = { pared: has(`pared_${room}`), piso: has(`piso_${room}`), ventana: has(`ventana_${room}`), cuadro: has(`cuadro_${room}`) };
+    const r = this.room;
+    // Pared y piso: se repiten a lo ancho de todo el canvas. La barda del jardín es solo una franja junto al piso.
+    const wallTop = room === 'jardin' ? this.floorY - GARDEN_STRIP_H : 0;
+    r.pared.setVisible(art.pared);
+    if (art.pared) r.pared.setTexture(`pared_${room}`).setPosition(left, wallTop).setSize(this.worldW, this.floorY - wallTop);
+    r.piso.setVisible(art.piso);
+    if (art.piso) r.piso.setTexture(`piso_${room}`).setPosition(left, this.floorY).setSize(this.worldW, this.worldH - this.floorY);
+    // Ventana y cuadro: abajo al centro de su lugar (el cuervo y el perico se paran encima).
+    const windowY = this.floorY - WINDOW_ABOVE_FLOOR;
+    const pictureY = this.floorY - PICTURE_ABOVE_FLOOR;
+    r.ventana.setVisible(art.ventana && room !== 'jardin' && windowY >= 6);
+    if (r.ventana.visible) r.ventana.setTexture(`ventana_${room}`).setPosition(46, windowY + 40);
+    r.cuadro.setVisible(art.cuadro && room !== 'jardin' && pictureY >= 6);
+    if (r.cuadro.visible) r.cuadro.setTexture(`cuadro_${room}`).setPosition(131, pictureY + 22);
+    drawRoom(g, room, left, this.worldW, this.worldH, this.floorY, art);
+    // El mueble: su cubierta queda a la altura de la superficie.
+    const mueble = furnitureArt(room, surface);
+    const conMueble = mueble !== null && has(mueble.key);
+    r.mueble.setVisible(conMueble);
+    if (conMueble) r.mueble.setTexture(mueble.key).setPosition(surface.left, this.floorY - surface.height - mueble.sobresale);
+    const inodoro = room === 'bano' && surface.kind === 'repisa' && has('mueble_inodoro');
+    r.inodoro.setVisible(inodoro);
+    if (inodoro) r.inodoro.setTexture('mueble_inodoro').setPosition(73, this.floorY);
+    if (!conMueble) drawSurface(g, surface, this.floorY, room, inodoro);
+  }
+
+  /** Dónde se paran el cuervo (ventana) y el perico (cuadro): arriba del dibujo, si tiene arte. */
+  private perchTop(kind: 'ventana' | 'cuadro', fallback: number): number {
+    const image = this.room[kind];
+    return image.visible ? image.y - this.heightOf(image) : fallback;
   }
 
   /** Cambia de cuarto si el objeto nuevo está en otro lugar (con un fundido corto). */
@@ -472,11 +516,11 @@ export class MainScene extends Phaser.Scene {
         return { x: 66, y: floorY + 4 };
       case 'perico': {
         const pictureY = floorY - PICTURE_ABOVE_FLOOR;
-        return pictureY >= 18 ? { x: 125, y: pictureY + 1 } : { x: 132, y: floorY - 78 };
+        return pictureY >= 18 ? { x: 125, y: this.perchTop('cuadro', pictureY) + 1 } : { x: 132, y: floorY - 78 };
       }
       case 'cuervo': {
         const windowY = floorY - WINDOW_ABOVE_FLOOR;
-        return windowY >= 16 ? { x: 40, y: windowY + 1 } : { x: 100, y: floorY - 84 };
+        return windowY >= 16 ? { x: 40, y: this.perchTop('ventana', windowY) + 1 } : { x: 100, y: floorY - 84 };
       }
       case 'cabra':
         return { x: 162, y: floorY + 5 };
