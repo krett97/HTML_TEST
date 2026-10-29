@@ -313,7 +313,7 @@ export class MainScene extends Phaser.Scene {
   /** Cambia de cuarto si el objeto nuevo está en otro lugar (con un fundido corto). */
   private enterPlace(animate: boolean): void {
     const next = placeOf(this.objectDef.lugar);
-    if (next.room === this.place.room && next.surface === this.place.surface) return;
+    if (next.room === this.place.room && next.surface.kind === this.place.surface.kind) return;
     this.place = next;
     this.drawBackground();
     if (animate) this.cameras.main.fadeIn(280, 18, 11, 22);

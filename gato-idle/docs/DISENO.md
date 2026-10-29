@@ -886,3 +886,5 @@ Los 8 cuartos dejan los rectángulos y usan arte de PixelLab (`src/assets/arte`)
 - **Muebles a su tamaño natural:** estirar pixel art deja píxeles de distinto tamaño, así que cada mueble se usa tal cual (recortado a su contorno) y la superficie toma sus medidas: ancho y alto de la cubierta (`FURNITURE` en `places.ts`). La cama sobresale 13 por la cabecera. El cuervo y el perico se paran arriba de la ventana y del cuadro según el alto del dibujo.
 - **Jardín:** la barda es una franja junto al pasto y arriba sigue el cielo; el árbol (rama del cuervo) y la casita de pájaros siguen dibujados.
 - Recetas en `tools/arte/cuartos.json` y `tools/arte/muebles.json` (se generan con `tools/arte/generar.py`).
+
+**0.24.1:** se quita el fundido a negro en cada rotura. Con las medidas de los muebles, `placeOf` arma una superficie nueva cada vez y la escena la comparaba por referencia: creía que era otro cuarto. Ahora compara cuarto y tipo de superficie.
