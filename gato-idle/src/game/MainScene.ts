@@ -152,6 +152,7 @@ export class MainScene extends Phaser.Scene {
         this.popNumber(this.object.x, this.object.y - this.heightOf(this.object) - 10, 'dinero grande', `+${this.controller.formatMoney(dinero)}`, { coin: true });
       }),
       this.controller.events.on('video', ({ video }) => this.onVideo(video.seguidores, video.viral)),
+      this.controller.events.on('mudanza', ({ casa, primeraVez }) => this.onMove(casa, primeraVez)),
       this.controller.events.on('offline', ({ dinero }) => {
         // Lluvia de monedas al cobrar lo de mientras no estabas.
         this.popNumber(this.object.x, this.object.y - this.heightOf(this.object) - 10, 'dinero grande', `+${this.controller.formatMoney(dinero)}`, { coin: true });
@@ -198,7 +199,7 @@ export class MainScene extends Phaser.Scene {
   private drawBackground(): void {
     const g = this.background.clear();
     drawRoom(g, this.place.room, this.cameras.main.scrollX, this.worldW, this.worldH, this.floorY);
-    drawSurface(g, this.place.surface, this.floorY);
+    drawSurface(g, this.place.surface, this.floorY, this.place.room);
   }
 
   /** Cambia de cuarto si el objeto nuevo está en otro lugar (con un fundido corto). */
@@ -542,6 +543,15 @@ export class MainScene extends Phaser.Scene {
       this.toast(tr('avisos.duenoGraba'));
       this.cameras.main.flash(120, 255, 241, 224); // flash del celular
     });
+  }
+
+  /** El dueño se mudó: viñeta con el dueño (la primera vez), aviso y destello; el cuarto nuevo ya lo puso placeObject. */
+  private onMove(casa: string, primeraVez: boolean): void {
+    const tr = get(t);
+    if (primeraVez) this.comicPanel('mudanza', this.textures.getBase64('duenio'), tr('vineta.mudanza.titulo'), tr('vineta.mudanza.texto'));
+    this.toast(tr('avisos.mudanza', { casa: tr(`casas.${casa}`) }));
+    this.controller.playSound('descubrimiento');
+    this.cameras.main.flash(200, 255, 241, 224);
   }
 
   /** Se subió el video: festejo, y si se hizo viral, confeti y sacudida. */

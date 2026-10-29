@@ -19,10 +19,10 @@ function newState() {
 }
 
 describe('Canal: subir el video es el reinicio', () => {
-  it('seguidores = ⌊√(dinero de la partida / escala)⌋', () => {
+  it('seguidores = ⌊(dinero de la partida / escala)^⅓⌋', () => {
     const escala = gameData.balance.canal.escalaSeguidores;
-    expect(followersFor(num(escala * 100), gameData)).toBe(10);
-    expect(followersFor(num(escala * 99), gameData)).toBe(9);
+    expect(followersFor(num(escala * 1000), gameData)).toBe(10);
+    expect(followersFor(num(escala * 999), gameData)).toBe(9);
   });
 
   it('no se puede subir antes de descubrir el canal ni antes de llegar lo bastante lejos', () => {

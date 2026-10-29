@@ -26,6 +26,19 @@ export interface ObjectDef {
   sprite: string;
   /** Rectángulo de color que se dibuja mientras no exista el sprite real. */
   placeholder?: PlaceholderSpec;
+  /** En qué casa está (casas.json): los de la casa siguiente llegan después de la mudanza. */
+  casa: string;
+}
+
+/**
+ * Una casa (casas.json, en orden): el departamento, la casa… La primera ya está; a cada una de
+ * las demás el dueño se muda al juntar `requisito` en el Canal (totales, nunca se gastan), y
+ * desde entonces cada partida empieza en ella con `fuerzaInicial` niveles de Fuerza.
+ */
+export interface HomeDef {
+  id: string;
+  requisito: { seguidores: number; visualizaciones: Decimal } | null;
+  fuerzaInicial: number;
 }
 
 /** Mascota que destruye sola: golpea cada `intervalo` segundos. */
@@ -60,6 +73,12 @@ export const PLACES = [
   'recamara-piso',
   'recamara-escritorio',
   'lavado-piso',
+  'jardin-mesa',
+  'jardin-piso',
+  'estudio-escritorio',
+  'estudio-repisa',
+  'estudio-piso',
+  'cochera-piso',
 ] as const;
 export type PlaceId = (typeof PLACES)[number];
 
@@ -155,8 +174,9 @@ export interface Balance {
     crecimiento: number;
   };
   canal: {
-    /** Seguidores por video = ⌊√(dinero ganado en la partida / escalaSeguidores)⌋. */
+    /** Seguidores por video = ⌊(dinero ganado en la partida / escalaSeguidores)^exponenteSeguidores⌋. */
     escalaSeguidores: number;
+    exponenteSeguidores: number;
     /** Cada seguidor da +2 % de dinero, para siempre. */
     bonoPorSeguidor: number;
     /** Visualizaciones del video por cada "vista" de la partida (stats.vistasVideo). */
@@ -200,6 +220,7 @@ export interface Balance {
 
 export interface GameData {
   objects: ObjectDef[];
+  homes: HomeDef[];
   tools: ToolDef[];
   allies: AllyDef[];
   unlocks: UnlockDef[];
@@ -210,6 +231,7 @@ export interface GameData {
 
 export interface RawGameData {
   objects: unknown;
+  casas: unknown;
   tools: unknown;
   allies: unknown;
   unlocks: unknown;
@@ -312,6 +334,23 @@ function uniqueIds(file: string, items: { id: string }[]): void {
 }
 
 export function parseGameData(raw: RawGameData): GameData {
+  const homes: HomeDef[] = asArray('casas.json', raw.casas).map((item, index) => {
+    const id = str('casas.json', item, 'id');
+    if (index === 0) return { id, requisito: null, fuerzaInicial: 0 };
+    const req = (item.requisito ?? {}) as Raw;
+    return {
+      id,
+      requisito: {
+        seguidores: positive('casas.json', req, 'seguidores').toNumber(),
+        visualizaciones: positive('casas.json', req, 'visualizaciones'),
+      },
+      fuerzaInicial: Math.floor(positive('casas.json', item, 'fuerzaInicial').toNumber()),
+    };
+  });
+  if (homes.length === 0) throw new DataError('casas.json', 'no hay casas');
+  uniqueIds('casas.json', homes);
+  const homeIds = homes.map((h) => h.id);
+
   const tools: ToolDef[] = asArray('tools.json', raw.tools).map((item) => ({ id: str('tools.json', item, 'id') }));
   if (tools.length === 0) throw new DataError('tools.json', 'no hay herramientas');
   uniqueIds('tools.json', tools);
@@ -341,10 +380,22 @@ export function parseGameData(raw: RawGameData): GameData {
       sonido: objectSound('objects.json', item),
       sprite: str('objects.json', item, 'sprite'),
       placeholder: item.placeholder as PlaceholderSpec | undefined,
+      casa: str('objects.json', item, 'casa'),
     };
   });
   uniqueIds('objects.json', objects);
   if (objects.length === 0) throw new DataError('objects.json', 'no hay objetos');
+  // Los objetos van por casa, en el orden de casas.json, y cada casa tiene al menos uno.
+  let lastHome = 0;
+  for (const obj of objects) {
+    const home = homeIds.indexOf(obj.casa);
+    if (home === -1) throw new DataError('objects.json', `"${obj.id}": la casa "${obj.casa}" no existe en casas.json`);
+    if (home < lastHome || home > lastHome + 1) {
+      throw new DataError('objects.json', `"${obj.id}": los objetos deben ir por casa, en el orden de casas.json`);
+    }
+    lastHome = home;
+  }
+  if (lastHome !== homes.length - 1) throw new DataError('objects.json', `la casa "${homeIds[homes.length - 1]}" no tiene objetos`);
 
   const objectIds = new Set(objects.map((o) => o.id));
   const allies: AllyDef[] = asArray('allies.json', raw.allies).map((item) => {
@@ -447,6 +498,7 @@ export function parseGameData(raw: RawGameData): GameData {
     },
     canal: {
       escalaSeguidores: n(canal, 'escalaSeguidores'),
+      exponenteSeguidores: Math.min(1, n(canal, 'exponenteSeguidores')),
       bonoPorSeguidor: n(canal, 'bonoPorSeguidor'),
       visualizacionesPorVista: n(canal, 'visualizacionesPorVista'),
       vistasPorSeguidor: n(canal, 'vistasPorSeguidor'),
@@ -487,5 +539,5 @@ export function parseGameData(raw: RawGameData): GameData {
     if (!skills.some((s) => s.id === id)) throw new DataError('habilidades.json', `falta la habilidad "${id}"`);
   }
 
-  return { objects, tools, allies, unlocks, research, skills, balance };
+  return { objects, homes, tools, allies, unlocks, research, skills, balance };
 }

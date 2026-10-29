@@ -8,7 +8,8 @@ import { alliesDps } from '../src/core/allies';
 import { botStep, playUntil } from '../src/core/bot';
 import { uploadVideo } from '../src/core/canal';
 import type { GameData } from '../src/core/data';
-import { currentObject, moneyPerBreak, tapDamage, tapsToBreak, valorStepsInObject } from '../src/core/economy';
+import { currentObject, moneyPerBreak, objectIndex, tapDamage, tapsToBreak, valorStepsInObject } from '../src/core/economy';
+import { lastObjectIndex } from '../src/core/mudanza';
 import { formatNum } from '../src/core/format';
 import { normalizeState } from '../src/core/normalize';
 import { claimSkill } from '../src/core/skills';
@@ -75,6 +76,8 @@ export function simulate(data: GameData, maxMinutes = MAX_MINUTES): { rows: SimR
 
 export interface RunRow {
   vuelta: number;
+  /** Casa en la que terminó la vuelta. */
+  casa: string;
   /** Minuto (desde el inicio de la vuelta) en que llega a cada objeto. */
   minutos: Record<string, number>;
   seguidores: number;
@@ -85,27 +88,40 @@ export interface RunRow {
   habilidades: string;
 }
 
+/** Objetos que se marcan en cada vuelta (los que caen entre el inicio y el último alcanzable). */
+const RUN_MARKS = ['lampara', 'tostadora', 'lavadora', 'refri', 'maceta', 'aro', 'silla', 'parrilla', 'moto', 'coche'];
+
 /**
- * Varias vueltas seguidas: juega hasta el refri, sube el video y reclama las habilidades que ya
- * alcanzó con sus seguidores y visualizaciones. Responde "¿cuánto más rápida es la segunda vuelta?".
+ * Varias vueltas seguidas: juega hasta el último objeto al que puede llegar (el refri, o el coche
+ * si ya se desbloqueó la mudanza), sube el video y reclama las habilidades que ya alcanzó con sus
+ * seguidores y visualizaciones. Responde "¿cuánto más rápida es la segunda vuelta?" y "¿cuándo
+ * se muda?".
  */
-export function simulateRuns(data: GameData, runs = 6): RunRow[] {
+export function simulateRuns(data: GameData, runs = 10): RunRow[] {
   const state = createInitialState(0);
   normalizeState(state, data);
   const rows: RunRow[] = [];
-  const marks = ['lampara', 'tostadora', 'lavadora', data.objects.at(-1)!.id];
   for (let vuelta = 1; vuelta <= runs; vuelta++) {
     const minutos: Record<string, number> = {};
     let seconds = 0;
+    const start = objectIndex(state, data);
+    const last = lastObjectIndex(state, data);
+    const marks = RUN_MARKS.filter((id) => {
+      const index = data.objects.findIndex((o) => o.id === id);
+      return index > start && index <= last;
+    });
+    if (!marks.includes(data.objects[last]!.id)) marks.push(data.objects[last]!.id);
     for (const objeto of marks) {
       seconds += playUntil(state, data, { objeto }, TAPS_PER_SECOND);
       minutos[objeto] = seconds / 60;
     }
+    const casa = data.homes[state.casa]!.id;
     const video = uploadVideo(state, data, 0, () => 0.5)!;
     // Reclama todos los niveles de habilidad que ya alcanzó.
     while (data.skills.some((d) => claimSkill(state, data, d.id)));
     rows.push({
       vuelta,
+      casa,
       minutos,
       seguidores: video.seguidores,
       visualizaciones: formatNum(video.visualizaciones),
@@ -129,10 +145,10 @@ function main(): void {
   for (const row of rows) console.log(line(row));
   console.log(`\nCompras: ${Object.entries(counts).map(([k, v]) => `${k} ×${v}`).join(', ')}`);
 
-  console.log('\nVueltas (sube el video al llegar al último objeto y gasta en habilidades):');
+  console.log('\nVueltas (sube el video al llegar al último objeto alcanzable y reclama habilidades):');
   for (const run of simulateRuns(gameData)) {
     const marks = Object.entries(run.minutos).map(([obj, min]) => `${obj} ${min.toFixed(1)}`).join(' · ');
-    console.log(`  ${run.vuelta}. ${marks} → +${run.seguidores} seg, +${run.visualizaciones} vis (total ${run.totalSeguidores} / ${run.totalVisualizaciones}) | ${run.habilidades}`);
+    console.log(`  ${run.vuelta}. [${run.casa}] ${marks} → +${run.seguidores} seg, +${run.visualizaciones} vis (total ${run.totalSeguidores} / ${run.totalVisualizaciones}) | ${run.habilidades}`);
   }
 }
 

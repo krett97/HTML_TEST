@@ -175,6 +175,9 @@
           <button type="button" class="btn" onclick={() => game.testResearch(true)}>{$t('pruebas.todasInvestigaciones')}</button>
           <button type="button" class="btn" onclick={() => game.testSponsor()}>{$t('pruebas.patrocinio')}</button>
           <button type="button" class="btn" onclick={() => game.testCanal(10, 25000)}>{$t('pruebas.canal')}</button>
+          <button type="button" class="btn" data-testid="probar-mudanza" onclick={() => say(game.testMudanza() ? $t('pruebas.mudanzaLista') : $t('pruebas.sinMudanza'))}
+            >{$t('pruebas.mudanza')}</button
+          >
           <button type="button" class="btn" onclick={() => { game.testOffline(3600); open = false; }}>{$t('pruebas.offline')}</button>
         </div>
       </section>

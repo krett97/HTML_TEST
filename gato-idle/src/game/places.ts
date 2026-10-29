@@ -1,10 +1,11 @@
-// Escenarios: cada objeto está en un cuarto (cocina, sala, baño, recámara, cuarto de lavado) y
-// sobre una superficie (barra, mesa, mueble, repisa, cama, escritorio o el piso). Arte provisional
-// dibujado con rectángulos; cuando llegue el de PixelApp se cambia el dibujo y las medidas se quedan.
+// Escenarios: cada objeto está en un cuarto (cocina, sala, baño, recámara, cuarto de lavado y, en
+// la casa nueva, jardín, estudio y cochera) y sobre una superficie (barra, mesa, mueble, repisa,
+// cama, escritorio o el piso). Dibujados con rectángulos; cuando lleguen fondos de PixelLab se
+// cambia el dibujo y las medidas se quedan.
 import type Phaser from 'phaser';
 import type { PlaceId } from '../core/data';
 
-export type Room = 'cocina' | 'sala' | 'bano' | 'recamara' | 'lavado';
+export type Room = 'cocina' | 'sala' | 'bano' | 'recamara' | 'lavado' | 'jardin' | 'estudio' | 'cochera';
 export type SurfaceKind = 'barra' | 'mesa' | 'mueble' | 'repisa' | 'cama' | 'escritorio' | 'piso';
 
 export interface Surface {
@@ -56,6 +57,12 @@ const ROOMS: Record<Room, RoomLook> = {
   bano: { wall: 0x34505e, wallDark: 0x2a424e, floor: 0x8fa3b0, floorLine: 0x74889a, frame: 0xe8e8f0, picture: 0xa8d8ea },
   recamara: { wall: 0x4a2d3c, wallDark: 0x3d2532, floor: 0x6b3a4a, floorLine: 0x5a2f3e, frame: 0xd9a441, picture: 0xe5a0b0 },
   lavado: { wall: 0x3a3f4a, wallDark: 0x30343d, floor: 0x5a5f68, floorLine: 0x4a4e56, frame: 0xffd36e, picture: 0x4a7ab8 },
+  // Jardín: el "muro" es el cielo; la ventana es una rama y el cuadro una casita de pájaros.
+  jardin: { wall: 0x7ec4e8, wallDark: 0x9a6a3c, floor: 0x5f9e3f, floorLine: 0x4a8030, frame: 0xc0504d, picture: 0xe8c48a },
+  // Estudio del influencer: paredes moradas con espuma acústica, tira de luz neón y un póster.
+  estudio: { wall: 0x2a2140, wallDark: 0x221a35, floor: 0x4a3434, floorLine: 0x3d2b2b, frame: 0xff5ec4, picture: 0x5ec4ff },
+  // Cochera: block gris, ventanita alta y tablero de herramientas.
+  cochera: { wall: 0x6b6f76, wallDark: 0x5a5e65, floor: 0x8a8d93, floorLine: 0x7a7d83, frame: 0x8a6a4a, picture: 0xc9a27a },
 };
 
 /** Alinea un patrón a la cuadrícula aunque la cámara esté corrida a la izquierda (x negativas). */
@@ -88,6 +95,36 @@ export function drawRoom(g: Phaser.GameObjects.Graphics, room: Room, left: numbe
     g.fillStyle(0x3e5d6c).fillRect(left, floorY - 56, w, 56);
     for (let y = floorY - 56; y < floorY; y += 8) g.fillStyle(look.wallDark).fillRect(left, y, w, 1);
     for (let x = snap(left, 8); x < left + w; x += 8) g.fillStyle(look.wallDark).fillRect(x, floorY - 56, 1, 56);
+  } else if (room === 'jardin') {
+    // Sol, nubes y barda de madera.
+    g.fillStyle(0xffe27a).fillRect(150, 12, 14, 14);
+    g.fillStyle(0xffffff).fillRect(snap(left, 2) + 30, 20, 22, 6).fillRect(snap(left, 2) + 36, 16, 12, 4).fillRect(90, 34, 18, 5);
+    const top = floorY - 44;
+    for (let x = snap(left, 10); x < left + w; x += 10) {
+      g.fillStyle(0xb98552).fillRect(x, top, 9, 44);
+      g.fillStyle(0x9a6a3c).fillRect(x + 9, top, 1, 44).fillRect(x, top, 9, 1);
+    }
+    g.fillStyle(0x9a6a3c).fillRect(left, top + 10, w, 3).fillRect(left, top + 30, w, 3);
+  } else if (room === 'estudio') {
+    // Espuma acústica a cuadros y tira de luz neón arriba.
+    for (let row = 0; row < 6; row++) {
+      for (let x = snap(left, 12); x < left + w; x += 12) {
+        g.fillStyle(row % 2 === 0 ? 0x332850 : 0x2e2448).fillRect(x + (row % 2) * 6, floorY - 70 + row * 8, 6, 8);
+      }
+    }
+    g.fillStyle(0xff5ec4).fillRect(left, 4, w, 2);
+    g.fillStyle(0xb8408a).fillRect(left, 6, w, 1);
+  } else if (room === 'cochera') {
+    // Block de concreto y una franja amarilla de seguridad.
+    for (let row = 0; floorY - 6 - row * 8 > 0; row++) {
+      const y = floorY - 6 - (row + 1) * 8;
+      g.fillStyle(look.wallDark).fillRect(left, y, w, 1);
+      for (let x = snap(left, 16) + (row % 2) * 8; x < left + w; x += 16) g.fillStyle(look.wallDark).fillRect(x, y, 1, 8);
+    }
+    for (let x = snap(left, 8); x < left + w; x += 8) {
+      g.fillStyle(0xffd36e).fillRect(x, floorY - 12, 4, 4);
+      g.fillStyle(0x2b1d2f).fillRect(x + 4, floorY - 12, 4, 4);
+    }
   } else if (room === 'lavado') {
     // Repisa con detergentes.
     const y = floorY - 92;
@@ -98,9 +135,11 @@ export function drawRoom(g: Phaser.GameObjects.Graphics, room: Room, left: numbe
   }
   g.fillStyle(look.wallDark).fillRect(left, floorY - 6, w, 6); // zoclo
 
-  // Ventana y cuadro, si caben.
+  // Ventana y cuadro, si caben (en el jardín: una rama y una casita de pájaros, donde se paran el cuervo y el perico).
   const windowY = floorY - WINDOW_ABOVE_FLOOR;
-  if (windowY >= 6) {
+  if (room === 'jardin') {
+    drawGardenPerches(g, windowY, floorY - PICTURE_ABOVE_FLOOR, floorY);
+  } else if (windowY >= 6) {
     g.fillStyle(0xe8d8c4).fillRect(22, windowY, 48, 40);
     g.fillStyle(0x8fc7e8).fillRect(25, windowY + 3, 42, 34);
     g.fillStyle(0xe8d8c4).fillRect(45, windowY + 3, 2, 34).fillRect(25, windowY + 19, 42, 2);
@@ -110,18 +149,37 @@ export function drawRoom(g: Phaser.GameObjects.Graphics, room: Room, left: numbe
     }
   }
   const pictureY = floorY - PICTURE_ABOVE_FLOOR;
-  if (pictureY >= 6) {
+  if (room !== 'jardin' && pictureY >= 6) {
     g.fillStyle(look.frame).fillRect(116, pictureY, 30, 22);
     g.fillStyle(look.picture).fillRect(118, pictureY + 2, 26, 18);
     if (room === 'cocina') {
       // Reloj: manecillas.
       g.fillStyle(0x2b1d2f).fillRect(130, pictureY + 5, 2, 7).fillRect(130, pictureY + 10, 6, 2);
+    } else if (room === 'estudio') {
+      // Póster: el logo del canal (un botón de "play").
+      g.fillStyle(0xe5534b).fillRect(124, pictureY + 6, 14, 10);
+      g.fillStyle(0xffffff).fillRect(129, pictureY + 8, 2, 6).fillRect(131, pictureY + 9, 2, 4).fillRect(133, pictureY + 10, 1, 2);
+    } else if (room === 'cochera') {
+      // Tablero con herramientas: martillo, llave y desarmador.
+      g.fillStyle(0x5a5e65).fillRect(121, pictureY + 4, 2, 12).fillRect(119, pictureY + 4, 6, 3);
+      g.fillStyle(0x8a94a6).fillRect(129, pictureY + 4, 2, 13).fillRect(128, pictureY + 3, 4, 3);
+      g.fillStyle(0xe5534b).fillRect(137, pictureY + 4, 3, 6);
+      g.fillStyle(0x8a94a6).fillRect(138, pictureY + 10, 1, 7);
     }
   }
 
   // Piso.
   g.fillStyle(look.floor).fillRect(left, floorY, w, h - floorY);
-  if (room === 'cocina' || room === 'bano') {
+  if (room === 'jardin') {
+    // Pasto con hojitas.
+    for (let row = 0; floorY + 2 + row * 5 < h; row++) {
+      for (let x = snap(left, 7) + (row % 2) * 3; x < left + w; x += 7) g.fillStyle(look.floorLine).fillRect(x, floorY + 2 + row * 5, 1, 2);
+    }
+  } else if (room === 'cochera') {
+    // Concreto con una mancha de aceite.
+    for (let y = floorY + 12; y < h; y += 12) g.fillStyle(look.floorLine).fillRect(left, y, w, 1);
+    g.fillStyle(0x5a5d63).fillRect(96, floorY + 8, 22, 4).fillRect(100, floorY + 6, 14, 8);
+  } else if (room === 'cocina' || room === 'bano') {
     // Losetas a cuadros.
     for (let row = 0; floorY + row * 8 < h; row++) {
       for (let x = snap(left, 16); x < left + w; x += 16) {
@@ -138,8 +196,23 @@ export function drawRoom(g: Phaser.GameObjects.Graphics, room: Room, left: numbe
   }
 }
 
+/** Rama (donde se para el cuervo) y casita de pájaros (el perico se para en el techo). */
+function drawGardenPerches(g: Phaser.GameObjects.Graphics, windowY: number, pictureY: number, floorY: number): void {
+  // Árbol a la izquierda con una rama a la altura de la "ventana".
+  const branchY = windowY >= 6 ? windowY : floorY - 84;
+  g.fillStyle(0x6b4a2a).fillRect(8, branchY - 30, 8, floorY - branchY + 30);
+  g.fillStyle(0x4a8030).fillRect(-6, branchY - 46, 36, 22).fillRect(0, branchY - 54, 24, 10);
+  g.fillStyle(0x6b4a2a).fillRect(14, branchY, 60, 3);
+  // Casita de pájaros en un poste, con el techo a la altura del "cuadro".
+  const top = pictureY >= 18 ? pictureY : floorY - 78;
+  g.fillStyle(0x9a6a3c).fillRect(129, top + 20, 4, floorY - top - 20);
+  g.fillStyle(0xc0504d).fillRect(118, top, 26, 4);
+  g.fillStyle(0xe8c48a).fillRect(121, top + 4, 20, 16);
+  g.fillStyle(0x2b1d2f).fillRect(128, top + 9, 6, 6);
+}
+
 /** La superficie donde está el objeto. */
-export function drawSurface(g: Phaser.GameObjects.Graphics, surface: Surface, floorY: number): void {
+export function drawSurface(g: Phaser.GameObjects.Graphics, surface: Surface, floorY: number, room: Room): void {
   const { left, right, height } = surface;
   const top = floorY - height;
   const width = right - left;
@@ -173,13 +246,15 @@ export function drawSurface(g: Phaser.GameObjects.Graphics, surface: Surface, fl
       break;
     }
     case 'repisa': {
-      // Repisa flotante del baño, y abajo el inodoro.
+      // Repisa flotante (en el baño, con el inodoro abajo).
       g.fillStyle(WHITE).fillRect(left, top, width, 3);
       g.fillStyle(0xb8c4d0).fillRect(left, top + 3, width, 1);
       g.fillStyle(0xb8c4d0).fillRect(left + 10, top + 4, 3, 6).fillRect(right - 14, top + 4, 3, 6);
-      g.fillStyle(WHITE).fillRect(64, floorY - 30, 14, 18); // tanque
-      g.fillStyle(WHITE).fillRect(60, floorY - 14, 26, 6); // taza
-      g.fillStyle(0xb8c4d0).fillRect(66, floorY - 8, 14, 8); // base
+      if (room === 'bano') {
+        g.fillStyle(WHITE).fillRect(64, floorY - 30, 14, 18); // tanque
+        g.fillStyle(WHITE).fillRect(60, floorY - 14, 26, 6); // taza
+        g.fillStyle(0xb8c4d0).fillRect(66, floorY - 8, 14, 8); // base
+      }
       break;
     }
     case 'cama': {

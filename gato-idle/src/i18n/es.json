@@ -57,7 +57,23 @@
     "lavadora": "Lavadora",
     "secadora": "Secadora",
     "estufa": "Estufa",
-    "refri": "Refri"
+    "refri": "Refri",
+    "maceta": "Maceta",
+    "gnomo": "Gnomo de jardín",
+    "flamenco": "Flamenco de plástico",
+    "aro": "Aro de luz",
+    "microfono": "Micrófono",
+    "camara": "Cámara",
+    "placa": "Placa de 100 mil",
+    "silla": "Silla gamer",
+    "parrilla": "Asador",
+    "bici": "Bici",
+    "moto": "Moto",
+    "coche": "Coche del dueño"
+  },
+  "casas": {
+    "departamento": "Departamento",
+    "casa": "Casa con jardín"
   },
   "mejoras": {
     "enLaMesa": "En la mesa",
@@ -85,7 +101,9 @@
     "sacoEfecto": "Aliados {actual} → {siguiente}",
     "superZarpazo": "¡SÚPER ZARPAZO!",
     "embestida": "¡EMBESTIDA!",
-    "comprar": "Comprar"
+    "comprar": "Comprar",
+    "valorMudanza": "🚚 ¡Mudanza! El dueño estrena casa: {objeto}",
+    "esperaMudanza": "El dueño ya no tiene dónde poner más cosas… Junta seguidores y visualizaciones para mudarse (📱 Canal)."
   },
   "ajustes": {
     "sonido": "Sonido",
@@ -124,7 +142,8 @@
     "dueno": "¡El dueño te cachó!",
     "duenoGraba": "…y en vez de regañarte, ¡empezó a grabar! 📱",
     "videoSubido": "📤 ¡Video subido! +{seguidores} seguidores",
-    "viral": "🔥 ¡SE HIZO VIRAL! 🔥"
+    "viral": "🔥 ¡SE HIZO VIRAL! 🔥",
+    "mudanza": "🚚 ¡El dueño se mudó a: {casa}!"
   },
   "aliados": {
     "gatito": "Gatito bebé",
@@ -161,7 +180,7 @@
     "roturas": "Tira {n} objetos más",
     "objeto": "Mejora el Valor",
     "nuevo": "¡Nuevo!",
-    "todo": "Ya descubriste todo lo de esta versión. Siguen: la mudanza y el personal del canal.",
+    "todo": "Ya descubriste todo lo de esta versión. Junta seguidores en el Canal para mudarte… y que venga lo que sigue.",
     "fuerza": "Fuerza",
     "valor": "Valor",
     "laboratorio": "Investigación gatuna",
@@ -241,7 +260,10 @@
     "apagar": "Apagar todos los trucos",
     "apagados": "Trucos apagados. Ahora sí, a jugar limpio.",
     "canal": "+10 seguidores y +25K visualizaciones",
-    "offline": "Simular 1 h fuera"
+    "offline": "Simular 1 h fuera",
+    "mudanza": "🚚 Desbloquear mudanza",
+    "mudanzaLista": "Mudanza desbloqueada: mejora el Valor en el último objeto.",
+    "sinMudanza": "Ya no quedan casas a dónde mudarse."
   },
   "canal": {
     "titulo": "Canal del dueño",
@@ -254,7 +276,7 @@
     "faltaMas": "Todavía no da para video: mejora el Valor",
     "subir": "📤 Subir video",
     "confirmar": "¿Seguro? Toca otra vez para subirlo",
-    "explica": "Al subirlo la partida vuelve al vaso. Conservas seguidores, visualizaciones, habilidades, investigaciones y descubrimientos.",
+    "explica": "Al subirlo la partida vuelve a empezar: en el vaso, o en la casa nueva si el dueño ya se mudó. Conservas seguidores, visualizaciones, habilidades, investigaciones y descubrimientos.",
     "habilidades": "Habilidades",
     "habilidadesIntro": "Se desbloquean solas al juntar seguidores y visualizaciones (nunca se gastan). Cuando llegues a la meta, ¡reclámala!",
     "videos": "Videos subidos",
@@ -286,6 +308,11 @@
     "meta": {
       "seguidores": "{tiene} de {meta} seguidores",
       "visualizaciones": "{tiene} de {meta} visualizaciones"
+    },
+    "mudanza": {
+      "titulo": "Mudanza: {casa}",
+      "explica": "Con más seguidores y visualizaciones, el dueño se muda a una casa más grande (con más cosas que tirar). No se gastan.",
+      "lista": "¡Listo! Llega al último objeto y sigue mejorando el Valor: el dueño se muda y la partida sigue en la casa nueva."
     }
   },
   "vineta": {
@@ -331,6 +358,10 @@
         "4": "«Esta vez sí lo cuido», dijo el dueño",
         "5": "Nuevo, brillante… y frágil"
       }
+    },
+    "mudanza": {
+      "titulo": "¡NOS MUDAMOS!",
+      "texto": "El dueño se hizo famoso: casa nueva, cosas nuevas que tirar"
     }
   },
   "offline": {

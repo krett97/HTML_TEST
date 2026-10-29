@@ -440,6 +440,9 @@ select {
 .vineta--objeto {
   --fondo: #ffd36e;
 }
+.vineta--mudanza {
+  --fondo: #ffb066;
+}
 .vineta-panel {
   position: relative;
   display: flex;

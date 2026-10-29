@@ -1,0 +1,146 @@
+[
+ {
+  "name": "maceta",
+  "desc": "small cactus in a terracotta flower pot wearing a tiny party hat, isolated object, no shadow",
+  "w": 32,
+  "h": 40,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game item, side view, bold black outline, cartoon, vibrant colors"
+ },
+ {
+  "name": "gnomo",
+  "desc": "garden gnome with a red pointy hat and white beard giving a smug thumbs up, isolated object, no shadow",
+  "w": 32,
+  "h": 48,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game item, side view, bold black outline, cartoon, vibrant colors"
+ },
+ {
+  "name": "flamenco",
+  "desc": "pink plastic lawn flamingo on a thin metal stake, looking surprised, isolated object, no shadow",
+  "w": 32,
+  "h": 72,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game item, side view, bold black outline, cartoon, vibrant colors"
+ },
+ {
+  "name": "aro",
+  "desc": "influencer ring light on a tall tripod stand, glowing white ring with a phone holder in the middle, isolated object, no shadow",
+  "w": 56,
+  "h": 96,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game item, side view, bold black outline, cartoon, vibrant colors"
+ },
+ {
+  "name": "microfono",
+  "desc": "podcast microphone on a desk stand with a round pop filter and pink glow, isolated object, no shadow",
+  "w": 24,
+  "h": 48,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game item, side view, bold black outline, cartoon, vibrant colors"
+ },
+ {
+  "name": "camara",
+  "desc": "black vlogging camera on a small tripod with a red recording light, isolated object, no shadow",
+  "w": 48,
+  "h": 32,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game item, side view, bold black outline, cartoon, vibrant colors"
+ },
+ {
+  "name": "placa",
+  "desc": "shiny silver award plaque in a frame with a big play triangle and the text 100K, isolated object, no shadow",
+  "w": 40,
+  "h": 48,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game item, side view, bold black outline, cartoon, vibrant colors"
+ },
+ {
+  "name": "silla",
+  "desc": "red and black racing style gaming chair with scratch marks, isolated object, no shadow",
+  "w": 64,
+  "h": 88,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game item, side view, bold black outline, cartoon, vibrant colors"
+ },
+ {
+  "name": "parrilla",
+  "desc": "round black kettle barbecue grill on legs with sausages smoking on top, isolated object, no shadow",
+  "w": 72,
+  "h": 72,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game item, side view, bold black outline, cartoon, vibrant colors"
+ },
+ {
+  "name": "bici",
+  "desc": "blue bicycle with a front basket and a bell, side view, isolated object, no shadow",
+  "w": 96,
+  "h": 64,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game item, side view, bold black outline, cartoon, vibrant colors"
+ },
+ {
+  "name": "moto",
+  "desc": "red retro scooter motorbike, side view, shiny, isolated object, no shadow",
+  "w": 120,
+  "h": 80,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game item, side view, bold black outline, cartoon, vibrant colors"
+ },
+ {
+  "name": "coche",
+  "desc": "yellow convertible car, side view, shiny, fuzzy dice hanging from the mirror, isolated object, no shadow",
+  "w": 200,
+  "h": 88,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game item, side view, bold black outline, cartoon, vibrant colors"
+ }
+]

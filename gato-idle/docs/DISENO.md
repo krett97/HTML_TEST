@@ -560,7 +560,7 @@ Hacia el **minuto 19** (al llegar a la cafetera), **el dueño cacha al gato**: e
 
 - La pestaña Canal muestra **el video en grabación** (la partida actual): cuántas cosas lleva rotas, a qué objeto llegó y la vista previa: "Si lo subes ahora: +24 seguidores · +2.4K visualizaciones".
 - Se puede subir desde la **lavadora** (`canal.objetoMinimo`); lo ideal es al llegar al refri. Subir pide dos toques.
-- Al subirlo sale el video con un **título chistoso** ("MI GATO VS. Refri 😱 (NO CLICKBAIT)", "Mi gato destruyó 412 cosas y no se arrepiente 💀"…), con 15 % de probabilidad de **hacerse viral** (×2 seguidores y visualizaciones, confeti y sacudida), y **la partida vuelve al vaso**.
+- Al subirlo sale el video con un **título chistoso** ("MI GATO VS. Refri 😱 (NO CLICKBAIT)", "Mi gato destruyó 412 cosas y no se arrepiente 💀"…), con 15 % de probabilidad de **hacerse viral** (×2 seguidores y visualizaciones, confeti y sacudida), y **la partida vuelve al vaso** (o, ya mudado, al primer objeto de la casa nueva: §36).
 
 | Se pierde | Se conserva |
 |---|---|
@@ -774,3 +774,26 @@ Antes, al golpear, el gato se quedaba quieto y una pata se deslizaba desde atrá
 - Los cuadros se hicieron editando el dibujo con *edit-image-pixen* (misma cara y colores); las cuatro variantes (normal, garras, saco, saco + garras) parten del mismo cuadro y se recortan con el mismo marco para que no salten. Recetas en `tools/arte/elegidos.json`; herramienta `tools/arte/editar.py`.
 - El gato sentado mira hacia el objeto (a la derecha), igual que en el manotazo (0.18.1: se volteó el dibujo de PixelLab y se recolocó el sombrero).
 - El Sombrero ridículo ahora es un **sombrero de copa negro de mago** (brillante, con banda gris), que combina con el saco; asentado sobre la cabeza sin tapar los ojos (0.18.2–0.18.4).
+
+## 36. La mudanza: la casa con jardín (versión 0.19.0)
+
+Cuando el Canal junta **80 seguidores y 500K visualizaciones** (totales, nunca se gastan), el dueño se puede mudar. La partida **continúa después del refri**: en el refri el Valor ya no se detiene, y el siguiente objeto es el primero de la casa nueva. Ahí sale la viñeta **"¡NOS MUDAMOS!"** con el dueño ("se hizo famoso: casa nueva, cosas nuevas que tirar"), y desde entonces **cada video reinicia directo en la casa**, con el gato ya entrenado (Fuerza 50). El departamento no se repite.
+
+- **Dónde se ve:** en el Canal, la tarjeta "🚚 Mudanza: Casa con jardín" con dos barras (seguidores y visualizaciones). En el refri, mientras falte, el Valor avisa "🔒 El dueño ya no tiene dónde poner más cosas… (📱 Canal)"; cuando ya se puede, el nivel que muda dice "🚚 ¡Mudanza! El dueño estrena casa: Maceta".
+- **Tres cuartos nuevos** (dibujados en código): **jardín** (cielo, barda de madera, árbol con rama para el cuervo y casita de pájaros para el perico), **estudio del influencer** (espuma acústica, luz neón rosa y póster de "play") y **cochera** (block, franja amarilla, tablero de herramientas y mancha de aceite).
+- **12 objetos nuevos** (arte de PixelLab, con su chiste): cactus con gorrito de fiesta, gnomo gruñón con el pulgar arriba, flamenco de plástico, aro de luz, micrófono, cámara grabando, placa "100k", silla gamer, asador con salchichas, bici, scooter y **el coche del dueño** con dados de peluche (el último y el más grande).
+- **Curva:** cada objeto de la casa aguanta ×1.6 y paga ×1.5 el anterior (en el departamento ×1.4 y ×1.75): con el gato ya fuerte, la casa sigue costando.
+- **Seguidores con raíz cúbica:** seguidores por video = ⌊(dinero de la partida / 80 000)^⅓⌋. En el departamento da lo mismo que antes (~24 por video), pero la casa, que paga muchísimo más, da ~127 en lugar de ~600, y el bono no se dispara.
+- Datos: `src/data/casas.json` (casas en orden, requisito y Fuerza inicial) y el campo `casa` de cada objeto. Lógica: `src/core/mudanza.ts`. El estado guarda `casa` (a qué casa ya se mudó; sobrevive al subir el video). Hecho para más casas: agregar una a `casas.json` y sus objetos al final.
+- Modo pruebas: "🚚 Desbloquear mudanza" junta justo lo que pide.
+
+Simulador (5 toques/s, reclamando habilidades):
+
+| Vuelta | Casa | Minutos | Seguidores del video |
+|---|---|---|---|
+| 1–4 | departamento | 36 → 14 → 8.5 → 5.6 (refri) | ~23 cada uno (total 93 / 594K) |
+| 5 | se muda | refri 4.4 · maceta 4.8 · coche 36.9 | 127 |
+| 6 | casa | coche 15.7 | 127 |
+| 7–10 | casa | 10.1 → 6.9 → 5.6 → 4.5 | 127 cada uno |
+
+Pendiente: una casa siguiente (edificio, ciudad… hasta la Luna), fondos de PixelLab para los cuartos y un aliado nuevo de la casa.

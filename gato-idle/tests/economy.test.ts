@@ -60,7 +60,7 @@ describe('Valor', () => {
   it('cada nivel paga más por rotura', () => {
     const state = newState(1e6);
     const before = moneyPerBreak(state, gameData);
-    expect(buyValor(state, gameData)).toEqual({ bought: true, newObject: null });
+    expect(buyValor(state, gameData)).toEqual({ bought: true, newObject: null, home: null });
     expect(moneyPerBreak(state, gameData).gt(before)).toBe(true);
   });
 

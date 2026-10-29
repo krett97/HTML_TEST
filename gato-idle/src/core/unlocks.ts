@@ -1,7 +1,7 @@
 // Descubrimientos: el juego empieza solo con el manotazo y va revelando funciones, aliados y el
 // laboratorio conforme el jugador avanza (unlocks.json, en orden). Siempre hay uno "próximo".
 import type { GameData, UnlockDef } from './data';
-import { objectIndexFor } from './economy';
+import { objectIndex } from './economy';
 import type { GameState } from './state';
 
 export function hasUnlock(state: GameState, id: string): boolean {
@@ -24,7 +24,7 @@ export function unlockProgress(state: GameState, data: GameData, unlock: UnlockD
   const objectId = unlock.condicion.objeto;
   const index = data.objects.findIndex((o) => o.id === objectId);
   const target = index * data.balance.valor.nivelesPorObjeto;
-  const reached = objectIndexFor(state.nivelValor, data) >= index;
+  const reached = objectIndex(state, data) >= index;
   return { unlock, current: reached ? target : Math.min(state.nivelValor, target), target };
 }
 

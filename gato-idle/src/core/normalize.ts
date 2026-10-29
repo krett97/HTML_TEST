@@ -1,6 +1,7 @@
 import { normalizeAllies } from './allies';
 import { BUY_AMOUNTS } from './bulk';
 import { normalizeCanal } from './canal';
+import { moveIfReady, normalizeHome } from './mudanza';
 import { normalizeSkills } from './skills';
 import type { GameData } from './data';
 import { isDecimal, ZERO } from './num';
@@ -25,6 +26,9 @@ export function normalizeState(state: GameState, data: GameData): void {
   if (!BUY_AMOUNTS.includes(state.ajustes.compra)) state.ajustes.compra = 1;
   normalizeSkills(state, data);
   normalizeCanal(state);
+  normalizeHome(state, data);
+  // Un guardado que ya juntó lo de la mudanza y tenía Valor de sobra en el último objeto se muda ya.
+  moveIfReady(state, data);
   if (state.offline && !(isDecimal(state.offline.dinero) && Number.isFinite(state.offline.roturas))) state.offline = null;
   state.vistos = [...new Set(state.vistos.filter((id) => typeof id === 'string'))];
   state.stats.roturasPartida = Math.max(0, Math.floor(state.stats.roturasPartida));

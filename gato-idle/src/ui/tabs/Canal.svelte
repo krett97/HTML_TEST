@@ -68,6 +68,24 @@
     <p class="small muted note">{$t('canal.explica')}</p>
   </div>
 
+  {#if $view.canal.mudanza}
+    {@const mudanza = $view.canal.mudanza}
+    <!-- La mudanza: se desbloquea al juntar seguidores y visualizaciones (no se gastan). -->
+    <div class="card move" class:ready={mudanza.desbloqueada} data-testid="mudanza">
+      <div class="name">🚚 {$t('canal.mudanza.titulo', { casa: $t(`casas.${mudanza.siguiente}`) })}</div>
+      <p class="small muted note">
+        {mudanza.desbloqueada ? $t('canal.mudanza.lista') : $t('canal.mudanza.explica')}
+      </p>
+      {#each [['seguidores', '👥', mudanza.seguidores], ['visualizaciones', '👁️', mudanza.visualizaciones]] as const as [recurso, icono, meta] (recurso)}
+        <div class="goal" title={$t(`canal.meta.${recurso}`, { tiene: meta.tiene, meta: meta.meta })}>
+          <span class="goal-icon" aria-hidden="true">{icono}</span>
+          <span class="goal-bar"><span class="goal-fill" style:width="{meta.progreso * 100}%"></span></span>
+          <span class="goal-text cifra">{meta.tiene}/{meta.meta}</span>
+        </div>
+      {/each}
+    </div>
+  {/if}
+
   <h3>{$t('canal.habilidades')}</h3>
   <p class="small muted intro">{$t('canal.habilidadesIntro')}</p>
   {#each $view.canal.habilidades as skill (skill.id)}
@@ -247,6 +265,13 @@
     50% {
       scale: 1.07;
     }
+  }
+  .move {
+    display: grid;
+    gap: 4px;
+  }
+  .move .name {
+    font-weight: 700;
   }
   .videos {
     display: grid;

@@ -14,11 +14,12 @@ import {
   critDamageCost,
   fuerzaCost,
   sacoCost,
-  objectIndexFor,
+  objectIndex,
   valorCost,
   valorNextObject,
 } from './economy';
 import { breaksPerSecond, incomePerSecond } from './income';
+import { lastObjectIndex } from './mudanza';
 import { num } from './num';
 import { pruebasIniciales, type GameState } from './state';
 import { checkUnlocks, hasUnlock, nextUnlock } from './unlocks';
@@ -100,7 +101,7 @@ export function botStep(state: GameState, data: GameData, tps: number): BotStep 
     state.dineroPartida = state.dineroPartida.add(earned);
     state.stats.roturas += missing;
     state.stats.roturasPartida += missing;
-    state.stats.vistasVideo += missing * (objectIndexFor(state.nivelValor, data) + 1);
+    state.stats.vistasVideo += missing * (objectIndex(state, data) + 1);
     return { seconds, bought: null, discovered: checkUnlocks(state, data) };
   }
   const option = choose(state, data, tps);
@@ -111,7 +112,7 @@ export function botStep(state: GameState, data: GameData, tps: number): BotStep 
   const broken = Math.floor(breaksPerSecond(state, data, tps) * seconds);
   state.stats.roturas += broken;
   state.stats.roturasPartida += broken;
-  state.stats.vistasVideo += broken * (objectIndexFor(state.nivelValor, data) + 1);
+  state.stats.vistasVideo += broken * (objectIndex(state, data) + 1);
   // Evita quedarse a una fracción de centavo por redondeo.
   if (state.dinero.lt(option.cost)) state.dinero = num(option.cost);
   const before = state.dinero;
@@ -139,7 +140,8 @@ export function playUntil(state: GameState, data: GameData, goal: PlayGoal, tps 
   let seconds = 0;
   try {
     for (let steps = 0; steps < 100_000; steps++) {
-      if (target !== -1 && objectIndexFor(state.nivelValor, data) >= target) break;
+      // Un objeto de una casa que aún no se desbloquea: juega hasta el último al que se puede llegar.
+      if (target !== -1 && objectIndex(state, data) >= Math.min(target, lastObjectIndex(state, data))) break;
       if (target === -1 && seconds >= limit) break;
       const step = botStep(state, data, tps);
       seconds += step.seconds;

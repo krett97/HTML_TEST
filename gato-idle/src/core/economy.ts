@@ -1,7 +1,8 @@
 // Fórmulas de la economía: daño, vistas, costos y compras. Todos los números vienen de
 // src/data/*.json; aquí solo está cómo se combinan.
-import type { GameData, ObjectDef } from './data';
+import type { GameData, HomeDef, ObjectDef } from './data';
 import { applyModifiers, collectModifiers } from './modifiers';
+import { lastObjectIndex, moveIfReady } from './mudanza';
 import { num, ZERO, type Decimal } from './num';
 import type { GameState } from './state';
 import { rammingMultiplier } from './skills';
@@ -9,19 +10,27 @@ import { pay } from './wallet';
 
 // ---- Objeto en la mesa ----
 
-/** Cada `nivelesPorObjeto` niveles de Valor, el dueño compra el siguiente objeto. */
-export function objectIndexFor(nivelValor: number, data: GameData): number {
+/**
+ * Cada `nivelesPorObjeto` niveles de Valor, el dueño compra el siguiente objeto, hasta `last`
+ * (el último de la casa a la que se puede llegar: ver mudanza.ts).
+ */
+export function objectIndexFor(nivelValor: number, data: GameData, last = data.objects.length - 1): number {
   const index = Math.floor(nivelValor / data.balance.valor.nivelesPorObjeto);
-  return Math.min(Math.max(index, 0), data.objects.length - 1);
+  return Math.min(Math.max(index, 0), last);
+}
+
+/** Índice del objeto en la mesa. */
+export function objectIndex(state: GameState, data: GameData): number {
+  return objectIndexFor(state.nivelValor, data, lastObjectIndex(state, data));
 }
 
 export function currentObject(state: GameState, data: GameData): ObjectDef {
-  return data.objects[objectIndexFor(state.nivelValor, data)]!;
+  return data.objects[objectIndex(state, data)]!;
 }
 
-/** Niveles de Valor comprados sobre el objeto actual (0 recién comprado). En el último objeto no tiene tope. */
+/** Niveles de Valor comprados sobre el objeto actual (0 recién comprado). En el último al que se llega no tiene tope. */
 export function valorStepsInObject(state: GameState, data: GameData): number {
-  return state.nivelValor - objectIndexFor(state.nivelValor, data) * data.balance.valor.nivelesPorObjeto;
+  return state.nivelValor - objectIndex(state, data) * data.balance.valor.nivelesPorObjeto;
 }
 
 export function objectProgress(state: GameState, data: GameData): number {
@@ -122,8 +131,9 @@ export function sacoCost(state: GameState, data: GameData): Decimal {
 
 /** El objeto que compraría el dueño con el siguiente nivel de Valor, si cambia. */
 export function valorNextObject(state: GameState, data: GameData): ObjectDef | null {
-  const current = objectIndexFor(state.nivelValor, data);
-  const next = objectIndexFor(state.nivelValor + 1, data);
+  const last = lastObjectIndex(state, data);
+  const current = objectIndexFor(state.nivelValor, data, last);
+  const next = objectIndexFor(state.nivelValor + 1, data, last);
   return next === current ? null : data.objects[next]!;
 }
 
@@ -139,15 +149,18 @@ export interface ValorPurchase {
   bought: boolean;
   /** Si el dueño cambió de objeto, el nuevo. */
   newObject: ObjectDef | null;
+  /** Si con ese objeto el dueño se mudó, la casa nueva. */
+  home: HomeDef | null;
 }
 
 export function buyValor(state: GameState, data: GameData): ValorPurchase {
   const nextObject = valorNextObject(state, data);
-  if (!pay(state, valorCost(state, data))) return { bought: false, newObject: null };
+  if (!pay(state, valorCost(state, data))) return { bought: false, newObject: null, home: null };
   state.nivelValor += 1;
   // Objeto nuevo: empieza en el centro de la mesa.
   if (nextObject) state.danioObjeto = ZERO;
-  return { bought: true, newObject: nextObject };
+  // El primer objeto de la casa nueva: ¡mudanza!
+  return { bought: true, newObject: nextObject, home: moveIfReady(state, data) };
 }
 
 export function buyCritChance(state: GameState, data: GameData): boolean {

@@ -45,7 +45,8 @@
     "roturasMinimas": 100
   },
   "canal": {
-    "escalaSeguidores": 2000000,
+    "escalaSeguidores": 80000,
+    "exponenteSeguidores": 0.3333333333,
     "bonoPorSeguidor": 0.02,
     "visualizacionesPorVista": 1,
     "vistasPorSeguidor": 0.1,

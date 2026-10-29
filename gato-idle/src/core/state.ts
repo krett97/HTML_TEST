@@ -69,6 +69,8 @@ export interface GameState {
   };
   /** Daño acumulado sobre el objeto actual. */
   danioObjeto: Decimal;
+  /** Casa a la que ya se mudó el dueño (índice de casas.json; 0 = departamento). Sobrevive al subir el video. */
+  casa: number;
   stats: {
     toques: number;
     roturas: number;
@@ -111,6 +113,7 @@ export function createInitialState(now: number): GameState {
     desbloqueos: [],
     laboratorio: { hechas: [], actual: null },
     danioObjeto: ZERO,
+    casa: 0,
     stats: { toques: 0, roturas: 0, roturasPartida: 0, vistasVideo: 0 },
     canal: { seguidores: 0, visualizaciones: ZERO, videos: [] },
     habilidades: [],

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { parseGameData } from '../src/core/data';
 import { gameData } from '../src/data';
 import objects from '../src/data/objects.json';
+import casas from '../src/data/casas.json';
 import tools from '../src/data/tools.json';
 import balance from '../src/data/balance.json';
 import allies from '../src/data/allies.json';
@@ -9,13 +10,16 @@ import unlocks from '../src/data/unlocks.json';
 import research from '../src/data/research.json';
 import habilidades from '../src/data/habilidades.json';
 
-const base = { objects, tools, allies, unlocks, research, balance, habilidades };
+const base = { objects, casas, tools, allies, unlocks, research, balance, habilidades };
 import es from '../src/i18n/es.json';
 import en from '../src/i18n/en.json';
 
 describe('datos de balance', () => {
   it('los JSON del juego son válidos', () => {
-    expect(gameData.objects.length).toBe(27);
+    expect(gameData.objects.length).toBe(39);
+    expect(gameData.homes.map((h) => h.id)).toEqual(['departamento', 'casa']);
+    expect(gameData.objects.filter((o) => o.casa === 'departamento').length).toBe(27);
+    expect(gameData.objects[27]!.id).toBe('maceta');
     expect(gameData.allies.map((a) => a.id)).toEqual(['gatito', 'raton', 'perro', 'perico', 'cuervo', 'mapache', 'cabra']);
     expect(gameData.tools.map((t) => t.id)).toEqual(['pata', 'carrito', 'aspiradora']);
   });
@@ -75,6 +79,15 @@ describe('datos de balance', () => {
     expect(() => parseGameData({ ...base, research: badResearch })).toThrow(/castillo/);
 
     expect(() => parseGameData({ ...base, tools: [] })).toThrow(/no hay herramientas/);
+
+    const unknownHome = objects.map((o, i) => (i === 3 ? { ...o, casa: 'castillo' } : o));
+    expect(() => parseGameData({ ...base, objects: unknownHome })).toThrow(/castillo/);
+
+    const mixedHomes = objects.map((o, i) => (i === 3 ? { ...o, casa: 'casa' } : o));
+    expect(() => parseGameData({ ...base, objects: mixedHomes })).toThrow(/por casa/);
+
+    const emptyHome = objects.filter((o) => o.casa === 'departamento');
+    expect(() => parseGameData({ ...base, objects: emptyHome })).toThrow(/no tiene objetos/);
   });
 });
 

@@ -65,13 +65,18 @@
         {$t('mejoras.valor')} <span class="level">{$t('mejoras.nivel', { n: $view.valor.nivel })}</span>
         {#if $view.nuevos.includes('valor')}<NewBadge />{/if}
       </div>
-      {#if $view.valor.nuevoObjeto}
+      {#if $view.valor.mudanza && $view.valor.nuevoObjeto}
+        <div class="effect gold" data-testid="valor-mudanza">{$t('mejoras.valorMudanza', { objeto: $t(`objetos.${$view.valor.nuevoObjeto}`) })}</div>
+      {:else if $view.valor.nuevoObjeto}
         <div class="effect gold">{$t('mejoras.valorNuevo', { objeto: $t(`objetos.${$view.valor.nuevoObjeto}`) })}</div>
       {:else}
         <div class="effect">{$t('mejoras.valorEfecto', { actual: $view.ganancia, siguiente: $view.valor.gananciaSiguiente })}</div>
       {/if}
       {#if $view.valor.ultimoObjeto}
         <div class="steps muted">{$t('mejoras.valorUltimo')}</div>
+        {#if $view.valor.esperaMudanza}
+          <div class="steps muted" data-testid="espera-mudanza">🔒 {$t('mejoras.esperaMudanza')}</div>
+        {/if}
       {:else}
         <div class="steps" title={$t('mejoras.valorEtapa', { n: $view.valor.enObjeto, total: $view.valor.porObjeto })}>
           {#each { length: $view.valor.porObjeto } as _, i (i)}

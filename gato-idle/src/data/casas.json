@@ -1,0 +1,4 @@
+[
+  { "id": "departamento" },
+  { "id": "casa", "requisito": { "seguidores": 80, "visualizaciones": 500000 }, "fuerzaInicial": 50 }
+]

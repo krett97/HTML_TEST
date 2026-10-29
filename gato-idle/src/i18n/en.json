@@ -57,7 +57,23 @@
     "lavadora": "Washing machine",
     "secadora": "Dryer",
     "estufa": "Stove",
-    "refri": "Fridge"
+    "refri": "Fridge",
+    "maceta": "Flower pot",
+    "gnomo": "Garden gnome",
+    "flamenco": "Plastic flamingo",
+    "aro": "Ring light",
+    "microfono": "Microphone",
+    "camara": "Camera",
+    "placa": "100K plaque",
+    "silla": "Gaming chair",
+    "parrilla": "BBQ grill",
+    "bici": "Bike",
+    "moto": "Motorbike",
+    "coche": "Owner's car"
+  },
+  "casas": {
+    "departamento": "Apartment",
+    "casa": "House with a garden"
   },
   "mejoras": {
     "enLaMesa": "On the table",
@@ -85,7 +101,9 @@
     "sacoEfecto": "Allies {actual} → {siguiente}",
     "superZarpazo": "SUPER SWIPE!",
     "embestida": "RAM!",
-    "comprar": "Buy"
+    "comprar": "Buy",
+    "valorMudanza": "🚚 Moving day! The owner gets a new house: {objeto}",
+    "esperaMudanza": "The owner has no room for more stuff… Get followers and views so they can move (📱 Channel)."
   },
   "ajustes": {
     "sonido": "Sound",
@@ -124,7 +142,8 @@
     "dueno": "The owner caught you!",
     "duenoGraba": "…and instead of scolding you, started recording! 📱",
     "videoSubido": "📤 Video uploaded! +{seguidores} followers",
-    "viral": "🔥 IT WENT VIRAL! 🔥"
+    "viral": "🔥 IT WENT VIRAL! 🔥",
+    "mudanza": "🚚 The owner moved to: {casa}!"
   },
   "aliados": {
     "gatito": "Baby kitten",
@@ -161,7 +180,7 @@
     "roturas": "Knock off {n} more items",
     "objeto": "Upgrade Value",
     "nuevo": "New!",
-    "todo": "You've discovered everything in this version. Coming next: moving out and the channel staff.",
+    "todo": "You have discovered everything in this version. Get followers on the Channel to move… and see what comes next.",
     "fuerza": "Strength",
     "valor": "Value",
     "laboratorio": "Cat research",
@@ -241,7 +260,10 @@
     "apagar": "Turn off all cheats",
     "apagados": "Cheats off. Playing fair now.",
     "canal": "+10 followers and +25K views",
-    "offline": "Simulate 1 h away"
+    "offline": "Simulate 1 h away",
+    "mudanza": "🚚 Unlock moving",
+    "mudanzaLista": "Moving unlocked: upgrade Value on the last object.",
+    "sinMudanza": "There are no more houses to move to."
   },
   "canal": {
     "titulo": "Owner's channel",
@@ -254,7 +276,7 @@
     "faltaMas": "Not enough for a video yet: upgrade Value",
     "subir": "📤 Upload video",
     "confirmar": "Sure? Tap again to upload",
-    "explica": "Uploading sends you back to the glass. You keep followers, views, skills, research and discoveries.",
+    "explica": "Uploading starts the run over: at the glass, or in the new house if the owner already moved. You keep followers, views, skills, research and discoveries.",
     "habilidades": "Skills",
     "habilidadesIntro": "They unlock on their own as you gather followers and views (never spent). When you hit the goal, claim it!",
     "videos": "Uploaded videos",
@@ -286,6 +308,11 @@
     "meta": {
       "seguidores": "{tiene} of {meta} followers",
       "visualizaciones": "{tiene} of {meta} views"
+    },
+    "mudanza": {
+      "titulo": "Moving: {casa}",
+      "explica": "With more followers and views, the owner moves to a bigger house (with more stuff to knock over). They are not spent.",
+      "lista": "Ready! Reach the last object and keep upgrading Value: the owner moves and the run continues in the new house."
     }
   },
   "vineta": {
@@ -331,6 +358,10 @@
         "4": "\"I'll take care of this one\", said the owner",
         "5": "New, shiny… and fragile"
       }
+    },
+    "mudanza": {
+      "titulo": "WE ARE MOVING!",
+      "texto": "The owner got famous: new house, new stuff to knock over"
     }
   },
   "offline": {

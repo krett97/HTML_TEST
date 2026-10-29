@@ -2,7 +2,7 @@
 // cuentan los aliados (nadie toca), con una eficiencia y un tope de horas. El objeto no cambia:
 // el dueño no compra nada nuevo mientras no estás.
 import type { GameData } from './data';
-import { objectIndexFor, moneyPerBreak } from './economy';
+import { objectIndex, moneyPerBreak } from './economy';
 import { breaksPerSecond } from './income';
 import { ZERO, type Decimal } from './num';
 import type { GameState } from './state';
@@ -39,6 +39,6 @@ export function claimOffline(state: GameState, data: GameData, earnings: { rotur
   state.dineroPartida = state.dineroPartida.add(dinero);
   state.stats.roturas += earnings.roturas;
   state.stats.roturasPartida += earnings.roturas;
-  state.stats.vistasVideo += earnings.roturas * (objectIndexFor(state.nivelValor, data) + 1);
+  state.stats.vistasVideo += earnings.roturas * (objectIndex(state, data) + 1);
   return dinero;
 }

@@ -23,10 +23,11 @@ import { claimSkill, rammingMultiplier, researchDuration, resourceTotal, skillCl
 import { addAllyLevels, advanceClock, completeAllResearch, discoverAll, discoverNext, finishResearchNow } from '../core/pruebas';
 import { deserialize, serialize } from '../core/save';
 import { canAfford } from '../core/wallet';
-import type { AllyDef, GameData, SkillDef } from '../core/data';
+import type { AllyDef, GameData, ObjectDef, SkillDef } from '../core/data';
 import { sacoMultiplier, type Effect } from '../core/modifiers';
 import { finishResearch, researchRemaining, researchStatus, startResearch, type ResearchStatus } from '../core/research';
 import { checkUnlocks, hasUnlock, nextUnlock } from '../core/unlocks';
+import { lastObjectIndex, moveIfReady, moveUnlocked, nextHome } from '../core/mudanza';
 import {
   buyCritChance,
   buyCritDamage,
@@ -41,7 +42,7 @@ import {
   currentObject,
   fuerzaCost,
   sacoCost,
-  objectIndexFor,
+  objectIndex,
   moneyPerBreak,
   objectProgress,
   tapDamage,
@@ -87,6 +88,8 @@ export interface GameEvents {
   investigacion: { researchId: string };
   /** El dueño subió el video: la partida vuelve a empezar. */
   video: { video: VideoRecord };
+  /** El dueño se mudó a otra casa (casas.json). `primeraVez`: nunca se había mudado ahí (viñeta). */
+  mudanza: { casa: string; primeraVez: boolean };
   /** Se cobraron las ganancias de mientras no estabas. */
   offline: { dinero: Decimal };
   /** Se cobró un patrocinio (anuncio visto completo). */
@@ -181,6 +184,10 @@ export interface ViewModel {
     enObjeto: number;
     porObjeto: number;
     ultimoObjeto: boolean;
+    /** Está en el último objeto de la casa y falta juntar lo de la mudanza (ver el Canal). */
+    esperaMudanza: boolean;
+    /** El siguiente nivel de Valor muda al dueño a la casa nueva. */
+    mudanza: boolean;
     cantidad: number;
     costo: string;
     alcanza: boolean;
@@ -248,6 +255,14 @@ export interface ViewModel {
     videos: VideoView[];
     habilidades: SkillView[];
     hayCompra: boolean;
+    /** La siguiente casa y cuánto falta en el Canal para mudarse (null: ya no hay más casas). */
+    mudanza: {
+      casa: string;
+      siguiente: string;
+      desbloqueada: boolean;
+      seguidores: { tiene: string; meta: string; progreso: number };
+      visualizaciones: { tiene: string; meta: string; progreso: number };
+    } | null;
   };
   /** Modo pruebas: si existe en esta versión, los trucos y si alguno está prendido. */
   pruebas: Pruebas & { disponible: boolean; activas: boolean };
@@ -454,17 +469,30 @@ export class Game {
 
   buyValor(): boolean {
     const before = currentObject(this.state, this.data);
+    const home = this.state.casa;
     const bought = this.buyUpgrade('valor') > 0;
-    const after = currentObject(this.state, this.data);
-    if (after !== before) {
-      this.events.emit('objeto', { objectId: after.id, primeraVez: this.firstTime(`objeto:${after.id}`) });
-      // El gato se sube solo al carrito o a la aspiradora al llegar a esos objetos.
-      if (after.herramienta !== before.herramienta) {
-        this.events.emit('herramienta', { toolId: after.herramienta });
-        this.playSound('herramienta');
-      }
-    }
+    this.afterObjectChange(before, home);
     return this.afterPurchase(bought);
+  }
+
+  /** Avisa a la escena si cambió el objeto (y si con eso el dueño se mudó). */
+  private afterObjectChange(before: ObjectDef, home: number): void {
+    const after = currentObject(this.state, this.data);
+    if (after === before) return;
+    const moved = this.state.casa !== home;
+    // Al mudarse, la viñeta es la de la casa nueva; el objeto solo lleva su aviso.
+    const primeraVez = this.firstTime(`objeto:${after.id}`) && !moved;
+    this.events.emit('objeto', { objectId: after.id, primeraVez });
+    if (moved) {
+      const casa = this.data.homes[this.state.casa]!.id;
+      this.events.emit('mudanza', { casa, primeraVez: this.firstTime(`casa:${casa}`) });
+      void this.save();
+    }
+    // El gato se sube solo al carrito o a la aspiradora al llegar a esos objetos.
+    if (after.herramienta !== before.herramienta) {
+      this.events.emit('herramienta', { toolId: after.herramienta });
+      this.playSound('herramienta');
+    }
   }
 
   /** Garras afiladas: +probabilidad de crítico. */
@@ -686,10 +714,23 @@ export class Game {
     this.afterTest(true);
   }
 
+  /** Modo pruebas: junta justo lo que pide la mudanza a la siguiente casa (si queda alguna). */
+  testMudanza(): boolean {
+    const req = nextHome(this.state, this.data)?.requisito;
+    if (!req) return false;
+    const canal = this.state.canal;
+    canal.seguidores = Math.max(canal.seguidores, req.seguidores);
+    if (canal.visualizaciones.lt(req.visualizaciones)) canal.visualizaciones = req.visualizaciones;
+    this.checkMove();
+    this.afterTest();
+    return true;
+  }
+
   /** Modo pruebas: seguidores y visualizaciones de regalo. */
   testCanal(seguidores: number, visualizaciones: number): void {
     this.state.canal.seguidores += seguidores;
     this.state.canal.visualizaciones = this.state.canal.visualizaciones.add(visualizaciones);
+    this.checkMove();
     this.afterTest();
   }
 
@@ -820,7 +861,21 @@ export class Game {
     }
   }
 
+  /**
+   * La meta de la mudanza se puede cumplir con Valor de sobra en el último objeto (o con el modo
+   * pruebas): entonces el dueño se muda en ese momento.
+   */
+  private checkMove(): void {
+    const before = currentObject(this.state, this.data);
+    const home = this.state.casa;
+    if (moveIfReady(this.state, this.data)) {
+      this.afterObjectChange(before, home);
+      this.markDirty();
+    }
+  }
+
   private runDiscoveries(now: number): void {
+    this.checkMove();
     for (const unlock of checkUnlocks(this.state, this.data)) {
       this.recentUnlocks.set(unlock.id, now);
       this.events.emit('descubrimiento', { unlockId: unlock.id });
@@ -958,6 +1013,25 @@ export class Game {
       })),
       habilidades,
       hayCompra: habilidades.some((h) => h.listo),
+      mudanza: this.moveView(fmt),
+    };
+  }
+
+  private moveView(fmt: (value: Decimal) => string): ViewModel['canal']['mudanza'] {
+    const s = this.state;
+    const home = nextHome(s, this.data);
+    if (!home?.requisito) return null;
+    const { seguidores, visualizaciones } = home.requisito;
+    return {
+      casa: this.data.homes[s.casa]!.id,
+      siguiente: home.id,
+      desbloqueada: moveUnlocked(s, this.data),
+      seguidores: { tiene: fmt(num(s.canal.seguidores)), meta: fmt(num(seguidores)), progreso: Math.min(1, s.canal.seguidores / seguidores) },
+      visualizaciones: {
+        tiene: fmt(s.canal.visualizaciones),
+        meta: fmt(visualizaciones),
+        progreso: Math.min(1, s.canal.visualizaciones.div(visualizaciones).toNumber()),
+      },
     };
   }
 
@@ -1052,7 +1126,9 @@ export class Game {
         nivel: s.nivelValor,
         enObjeto: valorStepsInObject(s, d),
         porObjeto: d.balance.valor.nivelesPorObjeto,
-        ultimoObjeto: object === d.objects[d.objects.length - 1],
+        ultimoObjeto: objectIndex(s, d) === lastObjectIndex(s, d),
+        esperaMudanza: objectIndex(s, d) === lastObjectIndex(s, d) && nextHome(s, d) !== null && !moveUnlocked(s, d),
+        mudanza: nuevoObjeto !== object && nextHome(s, d) !== null && nuevoObjeto.casa === nextHome(s, d)!.id,
         cantidad: valor.cantidad,
         costo: valor.costo,
         alcanza: puedeValor,
@@ -1123,7 +1199,7 @@ export class Game {
           duracion: researchDuration(s, d, r),
           efectos: r.efectos,
           requiere: r.requiere,
-          alcanzado: objectIndexFor(s.nivelValor, d) >= d.objects.findIndex((o) => o.id === r.requiere),
+          alcanzado: objectIndex(s, d) >= d.objects.findIndex((o) => o.id === r.requiere),
         })),
       },
       canal: this.canalView(fmt),

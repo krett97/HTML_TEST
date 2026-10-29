@@ -1,7 +1,7 @@
 // Investigación gatuna (antes "laboratorio"): investigaciones que tardan tiempo real (de un minuto a días) y dan
 // mejoras permanentes. Se investiga una a la vez, en orden, y el reloj sigue con el juego cerrado.
 import type { GameData, ResearchDef } from './data';
-import { objectIndexFor } from './economy';
+import { objectIndex } from './economy';
 import type { GameState } from './state';
 import { hasUnlock } from './unlocks';
 import { researchDuration } from './skills';
@@ -15,7 +15,7 @@ export function researchStatus(state: GameState, data: GameData, research: Resea
   if (lab.actual?.id === research.id) return 'en-curso';
   const index = data.research.indexOf(research);
   const previousDone = index === 0 || lab.hechas.includes(data.research[index - 1]!.id);
-  const reached = objectIndexFor(state.nivelValor, data) >= data.objects.findIndex((o) => o.id === research.requiere);
+  const reached = objectIndex(state, data) >= data.objects.findIndex((o) => o.id === research.requiere);
   return previousDone && reached ? 'disponible' : 'bloqueada';
 }
 
