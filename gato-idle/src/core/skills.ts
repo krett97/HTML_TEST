@@ -1,10 +1,10 @@
-// Habilidades del Canal: se compran con visualizaciones y se conservan al subir el video.
-//   embestida   cada `embestidaCada` manotazos, uno pega ×(1 + valor × nivel)
-//   recolectora la aspiradora recoge los pedazos: +valor × nivel de dinero
-//   pandilla    al empezar cada partida, el gatito, el ratón y el perro ya tienen valor × nivel niveles
-//   express     las investigaciones tardan (1 − valor × nivel), sin bajar de la mitad
-import type { GameData, ResearchDef, SkillDef, SkillId } from './data';
-import { num, type Decimal } from './num';
+// Habilidades del Canal: no se compran. Cada nivel se desbloquea al juntar seguidores o
+// visualizaciones (totales que solo crecen) y el jugador lo reclama con un toque.
+//   embestida   cada `embestidaCada` manotazos, uno pega ×(1 + valor × nivel)   (seguidores)
+//   recolectora la aspiradora recoge los pedazos: +valor × nivel de dinero      (visualizaciones)
+//   pandilla    al empezar cada partida, el gatito, el ratón y el perro ya tienen valor × nivel niveles (seguidores)
+//   express     las investigaciones tardan (1 − valor × nivel), sin bajar de la mitad (visualizaciones)
+import type { GameData, ResearchDef, SkillDef, SkillId, SkillResource } from './data';
 import type { GameState } from './state';
 
 export function skillDef(data: GameData, id: SkillId): SkillDef {
@@ -20,23 +20,30 @@ export function skillAmount(state: GameState, data: GameData, id: SkillId): numb
   return skillLevel(state, id) * skillDef(data, id).valor;
 }
 
-export function skillCost(state: GameState, def: SkillDef): Decimal {
-  return def.costoBase.mul(num(def.crecimiento).pow(skillLevel(state, def.id))).floor();
+/** Cuánto del recurso pide el nivel `level` (1 = el primero). */
+export function skillRequirement(def: SkillDef, level: number): number {
+  return Math.ceil(def.base * Math.pow(def.crecimiento, level - 1));
+}
+
+/** Seguidores o visualizaciones totales del canal. */
+export function resourceTotal(state: GameState, recurso: SkillResource): number {
+  return recurso === 'seguidores' ? state.canal.seguidores : state.canal.visualizaciones.toNumber();
 }
 
 export function skillMaxed(state: GameState, def: SkillDef): boolean {
   return skillLevel(state, def.id) >= def.max;
 }
 
-export function canAffordSkill(state: GameState, def: SkillDef): boolean {
-  return state.pruebas.dineroInfinito || state.canal.visualizaciones.gte(skillCost(state, def));
+/** Ya se alcanzó la meta del siguiente nivel y se puede reclamar. */
+export function skillClaimable(state: GameState, def: SkillDef): boolean {
+  if (skillMaxed(state, def)) return false;
+  return state.pruebas.dineroInfinito || resourceTotal(state, def.recurso) >= skillRequirement(def, skillLevel(state, def.id) + 1);
 }
 
-/** Paga con visualizaciones (o gratis con el dinero infinito del modo pruebas). */
-export function buySkill(state: GameState, data: GameData, id: string): boolean {
+/** Reclama el siguiente nivel si ya se alcanzó su meta (no cuesta nada). */
+export function claimSkill(state: GameState, data: GameData, id: string): boolean {
   const def = data.skills.find((s) => s.id === id);
-  if (!def || skillMaxed(state, def) || !canAffordSkill(state, def)) return false;
-  if (!state.pruebas.dineroInfinito) state.canal.visualizaciones = state.canal.visualizaciones.sub(skillCost(state, def));
+  if (!def || !skillClaimable(state, def)) return false;
   const entry = state.habilidades.find((s) => s.id === id);
   if (entry) entry.nivel += 1;
   else state.habilidades.push({ id, nivel: 1 });

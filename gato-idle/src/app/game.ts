@@ -17,7 +17,7 @@ import { playUntil, type PlayGoal } from '../core/bot';
 import { afterBulk, buyBulk, planBulk } from '../core/bulk';
 import { followerMultiplier, uploadVideo, videoPreview } from '../core/canal';
 import { incomePerSecond, sponsorReward } from '../core/income';
-import { buySkill, canAffordSkill, rammingMultiplier, researchDuration, skillCost, skillLevel, skillMaxed } from '../core/skills';
+import { claimSkill, rammingMultiplier, researchDuration, resourceTotal, skillClaimable, skillLevel, skillMaxed, skillRequirement } from '../core/skills';
 import { addAllyLevels, advanceClock, completeAllResearch, discoverAll, discoverNext, finishResearchNow } from '../core/pruebas';
 import { deserialize, serialize } from '../core/save';
 import { canAfford } from '../core/wallet';
@@ -241,8 +241,15 @@ export interface SkillView {
   nivel: number;
   max: number;
   maximo: boolean;
-  costo: string;
-  alcanza: boolean;
+  /** Con qué se desbloquea: seguidores o visualizaciones. */
+  recurso: 'seguidores' | 'visualizaciones';
+  /** Cuánto lleva y cuánto pide el siguiente nivel. */
+  tiene: string;
+  meta: string;
+  /** Avance hacia el siguiente nivel (0 a 1). */
+  progreso: number;
+  /** Ya se puede reclamar el siguiente nivel. */
+  listo: boolean;
   /** Lo que da ahora y con el siguiente nivel, ya como texto corto (×5, +30, 10…). */
   actual: string;
   siguiente: string;
@@ -471,8 +478,9 @@ export class Game {
     return video;
   }
 
-  buySkill(id: string): boolean {
-    return this.afterPurchase(buySkill(this.state, this.data, id));
+  /** Reclama el siguiente nivel de una habilidad cuya meta ya se alcanzó. */
+  claimSkill(id: string): boolean {
+    return this.afterPurchase(claimSkill(this.state, this.data, id));
   }
 
   /** Sonido respetando el ajuste "Sonido". */
@@ -834,7 +842,7 @@ export class Game {
         viral: v.viral,
       })),
       habilidades,
-      hayCompra: habilidades.some((h) => h.alcanza),
+      hayCompra: habilidades.some((h) => h.listo),
     };
   }
 
@@ -855,13 +863,18 @@ export class Game {
       }
     };
     const maximo = skillMaxed(s, def);
+    const tiene = resourceTotal(s, def.recurso);
+    const meta = skillRequirement(def, nivel + 1);
     return {
       id: def.id,
       nivel,
       max: def.max,
       maximo,
-      costo: fmt(skillCost(s, def)),
-      alcanza: !maximo && canAffordSkill(s, def),
+      recurso: def.recurso,
+      tiene: fmt(num(Math.min(tiene, meta))),
+      meta: fmt(num(meta)),
+      progreso: maximo ? 1 : Math.min(1, tiene / meta),
+      listo: skillClaimable(s, def),
       actual: show(s),
       siguiente: show(next),
     };

@@ -11,7 +11,7 @@ import type { GameData } from '../src/core/data';
 import { currentObject, moneyPerBreak, tapDamage, tapsToBreak, valorStepsInObject } from '../src/core/economy';
 import { formatNum } from '../src/core/format';
 import { normalizeState } from '../src/core/normalize';
-import { buySkill, skillCost } from '../src/core/skills';
+import { claimSkill } from '../src/core/skills';
 import { createInitialState, type GameState } from '../src/core/state';
 import { gameData } from '../src/data';
 
@@ -79,15 +79,17 @@ export interface RunRow {
   minutos: Record<string, number>;
   seguidores: number;
   visualizaciones: string;
+  /** Totales del canal después del video. */
+  totalSeguidores: number;
+  totalVisualizaciones: string;
   habilidades: string;
 }
 
 /**
- * Varias vueltas seguidas: juega hasta el refri, sube el video y gasta las visualizaciones en la
- * habilidad más barata (embestida, recolectora o pandilla). Responde "¿cuánto más rápida es la
- * segunda vuelta?".
+ * Varias vueltas seguidas: juega hasta el refri, sube el video y reclama las habilidades que ya
+ * alcanzó con sus seguidores y visualizaciones. Responde "¿cuánto más rápida es la segunda vuelta?".
  */
-export function simulateRuns(data: GameData, runs = 4): RunRow[] {
+export function simulateRuns(data: GameData, runs = 6): RunRow[] {
   const state = createInitialState(0);
   normalizeState(state, data);
   const rows: RunRow[] = [];
@@ -100,15 +102,15 @@ export function simulateRuns(data: GameData, runs = 4): RunRow[] {
       minutos[objeto] = seconds / 60;
     }
     const video = uploadVideo(state, data, 0, () => 0.5)!;
-    for (;;) {
-      const options = data.skills.filter((d) => d.id !== 'express').sort((a, b) => skillCost(state, a).cmp(skillCost(state, b)));
-      if (!options.some((d) => buySkill(state, data, d.id))) break;
-    }
+    // Reclama todos los niveles de habilidad que ya alcanzó.
+    while (data.skills.some((d) => claimSkill(state, data, d.id)));
     rows.push({
       vuelta,
       minutos,
       seguidores: video.seguidores,
       visualizaciones: formatNum(video.visualizaciones),
+      totalSeguidores: state.canal.seguidores,
+      totalVisualizaciones: formatNum(state.canal.visualizaciones),
       habilidades: state.habilidades.map((h) => `${h.id} ${h.nivel}`).join(', '),
     });
   }
@@ -130,7 +132,7 @@ function main(): void {
   console.log('\nVueltas (sube el video al llegar al último objeto y gasta en habilidades):');
   for (const run of simulateRuns(gameData)) {
     const marks = Object.entries(run.minutos).map(([obj, min]) => `${obj} ${min.toFixed(1)}`).join(' · ');
-    console.log(`  ${run.vuelta}. ${marks} → +${run.seguidores} seguidores, +${run.visualizaciones} visualizaciones | ${run.habilidades}`);
+    console.log(`  ${run.vuelta}. ${marks} → +${run.seguidores} seg, +${run.visualizaciones} vis (total ${run.totalSeguidores} / ${run.totalVisualizaciones}) | ${run.habilidades}`);
   }
 }
 

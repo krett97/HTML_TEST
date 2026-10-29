@@ -99,6 +99,8 @@ export function botStep(state: GameState, data: GameData, tps: number): BotStep 
     state.dinero = state.dinero.add(earned);
     state.dineroPartida = state.dineroPartida.add(earned);
     state.stats.roturas += missing;
+    state.stats.roturasPartida += missing;
+    state.stats.vistasVideo += missing * (objectIndexFor(state.nivelValor, data) + 1);
     return { seconds, bought: null, discovered: checkUnlocks(state, data) };
   }
   const option = choose(state, data, tps);
@@ -106,7 +108,10 @@ export function botStep(state: GameState, data: GameData, tps: number): BotStep 
   const seconds = Math.max(0, option.cost - state.dinero.toNumber()) / rate;
   state.dinero = state.dinero.add(rate * seconds);
   state.dineroPartida = state.dineroPartida.add(rate * seconds);
-  state.stats.roturas += Math.floor(breaksPerSecond(state, data, tps) * seconds);
+  const broken = Math.floor(breaksPerSecond(state, data, tps) * seconds);
+  state.stats.roturas += broken;
+  state.stats.roturasPartida += broken;
+  state.stats.vistasVideo += broken * (objectIndexFor(state.nivelValor, data) + 1);
   // Evita quedarse a una fracción de centavo por redondeo.
   if (state.dinero.lt(option.cost)) state.dinero = num(option.cost);
   const before = state.dinero;

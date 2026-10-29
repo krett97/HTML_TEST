@@ -228,7 +228,7 @@
     "puntoCargado": "Volviste al punto {n}.",
     "apagar": "Apagar todos los trucos",
     "apagados": "Trucos apagados. Ahora sí, a jugar limpio.",
-    "canal": "+10 seguidores y +2K visualizaciones"
+    "canal": "+10 seguidores y +25K visualizaciones"
   },
   "canal": {
     "titulo": "Canal del dueño",
@@ -243,7 +243,7 @@
     "confirmar": "¿Seguro? Toca otra vez para subirlo",
     "explica": "Al subirlo la partida vuelve al vaso. Conservas seguidores, visualizaciones, habilidades, investigaciones y descubrimientos.",
     "habilidades": "Habilidades",
-    "habilidadesIntro": "Se compran con visualizaciones y se quedan para siempre.",
+    "habilidadesIntro": "Se desbloquean solas al juntar seguidores y visualizaciones (nunca se gastan). Cuando llegues a la meta, ¡reclámala!",
     "videos": "Videos subidos",
     "sinVideos": "Aún no hay videos. ¡A romper cosas!",
     "videoStats": "+{seguidores} seguidores · {visualizaciones} visualizaciones",
@@ -268,6 +268,11 @@
       "recolectora": "Recoge los pedazos: +{actual}% → +{siguiente}% de dinero",
       "pandilla": "Gatito, ratón y perro empiezan en nivel {actual} → {siguiente}",
       "express": "Las investigaciones tardan {actual}% → {siguiente}% menos"
+    },
+    "reclamar": "¡Reclamar!",
+    "meta": {
+      "seguidores": "{tiene} de {meta} seguidores",
+      "visualizaciones": "{tiene} de {meta} visualizaciones"
     }
   },
   "vineta": {

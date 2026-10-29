@@ -228,7 +228,7 @@
     "puntoCargado": "Back to point {n}.",
     "apagar": "Turn off all cheats",
     "apagados": "Cheats off. Playing fair now.",
-    "canal": "+10 followers and +2K views"
+    "canal": "+10 followers and +25K views"
   },
   "canal": {
     "titulo": "Owner's channel",
@@ -243,7 +243,7 @@
     "confirmar": "Sure? Tap again to upload",
     "explica": "Uploading sends you back to the glass. You keep followers, views, skills, research and discoveries.",
     "habilidades": "Skills",
-    "habilidadesIntro": "Bought with views, kept forever.",
+    "habilidadesIntro": "They unlock on their own as you gather followers and views (never spent). When you hit the goal, claim it!",
     "videos": "Uploaded videos",
     "sinVideos": "No videos yet. Go break stuff!",
     "videoStats": "+{seguidores} followers · {visualizaciones} views",
@@ -268,6 +268,11 @@
       "recolectora": "Picks up the pieces: +{actual}% → +{siguiente}% money",
       "pandilla": "Kitten, mouse and dog start at level {actual} → {siguiente}",
       "express": "Research takes {actual}% → {siguiente}% less"
+    },
+    "reclamar": "Claim!",
+    "meta": {
+      "seguidores": "{tiene} of {meta} followers",
+      "visualizaciones": "{tiene} of {meta} views"
     }
   },
   "vineta": {

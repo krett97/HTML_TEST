@@ -47,7 +47,8 @@
   "canal": {
     "escalaSeguidores": 2000000,
     "bonoPorSeguidor": 0.02,
-    "visualizacionesPorSeguidor": 100,
+    "visualizacionesPorVista": 1,
+    "vistasPorSeguidor": 0.1,
     "probabilidadViral": 0.15,
     "multViral": 2,
     "objetoMinimo": "lavadora",

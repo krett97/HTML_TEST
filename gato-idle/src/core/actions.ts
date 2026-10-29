@@ -1,6 +1,6 @@
 // El manotazo: modifica el estado y devuelve qué pasó, para que la escena lo anime.
 import type { GameData } from './data';
-import { critChance, critMultiplier, currentObject, moneyPerBreak, objectProgress, tapDamage, viewsPerBreak } from './economy';
+import { critChance, critMultiplier, currentObject, moneyPerBreak, objectIndexFor, objectProgress, tapDamage, viewsPerBreak } from './economy';
 import { rammingMultiplier, skillLevel } from './skills';
 import { ZERO, type Decimal } from './num';
 import type { GameState } from './state';
@@ -34,6 +34,7 @@ export function hit(state: GameState, data: GameData, damage: Decimal): HitResul
   state.dineroPartida = state.dineroPartida.add(dinero);
   state.stats.roturas += 1;
   state.stats.roturasPartida += 1;
+  state.stats.vistasVideo += objectIndexFor(state.nivelValor, data) + 1;
   state.danioObjeto = ZERO;
   return { objectId: obj.id, damage, progress: 1, broke: true, reward: { vistas, dinero } };
 }

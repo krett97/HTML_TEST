@@ -1,6 +1,6 @@
 # Swat to the Moon — Documento de diseño
 
-> **Versión 0.13** · Actualiza el prompt original ([`prompt-original.md`](prompt-original.md)) con las mejoras del análisis.
+> **Versión 0.14** · Actualiza el prompt original ([`prompt-original.md`](prompt-original.md)) con las mejoras del análisis.
 > **Nombre provisional.** *Knock It Off!* ya está en uso (Spin Master vende un juego físico con ese nombre para jugar con tu gato, y hay varios juegos en itch.io). *Swat to the Moon* aún no está verificado en Play Store ni en registros de marca (USPTO / IMPI). El nombre visible se cambia en un solo lugar: `src/i18n/*.json` → `app.title` y `capacitor.config.ts` → `appName`.
 
 ---
@@ -576,18 +576,18 @@ bono permanente           = dinero × (1 + 0.02 × seguidores totales)
 
 La raíz cuadrada hace que esperar más dé más, pero cada vez menos: conviene subir el video en cuanto se llega al final, no quedarse horas en el refri. Una partida normal deja ~10 seguidores en la lavadora y ~24 en el refri (+48 % de dinero).
 
-### Habilidades (se compran con visualizaciones, `habilidades.json`, `src/core/skills.ts`)
+### Habilidades (desde 0.14.0 se desbloquean con metas: ver §31)
 
-| Habilidad | Efecto por nivel | Costo | Tope |
-|---|---|---|---|
-| 🏎️ Embestida del carrito | cada 10 manotazos, uno pega ×(1 + 2 × nivel) | `200 × 2^nivel` | 10 |
-| 🤖 Aspiradora recolectora | +10 % de dinero | `200 × 2^nivel` | 20 |
-| 🐾 Pandilla veterana | gatito, ratón y perro empiezan cada partida en nivel 5 × nivel | `400 × 2.5^nivel` | 10 |
-| 🧪 Investigación express | las investigaciones tardan 10 % menos (máximo la mitad) | `200 × 2.5^nivel` | 5 |
+| Habilidad | Efecto por nivel | Tope |
+|---|---|---|
+| 🏎️ Embestida del carrito | cada 10 manotazos, uno pega ×(1 + 2 × nivel) | 10 |
+| 🤖 Aspiradora recolectora | +10 % de dinero | 20 |
+| 🐾 Pandilla veterana | gatito, ratón y perro empiezan cada partida en nivel 5 × nivel | 10 |
+| 🧪 Investigación express | las investigaciones tardan 10 % menos (máximo la mitad) | 5 |
 
 Son las ideas de las herramientas viejas (§4) convertidas en mejoras permanentes. La embestida entra al daño promedio como `1 + (mult − 1) / 10`, así que el simulador la mide igual que los críticos.
 
-### Balance (simulador: `npm run simular`, sección "Vueltas")
+### Balance de la 0.10.0 (antes de las metas; el actual está en §31)
 
 | Vuelta | Llega al refri | Seguidores del video |
 |---|---|---|
@@ -661,3 +661,36 @@ Además de Garras, Sombrero y Saco (§28), ahora también tienen viñeta de cóm
 | El dueño compra un objeto nuevo | amarilla, con el objeto ampliado | "¡El dueño compró: Taza!" · una frase al azar ("Garantía: 0 días", "Se ve carísimo… sería una pena que se cayera 😼"…) |
 
 **Todas las viñetas salen solo la primera vez en la partida guardada** (`vistos` en el estado). Después de subir el video se vuelven a adoptar los aliados y a comprar los objetos; ahí sale el aviso corto de siempre, para no interrumpir cada vuelta. Con PixelLab cada viñeta tendrá su ilustración propia (hoy es el sprite ampliado).
+
+## 31. Habilidades por metas: seguidores y visualizaciones que nunca se gastan (versión 0.14.0)
+
+Antes las visualizaciones se gastaban en habilidades y el jugador tenía que escoger. Ahora:
+
+- **Seguidores y visualizaciones son totales que solo crecen.** No se gastan nunca.
+- Cada habilidad sube de nivel al llegar a una **meta** de seguidores o de visualizaciones. Cuando se alcanza, la tarjeta brilla y el botón **"¡Reclamar!"** late; un toque sube el nivel. No hay que escoger entre una y otra: todas avanzan solas con el canal.
+- Cada tarjeta muestra la meta del siguiente nivel con su barra ("👥 24/27", "👁️ 95.9K/100K").
+
+| Habilidad | Se desbloquea con | Meta del nivel n | Tope |
+|---|---|---|---|
+| 🏎️ Embestida del carrito | 👥 seguidores | `⌈6 × 1.7^(n−1)⌉`: 6, 11, 18, 30, 50… | 10 |
+| 🤖 Aspiradora recolectora | 👁️ visualizaciones | `⌈30K × 1.7^(n−1)⌉`: 30K, 51K, 87K, 147K… | 20 |
+| 🐾 Pandilla veterana | 👥 seguidores | `⌈15 × 1.8^(n−1)⌉`: 15, 27, 49, 88… | 10 |
+| 🧪 Investigación express | 👁️ visualizaciones | `⌈50K × 2^(n−1)⌉`: 50K, 100K, 200K… | 5 |
+
+### De dónde salen las visualizaciones (ahora miden la destrucción)
+
+```
+vistas del video          = Σ por cada rotura de la vuelta: posición del objeto (vaso 1 … refri 27)
+visualizaciones del video = vistas del video × (1 + 0.1 × seguidores que ya tiene el canal)   (×2 si es viral)
+seguidores del video      = ⌊ √(dinero ganado en la vuelta / 2,000,000) ⌋                   (×2 si es viral)
+```
+
+Romper cosas grandes da más vistas, y **un canal con más seguidores consigue más visualizaciones** (+10 % por seguidor). Sin ese bono, las vueltas más rápidas romperían menos cosas y cada video traería menos visualizaciones.
+
+### Balance (simulador)
+
+| Vuelta | Refri | Video | Totales | Habilidades reclamadas |
+|---|---|---|---|---|
+| 1 | min 36.2 | +24 👥 · +96K 👁️ | 24 / 96K | embestida 3, recolectora 3, pandilla 1, express 1 |
+| 2 | min 13.7 (2.6× más rápida) | +23 · +154K | 47 / 250K | 4, 4, 2, 3 |
+| 3 | min 8.5 | +22 · +175K | 69 / 426K | 5, 6, 3, 4 |

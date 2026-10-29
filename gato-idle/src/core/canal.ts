@@ -1,6 +1,6 @@
 // El canal del dueño. A media partida el dueño cacha al gato y empieza a grabar; "subir el video"
 // es el reinicio: la partida vuelve al vaso, y el video deja seguidores (bono permanente de
-// dinero) y visualizaciones (para comprar Habilidades).
+// dinero) y visualizaciones. Los dos son totales que solo crecen y desbloquean las Habilidades.
 import { allyUnlocked } from './allies';
 import type { GameData } from './data';
 import { currentObject, objectIndexFor } from './economy';
@@ -24,6 +24,11 @@ export function followerMultiplier(state: GameState, data: GameData): number {
   return 1 + state.canal.seguidores * data.balance.canal.bonoPorSeguidor;
 }
 
+/** Un canal con más seguidores consigue más visualizaciones: ×(1 + vistasPorSeguidor × seguidores). */
+export function viewsBoost(state: GameState, data: GameData): number {
+  return 1 + state.canal.seguidores * data.balance.canal.vistasPorSeguidor;
+}
+
 export interface VideoPreview {
   seguidores: number;
   visualizaciones: Decimal;
@@ -36,7 +41,7 @@ export function videoPreview(state: GameState, data: GameData): VideoPreview {
   const minimo = data.objects.findIndex((o) => o.id === data.balance.canal.objetoMinimo);
   return {
     seguidores,
-    visualizaciones: num(seguidores * data.balance.canal.visualizacionesPorSeguidor),
+    visualizaciones: num(state.stats.vistasVideo * data.balance.canal.visualizacionesPorVista * viewsBoost(state, data)).floor(),
     listo: hasUnlock(state, 'canal') && objectIndexFor(state.nivelValor, data) >= minimo && seguidores > 0,
   };
 }
@@ -78,6 +83,7 @@ function restartRun(state: GameState, data: GameData): void {
   state.nivelSaco = 0;
   state.danioObjeto = ZERO;
   state.stats.roturasPartida = 0;
+  state.stats.vistasVideo = 0;
   // Habilidad "pandilla": los primeros aliados ya vienen entrenados.
   const levels = skillAmount(state, data, 'pandilla');
   state.aliados = levels > 0

@@ -74,11 +74,13 @@ export interface GameState {
     roturas: number;
     /** Roturas de la partida actual (el video en grabación). */
     roturasPartida: number;
+    /** Vistas del video en grabación: cada rotura suma según el tamaño del objeto (vaso 1 … refri 27). */
+    vistasVideo: number;
   };
   /** El canal del dueño: lo que sobrevive al subir el video. */
   canal: {
+    /** Seguidores y visualizaciones son totales que solo crecen: las Habilidades se desbloquean con ellos. */
     seguidores: number;
-    /** Se gastan en Habilidades. */
     visualizaciones: Decimal;
     /** Los más recientes primero. */
     videos: VideoRecord[];
@@ -107,7 +109,7 @@ export function createInitialState(now: number): GameState {
     desbloqueos: [],
     laboratorio: { hechas: [], actual: null },
     danioObjeto: ZERO,
-    stats: { toques: 0, roturas: 0, roturasPartida: 0 },
+    stats: { toques: 0, roturas: 0, roturasPartida: 0, vistasVideo: 0 },
     canal: { seguidores: 0, visualizaciones: ZERO, videos: [] },
     habilidades: [],
     vistos: [],

@@ -70,7 +70,7 @@
   <h3>{$t('canal.habilidades')}</h3>
   <p class="small muted intro">{$t('canal.habilidadesIntro')}</p>
   {#each $view.canal.habilidades as skill (skill.id)}
-    <div class="card upgrade">
+    <div class="card upgrade" class:ready={skill.listo}>
       <span class="icon" aria-hidden="true">{SKILL_ICONS[skill.id] ?? '✨'}</span>
       <div class="info">
         <div class="name">
@@ -78,15 +78,23 @@
           <span class="level">{skill.maximo ? $t('canal.max') : `${skill.nivel}/${skill.max}`}</span>
         </div>
         <div class="effect">{$t(`canal.efectos.${skill.id}`, { actual: skill.actual, siguiente: skill.siguiente })}</div>
+        {#if !skill.maximo}
+          <!-- Meta del siguiente nivel: se desbloquea solo al juntar seguidores o visualizaciones. -->
+          <div class="goal" title={$t(`canal.meta.${skill.recurso}`, { tiene: skill.tiene, meta: skill.meta })}>
+            <span class="goal-icon" aria-hidden="true">{skill.recurso === 'seguidores' ? '👥' : '👁️'}</span>
+            <span class="goal-bar"><span class="goal-fill" style:width="{skill.progreso * 100}%"></span></span>
+            <span class="goal-text cifra">{skill.tiene}/{skill.meta}</span>
+          </div>
+        {/if}
       </div>
       <button
         type="button"
-        class="btn btn--accent buy cifra"
-        disabled={!skill.alcanza}
-        onclick={() => game.buySkill(skill.id)}
+        class="btn btn--accent buy claim"
+        disabled={!skill.listo}
+        onclick={() => game.claimSkill(skill.id)}
         data-testid="habilidad-{skill.id}"
       >
-        {skill.maximo ? '✓' : `👁️ ${skill.costo}`}
+        {#if skill.maximo}✓{:else if skill.listo}{$t('canal.reclamar')}{:else}🔒{/if}
       </button>
     </div>
   {/each}
@@ -205,6 +213,39 @@
   .buy {
     min-width: 84px;
     font-variant-numeric: tabular-nums;
+  }
+  .goal {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .goal-bar {
+    height: 8px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+  }
+  .goal-fill {
+    display: block;
+    height: 100%;
+    background: var(--gold);
+    transition: width 300ms ease-out;
+  }
+  /* Meta alcanzada: la tarjeta brilla y el botón "¡Reclamar!" late. */
+  .ready {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 2px rgba(255, 211, 110, 0.35);
+  }
+  .ready .claim {
+    animation: reclamar 900ms ease-in-out infinite;
+  }
+  @keyframes reclamar {
+    50% {
+      scale: 1.07;
+    }
   }
   .videos {
     display: grid;

@@ -93,16 +93,21 @@ export interface ResearchDef {
  * con efecto volverán como "Habilidades" en los reinicios (fase 4).
  */
 /**
- * Habilidad del Canal: se compra con visualizaciones y se conserva al subir el video.
+ * Habilidad del Canal: no se compra, se desbloquea por niveles al juntar seguidores o
+ * visualizaciones (totales, nunca se gastan). Nivel n pide ⌈base × crecimiento^(n−1)⌉ del `recurso`.
  * `valor` es lo que da cada nivel (ver core/skills.ts para qué significa en cada una).
  */
 export interface SkillDef {
   id: string;
-  costoBase: Decimal;
+  recurso: SkillResource;
+  base: number;
   crecimiento: number;
   max: number;
   valor: number;
 }
+
+export const SKILL_RESOURCES = ['seguidores', 'visualizaciones'] as const;
+export type SkillResource = (typeof SKILL_RESOURCES)[number];
 
 export interface ToolDef {
   id: string;
@@ -154,7 +159,10 @@ export interface Balance {
     escalaSeguidores: number;
     /** Cada seguidor da +2 % de dinero, para siempre. */
     bonoPorSeguidor: number;
-    visualizacionesPorSeguidor: number;
+    /** Visualizaciones del video por cada "vista" de la partida (stats.vistasVideo). */
+    visualizacionesPorVista: number;
+    /** Cada seguidor que ya tiene el canal trae +10 % de visualizaciones a cada video. */
+    vistasPorSeguidor: number;
     /** Probabilidad de que el video se haga viral y cuánto multiplica. */
     probabilidadViral: number;
     multViral: number;
@@ -279,6 +287,13 @@ function section(file: string, parent: Raw, key: string): Raw {
   const value = parent[key];
   if (value === null || typeof value !== 'object') throw new DataError(file, `falta la sección "${key}"`);
   return { id: key, ...(value as Raw) };
+}
+
+function skillResource(value: string, id: string): SkillResource {
+  if (!(SKILL_RESOURCES as readonly string[]).includes(value)) {
+    throw new DataError('habilidades.json', `"${id}": recurso "${value}" no es válido (${SKILL_RESOURCES.join(', ')})`);
+  }
+  return value as SkillResource;
 }
 
 function uniqueIds(file: string, items: { id: string }[]): void {
@@ -425,7 +440,8 @@ export function parseGameData(raw: RawGameData): GameData {
     canal: {
       escalaSeguidores: n(canal, 'escalaSeguidores'),
       bonoPorSeguidor: n(canal, 'bonoPorSeguidor'),
-      visualizacionesPorSeguidor: n(canal, 'visualizacionesPorSeguidor'),
+      visualizacionesPorVista: n(canal, 'visualizacionesPorVista'),
+      vistasPorSeguidor: n(canal, 'vistasPorSeguidor'),
       probabilidadViral: Math.min(1, n(canal, 'probabilidadViral')),
       multViral: n(canal, 'multViral'),
       objetoMinimo,
@@ -447,7 +463,8 @@ export function parseGameData(raw: RawGameData): GameData {
 
   const skills: SkillDef[] = asArray('habilidades.json', raw.habilidades).map((item) => ({
     id: str('habilidades.json', item, 'id'),
-    costoBase: positive('habilidades.json', item, 'costoBase'),
+    recurso: skillResource(str('habilidades.json', item, 'recurso'), String(item.id)),
+    base: positive('habilidades.json', item, 'base').toNumber(),
     crecimiento: positive('habilidades.json', item, 'crecimiento').toNumber(),
     max: Math.max(1, Math.floor(positive('habilidades.json', item, 'max').toNumber())),
     valor: positive('habilidades.json', item, 'valor').toNumber(),

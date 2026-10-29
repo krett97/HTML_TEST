@@ -8,7 +8,7 @@ import { normalizeState } from '../src/core/normalize';
 import { num } from '../src/core/num';
 import { startResearch } from '../src/core/research';
 import { deserialize, serialize } from '../src/core/save';
-import { buySkill, skillCost, skillLevel } from '../src/core/skills';
+import { claimSkill, skillClaimable, skillLevel, skillRequirement } from '../src/core/skills';
 import { createInitialState } from '../src/core/state';
 import { gameData } from '../src/data';
 
@@ -55,7 +55,9 @@ describe('Canal: subir el video es el reinicio', () => {
     expect(video.viral).toBe(false);
     expect(video.objeto).toBe('refri');
     expect(state.canal.seguidores).toBe(seguidores);
-    expect(state.canal.visualizaciones.toNumber()).toBe(seguidores * gameData.balance.canal.visualizacionesPorSeguidor);
+    // Primer video: cada rotura suma según el objeto (vaso 1 … refri 27), sin bono de seguidores todavía.
+    expect(state.canal.visualizaciones.toNumber()).toBeGreaterThan(50_000);
+    expect(state.stats.vistasVideo).toBe(0);
     expect(state.canal.videos).toHaveLength(1);
     expect(state.nivelValor).toBe(0);
     expect(state.nivelFuerza).toBe(0);
@@ -87,16 +89,45 @@ describe('Canal: subir el video es el reinicio', () => {
 });
 
 describe('Habilidades', () => {
-  it('se compran con visualizaciones y tienen tope', () => {
+  it('se desbloquean al llegar a la meta de seguidores o visualizaciones, sin gastar nada', () => {
     const state = newState();
-    const def = gameData.skills.find((s) => s.id === 'embestida')!;
-    expect(buySkill(state, gameData, 'embestida')).toBe(false);
-    state.canal.visualizaciones = skillCost(state, def);
-    expect(buySkill(state, gameData, 'embestida')).toBe(true);
-    expect(state.canal.visualizaciones.eq(0)).toBe(true);
-    state.habilidades = [{ id: 'embestida', nivel: def.max }];
-    state.canal.visualizaciones = num(1e30);
-    expect(buySkill(state, gameData, 'embestida')).toBe(false);
+    const embestida = gameData.skills.find((s) => s.id === 'embestida')!;
+    expect(embestida.recurso).toBe('seguidores');
+    expect(claimSkill(state, gameData, 'embestida')).toBe(false);
+    state.canal.seguidores = skillRequirement(embestida, 1);
+    expect(skillClaimable(state, embestida)).toBe(true);
+    expect(claimSkill(state, gameData, 'embestida')).toBe(true);
+    // No se gasta: los seguidores siguen ahí, pero el nivel 2 pide más.
+    expect(state.canal.seguidores).toBe(skillRequirement(embestida, 1));
+    expect(skillClaimable(state, embestida)).toBe(false);
+    state.canal.seguidores = skillRequirement(embestida, 3);
+    expect(claimSkill(state, gameData, 'embestida')).toBe(true);
+    expect(claimSkill(state, gameData, 'embestida')).toBe(true);
+    expect(skillLevel(state, 'embestida')).toBe(3);
+    state.habilidades = [{ id: 'embestida', nivel: embestida.max }];
+    state.canal.seguidores = 1e9;
+    expect(claimSkill(state, gameData, 'embestida')).toBe(false);
+  });
+
+  it('las de visualizaciones miran el total de visualizaciones', () => {
+    const state = newState();
+    const recolectora = gameData.skills.find((s) => s.id === 'recolectora')!;
+    expect(recolectora.recurso).toBe('visualizaciones');
+    state.canal.seguidores = 1e9;
+    expect(skillClaimable(state, recolectora)).toBe(false);
+    state.canal.visualizaciones = num(skillRequirement(recolectora, 1));
+    expect(claimSkill(state, gameData, 'recolectora')).toBe(true);
+  });
+
+  it('más seguidores, más visualizaciones por video', () => {
+    const a = newState();
+    a.desbloqueos.push('canal');
+    a.stats.vistasVideo = 1000;
+    const b = newState();
+    b.desbloqueos.push('canal');
+    b.stats.vistasVideo = 1000;
+    b.canal.seguidores = 50;
+    expect(videoPreview(b, gameData).visualizaciones.toNumber()).toBe(videoPreview(a, gameData).visualizaciones.toNumber() * 6);
   });
 
   it('embestida: cada 10 manotazos, uno pega ×(1 + 2 × nivel)', () => {
