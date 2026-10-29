@@ -11,7 +11,7 @@ type Source = CanvasImageSource & { width: number; height: number };
  * abajo medida desde los pies (lo mismo que HAT_X/HAT_Y + SWAT_HAT en MainScene, ×2).
  */
 const HAT_CENTER_X = 20;
-const HAT_BOTTOM = 31;
+const HAT_BOTTOM = 28;
 
 /** PNG (data URL) del gato a tamaño real; se amplía con CSS (image-rendering: pixelated). */
 export function catPortrait(textures: Phaser.Textures.TextureManager, look: CatLook): string {

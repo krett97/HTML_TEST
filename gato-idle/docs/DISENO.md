@@ -773,4 +773,4 @@ Antes, al golpear, el gato se quedaba quieto y una pata se deslizaba desde atrá
 - La viñeta de cómic de las mejoras del gato usa el cuadro del manotazo (luce las garras).
 - Los cuadros se hicieron editando el dibujo con *edit-image-pixen* (misma cara y colores); las cuatro variantes (normal, garras, saco, saco + garras) parten del mismo cuadro y se recortan con el mismo marco para que no salten. Recetas en `tools/arte/elegidos.json`; herramienta `tools/arte/editar.py`.
 - El gato sentado mira hacia el objeto (a la derecha), igual que en el manotazo (0.18.1: se volteó el dibujo de PixelLab y se recolocó el sombrero).
-- El Sombrero ridículo ahora es un **sombrero de copa negro de mago** (brillante, con banda gris), que combina con el saco; se apoya en la frente para que se vea la cara de susto (0.18.2–0.18.3).
+- El Sombrero ridículo ahora es un **sombrero de copa negro de mago** (brillante, con banda gris), que combina con el saco; asentado sobre la cabeza sin tapar los ojos (0.18.2–0.18.4).
