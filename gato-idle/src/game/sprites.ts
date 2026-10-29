@@ -76,22 +76,6 @@ export const CAT_SUIT = [
   '...kwwkkkkkkkwwk....',
 ];
 
-// Brazo con la patita blanca en la punta; sale del pecho del gato en cada manotazo.
-export const PAW = [
-  'kkkkkkkkk.',
-  'oooooowwwk',
-  'oooooowpwk',
-  'kkkkkkkkk.',
-];
-
-// Garras afiladas (mejora de crítico): la misma pata con garras de acero que brillan.
-export const CLAW = [
-  'kkkkkkkkkk.mm.',
-  'oooooowwwkmMm.',
-  'oooooowpwkmMMm',
-  'kkkkkkkkkk.mm.',
-];
-
 // Sombrero ridículo (mejora de daño crítico): chistera morada con flor, un poco grande para el gato.
 export const HAT = [
   '...kkkkk...',
@@ -251,23 +235,20 @@ export const OWNER = [
   '....kkkkkkkk',
 ];
 
-/** Con saco, la manga del brazo también es negra. */
-function sleeve(rows: string[]): string[] {
-  return rows.map((row) => row.slice(0, 6).replaceAll('o', 'j') + row.slice(6));
-}
-
 export const SPRITES = {
   gato: CAT,
   gato_saco: CAT_SUIT,
-  pata: PAW,
-  garra: CLAW,
-  pata_saco: sleeve(PAW),
-  garra_saco: sleeve(CLAW),
+  // Cuadro del manotazo (con garras y/o saco). Provisional: el mismo gato sentado.
+  gato_golpe: CAT,
+  gato_garra_golpe: CAT,
+  gato_saco_golpe: CAT_SUIT,
+  gato_saco_garra_golpe: CAT_SUIT,
   sombrero: HAT,
   duenio: OWNER,
   carrito: CAR,
   aspiradora: VACUUM,
   aliado_gatito: KITTEN,
+  aliado_gatito_golpe: KITTEN,
   aliado_perro: DOG,
   aliado_perico: PARROT,
   aliado_mapache: RACCOON,

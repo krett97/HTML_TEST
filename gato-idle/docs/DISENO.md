@@ -724,7 +724,7 @@ Llega el primer arte de verdad, generado con PixelLab. **Principio: los personaj
 | Gato (protagonista) | Gato crema con ojos enormes de susto y **una uva en la cabeza** |
 | Gato con saco | El mismo, con saco negro, camisa y corbata roja (editado con Pixen para que sea idéntico) |
 | Sombrero ridículo | **Gorra de hélice** de colores, gigante (tapa la uva) |
-| Garras afiladas | Tres uñas de metal en la pata (la pata se dibuja aparte: `tools/arte/patas.py`) |
+| Garras afiladas | Tres uñas de metal en la pata (se ven en el cuadro del manotazo, §35) |
 | Gatito bebé | Llorando a mares… con el pulgar arriba |
 | Ratón | Lentes oscuros y un queso, muy seguro de sí |
 | Perro | Shiba con **mirada de reojo** desconfiada |
@@ -763,3 +763,12 @@ Un tutorial **corto y en contexto**: el gato (con su cara de susto y su uva) hab
 Lo demás (críticos, saco, investigación, habilidades) ya lo presentan las viñetas de cómic y los avisos, así que el tutorial no crece.
 
 Reglas (`src/core/tutorial.ts`): cada paso terminado se anota en `vistos` (`tuto:<paso>`), que sobrevive a subir el video y a recargar, así que **nunca se repite**. Una partida que ya pasó por ahí (o que ya subió un video) lo da por visto sin mostrarlo. "Saltar tutorial" anota `tuto:saltar`.
+
+## 35. Manotazo de verdad (versión 0.18.0)
+
+Antes, al golpear, el gato se quedaba quieto y una pata se deslizaba desde atrás; el gatito bebé solo se recorría de lado. Ahora:
+
+- **El gato suelta el manotazo:** cada toque cambia por 75 ms al cuadro del golpe (se para, guiña y estira la pata hasta el objeto, inclinándose un poco) y se vuelve a sentar. Con garras, la pata del golpe trae las uñas de metal; con saco, el golpe es con saco. En ese cuadro pasa delante del objeto para que la pata le llegue (en el carrito o la aspiradora no: va sentado adentro). El sombrero sigue a la cabeza.
+- **El gatito bebé brinca en arco** hasta el objeto, suelta su manotazo (llorando) y regresa a su lugar. Cualquier aliado que tenga un cuadro `aliado_<id>_golpe` hace lo mismo; los demás siguen con sus saltitos.
+- La viñeta de cómic de las mejoras del gato usa el cuadro del manotazo (luce las garras).
+- Los cuadros se hicieron editando el dibujo con *edit-image-pixen* (misma cara y colores); las cuatro variantes (normal, garras, saco, saco + garras) parten del mismo cuadro y se recortan con el mismo marco para que no salten. Recetas en `tools/arte/elegidos.json`; herramienta `tools/arte/editar.py`.

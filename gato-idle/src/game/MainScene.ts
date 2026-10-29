@@ -26,6 +26,9 @@ const S = 1 / ART;
 /** Dónde va el sombrero respecto al gato (origen abajo a la izquierda): encima de la cabeza, tapando la uva. */
 const HAT_X = 9.5;
 const HAT_Y = -14;
+/** Cuánto dura el cuadro del manotazo (ms) y cuánto se mueve la cabeza (y el sombrero) en ese cuadro. */
+const SWAT_MS = 75;
+const SWAT_HAT = { dx: 0.5, dy: 2 };
 /** Inclinación máxima de los objetos que se "vuelcan", justo antes de caer. */
 const MAX_TILT = 22;
 /** Frases de la viñeta de objeto nuevo (vineta.objeto.frases.0 … N-1). */
@@ -63,13 +66,16 @@ export class MainScene extends Phaser.Scene {
   private scratches!: Phaser.GameObjects.Graphics;
   private cat!: Phaser.GameObjects.Image;
   private vehicle!: Phaser.GameObjects.Image;
-  private paw!: Phaser.GameObjects.Image;
   private hat!: Phaser.GameObjects.Image;
   private owner!: Phaser.GameObjects.Image;
   private object!: Phaser.GameObjects.Image;
   private objectDef!: ObjectDef;
   private look: ToolLook = toolLook('pata');
   private readonly allies = new Map<string, AllyVisual>();
+  /** El gato está soltando un manotazo (cuadro de golpe) y cuánto se inclina hacia el objeto. */
+  private swatting = false;
+  private swatTimer?: Phaser.Time.TimerEvent;
+  private readonly lean = { angle: 0 };
   private readonly lastAllyNumber = new Map<string, number>();
   private unsubscribers: (() => void)[] = [];
 
@@ -116,7 +122,6 @@ export class MainScene extends Phaser.Scene {
     this.cameras.main.setOrigin(0, 0).setZoom(ART);
 
     this.background = this.add.graphics();
-    this.paw = this.add.image(0, 0, 'pata').setOrigin(0, 0.5).setScale(S).setDepth(1).setVisible(false);
     this.cat = this.add.image(0, 0, 'gato').setOrigin(0, 1).setScale(S).setDepth(2);
     this.vehicle = this.add.image(0, 0, 'carrito').setOrigin(0.5, 1).setScale(S).setDepth(2.5).setVisible(false);
     this.hat = this.add.image(0, 0, 'sombrero').setOrigin(0.5, 1).setScale(S).setDepth(2.8).setVisible(false);
@@ -180,7 +185,9 @@ export class MainScene extends Phaser.Scene {
 
   /** Cada cuadro: el sombrero va en la cabeza del gato y los aliados siguen su lugar (el gatito, junto al gato). */
   update(): void {
-    this.hat.setPosition(this.cat.x + HAT_X, this.cat.y + HAT_Y);
+    const swat = this.swatting ? SWAT_HAT : { dx: 0, dy: 0 };
+    this.cat.setAngle(this.lean.angle);
+    this.hat.setPosition(this.cat.x + HAT_X + swat.dx, this.cat.y + HAT_Y + swat.dy).setAngle(this.lean.angle);
     for (const [id, visual] of this.allies) {
       if (!visual.sprite.visible) continue;
       const base = this.allyRest(id);
@@ -239,18 +246,13 @@ export class MainScene extends Phaser.Scene {
     this.applyLook();
     this.moveCat(this.catXFor(this.object.x), false);
     this.drawScratches(progress);
-    this.paw.setVisible(false);
   }
 
-  /** Vehículo según la herramienta del objeto en la mesa; garras y sombrero según las mejoras de crítico. */
+  /** Vehículo según la herramienta del objeto en la mesa; garras, sombrero y saco según las mejoras. */
   private applyLook(): void {
     this.look = toolLook(this.objectDef.herramienta);
-    const mejoras = this.controller.catLook();
-    // Con saco cambia el dibujo del gato y la manga del brazo.
-    const traje = mejoras.saco ? '_saco' : '';
-    this.cat.setTexture(`gato${traje}`);
-    this.paw.setTexture(`${mejoras.garras ? 'garra' : 'pata'}${traje}`);
-    this.hat.setVisible(mejoras.sombrero);
+    this.applyCatTexture();
+    this.hat.setVisible(this.controller.catLook().sombrero);
     this.vehicle.setVisible(this.look.vehicle !== null);
     if (this.look.vehicle) this.vehicle.setTexture(this.look.vehicle);
     this.cat.y = this.surfaceTop - this.look.lift;
@@ -290,7 +292,7 @@ export class MainScene extends Phaser.Scene {
   // ---- Eventos ----
 
   private onHit(result: HitResult): void {
-    this.swipePaw();
+    this.swat();
     this.tapNumber(result);
     if (result.critico) this.criticalHit();
     else if (result.embestida) this.rammingHit();
@@ -408,10 +410,30 @@ export class MainScene extends Phaser.Scene {
     visual.hop.dx = 0;
     visual.hop.dy = 0;
     const rest = this.allyRest(allyId);
+    const sprite = visual.sprite;
+    const idleKey = `aliado_${allyId}`;
+    const swatKey = `${idleKey}_golpe`;
+    sprite.setTexture(idleKey).setDepth(2.2);
+    if (this.textures.exists(swatKey)) {
+      // Brinca en arco hasta el objeto, suelta el manotazo (delante del objeto) y regresa.
+      const dx = this.object.x - this.widthOf(this.object) / 2 - this.widthOf(sprite) + 2 - rest.x;
+      this.tweens.add({ targets: visual.hop, dy: -8, duration: 45, ease: 'Quad.out', yoyo: true });
+      this.tweens.add({
+        targets: visual.hop,
+        dx,
+        duration: 90,
+        ease: 'Quad.out',
+        yoyo: true,
+        hold: 90,
+        onYoyo: () => sprite.setTexture(idleKey).setDepth(2.2),
+      });
+      this.time.delayedCall(90, () => {
+        if (visual.hop.dx !== 0) sprite.setTexture(swatKey).setDepth(3.2);
+      });
+      return;
+    }
     let target = { dx: 0, dy: -6 };
-    if (allyId === 'gatito') {
-      target = { dx: this.object.x - this.widthOf(this.object) / 2 - 13 - rest.x, dy: -3 };
-    } else if (allyId === 'perico' || allyId === 'cuervo') {
+    if (allyId === 'perico' || allyId === 'cuervo') {
       // Vuelan hasta el objeto y regresan.
       target = { dx: this.object.x - 5 - rest.x, dy: this.object.y - this.heightOf(this.object) - 2 - rest.y };
     } else if (allyId === 'cabra') {
@@ -677,20 +699,28 @@ export class MainScene extends Phaser.Scene {
     parent.append(el);
   }
 
-  private swipePaw(): void {
-    const restX = this.cat.x + 6;
-    const strikeX = this.object.x - this.widthOf(this.object) / 2 - this.widthOf(this.paw) + 3;
-    this.tweens.killTweensOf(this.paw);
-    this.paw.setPosition(restX, this.cat.y - 7).setVisible(true);
-    this.tweens.add({
-      targets: this.paw,
-      x: Math.max(restX, strikeX),
-      duration: 45,
-      ease: 'Quad.out',
-      yoyo: true,
-      hold: 30,
-      onComplete: () => this.paw.setVisible(false),
+  /** Dibujo del gato: sentado, o soltando el manotazo (con las garras de metal, si las tiene). */
+  private applyCatTexture(): void {
+    const mejoras = this.controller.catLook();
+    const traje = mejoras.saco ? '_saco' : '';
+    const golpe = this.swatting ? `${mejoras.garras ? '_garra' : ''}_golpe` : '';
+    this.cat.setTexture(`gato${traje}${golpe}`);
+    // En el manotazo pasa delante del objeto para que la pata le llegue (en un vehículo no: va sentado adentro).
+    this.cat.setDepth(this.swatting && !this.look.vehicle ? 3.2 : 2);
+  }
+
+  /** El manotazo: el gato se para, suelta la pata hacia el objeto inclinándose y se vuelve a sentar. */
+  private swat(): void {
+    this.swatTimer?.remove();
+    this.swatting = true;
+    this.applyCatTexture();
+    this.swatTimer = this.time.delayedCall(SWAT_MS, () => {
+      this.swatting = false;
+      this.applyCatTexture();
     });
+    this.tweens.killTweensOf(this.lean);
+    this.lean.angle = 0;
+    this.tweens.add({ targets: this.lean, angle: 5, duration: SWAT_MS / 2, ease: 'Quad.out', yoyo: true });
   }
 
   private pushObject(progress: number): void {
