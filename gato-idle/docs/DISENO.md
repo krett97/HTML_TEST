@@ -1,6 +1,6 @@
 # Swat to the Moon — Documento de diseño
 
-> **Versión 0.12** · Actualiza el prompt original ([`prompt-original.md`](prompt-original.md)) con las mejoras del análisis.
+> **Versión 0.13** · Actualiza el prompt original ([`prompt-original.md`](prompt-original.md)) con las mejoras del análisis.
 > **Nombre provisional.** *Knock It Off!* ya está en uso (Spin Master vende un juego físico con ese nombre para jugar con tu gato, y hay varios juegos en itch.io). *Swat to the Moon* aún no está verificado en Play Store ni en registros de marca (USPTO / IMPI). El nombre visible se cambia en un solo lugar: `src/i18n/*.json` → `app.title` y `capacitor.config.ts` → `appName`.
 
 ---
@@ -644,3 +644,20 @@ En Pixelify Sans el **8 parecía S y el 2 parecía Z**. Ahora:
 - **Lo que solo son cifras** (dinero de arriba, botones de compra, números de daño, medidor, seguidores) va completo en Jersey 10, incluidos "$", "K" y "M" (clase `.cifra`).
 
 Se eligió entre Press Start 2P, VT323, Silkscreen, Jersey 10, Tiny5, Micro 5, Handjet y Sixtyfour; Jersey 10 fue la más legible sin ocupar demasiado ancho.
+
+## 30. La moneda con gatito y más viñetas de cómic (versión 0.13.0)
+
+### La moneda
+
+El dinero ya no usa "$": es una **moneda dorada con la silueta de un gatito** (orejas, ojos y naricita rosa), pixel art de 13×13 dibujado como SVG para verse nítido a cualquier tamaño (`src/ui/coin.ts`, componente `Coin.svelte`). Está en los botones de compra, en el contador de arriba, en el botón de patrocinio y en el dinero que sale al romper cosas ("+🪙4.4K"). Los textos dentro de oraciones ("+$4.4K por rotura") todavía usan "$". Para PixelLab: la moneda es parte de la guía de arte (ícono de 13×13 o múltiplos).
+
+### Viñetas para aliados y objetos nuevos
+
+Además de Garras, Sombrero y Saco (§28), ahora también tienen viñeta de cómic:
+
+| Cuándo | Viñeta | Ejemplo |
+|---|---|---|
+| Se adopta un aliado | verde, con el aliado ampliado | "¡El perro se unió a la pandilla!" · "Siempre se lleva la culpa. Siempre" |
+| El dueño compra un objeto nuevo | amarilla, con el objeto ampliado | "¡El dueño compró: Taza!" · una frase al azar ("Garantía: 0 días", "Se ve carísimo… sería una pena que se cayera 😼"…) |
+
+**Todas las viñetas salen solo la primera vez en la partida guardada** (`vistos` en el estado). Después de subir el video se vuelven a adoptar los aliados y a comprar los objetos; ahí sale el aviso corto de siempre, para no interrumpir cada vuelta. Con PixelLab cada viñeta tendrá su ilustración propia (hoy es el sprite ampliado).

@@ -2,6 +2,7 @@
   import { t } from '../i18n';
   import { useGame } from './context';
   import Pruebas from './Pruebas.svelte';
+  import Coin from './Coin.svelte';
 
   const view = useGame().view;
 </script>
@@ -10,7 +11,7 @@
   <div class="title">{$t('app.title')}</div>
   <div class="right">
     <div class="money" aria-label={$t('hud.dinero')}>
-      <span class="coin" aria-hidden="true">$</span>
+      <Coin size={26} />
       <span class="cifra" data-testid="dinero">{$view.dinero}</span>
     </div>
     {#if $view.pruebas.disponible}
@@ -49,16 +50,5 @@
     font-weight: 700;
     color: var(--gold);
     font-variant-numeric: tabular-nums;
-  }
-  .coin {
-    display: inline-grid;
-    place-items: center;
-    width: 24px;
-    height: 24px;
-    border: 2px solid var(--line);
-    border-radius: 50%;
-    background: var(--gold);
-    color: var(--line);
-    font-size: 14px;
   }
 </style>

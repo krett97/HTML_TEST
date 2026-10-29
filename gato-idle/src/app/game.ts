@@ -68,16 +68,16 @@ import { SaveSlots } from './persistence';
 export interface GameEvents {
   /** Un manotazo (del jugador o, desde la fase 3, automático). */
   hit: HitResult;
-  /** El dueño compró un objeto nuevo (subió Valor de etapa). */
-  objeto: { objectId: string };
+  /** El dueño compró un objeto nuevo (subió Valor de etapa). `primeraVez`: nunca se había visto (viñeta). */
+  objeto: { objectId: string; primeraVez: boolean };
   /** El gato empezó a usar otra herramienta (llegó a una familia nueva de objetos). */
   herramienta: { toolId: string };
   /** El gato cambió de aspecto por una mejora: garras (crítico), sombrero (daño crítico) o saco (aliados). */
-  aspecto: { cambio: LookChange };
+  aspecto: { cambio: LookChange; primeraVez: boolean };
   /** Un aliado golpeó solo. */
   aliado: { allyId: string; result: HitResult };
-  /** Se adoptó un aliado (primer nivel). */
-  aliadoNuevo: { allyId: string };
+  /** Se adoptó un aliado (primer nivel). `primeraVez`: nunca se había adoptado (viñeta). */
+  aliadoNuevo: { allyId: string; primeraVez: boolean };
   /** Se descubrió algo nuevo (id de unlocks.json). */
   descubrimiento: { unlockId: string };
   /** Terminó una investigación del laboratorio. */
@@ -364,6 +364,13 @@ export class Game {
     this.markDirty();
   }
 
+  /** Las viñetas de cómic salen solo la primera vez en la partida guardada (no en cada vuelta). */
+  private firstTime(key: string): boolean {
+    if (this.state.vistos.includes(key)) return false;
+    this.state.vistos.push(key);
+    return true;
+  }
+
   /** Cuántos niveles compra cada botón (selector ×1 / ×10). */
   private get buyAmount(): number {
     return this.state.ajustes.compra;
@@ -400,7 +407,7 @@ export class Game {
     const bought = this.buyUpgrade('valor') > 0;
     const after = currentObject(this.state, this.data);
     if (after !== before) {
-      this.events.emit('objeto', { objectId: after.id });
+      this.events.emit('objeto', { objectId: after.id, primeraVez: this.firstTime(`objeto:${after.id}`) });
       // El gato se sube solo al carrito o a la aspiradora al llegar a esos objetos.
       if (after.herramienta !== before.herramienta) {
         this.events.emit('herramienta', { toolId: after.herramienta });
@@ -429,7 +436,7 @@ export class Game {
   private buyLookUpgrade(id: UpgradeId, cambio: LookChange, level: () => number): boolean {
     const first = level() === 0;
     const bought = this.buyUpgrade(id) > 0;
-    if (bought && first) this.events.emit('aspecto', { cambio });
+    if (bought && first) this.events.emit('aspecto', { cambio, primeraVez: this.firstTime(`aspecto:${cambio}`) });
     return this.afterPurchase(bought);
   }
 
@@ -440,7 +447,7 @@ export class Game {
     const bought = buyBulk(this.state, this.buyAmount, (s) => allyCost(s, this.data, ally), (s) => buyAlly(s, this.data, allyId)) > 0;
     if (bought && isNew) {
       this.allyTimers.set(allyId, 0);
-      this.events.emit('aliadoNuevo', { allyId });
+      this.events.emit('aliadoNuevo', { allyId, primeraVez: this.firstTime(`aliado:${allyId}`) });
     }
     return this.afterPurchase(bought);
   }

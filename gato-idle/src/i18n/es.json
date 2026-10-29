@@ -282,6 +282,37 @@
     "saco": {
       "titulo": "¡LLEGÓ EL JEFE!",
       "texto": "La pandilla pega más fuerte"
+    },
+    "aliado": {
+      "frases": {
+        "gatito": "Pequeño, tierno… y rasguña TODO",
+        "raton": "Mordisquea cables. No preguntes",
+        "perro": "Siempre se lleva la culpa. Siempre",
+        "perico": "Repite todo lo que dice el dueño",
+        "cuervo": "Se roba todo lo que brilla",
+        "mapache": "Saquea la cocina de noche",
+        "cabra": "Embiste sin razón. Ninguna"
+      },
+      "titulos": {
+        "gatito": "¡Un gatito bebé se unió a la pandilla!",
+        "raton": "¡El ratón se unió a la pandilla!",
+        "perro": "¡El perro se unió a la pandilla!",
+        "perico": "¡El perico se unió a la pandilla!",
+        "cuervo": "¡El cuervo se unió a la pandilla!",
+        "mapache": "¡El mapache se unió a la pandilla!",
+        "cabra": "¡La cabra se unió a la pandilla!"
+      }
+    },
+    "objeto": {
+      "titulo": "¡El dueño compró: {objeto}!",
+      "frases": {
+        "0": "Se ve carísimo… sería una pena que se cayera 😼",
+        "1": "El dueño dice que es «de colección»",
+        "2": "Garantía: 0 días",
+        "3": "Lo dejó justo en la orilla. Qué descuidado",
+        "4": "«Esta vez sí lo cuido», dijo el dueño",
+        "5": "Nuevo, brillante… y frágil"
+      }
     }
   }
 }

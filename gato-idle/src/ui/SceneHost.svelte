@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Coin from './Coin.svelte';
   import { onMount } from 'svelte';
   import { mountScene } from '../game/boot';
   import { t } from '../i18n';
@@ -43,7 +44,7 @@
   {#if $view.patrocinio.visible}
     <button type="button" class="sponsor" onclick={() => game.claimSponsor()} data-testid="patrocinio">
       <span class="sponsor-tag">📺 {$t('patrocinio.titulo')}</span>
-      <strong>+${$view.patrocinio.recompensa}</strong>
+      <strong class="cifra">+<Coin />{$view.patrocinio.recompensa}</strong>
       <span class="sponsor-tag">{$t('patrocinio.ver')}</span>
     </button>
   {/if}

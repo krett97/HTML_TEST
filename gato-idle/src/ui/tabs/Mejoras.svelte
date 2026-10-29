@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Coin from '../Coin.svelte';
   import { t } from '../../i18n';
   import { useGame } from '../context';
   import NewBadge from '../NewBadge.svelte';
@@ -50,7 +51,7 @@
       data-testid="comprar-fuerza"
     >
       {#if $view.fuerza.cantidad > 1}<span class="qty">×{$view.fuerza.cantidad}</span>{/if}
-      ${$view.fuerza.costo}
+      <span class="price"><Coin />{$view.fuerza.costo}</span>
     </button>
   </div>
   {/if}
@@ -86,7 +87,7 @@
       data-testid="comprar-valor"
     >
       {#if $view.valor.cantidad > 1}<span class="qty">×{$view.valor.cantidad}</span>{/if}
-      ${$view.valor.costo}
+      <span class="price"><Coin />{$view.valor.costo}</span>
     </button>
   </div>
   {/if}
@@ -113,7 +114,7 @@
       data-testid="comprar-critico"
     >
       {#if !$view.critico.maximo}{#if $view.critico.cantidad > 1}<span class="qty">×{$view.critico.cantidad}</span>{/if}{/if}
-      {$view.critico.maximo ? '✓' : `$${$view.critico.costo}`}
+      {#if $view.critico.maximo}✓{:else}<span class="price"><Coin />{$view.critico.costo}</span>{/if}
     </button>
   </div>
   {/if}
@@ -138,7 +139,7 @@
       data-testid="comprar-danio-critico"
     >
       {#if $view.danioCritico.cantidad > 1}<span class="qty">×{$view.danioCritico.cantidad}</span>{/if}
-      ${$view.danioCritico.costo}
+      <span class="price"><Coin />{$view.danioCritico.costo}</span>
     </button>
   </div>
   {/if}
@@ -161,7 +162,7 @@
       data-testid="comprar-saco"
     >
       {#if $view.saco.cantidad > 1}<span class="qty">×{$view.saco.cantidad}</span>{/if}
-      ${$view.saco.costo}
+      <span class="price"><Coin />{$view.saco.costo}</span>
     </button>
   </div>
   {/if}

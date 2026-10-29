@@ -83,6 +83,8 @@ export interface GameState {
     /** Los más recientes primero. */
     videos: VideoRecord[];
   };
+  /** Lo que ya se presentó con viñeta de cómic ("objeto:plato", "aliado:perro", "aspecto:garras"): solo la primera vez. */
+  vistos: string[];
   /** Habilidades del Canal compradas (se conservan al subir el video). */
   habilidades: { id: string; nivel: number }[];
   ajustes: Settings;
@@ -108,6 +110,7 @@ export function createInitialState(now: number): GameState {
     stats: { toques: 0, roturas: 0, roturasPartida: 0 },
     canal: { seguidores: 0, visualizaciones: ZERO, videos: [] },
     habilidades: [],
+    vistos: [],
     ajustes: {
       sonido: true,
       musica: true,

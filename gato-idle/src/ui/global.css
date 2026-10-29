@@ -79,6 +79,14 @@ select {
   font-weight: 400;
 }
 
+/* Precio de un botón: moneda con gatito + cifra. */
+.price {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  white-space: nowrap;
+}
+
 /* Botón con relieve de pixel art. */
 .btn {
   display: inline-flex;
@@ -230,6 +238,16 @@ select {
 }
 .num.aliado {
   animation-duration: 620ms;
+}
+.num-value {
+  display: inline-flex;
+  align-items: center;
+}
+.num-coin {
+  width: 0.85em;
+  height: 0.85em;
+  margin: 0 0.06em;
+  image-rendering: pixelated;
 }
 .num-label {
   margin-bottom: 2px;
@@ -416,6 +434,12 @@ select {
 .vineta--saco {
   --fondo: #ff9a8a;
 }
+.vineta--aliado {
+  --fondo: #7be07b;
+}
+.vineta--objeto {
+  --fondo: #ffd36e;
+}
 .vineta-panel {
   position: relative;
   display: flex;
@@ -442,8 +466,11 @@ select {
 }
 .vineta-gato {
   position: relative;
-  width: 136px;
-  height: auto;
+  flex: none;
+  height: 96px;
+  width: auto;
+  max-width: 150px;
+  object-fit: contain;
   image-rendering: pixelated;
   animation: vineta-pose 2500ms ease-out forwards;
 }

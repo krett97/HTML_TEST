@@ -13,6 +13,7 @@ import { drawRoom, drawSurface, PICTURE_ABOVE_FLOOR, placeOf, WINDOW_ABOVE_FLOOR
 import { catPortrait } from './catPortrait';
 import { toolLook, type ToolLook } from './sprites';
 import { ALLY_ICONS, ALLY_NUMBER_COLORS } from '../ui/allyIcons';
+import { COIN_URL } from '../ui/coin';
 import type { Decimal } from '../core/num';
 
 // Medidas en píxeles virtuales. La escena se ancla abajo: si hay más alto, crece la pared.
@@ -24,6 +25,8 @@ const HAT_X = 15;
 const HAT_Y = -15;
 /** Inclinación máxima de los objetos que se "vuelcan", justo antes de caer. */
 const MAX_TILT = 22;
+/** Frases de la viñeta de objeto nuevo (vineta.objeto.frases.0 … N-1). */
+const OBJECT_QUIPS = 6;
 /** Números flotantes a la vez, como máximo (con 15 toques por segundo y 7 aliados se juntan muchos). */
 const MAX_NUMBERS = 28;
 /** Un aliado muestra su número a lo mucho cada tanto (ms). */
@@ -107,15 +110,15 @@ export class MainScene extends Phaser.Scene {
 
     this.unsubscribers.push(
       this.controller.events.on('hit', (result) => this.onHit(result)),
-      this.controller.events.on('objeto', ({ objectId }) => this.onNewObject(objectId)),
+      this.controller.events.on('objeto', ({ objectId, primeraVez }) => this.onNewObject(objectId, primeraVez)),
       this.controller.events.on('herramienta', ({ toolId }) => this.onNewTool(toolId)),
-      this.controller.events.on('aspecto', ({ cambio }) => this.onNewLook(cambio)),
+      this.controller.events.on('aspecto', ({ cambio, primeraVez }) => this.onNewLook(cambio, primeraVez)),
       this.controller.events.on('aliado', ({ allyId, result }) => this.onAllyHit(allyId, result)),
-      this.controller.events.on('aliadoNuevo', ({ allyId }) => this.onNewAlly(allyId)),
+      this.controller.events.on('aliadoNuevo', ({ allyId, primeraVez }) => this.onNewAlly(allyId, primeraVez)),
       this.controller.events.on('descubrimiento', ({ unlockId }) => this.onDiscovery(unlockId)),
       this.controller.events.on('patrocinio', ({ dinero }) => {
         this.toast(get(t)('patrocinio.gracias', { dinero: this.controller.formatMoney(dinero) }));
-        this.popNumber(this.object.x, this.object.y - this.object.height - 10, 'dinero grande', `+$${this.controller.formatMoney(dinero)}`);
+        this.popNumber(this.object.x, this.object.y - this.object.height - 10, 'dinero grande', `+${this.controller.formatMoney(dinero)}`, { coin: true });
       }),
       this.controller.events.on('video', ({ video }) => this.onVideo(video.seguidores, video.viral)),
       this.controller.events.on('investigacion', ({ researchId }) => {
@@ -308,14 +311,19 @@ export class MainScene extends Phaser.Scene {
     this.update();
   }
 
-  private onNewAlly(allyId: string): void {
+  private onNewAlly(allyId: string, primeraVez: boolean): void {
     const visual = this.allies.get(allyId);
     if (!visual) return;
     visual.sprite.setVisible(true).setScale(0);
     this.update();
     this.tweens.add({ targets: visual.sprite, scale: 1, duration: 260, ease: 'Back.out' });
-    const ally = get(t)(`aliados.${allyId}`);
-    this.toast(get(t)('avisos.aliadoNuevo', { aliado: ally }));
+    const tr = get(t);
+    const ally = tr(`aliados.${allyId}`);
+    if (primeraVez) {
+      this.comicPanel('aliado', this.textures.getBase64(`aliado_${allyId}`), tr(`vineta.aliado.titulos.${allyId}`), tr(`vineta.aliado.frases.${allyId}`));
+    } else {
+      this.toast(tr('avisos.aliadoNuevo', { aliado: ally }));
+    }
     const def = this.allyDef(allyId);
     if (def.sonido.voz) this.controller.playSound(def.sonido.voz, { tono: def.sonido.tono });
   }
@@ -417,11 +425,17 @@ export class MainScene extends Phaser.Scene {
     this.time.delayedCall(400, () => emitter.destroy());
   }
 
-  private onNewObject(objectId: string): void {
+  private onNewObject(objectId: string, primeraVez: boolean): void {
     this.placeObject();
     this.popIn();
-    const objeto = get(t)(`objetos.${objectId}`);
-    this.toast(get(t)('avisos.objetoNuevo', { objeto }));
+    const tr = get(t);
+    const objeto = tr(`objetos.${objectId}`);
+    if (primeraVez) {
+      const frase = tr(`vineta.objeto.frases.${Phaser.Math.Between(0, OBJECT_QUIPS - 1)}`, { objeto });
+      this.comicPanel('objeto', this.textures.getBase64(this.objectDef.sprite), tr('vineta.objeto.titulo', { objeto }), frase);
+    } else {
+      this.toast(tr('avisos.objetoNuevo', { objeto }));
+    }
   }
 
   private onNewTool(toolId: string): void {
@@ -432,9 +446,11 @@ export class MainScene extends Phaser.Scene {
   }
 
   /** Compró su primera Garra afilada, Sombrero o Saco: se lo pone, salta y presume. */
-  private onNewLook(cambio: LookChange): void {
+  private onNewLook(cambio: LookChange, primeraVez: boolean): void {
+    const tr = get(t);
     this.applyLook();
-    this.comicPanel(cambio);
+    if (primeraVez) this.comicPanel(cambio, catPortrait(this.controller.catLook()), tr(`vineta.${cambio}.titulo`), tr(`vineta.${cambio}.texto`));
+    else this.toast(tr(`vineta.${cambio}.titulo`));
     this.controller.playSound('herramienta');
     this.tweens.add({ targets: this.cat, y: this.cat.y - 6, duration: 120, yoyo: true, ease: 'Quad.out' });
     if (cambio === 'sombrero') {
@@ -488,31 +504,31 @@ export class MainScene extends Phaser.Scene {
   }
 
   /**
-   * Viñeta de cómic (2.5 s) que cruza la escena: el gato con su nuevo aspecto y un globo de texto.
-   * No bloquea los toques. Arte provisional: cuando llegue el de PixelLab se cambia el retrato.
+   * Viñeta de cómic (2.5 s) que cruza la escena: un dibujo (el gato con su nuevo aspecto, el aliado
+   * nuevo o el objeto nuevo) y un globo de texto. No bloquea los toques. Arte provisional: cuando
+   * llegue el de PixelLab cada viñeta tendrá su ilustración.
    */
-  private comicPanel(cambio: LookChange): void {
+  private comicPanel(kind: string, image: string, titleText: string, subText: string): void {
     const host = this.game.canvas.parentElement;
     if (!host) return;
     host.querySelector(':scope > .vineta')?.remove();
-    const tr = get(t);
     const el = document.createElement('div');
-    el.className = `vineta vineta--${cambio}`;
+    el.className = `vineta vineta--${kind}`;
     el.dataset.testid = 'vineta';
     const panel = document.createElement('div');
     panel.className = 'vineta-panel';
     const img = document.createElement('img');
     img.className = 'vineta-gato';
     img.alt = '';
-    img.src = catPortrait(this.controller.catLook());
+    img.src = image;
     const text = document.createElement('div');
     text.className = 'vineta-texto';
     const title = document.createElement('strong');
     title.className = 'vineta-globo';
-    title.textContent = tr(`vineta.${cambio}.titulo`);
+    title.textContent = titleText;
     const sub = document.createElement('span');
     sub.className = 'vineta-sub';
-    sub.textContent = tr(`vineta.${cambio}.texto`);
+    sub.textContent = subText;
     text.append(title, sub);
     panel.append(img, text);
     el.append(panel);
@@ -579,11 +595,17 @@ export class MainScene extends Phaser.Scene {
 
   /** Dinero de una rotura, en la orilla por donde cayó el objeto. */
   private moneyNumber(dinero: Decimal): void {
-    this.popNumber(this.place.surface.right - 10, this.surfaceTop - 18, 'dinero', `+$${this.controller.formatMoney(dinero)}`);
+    this.popNumber(this.place.surface.right - 10, this.surfaceTop - 18, 'dinero', `+${this.controller.formatMoney(dinero)}`, { coin: true });
   }
 
   /** Crea el número (HTML, para que se lea nítido) con un desvío y giro al azar. */
-  private popNumber(x: number, y: number, kind: string, text: string, opts: { label?: string; icon?: string; color?: string; size?: number } = {}): void {
+  private popNumber(
+    x: number,
+    y: number,
+    kind: string,
+    text: string,
+    opts: { label?: string; icon?: string; color?: string; size?: number; coin?: boolean } = {},
+  ): void {
     const parent = this.game.canvas.parentElement;
     if (!parent) return;
     const live = parent.querySelectorAll(':scope > .num');
@@ -597,7 +619,18 @@ export class MainScene extends Phaser.Scene {
       el.append(label);
     }
     const value = document.createElement('span');
-    value.textContent = opts.icon ? `${opts.icon}${text}` : text;
+    value.className = 'num-value';
+    if (opts.coin) {
+      // El dinero lleva la moneda con gatito en lugar del "$": "+🪙4.4K".
+      const sign = text.startsWith('+') ? '+' : '';
+      const coin = document.createElement('img');
+      coin.className = 'num-coin';
+      coin.src = COIN_URL;
+      coin.alt = '';
+      value.append(sign, coin, text.slice(sign.length));
+    } else {
+      value.textContent = opts.icon ? `${opts.icon}${text}` : text;
+    }
     el.append(value);
     const pos = this.toCss(x, y);
     el.style.left = `${pos.left}px`;

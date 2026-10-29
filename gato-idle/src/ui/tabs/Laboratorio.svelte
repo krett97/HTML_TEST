@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Coin from '../Coin.svelte';
   import type { Effect } from '../../core/modifiers';
   import { formatDuration } from '../../core/time';
   import { t } from '../../i18n';
@@ -83,7 +84,7 @@
             data-testid="investigar-{project.id}"
           >
             <span class="small-label">{$t('laboratorio.investigar')}</span>
-            ${project.costo}
+            <span class="price"><Coin />{project.costo}</span>
           </button>
         {/if}
       </li>

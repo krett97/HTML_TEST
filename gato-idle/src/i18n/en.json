@@ -282,6 +282,37 @@
     "saco": {
       "titulo": "THE BOSS IS HERE!",
       "texto": "The gang hits harder"
+    },
+    "aliado": {
+      "frases": {
+        "gatito": "Tiny, cute… and scratches EVERYTHING",
+        "raton": "Chews on cables. Don't ask",
+        "perro": "Always takes the blame. Always",
+        "perico": "Repeats everything the owner says",
+        "cuervo": "Steals anything shiny",
+        "mapache": "Raids the kitchen at night",
+        "cabra": "Rams for no reason. None"
+      },
+      "titulos": {
+        "gatito": "A baby kitten joined the gang!",
+        "raton": "The mouse joined the gang!",
+        "perro": "The dog joined the gang!",
+        "perico": "The parrot joined the gang!",
+        "cuervo": "The crow joined the gang!",
+        "mapache": "The raccoon joined the gang!",
+        "cabra": "The goat joined the gang!"
+      }
+    },
+    "objeto": {
+      "titulo": "The owner bought: {objeto}!",
+      "frases": {
+        "0": "Looks expensive… shame if it fell 😼",
+        "1": "The owner says it's a \"collectible\"",
+        "2": "Warranty: 0 days",
+        "3": "Left right on the edge. So careless",
+        "4": "\"I'll take care of this one\", said the owner",
+        "5": "New, shiny… and fragile"
+      }
     }
   }
 }

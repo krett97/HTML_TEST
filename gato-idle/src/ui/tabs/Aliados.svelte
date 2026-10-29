@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Coin from '../Coin.svelte';
   import { ALLY_ICONS } from '../allyIcons';
   import BuyAmount from '../BuyAmount.svelte';
   import { t } from '../../i18n';
@@ -57,11 +58,11 @@
         disabled={!ally.alcanza}
         onclick={() => game.buyAlly(ally.id)}
         data-testid="comprar-aliado-{ally.id}"
-        aria-label="{ally.nivel > 0 ? $t('mejoras.nivel', { n: ally.nivel + 1 }) : $t('aliados.adoptar')} {$t(`aliados.${ally.id}`)} ${ally.costo}"
+        aria-label="{ally.nivel > 0 ? $t('mejoras.nivel', { n: ally.nivel + 1 }) : $t('aliados.adoptar')} {$t(`aliados.${ally.id}`)} {ally.costo}"
       >
         {#if ally.nivel === 0}<span class="adopt">{$t('aliados.adoptar')}</span>{/if}
         {#if ally.cantidad > 1}<span class="qty">×{ally.cantidad}</span>{/if}
-        ${ally.costo}
+        <span class="price"><Coin />{ally.costo}</span>
       </button>
     </div>
   {/each}

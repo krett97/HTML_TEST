@@ -25,6 +25,7 @@ export function normalizeState(state: GameState, data: GameData): void {
   if (!BUY_AMOUNTS.includes(state.ajustes.compra)) state.ajustes.compra = 1;
   normalizeSkills(state, data);
   normalizeCanal(state);
+  state.vistos = [...new Set(state.vistos.filter((id) => typeof id === 'string'))];
   state.stats.roturasPartida = Math.max(0, Math.floor(state.stats.roturasPartida));
   const pruebas = state.pruebas;
   if (!Number.isFinite(pruebas.multDanio) || pruebas.multDanio < 1) pruebas.multDanio = 1;
