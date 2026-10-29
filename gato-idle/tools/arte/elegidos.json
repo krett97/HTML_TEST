@@ -1,7 +1,7 @@
 {
   "_nota": "Candidato elegido de cada lote (nombre_sSEMILLA). Las variantes se hicieron con /edit-image-pixen sobre el elegido, para que la pose y la cara sean idénticas: gato_saco = gato_s4 + 'dress the cat in a black business suit jacket with white shirt collar and a red necktie, keep the face, grape and pose' (semilla 1). Manotazo (lienzo 56×44): gato_golpe = gato + 'the same cat now swatting to the right: one front paw raised and stretched far forward to the right in a quick swipe, body leaning right, mischievous, keep the face, the grape, the colors and the pixel style' (semilla 1); gato_saco_golpe = gato_golpe + saco (semilla 2); gato_garra_golpe y gato_saco_garra_golpe = + 'give the extended swatting paw three long sharp shiny steel metal claws, keep everything else exactly the same' (semilla 2). Los cuatro cuadros del manotazo se recortan con el mismo marco. aliado_gatito_golpe = gatito (lienzo 40×28) + 'the same crying kitten now swatting to the right: one front paw stretched forward to the right in a swipe, keep the tears, colors and pixel style' (semilla 2).",
   "gato": "gato_s4",
-  "sombrero": "sombrero_s1",
+  "sombrero": "sombrero_s2",
   "duenio": "duenio_s1",
   "aliado_gatito": "gatito_s4",
   "aliado_raton": "raton_s1",

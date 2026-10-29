@@ -23,9 +23,9 @@ const START_X = 74;
 const CAT_W = 19;
 /** Escala de las imágenes: el arte trae ART píxeles por unidad y la cámara amplía ×ART. */
 const S = 1 / ART;
-/** Dónde va el sombrero respecto al gato (origen abajo a la izquierda): encima de la cabeza, tapando la uva. */
+/** Dónde va el sombrero de mago respecto al gato (origen abajo a la izquierda): apoyado en la frente, tapando la uva. */
 const HAT_X = 11.5;
-const HAT_Y = -14;
+const HAT_Y = -17.5;
 /** Cuánto dura el cuadro del manotazo (ms) y cuánto se mueve la cabeza (y el sombrero) en ese cuadro. */
 const SWAT_MS = 75;
 const SWAT_HAT = { dx: -1.5, dy: 2 };

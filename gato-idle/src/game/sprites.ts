@@ -76,7 +76,7 @@ export const CAT_SUIT = [
   '...kwwkkkkkkkwwk....',
 ];
 
-// Sombrero ridículo (mejora de daño crítico): chistera morada con flor, un poco grande para el gato.
+// Sombrero ridículo (mejora de daño crítico). Dibujo provisional (chistera morada); el arte es un sombrero de mago negro.
 export const HAT = [
   '...kkkkk...',
   '..kuuuuUk..',
