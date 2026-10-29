@@ -79,3 +79,5 @@ apk-prueba/    APK de prueba sin Gradle (visor WebView)
 - **Guardado:** dos ranuras alternas con número de versión (`src/core/save.ts`). Para cambiar el formato, sube `SAVE_VERSION` y agrega una migración.
 - **Anuncios:** `src/services/ads.ts` define la interfaz. Hoy solo existe la versión de prueba; AdMob llega en la fase 5.
 - **`appId`** (`com.krett97.gatoidle`) es provisional y no se puede cambiar después de publicar en Google Play.
+
+**Versión para compartir** (sin el modo pruebas 🛠): `npm run build:compartir` deja un solo HTML en `dist-archivo/swat-to-the-moon.html`, listo para publicarlo y compartirlo (se juega en el navegador del celular, también en iPhone).

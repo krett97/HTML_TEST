@@ -8,6 +8,7 @@
     "dev:host": "vite --host",
     "build": "vite build",
     "build:archivo": "vite build --mode archivo && node scripts/build-archivo.mjs",
+    "build:compartir": "PRUEBAS=no npm run build:archivo",
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.json",
     "test": "vitest run",
