@@ -12,7 +12,6 @@ import {
   allyUnlocked,
   allyUpgradeGain,
   alliesDps,
-  bestAllyPurchase,
   buyAlly,
 } from '../core/allies';
 import { playUntil, type PlayGoal } from '../core/bot';
@@ -156,10 +155,8 @@ export interface AllyView {
   danio: string;
   danioSiguiente: string;
   intervalo: number;
-  /** Daño por segundo que suma la siguiente compra. */
+  /** Daño por segundo que suma la siguiente compra (con el costo, el jugador decide qué le conviene). */
   ganancia: string;
-  /** Es la compra de aliado que más daño da por cada peso. */
-  mejor: boolean;
 }
 
 export interface ResearchView {
@@ -1178,7 +1175,6 @@ export class Game {
       danioSiguiente: fmt(allyHitDamage(nivel + plan.count, ally, s, this.data)),
       intervalo: ally.intervalo,
       ganancia: fmt(alliesDps(after, this.data).sub(alliesDps(s, this.data))),
-      mejor: false,
     };
   }
 
@@ -1352,8 +1348,6 @@ export class Game {
     const puedeSaco = saco.alcanza;
     const puedeMarca = marca.alcanza;
     const aliados = d.allies.map((ally) => this.allyView(ally, fmt));
-    const best = bestAllyPurchase(s, d);
-    for (const ally of aliados) ally.mejor = ally.id === best && aliados.filter((a) => a.desbloqueado).length > 1;
     const next = nextUnlock(s, d);
     const now = Date.now();
     const current = s.laboratorio.actual;

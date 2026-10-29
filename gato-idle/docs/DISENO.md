@@ -406,7 +406,7 @@ Cada aliado nuevo es mucho mejor que el anterior, aunque cueste más: subir de n
 
 (Desde la 0.8.0 los aliados tardíos tienen el 40 % del daño base que tenían: el Saco de jefe se los repone, ver §25.)
 
-En la pestaña Aliados, cada tarjeta dice cuánto daño por segundo suma la siguiente compra (**"+10 daño/s"**), y la que da más daño por cada peso lleva la etiqueta **"★ Mejor compra"** (`bestAllyPurchase` en `src/core/allies.ts`).
+En la pestaña Aliados, cada tarjeta dice cuánto daño por segundo suma la siguiente compra (**"+10 daño/s"**) y cuánto cuesta. Desde 0.23.1 ya no se marca la "mejor compra": escoger bien es parte de la habilidad del jugador, y uno hábil avanza más rápido que uno que no (`bestAllyPurchase` queda solo para las pruebas de balance).
 
 ### Vida en manada (investigación gatuna)
 

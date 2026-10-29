@@ -50,7 +50,10 @@ export function allyUpgradeGain(state: GameState, data: GameData, ally: AllyDef)
   return alliesDps(after, data).sub(alliesDps(state, data));
 }
 
-/** El aliado cuya siguiente compra da más daño por cada peso. */
+/**
+ * El aliado cuya siguiente compra da más daño por cada peso. Solo para revisar el balance: el juego
+ * no lo muestra, escoger bien es parte de la habilidad del jugador.
+ */
 export function bestAllyPurchase(state: GameState, data: GameData): string | null {
   let best: string | null = null;
   let bestRatio = -1;

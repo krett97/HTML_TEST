@@ -191,8 +191,7 @@
     "cabra": "Cabra",
     "oculto": "???",
     "pista": "Un nuevo aliado",
-    "ganancia": "+{dps} daño/s",
-    "mejor": "★ Mejor compra"
+    "ganancia": "+{dps} daño/s"
   },
   "descubrimientos": {
     "proximo": "Próximo descubrimiento",

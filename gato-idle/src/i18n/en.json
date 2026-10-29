@@ -191,8 +191,7 @@
     "cabra": "Goat",
     "oculto": "???",
     "pista": "A new ally",
-    "ganancia": "+{dps} dmg/s",
-    "mejor": "★ Best buy"
+    "ganancia": "+{dps} dmg/s"
   },
   "descubrimientos": {
     "proximo": "Next discovery",
