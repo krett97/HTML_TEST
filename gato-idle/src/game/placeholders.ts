@@ -1,7 +1,8 @@
-// Arte provisional generado en código. Cuando llegue el arte de PixelApp, se cargan los PNG con
-// las mismas claves (las de "sprite" en objects.json y las de SPRITES) y este archivo se borra.
+// Arte provisional generado en código: solo se usa para las claves que no tienen PNG en
+// src/assets/arte (ver art.ts). Se dibuja a ART píxeles por unidad, igual que el arte de PixelLab.
 import type Phaser from 'phaser';
 import type { ObjectDef } from '../core/data';
+import { ART } from './sceneSize';
 import { PALETTE, SPRITES } from './sprites';
 
 type Ctx = CanvasRenderingContext2D;
@@ -13,14 +14,14 @@ const GLOW = '#5ec4ff';
 
 function pixelTexture(scene: Phaser.Scene, key: string, rows: string[]): void {
   const width = rows[0]!.length;
-  const canvas = scene.textures.createCanvas(key, width, rows.length)!;
+  const canvas = scene.textures.createCanvas(key, width * ART, rows.length * ART)!;
   const ctx = canvas.getContext();
   rows.forEach((row, y) => {
     [...row].forEach((char, x) => {
       const color = PALETTE[char];
       if (!color) return;
       ctx.fillStyle = color;
-      ctx.fillRect(x, y, 1, 1);
+      ctx.fillRect(x * ART, y * ART, ART, ART);
     });
   });
   canvas.refresh();
@@ -227,8 +228,10 @@ function drawObject(ctx: Ctx, id: string, w: number, h: number, c: string): void
 
 function objectTexture(scene: Phaser.Scene, obj: ObjectDef): void {
   const spec = obj.placeholder ?? { w: 12, h: 12, color: '#cccccc' };
-  const canvas = scene.textures.createCanvas(obj.sprite, spec.w, spec.h)!;
-  drawObject(canvas.getContext(), obj.id, spec.w, spec.h, spec.color);
+  const canvas = scene.textures.createCanvas(obj.sprite, spec.w * ART, spec.h * ART)!;
+  const ctx = canvas.getContext();
+  ctx.scale(ART, ART);
+  drawObject(ctx, obj.id, spec.w, spec.h, spec.color);
   canvas.refresh();
 }
 
@@ -239,7 +242,7 @@ export function createPlaceholders(scene: Phaser.Scene, objects: ObjectDef[]): v
   for (const obj of objects) {
     if (!scene.textures.exists(obj.sprite)) objectTexture(scene, obj);
   }
-  // Un píxel blanco para las partículas (se tiñe del color de cada objeto).
+  // Un cuadrito blanco para las partículas (se tiñe del color de cada objeto). Va en unidades del mundo.
   if (!scene.textures.exists('px')) {
     const px2 = scene.textures.createCanvas('px', 2, 2)!;
     px2.getContext().fillStyle = '#ffffff';

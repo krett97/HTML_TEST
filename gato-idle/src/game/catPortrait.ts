@@ -1,33 +1,33 @@
 // Retrato del gato con lo que trae puesto (garras, sombrero, saco), para la viñeta de cómic que
-// aparece al estrenar una mejora. Se dibuja con los mismos mapas de píxeles que la escena.
+// aparece al estrenar una mejora. Se arma con las mismas texturas que la escena.
+import type Phaser from 'phaser';
 import type { CatLook } from '../app/game';
-import { PALETTE, SPRITES } from './sprites';
 
-const W = 34;
-const H = 27;
-
-function draw(ctx: CanvasRenderingContext2D, rows: readonly string[], x: number, y: number): void {
-  rows.forEach((row, dy) => {
-    [...row].forEach((ch, dx) => {
-      if (ch === '.') return;
-      ctx.fillStyle = PALETTE[ch]!;
-      ctx.fillRect(x + dx, y + dy, 1, 1);
-    });
-  });
-}
+type Source = CanvasImageSource & { width: number; height: number };
 
 /** PNG (data URL) del gato a tamaño real; se amplía con CSS (image-rendering: pixelated). */
-export function catPortrait(look: CatLook): string {
+export function catPortrait(textures: Phaser.Textures.TextureManager, look: CatLook): string {
+  const traje = look.saco ? '_saco' : '';
+  const image = (key: string) => textures.get(key).getSourceImage() as Source;
+  const cat = image(`gato${traje}`);
+  const paw = image(`${look.garras ? 'garra' : 'pata'}${traje}`);
+  const hat = look.sombrero ? image('sombrero') : null;
+
+  // Mismas posiciones que en la escena (en píxeles de arte): la pata estirada al frente y el
+  // sombrero sobre la cabeza.
+  const pawX = Math.round(cat.width * 0.6);
+  // La orilla de abajo del sombrero queda a 2/3 del alto del gato (como HAT_Y en la escena).
+  const hatBottom = Math.round(cat.height * 0.67);
+  const top = hat ? Math.max(0, hatBottom + hat.height - cat.height) : 0;
   const canvas = document.createElement('canvas');
-  canvas.width = W;
-  canvas.height = H;
+  canvas.width = Math.max(cat.width, pawX + paw.width);
+  canvas.height = top + cat.height;
   const ctx = canvas.getContext('2d');
   if (!ctx) return '';
-  const traje = look.saco ? '_saco' : '';
-  const bottom = H - 1;
-  // Mismas posiciones que en la escena: el gato abajo a la izquierda, la pata estirada al frente.
-  draw(ctx, SPRITES[`gato${traje}` as keyof typeof SPRITES], 0, bottom - 16);
-  draw(ctx, SPRITES[`${look.garras ? 'garra' : 'pata'}${traje}` as keyof typeof SPRITES], 20, bottom - 9);
-  if (look.sombrero) draw(ctx, SPRITES.sombrero, 10, bottom - 15 - 9);
+  ctx.imageSmoothingEnabled = false;
+  const bottom = canvas.height;
+  ctx.drawImage(paw, pawX, bottom - Math.round(cat.height / 3) - Math.round(paw.height / 2));
+  ctx.drawImage(cat, 0, bottom - cat.height);
+  if (hat) ctx.drawImage(hat, Math.round(cat.width / 2 - hat.width / 2), bottom - hatBottom - hat.height);
   return canvas.toDataURL();
 }

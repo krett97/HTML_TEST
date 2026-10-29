@@ -1,0 +1,12 @@
+[
+ {"name":"gato","desc":"chubby cream and orange cat sitting, body facing right, head turned to stare at the viewer with huge round shocked black eyes, tiny pink nose, deadpan stunned face, one small green grape balanced on top of its head, funny meme cat","w":48,"h":48,"seeds":[1,2,3,4,5,6],"direction":"east"},
+ {"name":"gatito","desc":"tiny grey kitten with enormous watery teary eyes and trembling lip, giving a thumbs up, funny sad meme kitten","w":32,"h":32,"seeds":[1,2,3,4]},
+ {"name":"raton","desc":"tiny grey mouse wearing black pixel sunglasses, smug confident pose, holding a piece of cheese, funny meme","w":32,"h":32,"seeds":[1,2,3,4],"direction":"east"},
+ {"name":"perro","desc":"shiba inu dog sitting with suspicious side-eye glance and raised eyebrows, skeptical funny meme face, facing right","w":48,"h":48,"seeds":[1,2,3,4],"direction":"east"},
+ {"name":"perico","desc":"green parrot screaming with beak wide open, feathers ruffled, funny screaming bird meme, facing right","w":32,"h":32,"seeds":[1,2,3,4],"direction":"east"},
+ {"name":"cuervo","desc":"black crow wearing a thick gold chain necklace, holding a shiny gold coin in its beak, cool funny meme bird, facing right","w":32,"h":32,"seeds":[1,2,3,4],"direction":"east"},
+ {"name":"mapache","desc":"raccoon with bandit mask standing on hind legs hugging a stolen bag of chips, guilty sneaky grin, funny trash panda meme, facing right","w":48,"h":48,"seeds":[1,2,3,4],"direction":"east"},
+ {"name":"cabra","desc":"white goat screaming with mouth wide open, tongue out, eyes squeezed, funny screaming goat meme, facing left","w":48,"h":48,"seeds":[1,2,3,4],"direction":"west"},
+ {"name":"duenio","desc":"young influencer guy with messy hair and hoodie making an exaggerated shocked reaction face with mouth wide open, holding smartphone up to record, full body standing, facing left","w":48,"h":80,"seeds":[1,2,3,4],"direction":"west"},
+ {"name":"sombrero","desc":"silly propeller beanie cap with red yellow blue segments and a little propeller on top","w":32,"h":32,"seeds":[1,2,3]}
+]

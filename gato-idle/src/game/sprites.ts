@@ -289,7 +289,7 @@ export function toolLook(toolId: string): ToolLook {
     case 'carrito':
       return { vehicle: 'carrito', lift: 6 };
     case 'aspiradora':
-      return { vehicle: 'aspiradora', lift: 4 };
+      return { vehicle: 'aspiradora', lift: 10 };
     default:
       return { vehicle: null, lift: 0 };
   }

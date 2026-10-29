@@ -714,3 +714,34 @@ dinero  = roturas × dinero por rotura del objeto actual
 - Modo pruebas: "Simular 1 h fuera".
 
 Pendiente: subir el tope de horas y la eficiencia con investigaciones o habilidades del Canal.
+
+## 33. Arte de PixelLab estilo meme (versión 0.16.0)
+
+Llega el primer arte de verdad, generado con PixelLab. **Principio: los personajes son chistosos, inspirados en memes famosos, pero dibujos originales** (nunca copias de una foto ni de un personaje con dueño; solo "parecidos" en la idea).
+
+| Personaje | Inspiración |
+|---|---|
+| Gato (protagonista) | Gato crema con ojos enormes de susto y **una uva en la cabeza** |
+| Gato con saco | El mismo, con saco negro, camisa y corbata roja (editado con Pixen para que sea idéntico) |
+| Sombrero ridículo | **Gorra de hélice** de colores, gigante (tapa la uva) |
+| Garras afiladas | Tres uñas de metal en la pata (la pata se dibuja aparte: `tools/arte/patas.py`) |
+| Gatito bebé | Llorando a mares… con el pulgar arriba |
+| Ratón | Lentes oscuros y un queso, muy seguro de sí |
+| Perro | Shiba con **mirada de reojo** desconfiada |
+| Perico | Gritando con el pico abierto |
+| Cuervo | Cadena de oro, muy rapero |
+| Mapache | Abrazando una bolsa de papitas robada, cara de culpable |
+| Cabra | Gritando |
+| Dueño | Cara de miniatura de YouTube: boca abierta, celular arriba |
+| Carrito | Convertible de juguete; el gato va sentado adentro |
+| Aspiradora | **Robot aspiradora** con el gato encima (meme clásico) |
+
+Los 27 objetos también tienen su chiste: el vaso **medio lleno**, la taza con corazón "#1", el plato con **una rebanada de pizza triste**, el florero con la flor marchita, el celular con funda de brillitos, el cojín con cara de gato, los tenis "hype", la **lámpara de lava**, la TV pasando un video de gatos, la licuadora con licuado de fresa, la computadora gamer con luces arcoíris, la lavadora llena de espuma, la secadora con un calcetín atorado en la puerta y el refri con imanes y un dibujo.
+
+**Resolución.** El arte tiene el doble de detalle que el mundo: `ART = 2` píxeles de arte por unidad del mundo (`src/game/sceneSize.ts`). Las reglas, posiciones y cuartos siguen en unidades del mundo (área de juego de 180 de ancho); la cámara amplía ×2 y cada imagen se dibuja a escala ½. La escala del celular sigue siendo un entero de píxeles del dispositivo, así que todo se ve nítido. Los cuartos y superficies siguen dibujados en código (a la resolución del mundo), por ahora.
+
+**Cómo se carga.** Cada PNG de `src/assets/arte/` se carga con la clave de su nombre (`gato`, `gato_saco`, `pata`, `garra`, `sombrero`, `duenio`, `carrito`, `aspiradora`, `aliado_*`, `obj_*`), la misma de `SPRITES` y de `sprite` en `objects.json` (`src/game/art.ts`). Lo que no tenga PNG usa el dibujo provisional (`placeholders.ts`). La viñeta de cómic del gato se arma con las mismas texturas (`catPortrait.ts`).
+
+**Cómo se genera.** `tools/arte/generar.py` pide candidatos a PixelLab (modelo *pixflux*, 1 generación cada uno, varias semillas) y arma un montaje para elegir; los lotes con sus textos están en `tools/arte/*.json` y los elegidos en `tools/arte/elegidos.json`. Las variantes de un mismo personaje (el saco) se hacen con *edit-image-pixen*, que respeta pose y cara. La llave de PixelLab **nunca** va en el repositorio: el script la lee de `PIXELLAB_TOKEN`. Esta primera tanda gastó ~160 generaciones.
+
+Pendiente de arte: fondos de los cuartos y superficies, ilustraciones propias para las viñetas, animaciones (parpadeo del gato, aliados atacando) y la moneda.

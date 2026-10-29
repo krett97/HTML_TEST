@@ -7,8 +7,9 @@ import { allyLevel } from '../core/allies';
 import type { AllyDef, ObjectDef } from '../core/data';
 import type { Game, LookChange } from '../app/game';
 import { t } from '../i18n';
+import { loadArt } from './art';
 import { createPlaceholders } from './placeholders';
-import { FLOOR_H, SCENE_WIDTH } from './sceneSize';
+import { ART, FLOOR_H, SCENE_WIDTH } from './sceneSize';
 import { drawRoom, drawSurface, PICTURE_ABOVE_FLOOR, placeOf, WINDOW_ABOVE_FLOOR, type Place } from './places';
 import { catPortrait } from './catPortrait';
 import { toolLook, type ToolLook } from './sprites';
@@ -16,13 +17,15 @@ import { ALLY_ICONS, ALLY_NUMBER_COLORS } from '../ui/allyIcons';
 import { COIN_URL } from '../ui/coin';
 import type { Decimal } from '../core/num';
 
-// Medidas en píxeles virtuales. La escena se ancla abajo: si hay más alto, crece la pared.
+// Medidas en unidades del mundo (ver sceneSize.ts). La escena se ancla abajo: si hay más alto, crece la pared.
 // La superficie (alto, inicio y orilla) depende del lugar del objeto: ver places.ts.
 const START_X = 74;
-const CAT_W = 20;
-/** Dónde va el sombrero respecto al gato (origen abajo a la izquierda): centrado en la cabeza, con las puntas de las orejas asomando. */
-const HAT_X = 15;
-const HAT_Y = -15;
+const CAT_W = 19;
+/** Escala de las imágenes: el arte trae ART píxeles por unidad y la cámara amplía ×ART. */
+const S = 1 / ART;
+/** Dónde va el sombrero respecto al gato (origen abajo a la izquierda): encima de la cabeza, tapando la uva. */
+const HAT_X = 9.5;
+const HAT_Y = -14;
 /** Inclinación máxima de los objetos que se "vuelcan", justo antes de caer. */
 const MAX_TILT = 22;
 /** Frases de la viñeta de objeto nuevo (vineta.objeto.frases.0 … N-1). */
@@ -78,7 +81,7 @@ export class MainScene extends Phaser.Scene {
   private place: Place = placeOf('sala-mesa');
 
   private get floorY(): number {
-    return this.scale.height - FLOOR_H;
+    return this.worldH - FLOOR_H;
   }
 
   /** Altura de la cubierta donde están el gato y el objeto. */
@@ -86,19 +89,42 @@ export class MainScene extends Phaser.Scene {
     return this.floorY - this.place.surface.height;
   }
 
+  preload(): void {
+    loadArt(this);
+  }
+
+  /** Medidas de una imagen en unidades del mundo (sin contar su escala animada). */
+  private widthOf(img: Phaser.GameObjects.Image): number {
+    return img.width * S;
+  }
+
+  private heightOf(img: Phaser.GameObjects.Image): number {
+    return img.height * S;
+  }
+
+  /** Ancho y alto visibles del mundo. */
+  private get worldW(): number {
+    return this.scale.width / ART;
+  }
+
+  private get worldH(): number {
+    return this.scale.height / ART;
+  }
+
   create(): void {
     createPlaceholders(this, this.controller.data.objects);
+    this.cameras.main.setOrigin(0, 0).setZoom(ART);
 
     this.background = this.add.graphics();
-    this.paw = this.add.image(0, 0, 'pata').setOrigin(0, 0.5).setDepth(1).setVisible(false);
-    this.cat = this.add.image(0, 0, 'gato').setOrigin(0, 1).setDepth(2);
-    this.vehicle = this.add.image(0, 0, 'carrito').setOrigin(0.5, 1).setDepth(2.5).setVisible(false);
-    this.hat = this.add.image(0, 0, 'sombrero').setOrigin(0.5, 1).setDepth(2.8).setVisible(false);
-    this.owner = this.add.image(0, 0, 'duenio').setOrigin(0.5, 1).setScale(2).setDepth(4.5).setVisible(false);
-    this.object = this.add.image(0, 0, '__DEFAULT').setOrigin(0.5, 1).setDepth(3);
+    this.paw = this.add.image(0, 0, 'pata').setOrigin(0, 0.5).setScale(S).setDepth(1).setVisible(false);
+    this.cat = this.add.image(0, 0, 'gato').setOrigin(0, 1).setScale(S).setDepth(2);
+    this.vehicle = this.add.image(0, 0, 'carrito').setOrigin(0.5, 1).setScale(S).setDepth(2.5).setVisible(false);
+    this.hat = this.add.image(0, 0, 'sombrero').setOrigin(0.5, 1).setScale(S).setDepth(2.8).setVisible(false);
+    this.owner = this.add.image(0, 0, 'duenio').setOrigin(0.5, 1).setScale(S).setDepth(4.5).setVisible(false);
+    this.object = this.add.image(0, 0, '__DEFAULT').setOrigin(0.5, 1).setScale(S).setDepth(3);
     this.scratches = this.add.graphics().setDepth(3.5);
     for (const ally of this.controller.data.allies) {
-      const sprite = this.add.image(0, 0, `aliado_${ally.id}`).setOrigin(0, 1).setDepth(ally.id === 'gatito' ? 2.7 : 2.2);
+      const sprite = this.add.image(0, 0, `aliado_${ally.id}`).setOrigin(0, 1).setScale(S).setDepth(2.2);
       this.allies.set(ally.id, { sprite, hop: { dx: 0, dy: 0 } });
     }
 
@@ -118,12 +144,12 @@ export class MainScene extends Phaser.Scene {
       this.controller.events.on('descubrimiento', ({ unlockId }) => this.onDiscovery(unlockId)),
       this.controller.events.on('patrocinio', ({ dinero }) => {
         this.toast(get(t)('patrocinio.gracias', { dinero: this.controller.formatMoney(dinero) }));
-        this.popNumber(this.object.x, this.object.y - this.object.height - 10, 'dinero grande', `+${this.controller.formatMoney(dinero)}`, { coin: true });
+        this.popNumber(this.object.x, this.object.y - this.heightOf(this.object) - 10, 'dinero grande', `+${this.controller.formatMoney(dinero)}`, { coin: true });
       }),
       this.controller.events.on('video', ({ video }) => this.onVideo(video.seguidores, video.viral)),
       this.controller.events.on('offline', ({ dinero }) => {
         // Lluvia de monedas al cobrar lo de mientras no estabas.
-        this.popNumber(this.object.x, this.object.y - this.object.height - 10, 'dinero grande', `+${this.controller.formatMoney(dinero)}`, { coin: true });
+        this.popNumber(this.object.x, this.object.y - this.heightOf(this.object) - 10, 'dinero grande', `+${this.controller.formatMoney(dinero)}`, { coin: true });
         this.burst(0xffd36e, 24);
       }),
       this.controller.events.on('investigacion', ({ researchId }) => {
@@ -144,7 +170,7 @@ export class MainScene extends Phaser.Scene {
   /** Redibuja el fondo y recoloca todo según el tamaño actual. */
   private layout(): void {
     // El área de juego (0..180) queda centrada; lo que sobra a los lados es más cuarto.
-    this.cameras.main.setScroll(-Math.floor((this.scale.width - SCENE_WIDTH) / 2), 0);
+    this.cameras.main.setScroll(-Math.floor((this.worldW - SCENE_WIDTH) / 2), 0);
     // Al redibujar (inicio, cambio de tamaño) se entra directo al cuarto, sin fundido.
     this.place = placeOf(this.controller.data.objects.find((o) => o.id === this.controller.currentObjectId())!.lugar);
     this.drawBackground();
@@ -152,7 +178,7 @@ export class MainScene extends Phaser.Scene {
     this.refreshAllies();
   }
 
-  /** Cada cuadro: el sombrero va en la cabeza del gato y los aliados siguen su lugar (el gatito, en el lomo). */
+  /** Cada cuadro: el sombrero va en la cabeza del gato y los aliados siguen su lugar (el gatito, junto al gato). */
   update(): void {
     this.hat.setPosition(this.cat.x + HAT_X, this.cat.y + HAT_Y);
     for (const [id, visual] of this.allies) {
@@ -164,7 +190,7 @@ export class MainScene extends Phaser.Scene {
 
   private drawBackground(): void {
     const g = this.background.clear();
-    drawRoom(g, this.place.room, this.cameras.main.scrollX, this.scale.width, this.scale.height, this.floorY);
+    drawRoom(g, this.place.room, this.cameras.main.scrollX, this.worldW, this.worldH, this.floorY);
     drawSurface(g, this.place.surface, this.floorY);
   }
 
@@ -180,7 +206,7 @@ export class MainScene extends Phaser.Scene {
   // ---- Posiciones ----
 
   private startX(): number {
-    const width = this.textures.get(this.objectDef.sprite).getSourceImage().width;
+    const width = this.textures.get(this.objectDef.sprite).getSourceImage().width * S;
     return Math.max(START_X, this.place.surface.left + CAT_W + 6 + width / 2);
   }
 
@@ -199,7 +225,7 @@ export class MainScene extends Phaser.Scene {
   }
 
   private catXFor(objectX: number): number {
-    return objectX - this.object.width / 2 - CAT_W - 1;
+    return objectX - this.widthOf(this.object) / 2 - CAT_W - 1;
   }
 
   /** Pone el objeto actual en su posición según el progreso guardado. */
@@ -208,7 +234,7 @@ export class MainScene extends Phaser.Scene {
     this.enterPlace(true);
     this.tweens.killTweensOf([this.object, this.cat, this.vehicle]);
     const progress = this.controller.progress();
-    this.object.setTexture(this.objectDef.sprite).setScale(1).setAlpha(1).setVisible(true);
+    this.object.setTexture(this.objectDef.sprite).setScale(S).setAlpha(1).setVisible(true);
     this.object.setPosition(this.objectX(progress), this.surfaceTop).setAngle(this.objectAngle(progress));
     this.applyLook();
     this.moveCat(this.catXFor(this.object.x), false);
@@ -246,8 +272,8 @@ export class MainScene extends Phaser.Scene {
     const g = this.scratches.clear();
     if (this.objectDef.estiloRotura !== 'rasgar' || progress <= 0) return;
     const count = Math.min(MAX_SCRATCHES, Math.ceil(progress * MAX_SCRATCHES));
-    const w = this.object.width;
-    const h = this.object.height;
+    const w = this.widthOf(this.object);
+    const h = this.heightOf(this.object);
     const left = this.object.x - w / 2;
     const top = this.object.y - h;
     g.fillStyle(COLORS.scratch, 0.85);
@@ -286,7 +312,8 @@ export class MainScene extends Phaser.Scene {
     const floorY = this.floorY;
     switch (id) {
       case 'gatito':
-        return { x: this.cat.x + 1, y: this.cat.y - 8 };
+        // A un lado del gato, llorando con el pulgar arriba.
+        return { x: this.cat.x - 13, y: this.cat.y };
       case 'perro':
         return { x: 1, y: floorY + 5 };
       case 'raton':
@@ -321,7 +348,7 @@ export class MainScene extends Phaser.Scene {
     if (!visual) return;
     visual.sprite.setVisible(true).setScale(0);
     this.update();
-    this.tweens.add({ targets: visual.sprite, scale: 1, duration: 260, ease: 'Back.out' });
+    this.tweens.add({ targets: visual.sprite, scale: S, duration: 260, ease: 'Back.out' });
     const tr = get(t);
     const ally = tr(`aliados.${allyId}`);
     if (primeraVez) {
@@ -383,10 +410,10 @@ export class MainScene extends Phaser.Scene {
     const rest = this.allyRest(allyId);
     let target = { dx: 0, dy: -6 };
     if (allyId === 'gatito') {
-      target = { dx: this.object.x - this.object.width / 2 - 13 - rest.x, dy: -3 };
+      target = { dx: this.object.x - this.widthOf(this.object) / 2 - 13 - rest.x, dy: -3 };
     } else if (allyId === 'perico' || allyId === 'cuervo') {
       // Vuelan hasta el objeto y regresan.
-      target = { dx: this.object.x - 5 - rest.x, dy: this.object.y - this.object.height - 2 - rest.y };
+      target = { dx: this.object.x - 5 - rest.x, dy: this.object.y - this.heightOf(this.object) - 2 - rest.y };
     } else if (allyId === 'cabra') {
       // Embiste la pata de la mesa.
       target = { dx: -8, dy: 0 };
@@ -405,7 +432,7 @@ export class MainScene extends Phaser.Scene {
   /** Explosión de chispas en el objeto (críticos y embestidas). */
   private burst(tint: number, count: number): void {
     const { x, y } = this.numberAnchor();
-    const emitter = this.add.particles(x, y + this.object.height / 2, 'px', {
+    const emitter = this.add.particles(x, y + this.heightOf(this.object) / 2, 'px', {
       speed: { min: 60, max: 140 },
       lifespan: 420,
       scale: { start: 1.6, end: 0.3 },
@@ -418,7 +445,7 @@ export class MainScene extends Phaser.Scene {
   }
 
   private sparks(tint: number): void {
-    const emitter = this.add.particles(this.object.x, this.object.y - this.object.height / 2, 'px', {
+    const emitter = this.add.particles(this.object.x, this.object.y - this.heightOf(this.object) / 2, 'px', {
       speed: { min: 20, max: 50 },
       lifespan: 300,
       scale: { start: 0.8, end: 0.2 },
@@ -454,17 +481,17 @@ export class MainScene extends Phaser.Scene {
   private onNewLook(cambio: LookChange, primeraVez: boolean): void {
     const tr = get(t);
     this.applyLook();
-    if (primeraVez) this.comicPanel(cambio, catPortrait(this.controller.catLook()), tr(`vineta.${cambio}.titulo`), tr(`vineta.${cambio}.texto`));
+    if (primeraVez) this.comicPanel(cambio, catPortrait(this.textures, this.controller.catLook()), tr(`vineta.${cambio}.titulo`), tr(`vineta.${cambio}.texto`));
     else this.toast(tr(`vineta.${cambio}.titulo`));
     this.controller.playSound('herramienta');
     this.tweens.add({ targets: this.cat, y: this.cat.y - 6, duration: 120, yoyo: true, ease: 'Quad.out' });
     if (cambio === 'sombrero') {
       this.hat.setScale(0);
-      this.tweens.add({ targets: this.hat, scale: 1, duration: 260, ease: 'Back.out' });
+      this.tweens.add({ targets: this.hat, scale: S, duration: 260, ease: 'Back.out' });
     }
     if (cambio === 'saco') {
       // Se acomoda el saco: se estira y vuelve, muy profesional.
-      this.tweens.add({ targets: this.cat, scaleX: 1.15, duration: 90, yoyo: true, repeat: 1, ease: 'Sine.inOut' });
+      this.tweens.add({ targets: this.cat, scaleX: 1.15 * S, duration: 90, yoyo: true, repeat: 1, ease: 'Sine.inOut' });
     }
   }
 
@@ -563,7 +590,7 @@ export class MainScene extends Phaser.Scene {
 
   /** Arriba del objeto, donde salen los números. */
   private numberAnchor(): { x: number; y: number } {
-    return { x: this.object.x, y: this.object.y - this.object.height - 2 };
+    return { x: this.object.x, y: this.object.y - this.heightOf(this.object) - 2 };
   }
 
   /** Qué tanto del objeto se llevó el golpe (0 a 1): los golpes grandes se ven más grandes. */
@@ -652,7 +679,7 @@ export class MainScene extends Phaser.Scene {
 
   private swipePaw(): void {
     const restX = this.cat.x + 6;
-    const strikeX = this.object.x - this.object.width / 2 - this.paw.width + 3;
+    const strikeX = this.object.x - this.widthOf(this.object) / 2 - this.widthOf(this.paw) + 3;
     this.tweens.killTweensOf(this.paw);
     this.paw.setPosition(restX, this.cat.y - 7).setVisible(true);
     this.tweens.add({
@@ -669,10 +696,10 @@ export class MainScene extends Phaser.Scene {
   private pushObject(progress: number): void {
     const x = this.objectX(progress);
     this.tweens.killTweensOf([this.object, this.cat, this.vehicle]);
-    this.object.setScale(1).setVisible(true);
+    this.object.setScale(S).setVisible(true);
     this.tweens.add({ targets: this.object, x, angle: this.objectAngle(progress), duration: 90, ease: 'Quad.out' });
     // Pequeño apachurrón para que el golpe se sienta.
-    this.tweens.add({ targets: this.object, scaleY: 0.88, scaleX: 1.08, duration: 50, yoyo: true });
+    this.tweens.add({ targets: this.object, scaleY: 0.88 * S, scaleX: 1.08 * S, duration: 50, yoyo: true });
     this.moveCat(this.catXFor(x), true);
     // Lo que se rasga no se mueve, así que los rasguños van ya en su lugar.
     this.drawScratches(progress);
@@ -686,15 +713,16 @@ export class MainScene extends Phaser.Scene {
       .image(this.object.x, this.object.y, def.sprite)
       .setOrigin(0.5, 1)
       .setAngle(this.object.angle)
+      .setScale(S)
       .setDepth(4);
-    const floorY = this.scale.height - FLOOR_H + 4;
+    const floorY = this.floorY + 4;
 
     if (def.estiloRotura === 'rasgar') {
       // Queda hecho jirones ahí mismo.
-      this.shatter(piece.x, piece.y - piece.height / 2, color, 24, 400);
+      this.shatter(piece.x, piece.y - this.heightOf(piece) / 2, color, 24, 400);
       this.tweens.add({
         targets: piece,
-        scaleY: 0.1,
+        scaleY: 0.1 * S,
         alpha: 0,
         duration: 260,
         ease: 'Quad.in',
@@ -710,7 +738,7 @@ export class MainScene extends Phaser.Scene {
         ease: 'Quad.in',
         onComplete: () => {
           piece.destroy();
-          this.shatter(piece.x + piece.height / 2, floorY - 2, color, 20, 260);
+          this.shatter(piece.x + this.heightOf(piece) / 2, floorY - 2, color, 20, 260);
         },
       });
     } else {
@@ -718,7 +746,7 @@ export class MainScene extends Phaser.Scene {
       this.tweens.chain({
         targets: piece,
         tweens: [
-          { x: this.place.surface.right + piece.width / 2 + 3, duration: 80, ease: 'Quad.out' },
+          { x: this.place.surface.right + this.widthOf(piece) / 2 + 3, duration: 80, ease: 'Quad.out' },
           { y: floorY, angle: def.estiloRotura === 'volcar' ? 90 : 75, duration: 260, ease: 'Quad.in' },
         ],
         onComplete: () => {
@@ -735,7 +763,7 @@ export class MainScene extends Phaser.Scene {
 
   private popIn(delay = 0): void {
     this.object.setScale(0);
-    this.tweens.add({ targets: this.object, scale: 1, delay, duration: 220, ease: 'Back.out' });
+    this.tweens.add({ targets: this.object, scale: S, delay, duration: 220, ease: 'Back.out' });
   }
 
   private shatter(x: number, y: number, tint: number, count: number, gravity: number): void {
@@ -759,7 +787,7 @@ export class MainScene extends Phaser.Scene {
   /** Convierte un punto de la escena a píxeles CSS dentro del contenedor del canvas. */
   private toCss(x: number, y: number): { left: number; top: number } {
     const canvas = this.game.canvas;
-    const zoom = this.scale.zoom;
+    const zoom = this.scale.zoom * ART;
     return {
       left: canvas.offsetLeft + (x - this.cameras.main.scrollX) * zoom,
       top: canvas.offsetTop + y * zoom,

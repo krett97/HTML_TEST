@@ -1,0 +1,4 @@
+[
+ {"name":"carrito","desc":"small red toy ride-on car with a racing stripe and tiny wheels, empty seat, seen from the side, facing right","w":64,"h":32,"seeds":[1,2,3,4],"style":", pixel art game item, side view, bold black outline, cartoon, vibrant colors, isolated, no shadow"},
+ {"name":"aspiradora","desc":"round flat black robot vacuum cleaner disk with a glowing green light, seen from the side, very flat and wide","w":64,"h":32,"seeds":[1,2,3,4],"style":", pixel art game item, side view, bold black outline, cartoon, isolated, no shadow"}
+]

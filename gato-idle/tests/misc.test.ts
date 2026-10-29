@@ -14,11 +14,11 @@ describe('tope de toques', () => {
 describe('tamaño de la escena', () => {
   it('celular: escala entera de píxeles y alto que llena el espacio', () => {
     const size = computeSceneSize(390, 420, 3);
-    expect(size).toEqual({ pixelScale: 6, width: 195, height: 210, zoom: 2 });
+    expect(size).toEqual({ pixelScale: 3, width: 195, height: 210, zoom: 1 });
   });
 
   it('PC: columna de 476 px', () => {
-    expect(computeSceneSize(476, 500, 1)).toEqual({ pixelScale: 2, width: 238, height: 250, zoom: 2 });
+    expect(computeSceneSize(476, 500, 1)).toEqual({ pixelScale: 1, width: 238, height: 250, zoom: 1 });
   });
 
   it('nunca baja de escala 1 ni del alto mínimo', () => {

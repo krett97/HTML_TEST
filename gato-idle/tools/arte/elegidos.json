@@ -1,0 +1,13 @@
+{
+  "_nota": "Candidato elegido de cada lote (nombre_sSEMILLA). gato_saco salió de editar gato_s4 con /edit-image-pixen: 'dress the cat in a black business suit jacket with white shirt collar and a red necktie, keep the face, grape and pose' (semilla 1). Las patas se dibujan con tools/patas.py.",
+  "gato": "gato_s4", "sombrero": "sombrero_s1", "duenio": "duenio_s1",
+  "aliado_gatito": "gatito_s4", "aliado_raton": "raton_s1", "aliado_perro": "perro_s4", "aliado_perico": "perico_s1",
+  "aliado_cuervo": "cuervo_s1", "aliado_mapache": "mapache_s4", "aliado_cabra": "cabra_s1",
+  "carrito": "carrito_s1", "aspiradora": "aspiradora_s1",
+  "obj_vaso": "vaso_s2", "obj_taza": "taza_s2", "obj_plato": "plato_s3", "obj_control": "control_s1", "obj_florero": "florero_s2",
+  "obj_celular": "celular_s2", "obj_papel": "papel_s3", "obj_cojin": "cojin_s2", "obj_tenis": "tenis_s2", "obj_cortinas": "cortinas_s1",
+  "obj_sofa": "sofa_s1", "obj_colchon": "colchon_s1", "obj_lampara": "lampara_s1", "obj_bocina": "bocina_s1", "obj_consola": "consola_s1",
+  "obj_tv": "tv_s1", "obj_mesa": "mesa_s1", "obj_librero": "librero_s2", "obj_tostadora": "tostadora_s2", "obj_cafetera": "cafetera_s1",
+  "obj_licuadora": "licuadora_s1", "obj_microondas": "microondas_s2", "obj_computadora": "computadora_s2", "obj_lavadora": "lavadora_s1",
+  "obj_secadora": "secadora_s1", "obj_estufa": "estufa_s3", "obj_refri": "refri_s1"
+}

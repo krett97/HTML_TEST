@@ -1,0 +1,326 @@
+[
+ {
+  "name": "vaso",
+  "desc": "clear drinking glass of water filled exactly half way, isolated object, no shadow",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game item, side view, bold black outline, cartoon, vibrant colors"
+ },
+ {
+  "name": "taza",
+  "desc": "white coffee mug printed with a pink heart and the text #1, steam rising, isolated object, no shadow",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game item, side view, bold black outline, cartoon, vibrant colors"
+ },
+ {
+  "name": "plato",
+  "desc": "white dinner plate with one sad lonely slice of pizza on it, isolated object, no shadow",
+  "w": 40,
+  "h": 32,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game item, side view, bold black outline, cartoon, vibrant colors"
+ },
+ {
+  "name": "control",
+  "desc": "black tv remote control lying flat with colorful buttons, isolated object, no shadow",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game item, side view, bold black outline, cartoon, vibrant colors"
+ },
+ {
+  "name": "florero",
+  "desc": "blue ceramic flower vase with one droopy wilted flower, isolated object, no shadow",
+  "w": 24,
+  "h": 48,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game item, side view, bold black outline, cartoon, vibrant colors"
+ },
+ {
+  "name": "celular",
+  "desc": "smartphone standing upright with a pink glitter case and a cracked screen, isolated object, no shadow",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game item, side view, bold black outline, cartoon, vibrant colors"
+ },
+ {
+  "name": "papel",
+  "desc": "big fluffy roll of toilet paper, isolated object, no shadow",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game item, side view, bold black outline, cartoon, vibrant colors"
+ },
+ {
+  "name": "cojin",
+  "desc": "square decorative throw pillow with a funny cat face print, isolated object, no shadow",
+  "w": 40,
+  "h": 32,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game item, side view, bold black outline, cartoon, vibrant colors"
+ },
+ {
+  "name": "tenis",
+  "desc": "flashy expensive hype sneaker shoe, white with neon accents, isolated object, no shadow",
+  "w": 48,
+  "h": 24,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game item, side view, bold black outline, cartoon, vibrant colors"
+ },
+ {
+  "name": "cortinas",
+  "desc": "tall purple curtain panel hanging from a rod, fabric folds, isolated object, no shadow",
+  "w": 64,
+  "h": 96,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game item, side view, bold black outline, cartoon, vibrant colors"
+ },
+ {
+  "name": "sofa",
+  "desc": "comfy red couch sofa with two cushions, front view, isolated object, no shadow",
+  "w": 96,
+  "h": 48,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game item, side view, bold black outline, cartoon, vibrant colors"
+ },
+ {
+  "name": "colchon",
+  "desc": "thick white mattress lying flat with blue stripes, isolated object, no shadow",
+  "w": 112,
+  "h": 32,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game item, side view, bold black outline, cartoon, vibrant colors"
+ },
+ {
+  "name": "lampara",
+  "desc": "retro lava lamp with glowing orange blobs, isolated object, no shadow",
+  "w": 32,
+  "h": 72,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game item, side view, bold black outline, cartoon, vibrant colors"
+ },
+ {
+  "name": "bocina",
+  "desc": "tall black party speaker with glowing blue woofer, isolated object, no shadow",
+  "w": 40,
+  "h": 56,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game item, side view, bold black outline, cartoon, vibrant colors"
+ },
+ {
+  "name": "consola",
+  "desc": "white video game console lying flat with a controller, isolated object, no shadow",
+  "w": 56,
+  "h": 24,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game item, side view, bold black outline, cartoon, vibrant colors"
+ },
+ {
+  "name": "tv",
+  "desc": "big flat screen tv on a small stand showing a cat video, isolated object, no shadow",
+  "w": 72,
+  "h": 56,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game item, side view, bold black outline, cartoon, vibrant colors"
+ },
+ {
+  "name": "mesa",
+  "desc": "small wooden coffee table, front view, isolated object, no shadow",
+  "w": 88,
+  "h": 32,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game item, side view, bold black outline, cartoon, vibrant colors"
+ },
+ {
+  "name": "librero",
+  "desc": "tall wooden bookshelf full of colorful books and a small plant, isolated object, no shadow",
+  "w": 56,
+  "h": 112,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game item, side view, bold black outline, cartoon, vibrant colors"
+ },
+ {
+  "name": "tostadora",
+  "desc": "chrome toaster with two slices of toast popping up, isolated object, no shadow",
+  "w": 40,
+  "h": 32,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game item, side view, bold black outline, cartoon, vibrant colors"
+ },
+ {
+  "name": "cafetera",
+  "desc": "black drip coffee maker with a glass pot of coffee, isolated object, no shadow",
+  "w": 32,
+  "h": 48,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game item, side view, bold black outline, cartoon, vibrant colors"
+ },
+ {
+  "name": "licuadora",
+  "desc": "kitchen blender full of pink strawberry smoothie, isolated object, no shadow",
+  "w": 32,
+  "h": 64,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game item, side view, bold black outline, cartoon, vibrant colors"
+ },
+ {
+  "name": "microondas",
+  "desc": "white microwave oven with a glowing window and a bowl inside, isolated object, no shadow",
+  "w": 64,
+  "h": 40,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game item, side view, bold black outline, cartoon, vibrant colors"
+ },
+ {
+  "name": "computadora",
+  "desc": "gaming computer monitor and keyboard with rainbow rgb lights, isolated object, no shadow",
+  "w": 64,
+  "h": 48,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game item, side view, bold black outline, cartoon, vibrant colors"
+ },
+ {
+  "name": "lavadora",
+  "desc": "white front-loading washing machine with round glass door full of bubbles, isolated object, no shadow",
+  "w": 72,
+  "h": 80,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game item, side view, bold black outline, cartoon, vibrant colors"
+ },
+ {
+  "name": "secadora",
+  "desc": "cream colored front-loading clothes dryer with a sock stuck in the door, isolated object, no shadow",
+  "w": 72,
+  "h": 80,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game item, side view, bold black outline, cartoon, vibrant colors"
+ },
+ {
+  "name": "estufa",
+  "desc": "white kitchen stove with four burners, oven door and a pot on top, isolated object, no shadow",
+  "w": 72,
+  "h": 72,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game item, side view, bold black outline, cartoon, vibrant colors"
+ },
+ {
+  "name": "refri",
+  "desc": "tall silver refrigerator with funny fridge magnets and a drawing on the door, isolated object, no shadow",
+  "w": 64,
+  "h": 120,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game item, side view, bold black outline, cartoon, vibrant colors"
+ }
+]
