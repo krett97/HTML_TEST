@@ -75,6 +75,23 @@
     "departamento": "Departamento",
     "casa": "Casa con jardín"
   },
+  "jefes": {
+    "pepino": {
+      "nombre": "Pepino Gigante",
+      "titulo": "¡APARECIÓ EL PEPINO GIGANTE!",
+      "frase": "El gato está aterrado… ¡tienes 30 segundos!",
+      "trofeo": "Trofeo: +25 % de daño para siempre"
+    }
+  },
+  "jefe": {
+    "retar": "¡Retar al {jefe}!",
+    "revancha": "Revancha en {s} s",
+    "aparece": "¡Volvió el {jefe}!",
+    "victoria": "¡{jefe} DERROTADO!",
+    "premio": "🏆 ¡Le ganaste al {jefe}! +{dinero}",
+    "derrota": "El {jefe} se burla de ti… Revancha en 60 s (+{dinero})",
+    "bono": "+{pct} % daño"
+  },
   "mejoras": {
     "enLaMesa": "En la mesa",
     "progreso": "Camino a la orilla",
@@ -263,7 +280,8 @@
     "offline": "Simular 1 h fuera",
     "mudanza": "🚚 Desbloquear mudanza",
     "mudanzaLista": "Mudanza desbloqueada: mejora el Valor en el último objeto.",
-    "sinMudanza": "Ya no quedan casas a dónde mudarse."
+    "sinMudanza": "Ya no quedan casas a dónde mudarse.",
+    "jefe": "🥒 Pelear con el jefe"
   },
   "canal": {
     "titulo": "Canal del dueño",

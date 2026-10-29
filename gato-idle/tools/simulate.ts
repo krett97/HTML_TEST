@@ -10,8 +10,11 @@ import { uploadVideo } from '../src/core/canal';
 import type { GameData } from '../src/core/data';
 import { currentObject, moneyPerBreak, objectIndex, tapDamage, tapsToBreak, valorStepsInObject } from '../src/core/economy';
 import { lastObjectIndex } from '../src/core/mudanza';
+import { bossHere, bossHp } from '../src/core/jefes';
+import { expectedTapDamage } from '../src/core/economy';
 import { formatNum } from '../src/core/format';
 import { normalizeState } from '../src/core/normalize';
+import { deserialize, serialize } from '../src/core/save';
 import { claimSkill } from '../src/core/skills';
 import { createInitialState, type GameState } from '../src/core/state';
 import { gameData } from '../src/data';
@@ -78,6 +81,8 @@ export interface RunRow {
   vuelta: number;
   /** Casa en la que terminó la vuelta. */
   casa: string;
+  /** Si hubo jefe al final: qué parte de su vida se le quita en su tiempo, al llegar y tras 2 y 5 min más. */
+  jefe: string | null;
   /** Minuto (desde el inicio de la vuelta) en que llega a cada objeto. */
   minutos: Record<string, number>;
   seguidores: number;
@@ -86,6 +91,28 @@ export interface RunRow {
   totalSeguidores: number;
   totalVisualizaciones: string;
   habilidades: string;
+}
+
+/** Daño que se le haría al jefe en su tiempo (manotazos a TAPS_PER_SECOND + pandilla), como % de su vida. */
+function bossShare(state: GameState, data: GameData): number {
+  const boss = bossHere(state, data);
+  if (!boss) return 0;
+  const dps = expectedTapDamage(state, data).mul(TAPS_PER_SECOND).add(alliesDps(state, data));
+  return dps.mul(boss.segundos).div(bossHp(data, boss)).toNumber() * 100;
+}
+
+/** Al llegar al jefe, y tras jugar 2 y 5 minutos más en su objeto (el bot sigue comprando). */
+function bossCheck(state: GameState, data: GameData): string | null {
+  if (!bossHere(state, data)) return null;
+  const loaded = deserialize(serialize(state, 0), 0);
+  if (!loaded.ok) return null;
+  const copy = loaded.state;
+  const shares = [bossShare(copy, data)];
+  playUntil(copy, data, { segundos: 120 }, TAPS_PER_SECOND);
+  shares.push(bossShare(copy, data));
+  playUntil(copy, data, { segundos: 180 }, TAPS_PER_SECOND);
+  shares.push(bossShare(copy, data));
+  return shares.map((p) => `${Math.round(p)}%`).join(' → ');
 }
 
 /** Objetos que se marcan en cada vuelta (los que caen entre el inicio y el último alcanzable). */
@@ -116,12 +143,14 @@ export function simulateRuns(data: GameData, runs = 10): RunRow[] {
       minutos[objeto] = seconds / 60;
     }
     const casa = data.homes[state.casa]!.id;
+    const jefe = bossCheck(state, data);
     const video = uploadVideo(state, data, 0, () => 0.5)!;
     // Reclama todos los niveles de habilidad que ya alcanzó.
     while (data.skills.some((d) => claimSkill(state, data, d.id)));
     rows.push({
       vuelta,
       casa,
+      jefe,
       minutos,
       seguidores: video.seguidores,
       visualizaciones: formatNum(video.visualizaciones),
@@ -148,6 +177,7 @@ function main(): void {
   console.log('\nVueltas (sube el video al llegar al último objeto alcanzable y reclama habilidades):');
   for (const run of simulateRuns(gameData)) {
     const marks = Object.entries(run.minutos).map(([obj, min]) => `${obj} ${min.toFixed(1)}`).join(' · ');
+    if (run.jefe) console.log(`     jefe (vida quitada al llegar → +2 min → +5 min): ${run.jefe}`);
     console.log(`  ${run.vuelta}. [${run.casa}] ${marks} → +${run.seguidores} seg, +${run.visualizaciones} vis (total ${run.totalSeguidores} / ${run.totalVisualizaciones}) | ${run.habilidades}`);
   }
 }

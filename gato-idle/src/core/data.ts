@@ -41,6 +41,22 @@ export interface HomeDef {
   fuerzaInicial: number;
 }
 
+/**
+ * Jefe de una casa (jefes.json): aparece en el último objeto de su casa. Hay `segundos` para
+ * quitarle una vida de `vidaEnRoturas` veces la del último objeto. Si se gana, paga lo de
+ * `premioEnRoturas` roturas de ese objeto y deja un trofeo con `efectos` para siempre; si no, paga
+ * una parte según el daño hecho y la revancha llega en `esperaDerrota` segundos.
+ */
+export interface BossDef {
+  id: string;
+  casa: string;
+  segundos: number;
+  vidaEnRoturas: number;
+  premioEnRoturas: number;
+  esperaDerrota: number;
+  efectos: Effect[];
+}
+
 /** Mascota que destruye sola: golpea cada `intervalo` segundos. */
 export interface AllyDef {
   id: string;
@@ -221,6 +237,7 @@ export interface Balance {
 export interface GameData {
   objects: ObjectDef[];
   homes: HomeDef[];
+  bosses: BossDef[];
   tools: ToolDef[];
   allies: AllyDef[];
   unlocks: UnlockDef[];
@@ -232,6 +249,7 @@ export interface GameData {
 export interface RawGameData {
   objects: unknown;
   casas: unknown;
+  jefes: unknown;
   tools: unknown;
   allies: unknown;
   unlocks: unknown;
@@ -397,6 +415,24 @@ export function parseGameData(raw: RawGameData): GameData {
   }
   if (lastHome !== homes.length - 1) throw new DataError('objects.json', `la casa "${homeIds[homes.length - 1]}" no tiene objetos`);
 
+  const bosses: BossDef[] = asArray('jefes.json', raw.jefes).map((item) => {
+    const id = str('jefes.json', item, 'id');
+    const casa = str('jefes.json', item, 'casa');
+    if (!homeIds.includes(casa)) throw new DataError('jefes.json', `"${id}": la casa "${casa}" no existe en casas.json`);
+    const n = (key: string) => positive('jefes.json', item, key).toNumber();
+    return {
+      id,
+      casa,
+      segundos: n('segundos'),
+      vidaEnRoturas: n('vidaEnRoturas'),
+      premioEnRoturas: n('premioEnRoturas'),
+      esperaDerrota: n('esperaDerrota'),
+      efectos: effects('jefes.json', item),
+    };
+  });
+  uniqueIds('jefes.json', bosses);
+  if (new Set(bosses.map((b) => b.casa)).size !== bosses.length) throw new DataError('jefes.json', 'cada casa tiene a lo mucho un jefe');
+
   const objectIds = new Set(objects.map((o) => o.id));
   const allies: AllyDef[] = asArray('allies.json', raw.allies).map((item) => {
     const id = str('allies.json', item, 'id');
@@ -539,5 +575,5 @@ export function parseGameData(raw: RawGameData): GameData {
     if (!skills.some((s) => s.id === id)) throw new DataError('habilidades.json', `falta la habilidad "${id}"`);
   }
 
-  return { objects, homes, tools, allies, unlocks, research, skills, balance };
+  return { objects, homes, bosses, tools, allies, unlocks, research, skills, balance };
 }

@@ -1,0 +1,14 @@
+[
+  {
+    "id": "pepino",
+    "casa": "casa",
+    "segundos": 30,
+    "vidaEnRoturas": 2.5,
+    "premioEnRoturas": 60,
+    "esperaDerrota": 60,
+    "efectos": [
+      { "stat": "danio", "op": "mult", "valor": 1.25 },
+      { "stat": "danioAliados", "op": "mult", "valor": 1.25 }
+    ]
+  }
+]

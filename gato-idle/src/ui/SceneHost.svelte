@@ -43,6 +43,26 @@
       {#if $view.dps.racha}<span class="dps-racha">{$t('hud.racha')}</span>{/if}
     </div>
   {/if}
+  {#if $view.jefe.pelea}
+    {@const pelea = $view.jefe.pelea}
+    <!-- Pelea contra el jefe: nombre, vida que le queda y reloj. -->
+    <div class="boss" class:apurado={pelea.restante <= 5} data-testid="pelea-jefe">
+      <div class="boss-top">
+        <strong>🥒 {$t(`jefes.${pelea.id}.nombre`)}</strong>
+        <span class="boss-time cifra" data-testid="reloj-jefe">⏱ {pelea.restante.toFixed(1)}</span>
+      </div>
+      <div class="boss-bar"><span class="boss-fill" style:width="{(1 - pelea.progreso) * 100}%"></span></div>
+      <div class="boss-hp cifra">{pelea.vida}</div>
+    </div>
+  {:else if $view.jefe.aqui}
+    {#if $view.jefe.revancha > 0}
+      <div class="boss-wait" data-testid="revancha">🥒 {$t('jefe.revancha', { s: $view.jefe.revancha })}</div>
+    {:else}
+      <button type="button" class="boss-call" onclick={() => game.challengeBoss()} data-testid="retar-jefe">
+        🥒 {$t('jefe.retar', { jefe: $t(`jefes.${$view.jefe.aqui}.nombre`) })}
+      </button>
+    {/if}
+  {/if}
   {#if $view.patrocinio.visible}
     <button type="button" class="sponsor" onclick={() => game.claimSponsor()} data-testid="patrocinio">
       <span class="sponsor-tag">📺 {$t('patrocinio.titulo')}</span>
@@ -86,6 +106,91 @@
     text-shadow: 0 2px 0 var(--line);
     pointer-events: none;
     animation: bob 1s ease-in-out infinite alternate;
+  }
+  /*
+   * Jefe: el botón para retarlo y la espera de la revancha van abajo al centro, sobre el piso
+   * (cerca del gato); la barra de la pelea, arriba a la derecha (el patrocinio se oculta en la pelea).
+   */
+  .boss-call,
+  .boss-wait,
+  .boss {
+    position: absolute;
+    z-index: 5;
+    border: 2px solid var(--line);
+    border-radius: 6px;
+    box-shadow: 0 3px 0 var(--line);
+  }
+  .boss-call,
+  .boss-wait {
+    bottom: calc(var(--piso, 0px) + 8px);
+    left: 50%;
+    translate: -50% 0;
+    white-space: nowrap;
+  }
+  .boss {
+    top: 12px;
+    right: 12px;
+  }
+  .boss-call {
+    padding: 8px 12px;
+    background: #8fe36b;
+    color: #1d3b12;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    animation: reto 900ms ease-in-out infinite;
+  }
+  @keyframes reto {
+    50% {
+      scale: 1.07;
+    }
+  }
+  .boss-wait {
+    padding: 4px 10px;
+    background: rgba(18, 11, 22, 0.75);
+    color: var(--muted);
+    font-size: 13px;
+    pointer-events: none;
+  }
+  .boss {
+    width: min(200px, calc(100% - 150px));
+    padding: 6px 8px;
+    background: rgba(18, 11, 22, 0.85);
+    color: var(--text);
+    pointer-events: none;
+  }
+  .boss-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 6px;
+    font-size: 13px;
+  }
+  .boss-time {
+    color: var(--gold);
+    font-size: 18px;
+    line-height: 1;
+  }
+  .boss.apurado .boss-time {
+    color: var(--danger);
+    animation: bob 300ms ease-in-out infinite alternate;
+  }
+  .boss-bar {
+    height: 10px;
+    margin-top: 4px;
+    border: 2px solid var(--line);
+    background: var(--bg);
+  }
+  .boss-fill {
+    display: block;
+    height: 100%;
+    background: #5ec44a;
+    transition: width 120ms linear;
+  }
+  .boss-hp {
+    margin-top: 2px;
+    text-align: right;
+    font-size: 12px;
+    color: var(--muted);
   }
   /* Medidor de daño por segundo (arriba a la izquierda, debajo del REC). */
   .dps {

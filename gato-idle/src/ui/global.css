@@ -443,6 +443,12 @@ select {
 .vineta--mudanza {
   --fondo: #ffb066;
 }
+.vineta--jefe {
+  --fondo: #8fe36b;
+}
+.vineta--trofeo {
+  --fondo: #ffd36e;
+}
 .vineta-panel {
   position: relative;
   display: flex;

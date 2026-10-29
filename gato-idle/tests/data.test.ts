@@ -3,6 +3,7 @@ import { parseGameData } from '../src/core/data';
 import { gameData } from '../src/data';
 import objects from '../src/data/objects.json';
 import casas from '../src/data/casas.json';
+import jefes from '../src/data/jefes.json';
 import tools from '../src/data/tools.json';
 import balance from '../src/data/balance.json';
 import allies from '../src/data/allies.json';
@@ -10,7 +11,7 @@ import unlocks from '../src/data/unlocks.json';
 import research from '../src/data/research.json';
 import habilidades from '../src/data/habilidades.json';
 
-const base = { objects, casas, tools, allies, unlocks, research, balance, habilidades };
+const base = { objects, casas, jefes, tools, allies, unlocks, research, balance, habilidades };
 import es from '../src/i18n/es.json';
 import en from '../src/i18n/en.json';
 

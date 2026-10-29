@@ -39,12 +39,18 @@ export function hit(state: GameState, data: GameData, damage: Decimal): HitResul
   return { objectId: obj.id, damage, progress: 1, broke: true, reward: { vistas, dinero } };
 }
 
-/** Un manotazo del jugador. Con probabilidad de crítico, multiplica su daño. `rng` sirve para las pruebas. */
-export function tap(state: GameState, data: GameData, rng: () => number = Math.random): HitResult {
+/** Cuenta un manotazo y decide su daño: crítico (al azar) y embestida (uno de cada `embestidaCada`). */
+export function rollTap(state: GameState, data: GameData, rng: () => number = Math.random): { damage: Decimal; critico: boolean; embestida: boolean } {
   state.stats.toques += 1;
   const critico = rng() < critChance(state, data);
   let damage = critico ? tapDamage(state, data).mul(critMultiplier(state, data)) : tapDamage(state, data);
   const embestida = skillLevel(state, 'embestida') > 0 && state.stats.toques % data.balance.canal.embestidaCada === 0;
   if (embestida) damage = damage.mul(rammingMultiplier(state, data));
+  return { damage, critico, embestida };
+}
+
+/** Un manotazo del jugador. Con probabilidad de crítico, multiplica su daño. `rng` sirve para las pruebas. */
+export function tap(state: GameState, data: GameData, rng: () => number = Math.random): HitResult {
+  const { damage, critico, embestida } = rollTap(state, data, rng);
   return { ...hit(state, data, damage), critico, embestida };
 }

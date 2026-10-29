@@ -41,6 +41,11 @@ export function collectModifiers(state: GameState, data: GameData): Modifier[] {
   if (state.nivelSaco > 0) {
     mods.push({ stat: 'danioAliados', op: 'mult', valor: sacoMultiplier(state, data), fuente: 'mejora:saco' });
   }
+  // Trofeos de los jefes derrotados.
+  for (const boss of data.bosses) {
+    if (!state.jefes.derrotados.includes(boss.id)) continue;
+    for (const effect of boss.efectos) mods.push({ ...resolveEffect(effect, state), fuente: `jefe:${boss.id}` });
+  }
   for (const research of data.research) {
     if (!state.laboratorio.hechas.includes(research.id)) continue;
     for (const effect of research.efectos) {

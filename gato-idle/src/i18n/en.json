@@ -75,6 +75,23 @@
     "departamento": "Apartment",
     "casa": "House with a garden"
   },
+  "jefes": {
+    "pepino": {
+      "nombre": "Giant Cucumber",
+      "titulo": "THE GIANT CUCUMBER APPEARED!",
+      "frase": "The cat is terrified… you have 30 seconds!",
+      "trofeo": "Trophy: +25% damage forever"
+    }
+  },
+  "jefe": {
+    "retar": "Challenge the {jefe}!",
+    "revancha": "Rematch in {s} s",
+    "aparece": "The {jefe} is back!",
+    "victoria": "{jefe} DEFEATED!",
+    "premio": "🏆 You beat the {jefe}! +{dinero}",
+    "derrota": "The {jefe} laughs at you… Rematch in 60 s (+{dinero})",
+    "bono": "+{pct}% damage"
+  },
   "mejoras": {
     "enLaMesa": "On the table",
     "progreso": "Way to the edge",
@@ -263,7 +280,8 @@
     "offline": "Simulate 1 h away",
     "mudanza": "🚚 Unlock moving",
     "mudanzaLista": "Moving unlocked: upgrade Value on the last object.",
-    "sinMudanza": "There are no more houses to move to."
+    "sinMudanza": "There are no more houses to move to.",
+    "jefe": "🥒 Fight the boss"
   },
   "canal": {
     "titulo": "Owner's channel",

@@ -2,7 +2,8 @@
 // La escena y la UI nunca tocan el estado directamente: llaman métodos de Game y escuchan
 // sus eventos (escena) o su `view` (UI).
 import { writable, type Readable, type Writable } from 'svelte/store';
-import { hit, tap, type HitResult } from '../core/actions';
+import { hit, rollTap, tap, type HitResult } from '../core/actions';
+import { bossDef, bossHere, damageBoss, endFight, rematchIn, startFight, type BossFight } from '../core/jefes';
 import {
   allyCost,
   allyHitDamage,
@@ -88,6 +89,12 @@ export interface GameEvents {
   investigacion: { researchId: string };
   /** El dueño subió el video: la partida vuelve a empezar. */
   video: { video: VideoRecord };
+  /** Empezó o terminó la pelea contra un jefe (jefes.json). */
+  jefe:
+    | { fase: 'inicio'; id: string; primeraVez: boolean }
+    | { fase: 'fin'; id: string; gano: boolean; premio: Decimal; primeraVez: boolean };
+  /** Un golpe al jefe: del gato (aliado null) o de un aliado. */
+  jefeGolpe: { damage: Decimal; critico: boolean; embestida: boolean; aliado: string | null };
   /** El dueño se mudó a otra casa (casas.json). `primeraVez`: nunca se había mudado ahí (viñeta). */
   mudanza: { casa: string; primeraVez: boolean };
   /** Se cobraron las ganancias de mientras no estabas. */
@@ -231,6 +238,14 @@ export interface ViewModel {
   };
   /** Oferta de patrocinio en pantalla: ver un anuncio a cambio de dinero. */
   patrocinio: { visible: boolean; recompensa: string };
+  /** El jefe de la casa: si espera en este objeto, la pelea en curso y los trofeos ganados. */
+  jefe: {
+    aqui: string | null;
+    /** Segundos para la revancha tras perder (0: ya se puede). */
+    revancha: number;
+    pelea: { id: string; vida: string; quitado: string; progreso: number; restante: number } | null;
+    trofeos: { id: string; bono: number }[];
+  };
   /** Descubrimientos recientes (para la etiqueta "¡Nuevo!"). */
   nuevos: string[];
   proximo: NextUnlockView | null;
@@ -351,6 +366,8 @@ export class Game {
   /** Cuándo se fue a segundo plano (para las ganancias de mientras no estabas). */
   private backgroundAt: number | null = null;
   private offlineBusy = false;
+  /** Pelea contra un jefe en curso (no se guarda: si se cierra el juego, se pierde sin premio ni espera). */
+  private fight: BossFight | null = null;
 
   constructor(
     readonly data: GameData,
@@ -410,11 +427,59 @@ export class Game {
 
   tap(): void {
     if (!this.limiter.tryConsume(performance.now())) return;
+    if (this.fight) {
+      const roll = rollTap(this.state, this.data);
+      // Modo pruebas: el daño infinito también tumba al jefe de un manotazo.
+      const damage = this.state.pruebas.danioInfinito ? this.fight.vida : roll.damage;
+      this.dpsMeter.add(performance.now(), damage, 'gato');
+      this.haptic('ligera');
+      this.hitBoss(damage, roll.critico, roll.embestida, null);
+      return;
+    }
     const result = tap(this.state, this.data);
     this.dpsMeter.add(performance.now(), result.damage, 'gato');
     this.haptic(result.broke ? 'media' : 'ligera');
     this.events.emit('hit', result);
     this.markDirty();
+  }
+
+  // ---- Jefes ----
+
+  /** "¡Retar al jefe!": empieza la pelea si el jefe espera en este objeto y no hay que esperar la revancha. */
+  challengeBoss(): boolean {
+    const boss = bossHere(this.state, this.data);
+    if (this.fight || !boss || rematchIn(this.state, Date.now()) > 0) return false;
+    this.startBoss(boss.id);
+    return true;
+  }
+
+  private startBoss(id: string): void {
+    this.fight = startFight(this.data, bossDef(this.data, id)!, Date.now());
+    this.events.emit('jefe', { fase: 'inicio', id, primeraVez: this.firstTime(`jefe:${id}`) });
+    this.playSound('descubrimiento');
+    this.markDirty();
+  }
+
+  private hitBoss(damage: Decimal, critico: boolean, embestida: boolean, aliado: string | null): void {
+    const fight = this.fight;
+    if (!fight) return;
+    const won = damageBoss(fight, damage);
+    this.events.emit('jefeGolpe', { damage, critico, embestida, aliado });
+    if (won) this.finishBoss();
+    this.markDirty();
+  }
+
+  /** Se acabó el tiempo o la vida del jefe: paga y avisa a la escena. */
+  private finishBoss(): void {
+    const fight = this.fight;
+    if (!fight) return;
+    this.fight = null;
+    const outcome = endFight(this.state, this.data, fight, Date.now());
+    const primeraVez = outcome.gano && this.firstTime(`trofeo:${outcome.id}`);
+    this.events.emit('jefe', { fase: 'fin', id: outcome.id, gano: outcome.gano, premio: outcome.premio, primeraVez });
+    this.playSound(outcome.gano ? 'objeto-nuevo' : 'critico');
+    this.markDirty();
+    void this.save();
   }
 
   /** "¡Va!" en un globito del tutorial que solo explica. */
@@ -538,6 +603,7 @@ export class Game {
   uploadVideo(): VideoRecord | null {
     const video = uploadVideo(this.state, this.data, Date.now());
     if (!video) return null;
+    this.fight = null;
     this.allyTimers.clear();
     this.dpsMeter.clear();
     this.events.emit('video', { video });
@@ -726,6 +792,17 @@ export class Game {
     return true;
   }
 
+  /** Modo pruebas: pelea contra el jefe de la casa aquí mismo (aunque no esté en su objeto ni se haya ganado). */
+  testBoss(): boolean {
+    if (this.fight) return false;
+    const home = this.data.homes[this.state.casa]!.id;
+    const boss = this.data.bosses.find((b) => b.casa === home) ?? this.data.bosses[0];
+    if (!boss) return false;
+    this.state.jefes.revancha = 0;
+    this.startBoss(boss.id);
+    return true;
+  }
+
   /** Modo pruebas: seguidores y visualizaciones de regalo. */
   testCanal(seguidores: number, visualizaciones: number): void {
     this.state.canal.seguidores += seguidores;
@@ -793,6 +870,8 @@ export class Game {
   /** Después de un truco: la escena se redibuja si cambió algo visible, y se guarda. */
   private afterTest(redraw = false): void {
     normalizeState(this.state, this.data);
+    // Si cambió la partida de golpe, la pelea en curso se cancela (sin premio).
+    if (redraw) this.fight = null;
     if (redraw) this.events.emit('reset', undefined);
     this.markDirty();
     this.refreshView();
@@ -800,6 +879,11 @@ export class Game {
   }
 
   // ---- Consultas para la escena ----
+
+  /** El jefe contra el que se pelea ahora, o null. */
+  bossFightId(): string | null {
+    return this.fight?.id ?? null;
+  }
 
   currentObjectId(): string {
     return currentObject(this.state, this.data).id;
@@ -838,6 +922,13 @@ export class Game {
     this.runAllies(dt);
     this.runDiscoveries(now);
     this.runSponsor(now);
+    // Pelea contra el jefe: el reloj corre y la barra se actualiza.
+    if (this.fight) {
+      if (Date.now() >= this.fight.fin) this.finishBoss();
+      this.markDirty();
+    } else if (this.state.jefes.revancha > Date.now() && now - this.lastSecond < TICK_MS) {
+      this.markDirty();
+    }
     // El medidor de daño baja solo cuando se deja de golpear: se actualiza aunque no pase nada más.
     if (this.dpsMeter.active && now - this.lastDpsRefresh > 250) {
       this.lastDpsRefresh = now;
@@ -915,6 +1006,12 @@ export class Game {
   }
 
   private allyHit(ally: AllyDef, level: number): void {
+    if (this.fight) {
+      const damage = allyHitDamage(level, ally, this.state, this.data);
+      this.dpsMeter.add(performance.now(), damage, 'aliados');
+      this.hitBoss(damage, false, false, ally.id);
+      return;
+    }
     const result = hit(this.state, this.data, allyHitDamage(level, ally, this.state, this.data));
     this.dpsMeter.add(performance.now(), result.damage, 'aliados');
     this.events.emit('aliado', { allyId: ally.id, result });
@@ -1014,6 +1111,26 @@ export class Game {
       habilidades,
       hayCompra: habilidades.some((h) => h.listo),
       mudanza: this.moveView(fmt),
+    };
+  }
+
+  private bossView(fmt: (value: Decimal) => string): ViewModel['jefe'] {
+    const s = this.state;
+    const fight = this.fight;
+    const now = Date.now();
+    return {
+      aqui: bossHere(s, this.data)?.id ?? null,
+      revancha: rematchIn(s, now),
+      pelea: fight && {
+        id: fight.id,
+        vida: fmt(fight.vida.sub(fight.danio)),
+        quitado: fmt(fight.danio),
+        progreso: Math.min(1, fight.danio.div(fight.vida).toNumber()),
+        restante: Math.max(0, Math.ceil((fight.fin - now) / 100) / 10),
+      },
+      trofeos: this.data.bosses
+        .filter((b) => s.jefes.derrotados.includes(b.id))
+        .map((b) => ({ id: b.id, bono: Math.round(((b.efectos.find((e) => e.stat === 'danio')?.valor ?? 1) - 1) * 100) })),
     };
   }
 
@@ -1180,7 +1297,8 @@ export class Game {
       nuevos: [...this.recentUnlocks.keys()],
       dps: this.dpsView(fmt),
       offline: this.offlineView(fmt),
-      patrocinio: { visible: this.sponsorVisible() && !this.sponsorBusy, recompensa: fmt(sponsorReward(s, d)) },
+      patrocinio: { visible: this.sponsorVisible() && !this.sponsorBusy && !this.fight, recompensa: fmt(sponsorReward(s, d)) },
+      jefe: this.bossView(fmt),
       proximo: next && {
         id: next.unlock.id,
         tipo: next.unlock.id.startsWith('aliado:') ? 'aliado' : 'funcion',

@@ -803,3 +803,18 @@ Pendiente: una casa siguiente (edificio, ciudad… hasta la Luna), fondos de Pix
 - **Sacudida:** al romper un objeto la pantalla temblaba fuerte (110 ms, 1.2 % del tamaño de la cámara) en *cada* rotura, y con la pandilla rompiendo sin parar casi nunca se detenía. Ahora es una cuarta parte (70 ms, 0.3 %) y a lo mucho una cada medio segundo. El crítico, la embestida y el video viral también bajaron (tabla `SHAKES` en `MainScene.ts`). La vibración del celular (háptica) no cambió y se apaga en Ajustes.
 - **Objetos de la casa ×1.5:** se redibujaron con el redimensionado de PixelLab (`/resize`), que conserva el diseño con más detalle en lugar de estirar los píxeles.
 
+## 38. Jefes: el Pepino Gigante (versión 0.20.0)
+
+Al terminar la casa (llegar al **coche**, su último objeto) aparece en la escena el botón **"🥒 ¡Retar al Pepino Gigante!"** (inspirado en el meme de los gatos que saltan del susto al ver un pepino). La pelea:
+
+- El pepino (arte de PixelLab, enorme, con sonrisa malvada) toma el lugar del objeto; el gato se le pone enfrente. Arriba a la derecha: su nombre, la vida que le queda y un reloj de **30 s** (rojo en los últimos 5).
+- Los manotazos (con críticos y embestidas) **y la pandilla** le pegan a él: cada golpe lo apachurra y lo hace parpadear. La primera vez sale la viñeta "¡APARECIÓ EL PEPINO GIGANTE! El gato está aterrado… ¡tienes 30 segundos!".
+- **Vida:** 2.5 veces la del coche. Según el simulador, al llegar se le quita ~74 % (se pierde) y tras ~5 minutos de mejorar en el coche ~103 % (se gana); en la vuelta siguiente se gana de entrada.
+- **Ganar:** el pepino se marea (cuadro "derrotado") y cae, confeti, viñeta "¡Pepino Gigante DERROTADO! Trofeo: +25 % de daño para siempre", y un premio de lo que pagan 60 roturas del coche. El **trofeo** (+25 % al daño del gato y de la pandilla) dura para siempre, también después de subir videos, y se ve en Mejoras ("🏆 Pepino Gigante · +25 % daño"). Ya derrotado, no vuelve a aparecer.
+- **Perder:** el pepino se burla (tres brinquitos), paga la mitad del premio por la parte de vida que se le quitó, y la **revancha** llega en 60 s ("🥒 Revancha en 55 s").
+- La pelea en curso no se guarda: si se cierra el juego o se sube un video, se cancela sin premio ni espera.
+
+Datos: `src/data/jefes.json` (casa, segundos, vida y premio en "roturas del último objeto", espera de la revancha y los efectos del trofeo). Lógica: `src/core/jefes.ts`; el trofeo entra al sistema de modificadores. Modo pruebas: "🥒 Pelear con el jefe" (en cualquier objeto) y el daño infinito también tumba al jefe.
+
+Siguientes jefes (uno por casa): **la Aspiradora Industrial**, **el Veterinario** (con el cono de la vergüenza) y **la Bañera**.
+

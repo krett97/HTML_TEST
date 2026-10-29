@@ -166,6 +166,11 @@ export class MainScene extends Phaser.Scene {
       }),
       this.controller.events.on('video', ({ video }) => this.onVideo(video.seguidores, video.viral)),
       this.controller.events.on('mudanza', ({ casa, primeraVez }) => this.onMove(casa, primeraVez)),
+      this.controller.events.on('jefe', (event) => {
+        if (event.fase === 'inicio') this.onBossStart(event.id, event.primeraVez);
+        else this.onBossEnd(event.id, event.gano, event.premio, event.primeraVez);
+      }),
+      this.controller.events.on('jefeGolpe', (event) => this.onBossHit(event)),
       this.controller.events.on('offline', ({ dinero }) => {
         // Lluvia de monedas al cobrar lo de mientras no estabas.
         this.popNumber(this.object.x, this.object.y - this.heightOf(this.object) - 10, 'dinero grande', `+${this.controller.formatMoney(dinero)}`, { coin: true });
@@ -249,17 +254,102 @@ export class MainScene extends Phaser.Scene {
     return objectX - this.widthOf(this.object) / 2 - CAT_W - 1;
   }
 
-  /** Pone el objeto actual en su posición según el progreso guardado. */
+  /** Pone el objeto actual en su posición según el progreso guardado (o al jefe, si hay pelea). */
   private placeObject(): void {
     this.objectDef = this.controller.data.objects.find((o) => o.id === this.controller.currentObjectId())!;
     this.enterPlace(true);
     this.tweens.killTweensOf([this.object, this.cat, this.vehicle]);
+    const boss = this.controller.bossFightId();
+    if (boss) {
+      this.placeBoss(boss);
+      return;
+    }
     const progress = this.controller.progress();
     this.object.setTexture(this.objectDef.sprite).setScale(S).setAlpha(1).setVisible(true);
     this.object.setPosition(this.objectX(progress), this.surfaceTop).setAngle(this.objectAngle(progress));
     this.applyLook();
     this.moveCat(this.catXFor(this.object.x), false);
     this.drawScratches(progress);
+  }
+
+  // ---- Jefes ----
+
+  /** El jefe toma el lugar del objeto (al centro de la superficie) y el gato se le pone enfrente. */
+  private placeBoss(id: string): void {
+    this.scratches.clear();
+    this.object.setTexture(`jefe_${id}`).setScale(S).setAlpha(1).setAngle(0).setVisible(true);
+    const x = Math.max(START_X, this.place.surface.left + CAT_W + 6 + this.widthOf(this.object) / 2);
+    this.object.setPosition(x, this.surfaceTop);
+    this.applyLook();
+    this.moveCat(this.catXFor(x), false);
+  }
+
+  private onBossStart(id: string, primeraVez: boolean): void {
+    const tr = get(t);
+    this.placeObject();
+    this.popIn();
+    this.shake('viral');
+    this.cameras.main.flash(180, 120, 220, 90);
+    const jefe = tr(`jefes.${id}.nombre`);
+    if (primeraVez) this.comicPanel('jefe', this.textures.getBase64(`jefe_${id}`), tr(`jefes.${id}.titulo`), tr(`jefes.${id}.frase`));
+    else this.toast(tr('jefe.aparece', { jefe }));
+  }
+
+  private onBossHit(event: { damage: Decimal; critico: boolean; embestida: boolean; aliado: string | null }): void {
+    if (event.aliado) {
+      const visual = this.allies.get(event.aliado);
+      if (visual?.sprite.visible) this.allyAttack(event.aliado, visual);
+      const { golpe, tono, volumen } = this.allyDef(event.aliado).sonido;
+      this.controller.playSound(golpe, { tono, volumen, minGapMs: 60 });
+      this.allyNumber(event.aliado, event.damage);
+    } else {
+      this.swat();
+      this.tapNumber(event);
+      if (event.critico) this.criticalHit();
+      else if (event.embestida) this.rammingHit();
+      this.controller.playSound('rasguno', { tono: 0.8, minGapMs: 45 });
+    }
+    // El pepino se apachurra y parpadea en blanco con cada golpe.
+    this.tweens.killTweensOf(this.object);
+    this.object.setScale(S);
+    this.tweens.add({ targets: this.object, scaleY: 0.93 * S, scaleX: 1.05 * S, duration: 50, yoyo: true });
+    this.object.setTint(0xffffff).setTintMode(Phaser.TintModes.FILL);
+    this.time.delayedCall(45, () => this.object.clearTint().setTintMode(Phaser.TintModes.MULTIPLY));
+  }
+
+  /** Ganó: el jefe se marea y cae, confeti y trofeo. Perdió: el jefe se burla y se va. Después vuelve el objeto. */
+  private onBossEnd(id: string, gano: boolean, premio: Decimal, primeraVez: boolean): void {
+    const tr = get(t);
+    const jefe = tr(`jefes.${id}.nombre`);
+    const dinero = this.controller.formatMoney(premio);
+    this.tweens.killTweensOf(this.object);
+    this.object.clearTint().setScale(S);
+    if (gano) {
+      this.object.setTexture(`jefe_${id}_derrotado`);
+      this.tweens.chain({
+        targets: this.object,
+        tweens: [
+          { angle: -8, duration: 120, yoyo: true, repeat: 2 },
+          { angle: 90, y: this.surfaceTop + 4, duration: 380, ease: 'Quad.in' },
+        ],
+      });
+      const colors = [0xe5534b, 0xffd36e, 0x5ec4a8, 0x8e5bd1];
+      colors.forEach((color, i) => this.time.delayedCall(i * 120, () => this.shatter(40 + i * 35, this.surfaceTop - 40, color, 24, 200)));
+      if (primeraVez) {
+        this.comicPanel('trofeo', this.textures.getBase64(`jefe_${id}_derrotado`), tr('jefe.victoria', { jefe }), tr(`jefes.${id}.trofeo`));
+      }
+      this.toast(tr('jefe.premio', { jefe, dinero }));
+    } else {
+      // Se ríe: tres brinquitos.
+      this.tweens.add({ targets: this.object, y: this.object.y - 8, duration: 110, yoyo: true, repeat: 2, ease: 'Quad.out' });
+      this.toast(tr('jefe.derrota', { jefe, dinero }));
+    }
+    if (premio.gt(0)) this.popNumber(this.object.x, this.object.y - this.heightOf(this.object) - 10, 'dinero grande', `+${dinero}`, { coin: true });
+    this.time.delayedCall(gano ? 1700 : 1200, () => {
+      if (this.controller.bossFightId()) return;
+      this.placeObject();
+      this.popIn();
+    });
   }
 
   /** Vehículo según la herramienta del objeto en la mesa; garras, sombrero y saco según las mejoras. */
@@ -644,7 +734,7 @@ export class MainScene extends Phaser.Scene {
   }
 
   /** El manotazo del gato: número que salta en arco; el crítico y la embestida, enormes y con letrero. */
-  private tapNumber(result: HitResult): void {
+  private tapNumber(result: Pick<HitResult, 'damage' | 'critico' | 'embestida'>): void {
     const tr = get(t);
     const { x, y } = this.numberAnchor();
     const ratio = this.damageRatio(result.damage);

@@ -57,6 +57,12 @@
   </div>
   {/if}
 
+  {#if $view.jefe.trofeos.length > 0}
+    <div class="trofeos" data-testid="trofeos">
+      🏆 {#each $view.jefe.trofeos as trofeo (trofeo.id)}<span>{$t(`jefes.${trofeo.id}.nombre`)} · {$t('jefe.bono', { pct: trofeo.bono })}</span>{/each}
+    </div>
+  {/if}
+
   {#if $view.funciones.valor}
   <div class="card upgrade" class:fresh={$view.nuevos.includes('valor')}>
     <span class="icon" aria-hidden="true">💎</span>
@@ -260,5 +266,16 @@
   }
   .fresh {
     border-color: var(--gold);
+  }
+  .trofeos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    padding: 6px 10px;
+    border: 2px solid var(--gold);
+    border-radius: 4px;
+    color: var(--gold);
+    font-size: 13px;
+    font-weight: 700;
   }
 </style>
