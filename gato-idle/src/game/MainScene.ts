@@ -218,6 +218,9 @@ export class MainScene extends Phaser.Scene {
       if (!visual.sprite.visible) continue;
       const base = this.allyRest(id);
       visual.sprite.setPosition(Math.round(base.x + visual.hop.dx), Math.round(base.y + visual.hop.dy));
+      // El mapache sigue al objeto con la mirada: el gato lo va empujando y termina pasándolo
+      // (su dibujo mira a la izquierda; volteado, a la derecha).
+      if (id === 'mapache') visual.sprite.setFlipX(this.object.x > base.x + this.widthOf(visual.sprite) / 2);
     }
   }
 

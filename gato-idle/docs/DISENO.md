@@ -864,3 +864,5 @@ Simulador (5 toques/s, sin anuncios, gastando en lo más barato): la mudanza lle
 
 
 **0.22.1:** el mapache vuelve a mirar hacia el objeto (está a su derecha, así que su dibujo original ya lo veía).
+
+**0.22.2:** el mapache sigue al objeto con la mirada: mientras el gato lo empuja, el objeto termina pasándolo, y entonces el mapache se voltea a la derecha.
