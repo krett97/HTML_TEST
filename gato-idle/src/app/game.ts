@@ -61,6 +61,7 @@ import type { AudioEngine, PlayOptions } from '../services/audio';
 import { vibrate, type HapticStrength } from '../services/haptics';
 import { watchLifecycle } from '../services/lifecycle';
 import type { KeyValueStore } from '../services/storage';
+import { DpsMeter } from './dpsMeter';
 import { Emitter } from './emitter';
 import { SaveSlots } from './persistence';
 
@@ -193,6 +194,17 @@ export interface ViewModel {
   hayCompra: boolean;
   /** Qué partes del juego ya se descubrieron. */
   funciones: { fuerza: boolean; valor: boolean; critico: boolean; danioCritico: boolean; saco: boolean; laboratorio: boolean; canal: boolean; aliados: boolean };
+  /** Daño por segundo real de los últimos segundos (medidor de la escena). */
+  dps: {
+    total: string;
+    gato: string;
+    aliados: string;
+    /** Qué parte del daño hizo el gato (0 a 1). */
+    parteGato: number;
+    /** Va tocando rápido (4+ manotazos por segundo): el medidor se prende en llamas. */
+    racha: boolean;
+    activo: boolean;
+  };
   /** Oferta de patrocinio en pantalla: ver un anuncio a cambio de dinero. */
   patrocinio: { visible: boolean; recompensa: string };
   /** Descubrimientos recientes (para la etiqueta "¡Nuevo!"). */
@@ -265,6 +277,8 @@ const MAX_TICK_MS = 3000;
 const MAX_HITS_PER_TICK = 4;
 /** Cuánto tiempo se marca algo recién descubierto con "¡Nuevo!". */
 const NEW_BADGE_MS = 45_000;
+/** Manotazos por segundo para considerar que el jugador va "en racha". */
+const STREAK_TAPS_PER_SECOND = 4;
 /** Puntos de guardado del modo pruebas (aparte de la partida). */
 const TEST_SLOTS = 3;
 const testSlotKey = (slot: number) => `gato-idle.prueba.${slot}`;
@@ -287,6 +301,8 @@ export class Game {
   /** Descubrimientos recientes y cuándo ocurrieron (no se guarda). */
   private readonly recentUnlocks = new Map<string, number>();
   private lastSecond = 0;
+  private readonly dpsMeter = new DpsMeter();
+  private lastDpsRefresh = 0;
   /** Cuándo aparece la siguiente oferta de patrocinio y hasta cuándo sigue visible (ms, performance.now). */
   private sponsorAt = 0;
   private sponsorUntil = 0;
@@ -342,6 +358,7 @@ export class Game {
   tap(): void {
     if (!this.limiter.tryConsume(performance.now())) return;
     const result = tap(this.state, this.data);
+    this.dpsMeter.add(performance.now(), result.damage, 'gato');
     this.haptic(result.broke ? 'media' : 'ligera');
     this.events.emit('hit', result);
     this.markDirty();
@@ -437,6 +454,7 @@ export class Game {
     const video = uploadVideo(this.state, this.data, Date.now());
     if (!video) return null;
     this.allyTimers.clear();
+    this.dpsMeter.clear();
     this.events.emit('video', { video });
     this.events.emit('reset', undefined);
     this.playSound('descubrimiento');
@@ -508,6 +526,7 @@ export class Game {
     this.lastSavedAt = null;
     this.allyTimers.clear();
     this.recentUnlocks.clear();
+    this.dpsMeter.clear();
     this.events.emit('reset', undefined);
     await this.save();
   }
@@ -662,6 +681,11 @@ export class Game {
     this.runAllies(dt);
     this.runDiscoveries(now);
     this.runSponsor(now);
+    // El medidor de daño baja solo cuando se deja de golpear: se actualiza aunque no pase nada más.
+    if (this.dpsMeter.active && now - this.lastDpsRefresh > 250) {
+      this.lastDpsRefresh = now;
+      this.markDirty();
+    }
     if (this.dirty) this.refreshView();
   }
 
@@ -721,6 +745,7 @@ export class Game {
 
   private allyHit(ally: AllyDef, level: number): void {
     const result = hit(this.state, this.data, allyHitDamage(level, ally, this.state, this.data));
+    this.dpsMeter.add(performance.now(), result.damage, 'aliados');
     this.events.emit('aliado', { allyId: ally.id, result });
     this.markDirty();
   }
@@ -761,6 +786,19 @@ export class Game {
       intervalo: ally.intervalo,
       ganancia: fmt(alliesDps(after, this.data).sub(alliesDps(s, this.data))),
       mejor: false,
+    };
+  }
+
+  private dpsView(fmt: (value: Decimal) => string): ViewModel['dps'] {
+    const reading = this.dpsMeter.read(performance.now());
+    const total = reading.total.toNumber();
+    return {
+      total: fmt(reading.total),
+      gato: fmt(reading.gato),
+      aliados: fmt(reading.aliados),
+      parteGato: total > 0 ? reading.gato.toNumber() / total : 0,
+      racha: reading.toques >= STREAK_TAPS_PER_SECOND,
+      activo: total > 0,
     };
   }
 
@@ -929,6 +967,7 @@ export class Game {
         aliados: s.desbloqueos.some((id) => id.startsWith('aliado:')),
       },
       nuevos: [...this.recentUnlocks.keys()],
+      dps: this.dpsView(fmt),
       patrocinio: { visible: this.sponsorVisible() && !this.sponsorBusy, recompensa: fmt(sponsorReward(s, d)) },
       proximo: next && {
         id: next.unlock.id,

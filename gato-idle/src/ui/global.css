@@ -1,3 +1,22 @@
+/*
+ * Números legibles: en Pixelify Sans el 8 parece S y el 2 parece Z. Los dígitos de TODO el juego
+ * usan Jersey 10 (pixel art grueso con dígitos claros), un poco más grande para empatar con el texto.
+ * "Numeros" es la misma fuente completa ($, K, M incluidos) para lo que solo son cifras.
+ */
+@font-face {
+  font-family: 'Digitos';
+  src: url('@fontsource/jersey-10/files/jersey-10-latin-400-normal.woff2') format('woff2');
+  unicode-range: U+0030-0039;
+  size-adjust: 135%;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Numeros';
+  src: url('@fontsource/jersey-10/files/jersey-10-latin-400-normal.woff2') format('woff2');
+  size-adjust: 135%;
+  font-display: swap;
+}
+
 :root {
   --bg: #1e1424;
   --panel: #2b1d2f;
@@ -9,7 +28,9 @@
   --gold: #ffd36e;
   --good: #5ec4a8;
   --danger: #e5534b;
-  --font: 'Pixelify Sans', system-ui, sans-serif;
+  --font: 'Digitos', 'Pixelify Sans', system-ui, sans-serif;
+  /* Para dinero, costos y números de daño. */
+  --font-num: 'Numeros', 'Pixelify Sans', system-ui, sans-serif;
   color-scheme: dark;
 }
 
@@ -24,6 +45,8 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font);
+  /* Jersey 10 solo tiene un grosor: que el navegador no le invente negritas borrosas. */
+  font-synthesis: none;
   font-size: 16px;
   -webkit-tap-highlight-color: transparent;
   -webkit-user-select: none;
@@ -48,6 +71,12 @@ button,
 select {
   font: inherit;
   color: inherit;
+}
+
+/* Lo que solo son cifras (botones de compra, contadores). */
+.cifra {
+  font-family: var(--font-num);
+  font-weight: 400;
 }
 
 /* Botón con relieve de pixel art. */
@@ -150,8 +179,9 @@ select {
   align-items: center;
   transform: translate(-50%, -100%);
   color: var(--c);
+  font-family: var(--font-num);
   font-size: var(--size);
-  font-weight: 700;
+  font-weight: 400;
   line-height: 1;
   white-space: nowrap;
   /* Contorno grueso de pixel art y sombra abajo, para leerse sobre cualquier cuarto. */
@@ -203,6 +233,7 @@ select {
 }
 .num-label {
   margin-bottom: 2px;
+  font-family: var(--font);
   font-size: 0.42em;
   letter-spacing: 1px;
   color: var(--gold);

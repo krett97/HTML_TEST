@@ -5,7 +5,11 @@
   },
   "hud": {
     "dinero": "Money",
-    "toca": "Tap to swat!"
+    "toca": "Tap to swat!",
+    "dps": "dmg/s",
+    "dpsGato": "Cat",
+    "dpsAliados": "Gang",
+    "racha": "ON FIRE!"
   },
   "tabs": {
     "mejoras": "Upgrades",

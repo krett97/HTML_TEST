@@ -33,12 +33,12 @@
   <div class="card stats">
     <div class="stat">
       <span class="muted">{$t('canal.seguidores')}</span>
-      <strong data-testid="seguidores">👥 {$view.canal.seguidores}</strong>
+      <strong class="cifra" data-testid="seguidores">👥 {$view.canal.seguidores}</strong>
       <span class="small gold">{$t('canal.bono', { pct: $view.canal.bono })}</span>
     </div>
     <div class="stat">
       <span class="muted">{$t('canal.visualizaciones')}</span>
-      <strong data-testid="visualizaciones">👁️ {$view.canal.visualizaciones}</strong>
+      <strong class="cifra" data-testid="visualizaciones">👁️ {$view.canal.visualizaciones}</strong>
     </div>
   </div>
 
@@ -81,7 +81,7 @@
       </div>
       <button
         type="button"
-        class="btn btn--accent buy"
+        class="btn btn--accent buy cifra"
         disabled={!skill.alcanza}
         onclick={() => game.buySkill(skill.id)}
         data-testid="habilidad-{skill.id}"

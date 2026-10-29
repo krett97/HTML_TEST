@@ -11,7 +11,7 @@
   <div class="right">
     <div class="money" aria-label={$t('hud.dinero')}>
       <span class="coin" aria-hidden="true">$</span>
-      <span data-testid="dinero">{$view.dinero}</span>
+      <span class="cifra" data-testid="dinero">{$view.dinero}</span>
     </div>
     {#if $view.pruebas.disponible}
       <Pruebas />

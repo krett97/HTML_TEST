@@ -53,7 +53,7 @@
       </div>
       <button
         type="button"
-        class="btn btn--accent buy"
+        class="btn btn--accent buy cifra"
         disabled={!ally.alcanza}
         onclick={() => game.buyAlly(ally.id)}
         data-testid="comprar-aliado-{ally.id}"
@@ -140,6 +140,7 @@
     font-size: 12px;
   }
   .adopt {
+    font-family: var(--font);
     font-size: 12px;
     font-weight: 400;
   }

@@ -5,7 +5,11 @@
   },
   "hud": {
     "dinero": "Dinero",
-    "toca": "¡Toca para dar un manotazo!"
+    "toca": "¡Toca para dar un manotazo!",
+    "dps": "daño/s",
+    "dpsGato": "Gato",
+    "dpsAliados": "Pandilla",
+    "racha": "¡EN RACHA!"
   },
   "tabs": {
     "mejoras": "Mejoras",

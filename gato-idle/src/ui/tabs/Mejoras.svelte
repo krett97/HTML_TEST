@@ -44,7 +44,7 @@
     </div>
     <button
       type="button"
-      class="btn btn--accent buy"
+      class="btn btn--accent buy cifra"
       disabled={!$view.fuerza.alcanza}
       onclick={() => game.buyFuerza()}
       data-testid="comprar-fuerza"
@@ -80,7 +80,7 @@
     </div>
     <button
       type="button"
-      class="btn btn--accent buy"
+      class="btn btn--accent buy cifra"
       disabled={!$view.valor.alcanza}
       onclick={() => game.buyValor()}
       data-testid="comprar-valor"
@@ -107,7 +107,7 @@
     </div>
     <button
       type="button"
-      class="btn btn--accent buy"
+      class="btn btn--accent buy cifra"
       disabled={!$view.critico.alcanza}
       onclick={() => game.buyCritChance()}
       data-testid="comprar-critico"
@@ -132,7 +132,7 @@
     </div>
     <button
       type="button"
-      class="btn btn--accent buy"
+      class="btn btn--accent buy cifra"
       disabled={!$view.danioCritico.alcanza}
       onclick={() => game.buyCritDamage()}
       data-testid="comprar-danio-critico"
@@ -155,7 +155,7 @@
     </div>
     <button
       type="button"
-      class="btn btn--accent buy"
+      class="btn btn--accent buy cifra"
       disabled={!$view.saco.alcanza}
       onclick={() => game.buySaco()}
       data-testid="comprar-saco"

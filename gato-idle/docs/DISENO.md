@@ -1,6 +1,6 @@
 # Swat to the Moon — Documento de diseño
 
-> **Versión 0.11** · Actualiza el prompt original ([`prompt-original.md`](prompt-original.md)) con las mejoras del análisis.
+> **Versión 0.12** · Actualiza el prompt original ([`prompt-original.md`](prompt-original.md)) con las mejoras del análisis.
 > **Nombre provisional.** *Knock It Off!* ya está en uso (Spin Master vende un juego físico con ese nombre para jugar con tu gato, y hay varios juegos en itch.io). *Swat to the Moon* aún no está verificado en Play Store ni en registros de marca (USPTO / IMPI). El nombre visible se cambia en un solo lugar: `src/i18n/*.json` → `app.title` y `capacitor.config.ts` → `appName`.
 
 ---
@@ -626,3 +626,21 @@ Arriba de Mejoras y de Aliados hay un selector **Comprar ×1 | ×10** (se guarda
 El **primer nivel** de cada una lanza una viñeta de ~2.5 s que cruza la mitad de la escena: recuadro inclinado con puntitos de historieta y líneas de velocidad del color de la mejora (azul acero, morado, rojo), el gato ampliado **con su nuevo aspecto** y un globo de texto ("¡GARRAS DE ACERO!", "¡QUÉ ELEGANCIA!", "¡LLEGÓ EL JEFE!"). No bloquea los toques. Hoy el gato de la viñeta es el mismo pixel art ampliado; **con PixelLab se dibuja una ilustración propia para cada viñeta** (pose y expresión de cómic).
 
 Recordatorio: estas mejoras no están desde el inicio; se descubren al subir el Valor (Garras ~min 3, Sombrero ~min 6, Saco ~min 12; ver §20).
+
+## 29. Medidor de daño por segundo y números legibles (versión 0.12.0)
+
+### Medidor en la escena
+
+Arriba a la izquierda (debajo del ● REC) está el **daño por segundo real** de los últimos 3 segundos: suma lo que de verdad pegaron los manotazos (con críticos y embestidas) y los aliados (`src/app/dpsMeter.ts`). Por eso sube si tocas rápido y baja solo al detenerte, hasta quedar en lo que hace la pandilla.
+
+- Número grande dorado que "late" cada vez que cambia.
+- Barra repartida: **naranja = gato 🐱**, **morado = pandilla 🐾**, con las dos cifras abajo.
+- **En racha** (4 o más manotazos por segundo): ícono 🔥, borde de fuego que tiembla, número rojo encendido y letrero "¡EN RACHA!".
+
+### Números fáciles de leer
+
+En Pixelify Sans el **8 parecía S y el 2 parecía Z**. Ahora:
+- **Todos los dígitos del juego** usan **Jersey 10** (pixel art grueso, con dígitos inconfundibles), un poco más grande para empatar con el texto: "Daño **304** → **312**". Se hace con `unicode-range` (fuente "Digitos"), así que ningún texto tuvo que cambiar.
+- **Lo que solo son cifras** (dinero de arriba, botones de compra, números de daño, medidor, seguidores) va completo en Jersey 10, incluidos "$", "K" y "M" (clase `.cifra`).
+
+Se eligió entre Press Start 2P, VT323, Silkscreen, Jersey 10, Tiny5, Micro 5, Handjet y Sixtyfour; Jersey 10 fue la más legible sin ocupar demasiado ancho.

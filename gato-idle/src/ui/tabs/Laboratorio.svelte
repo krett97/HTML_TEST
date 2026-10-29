@@ -76,7 +76,7 @@
         {:else if project.estado === 'disponible'}
           <button
             type="button"
-            class="btn btn--accent buy"
+            class="btn btn--accent buy cifra"
             disabled={busy || !project.alcanza}
             title={busy ? $t('laboratorio.ocupado') : undefined}
             onclick={() => game.startResearch(project.id)}
