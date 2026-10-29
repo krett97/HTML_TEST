@@ -11,6 +11,18 @@
     "dpsAliados": "Gang",
     "racha": "ON FIRE!"
   },
+  "tutorial": {
+    "tocar": "Psst, human. Tap the screen and I'll swat whatever is on the table.",
+    "monedas": "Down it goes! 😼 Every broken thing gives coins (up top). And the owner puts out another one. Never learns.",
+    "fuerza": "Buy Strength: my swats hit harder and things fall faster.",
+    "valor": "Buy Value: the owner puts out pricier stuff. Pricier = more coins. It's science.",
+    "meta": "Down here you can see what's next. Spoiler: more destruction.",
+    "aliado": "A kitten wants to join the gang. Adopt it in 🐱 Allies: it breaks things on its own, even when you don't tap.",
+    "video": "The owner's video is ready! Upload it in 📱 Channel: you start over, but with followers that make you stronger.",
+    "ok": "Got it!",
+    "saltar": "Skip tutorial",
+    "gato": "The cat says"
+  },
   "tabs": {
     "mejoras": "Upgrades",
     "aliados": "Allies",

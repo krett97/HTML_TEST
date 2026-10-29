@@ -49,6 +49,7 @@
       disabled={!$view.fuerza.alcanza}
       onclick={() => game.buyFuerza()}
       data-testid="comprar-fuerza"
+      data-tuto="fuerza"
     >
       {#if $view.fuerza.cantidad > 1}<span class="qty">×{$view.fuerza.cantidad}</span>{/if}
       <span class="price"><Coin />{$view.fuerza.costo}</span>
@@ -85,6 +86,7 @@
       disabled={!$view.valor.alcanza}
       onclick={() => game.buyValor()}
       data-testid="comprar-valor"
+      data-tuto="valor"
     >
       {#if $view.valor.cantidad > 1}<span class="qty">×{$view.valor.cantidad}</span>{/if}
       <span class="price"><Coin />{$view.valor.costo}</span>

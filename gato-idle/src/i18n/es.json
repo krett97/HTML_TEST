@@ -11,6 +11,18 @@
     "dpsAliados": "Pandilla",
     "racha": "¡EN RACHA!"
   },
+  "tutorial": {
+    "tocar": "Psst, humano. Toca la pantalla y le doy un manotazo a lo que esté en la mesa.",
+    "monedas": "¡Al suelo! 😼 Cada cosa rota da monedas (arriba). Y el dueño pone otra. Nunca aprende.",
+    "fuerza": "Compra Fuerza: mis manotazos pegan más fuerte y las cosas caen más rápido.",
+    "valor": "Compra Valor: el dueño pone cosas más caras. Más caras = más monedas. Es ciencia.",
+    "meta": "Aquí abajo ves qué sigue. Spoiler: más destrucción.",
+    "aliado": "Un gatito quiere unirse a la pandilla. Adóptalo en 🐱 Aliados: rompe cosas solito, aunque no toques.",
+    "video": "¡El dueño ya tiene video! Súbelo en 📱 Canal: empiezas de cero, pero con seguidores que te hacen más fuerte.",
+    "ok": "¡Va!",
+    "saltar": "Saltar tutorial",
+    "gato": "El gato dice"
+  },
   "tabs": {
     "mejoras": "Mejoras",
     "aliados": "Aliados",

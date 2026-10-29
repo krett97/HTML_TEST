@@ -61,6 +61,7 @@
       disabled={!$view.canal.grabando.listo}
       onclick={upload}
       data-testid="subir-video"
+      data-tuto="video"
     >
       {confirming ? $t('canal.confirmar') : $t('canal.subir')}
     </button>

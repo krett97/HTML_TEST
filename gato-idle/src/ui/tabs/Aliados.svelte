@@ -58,6 +58,7 @@
         disabled={!ally.alcanza}
         onclick={() => game.buyAlly(ally.id)}
         data-testid="comprar-aliado-{ally.id}"
+        data-tuto={ally.id === $view.aliados[0]?.id ? 'aliado' : undefined}
         aria-label="{ally.nivel > 0 ? $t('mejoras.nivel', { n: ally.nivel + 1 }) : $t('aliados.adoptar')} {$t(`aliados.${ally.id}`)} {ally.costo}"
       >
         {#if ally.nivel === 0}<span class="adopt">{$t('aliados.adoptar')}</span>{/if}

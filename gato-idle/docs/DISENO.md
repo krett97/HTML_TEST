@@ -745,3 +745,21 @@ Los 27 objetos también tienen su chiste: el vaso **medio lleno**, la taza con c
 **Cómo se genera.** `tools/arte/generar.py` pide candidatos a PixelLab (modelo *pixflux*, 1 generación cada uno, varias semillas) y arma un montaje para elegir; los lotes con sus textos están en `tools/arte/*.json` y los elegidos en `tools/arte/elegidos.json`. Las variantes de un mismo personaje (el saco) se hacen con *edit-image-pixen*, que respeta pose y cara. La llave de PixelLab **nunca** va en el repositorio: el script la lee de `PIXELLAB_TOKEN`. Esta primera tanda gastó ~160 generaciones.
 
 Pendiente de arte: fondos de los cuartos y superficies, ilustraciones propias para las viñetas, animaciones (parpadeo del gato, aliados atacando) y la moneda.
+
+## 34. Tutorial: el gato te explica (versión 0.17.0)
+
+Un tutorial **corto y en contexto**: el gato (con su cara de susto y su uva) habla en un globito al pie de la escena, **un paso a la vez y solo cuando ya se puede hacer lo que pide**. Lo que hay que tocar brilla en dorado y una manita 👆 lo señala (si está abajo en la lista, se desplaza solo hasta verlo). Nunca bloquea: se puede seguir tocando la escena, y siempre está "Saltar tutorial".
+
+| Paso | Cuándo sale | El gato dice | Se cierra |
+|---|---|---|---|
+| tocar | Al empezar | "Psst, humano. Toca la pantalla y le doy un manotazo a lo que esté en la mesa." (manita sobre la mesa) | Al romper la primera cosa |
+| monedas | Después | "¡Al suelo! 😼 Cada cosa rota da monedas (arriba). Y el dueño pone otra. Nunca aprende." (brilla el contador) | "¡Va!" o al comprar Fuerza |
+| fuerza | Cuando Fuerza se descubre y alcanza | "Compra Fuerza: mis manotazos pegan más fuerte…" | Al comprarla |
+| valor | Cuando Valor se descubre y alcanza | "Compra Valor: el dueño pone cosas más caras. Más caras = más monedas. Es ciencia." | Al comprarlo |
+| meta | Después | "Aquí abajo ves qué sigue. Spoiler: más destrucción." (brilla Próximo descubrimiento) | "¡Va!" |
+| aliado | Cuando el gatito bebé se puede adoptar | "Un gatito quiere unirse a la pandilla. Adóptalo en 🐱 Aliados…" (brillan la pestaña y el botón Adoptar) | Al adoptarlo |
+| video | Cuando el primer video ya se puede subir | "¡El dueño ya tiene video! Súbelo en 📱 Canal: empiezas de cero, pero con seguidores que te hacen más fuerte." | Al subirlo |
+
+Lo demás (críticos, saco, investigación, habilidades) ya lo presentan las viñetas de cómic y los avisos, así que el tutorial no crece.
+
+Reglas (`src/core/tutorial.ts`): cada paso terminado se anota en `vistos` (`tuto:<paso>`), que sobrevive a subir el video y a recargar, así que **nunca se repite**. Una partida que ya pasó por ahí (o que ya subió un video) lo da por visto sin mostrarlo. "Saltar tutorial" anota `tuto:saltar`.

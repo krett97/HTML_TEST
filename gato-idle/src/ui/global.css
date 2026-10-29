@@ -567,3 +567,62 @@ select {
   background: var(--text);
   transform: translateX(20px);
 }
+
+/* Tutorial (ver Tutorial.svelte): lo que hay que tocar en el paso actual brilla y una manita lo señala. */
+html[data-tuto='monedas'] [data-tuto='monedas'],
+html[data-tuto='fuerza'] [data-tuto='fuerza'],
+html[data-tuto='valor'] [data-tuto='valor'],
+html[data-tuto='meta'] [data-tuto='meta'],
+html[data-tuto='aliado'] [data-tuto='aliado'],
+html[data-tuto='video'] [data-tuto='video'] {
+  position: relative;
+  animation: tuto-brillo 1s ease-in-out infinite;
+}
+html[data-tuto='monedas'] [data-tuto='monedas']::after,
+html[data-tuto='fuerza'] [data-tuto='fuerza']::after,
+html[data-tuto='valor'] [data-tuto='valor']::after,
+html[data-tuto='meta'] [data-tuto='meta']::after,
+html[data-tuto='aliado'] [data-tuto='aliado']::after,
+html[data-tuto='video'] [data-tuto='video']::after {
+  content: '👆';
+  position: absolute;
+  z-index: 5;
+  right: 2px;
+  bottom: -8px;
+  font-size: 26px;
+  line-height: 1;
+  pointer-events: none;
+  animation: tuto-dedo 700ms ease-in-out infinite alternate;
+}
+@keyframes tuto-brillo {
+  0%,
+  100% {
+    box-shadow: 0 0 0 2px var(--gold);
+  }
+  50% {
+    box-shadow:
+      0 0 0 4px var(--gold),
+      0 0 18px var(--gold);
+  }
+}
+@keyframes tuto-dedo {
+  to {
+    transform: translateY(-6px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+html[data-tuto='monedas'] [data-tuto='monedas'],
+html[data-tuto='fuerza'] [data-tuto='fuerza'],
+html[data-tuto='valor'] [data-tuto='valor'],
+html[data-tuto='meta'] [data-tuto='meta'],
+html[data-tuto='aliado'] [data-tuto='aliado'],
+html[data-tuto='video'] [data-tuto='video'],
+html[data-tuto='monedas'] [data-tuto='monedas']::after,
+html[data-tuto='fuerza'] [data-tuto='fuerza']::after,
+html[data-tuto='valor'] [data-tuto='valor']::after,
+html[data-tuto='meta'] [data-tuto='meta']::after,
+html[data-tuto='aliado'] [data-tuto='aliado']::after,
+html[data-tuto='video'] [data-tuto='video']::after {
+    animation: none;
+  }
+}

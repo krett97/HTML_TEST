@@ -58,6 +58,7 @@ import { num, type Decimal } from '../core/num';
 import { createInitialState, pruebasIniciales, type GameState, type Pruebas, type Settings, type VideoRecord } from '../core/state';
 import { detectLocale, isLocale, locale } from '../i18n';
 import type { SoundId } from '../core/sounds';
+import { completeTutorialStep, skipTutorial, updateTutorial, type TutorialStep } from '../core/tutorial';
 import type { AdResult, AdsService, RewardedPlacement } from '../services/ads';
 import type { AudioEngine, PlayOptions } from '../services/audio';
 import { vibrate, type HapticStrength } from '../services/haptics';
@@ -250,6 +251,8 @@ export interface ViewModel {
   };
   /** Modo pruebas: si existe en esta versión, los trucos y si alguno está prendido. */
   pruebas: Pruebas & { disponible: boolean; activas: boolean };
+  /** Paso del tutorial que el gato está explicando (null: ninguno). */
+  tutorial: TutorialStep | null;
 }
 
 export interface SkillView {
@@ -397,6 +400,18 @@ export class Game {
     this.haptic(result.broke ? 'media' : 'ligera');
     this.events.emit('hit', result);
     this.markDirty();
+  }
+
+  /** "¡Va!" en un globito del tutorial que solo explica. */
+  tutorialOk(step: TutorialStep): void {
+    completeTutorialStep(this.state, step);
+    this.markDirty();
+  }
+
+  skipTutorial(): void {
+    skipTutorial(this.state);
+    this.markDirty();
+    void this.save();
   }
 
   /** Las viñetas de cómic salen solo la primera vez en la partida guardada (no en cada vuelta). */
@@ -1123,6 +1138,8 @@ export class Game {
         disponible: __PRUEBAS__,
         activas: s.pruebas.dineroInfinito || s.pruebas.danioInfinito || s.pruebas.multDanio !== 1,
       },
+      // También anota los pasos que ya se cumplieron.
+      tutorial: updateTutorial(s, d),
     };
   }
 }

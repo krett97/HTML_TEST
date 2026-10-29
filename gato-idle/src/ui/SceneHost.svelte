@@ -1,5 +1,6 @@
 <script lang="ts">
   import Coin from './Coin.svelte';
+  import Tutorial from './Tutorial.svelte';
   import { onMount } from 'svelte';
   import { mountScene } from '../game/boot';
   import { t } from '../i18n';
@@ -13,9 +14,10 @@
 </script>
 
 <section class="scene" bind:this={host} data-testid="escena">
-  {#if $view.toques === 0 && $view.roturas === 0}
+  {#if $view.toques === 0 && $view.roturas === 0 && !$view.tutorial}
     <p class="hint">{$t('hud.toca')}</p>
   {/if}
+  <Tutorial />
   {#if $view.funciones.canal}
     <!-- El dueño está grabando: la escena es el video. -->
     <div class="visor" aria-hidden="true"></div>

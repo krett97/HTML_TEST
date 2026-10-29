@@ -7,7 +7,7 @@
   const remaining = $derived(next ? next.meta - next.actual : 0);
 </script>
 
-<div class="card" data-testid="proximo">
+<div class="card" data-testid="proximo" data-tuto="meta">
   <span class="icon" aria-hidden="true">❓</span>
   <div class="info">
     <div class="label">{$t('descubrimientos.proximo')}</div>

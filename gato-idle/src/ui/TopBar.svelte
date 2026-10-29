@@ -10,7 +10,7 @@
 <header class="top">
   <div class="title">{$t('app.title')}</div>
   <div class="right">
-    <div class="money" aria-label={$t('hud.dinero')}>
+    <div class="money" aria-label={$t('hud.dinero')} data-tuto="monedas">
       <Coin size={26} />
       <span class="cifra" data-testid="dinero">{$view.dinero}</span>
     </div>

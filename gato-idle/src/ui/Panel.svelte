@@ -16,6 +16,8 @@
     { id: 'ajustes', icon: '⚙️', component: Ajustes },
   ] as const;
   type TabId = (typeof ALL_TABS)[number]['id'];
+  /** Pestaña que señala el tutorial en cada paso. */
+  const TAB_STEP: Partial<Record<TabId, string>> = { aliados: 'aliado', canal: 'video' };
 
   const view = useGame().view;
 
@@ -62,6 +64,7 @@
         class:active={tab.id === active}
         aria-selected={tab.id === active}
         onclick={() => (active = tab.id)}
+        data-tuto={TAB_STEP[tab.id]}
       >
         <span class="tab-icon" aria-hidden="true">
           {tab.icon}
