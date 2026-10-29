@@ -12,7 +12,7 @@
   "valor": {
     "nivelesPorObjeto": 5,
     "vistasPorNivel": 0.1,
-    "costoEnRoturas": 28,
+    "costoEnRoturas": 16,
     "crecimiento": 1.3
   },
   "critico": {
@@ -52,10 +52,10 @@
     "roturasMinimas": 100
   },
   "canal": {
-    "escalaSeguidores": 156250,
+    "escalaSeguidores": 93000,
     "exponenteSeguidores": 0.3333333333,
     "bonoPorSeguidor": 0.02,
-    "visualizacionesPorVista": 0.8,
+    "visualizacionesPorVista": 1.45,
     "vistasPorSeguidor": 0.1,
     "probabilidadViral": 0.15,
     "multViral": 2,

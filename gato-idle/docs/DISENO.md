@@ -866,3 +866,14 @@ Simulador (5 toques/s, sin anuncios, gastando en lo más barato): la mudanza lle
 **0.22.1:** el mapache vuelve a mirar hacia el objeto (está a su derecha, así que su dibujo original ya lo veía).
 
 **0.22.2:** el mapache sigue al objeto con la mirada: mientras el gato lo empuja, el objeto termina pasándolo, y entonces el mapache se voltea a la derecha.
+
+## 41. Objetos más duros al inicio (versión 0.23.0)
+
+Al inicio todo se rompía en 1 o 2 golpes. Subir solo la vida no servía: la Fuerza es tan barata al principio que el jugador (y el simulador) compra más y vuelve a romper en 1 o 2 golpes; y como Valor cuesta "N roturas" del objeto actual, cada objeto más duro alargaba toda la partida y bajaba las visualizaciones (salen de las roturas). Se ajustaron cuatro cosas juntas:
+
+- **Vida de los primeros 15 objetos** (de la taza a la tele): ×2.6 la taza, ×3 el plato, ×3.4 el control… bajando hasta ×1.2 la tele; de la mesa en adelante, igual. El vaso no cambia (el tutorial).
+- **Valor**: `costoEnRoturas` 28 → 16, para que el ritmo no se alargue.
+- **Visualizaciones por video**: `visualizacionesPorVista` 0.8 → 1.45 (hay menos roturas, cada una cuenta más).
+- **Seguidores**: `escalaSeguidores` 156250 → 93000 (19 en el primer video, como en 0.22).
+
+Simulador (5 toques/s): de la taza a la tele, 2–5 golpes por objeto (antes 1–3); la lámpara a los 11.9 min (antes 8.5), el refri a los 33.7 (antes 35.5); primer video +19 seguidores y +77K visualizaciones, y la mudanza tras la vuelta 5, igual que antes.
