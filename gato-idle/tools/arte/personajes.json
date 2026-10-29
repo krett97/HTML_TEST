@@ -119,7 +119,7 @@
  },
  {
   "name": "sombrero",
-  "desc": "tall pointy black wizard hat with a wide brim, a small yellow crescent moon and tiny white stars, the tip flopping to one side, funny",
+  "desc": "tall glossy black top hat like a stage magician, cylinder crown, curved brim, grey ribbon band, shiny highlights",
   "w": 32,
   "h": 40,
   "seeds": [
@@ -128,6 +128,6 @@
    3,
    4
   ],
-  "style": ", pixel art game item, side view, bold outline, cartoon, isolated, no shadow"
+  "style": ", pixel art game item, side view, bold outline, isolated, no shadow"
  }
 ]

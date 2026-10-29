@@ -480,7 +480,7 @@ Dos mejoras nuevas en la pestaña Mejoras, que se descubren después de Fuerza y
 | Mejora | Aparece (simulador) | Efecto | Costo | Aspecto del gato |
 |---|---|---|---|---|
 | **Garras afiladas** | min 2.9 | +1 % de probabilidad de crítico por nivel, **tope 50 %** | `200 × 1.4^nivel` | garras de acero en la pata |
-| **Sombrero ridículo** | min 5.9 | el crítico multiplica el daño ×2, +0.1 por nivel, sin tope | `2000 × 1.4^nivel` | sombrero de mago negro con luna (antes chistera morada) |
+| **Sombrero ridículo** | min 5.9 | el crítico multiplica el daño ×2, +0.1 por nivel, sin tope | `2000 × 1.4^nivel` | sombrero de copa negro de mago |
 
 **Por qué es medible:** en promedio, cada manotazo rinde
 
@@ -723,7 +723,7 @@ Llega el primer arte de verdad, generado con PixelLab. **Principio: los personaj
 |---|---|
 | Gato (protagonista) | Gato crema con ojos enormes de susto y **una uva en la cabeza** |
 | Gato con saco | El mismo, con saco negro, camisa y corbata roja (editado con Pixen para que sea idéntico) |
-| Sombrero ridículo | **Sombrero de mago negro** con luna dorada y estrellitas, para combinar con el saco (0.18.2; antes gorra de hélice) |
+| Sombrero ridículo | **Sombrero de copa negro de mago**, brillante y con banda gris, para combinar con el saco (0.18.3; antes gorra de hélice) |
 | Garras afiladas | Tres uñas de metal en la pata (se ven en el cuadro del manotazo, §35) |
 | Gatito bebé | Llorando a mares… con el pulgar arriba |
 | Ratón | Lentes oscuros y un queso, muy seguro de sí |
@@ -773,4 +773,4 @@ Antes, al golpear, el gato se quedaba quieto y una pata se deslizaba desde atrá
 - La viñeta de cómic de las mejoras del gato usa el cuadro del manotazo (luce las garras).
 - Los cuadros se hicieron editando el dibujo con *edit-image-pixen* (misma cara y colores); las cuatro variantes (normal, garras, saco, saco + garras) parten del mismo cuadro y se recortan con el mismo marco para que no salten. Recetas en `tools/arte/elegidos.json`; herramienta `tools/arte/editar.py`.
 - El gato sentado mira hacia el objeto (a la derecha), igual que en el manotazo (0.18.1: se volteó el dibujo de PixelLab y se recolocó el sombrero).
-- El Sombrero ridículo ahora es un **sombrero de mago negro** con luna y estrellitas, que combina con el saco; se apoya en la frente para que se vea la cara de susto (0.18.2).
+- El Sombrero ridículo ahora es un **sombrero de copa negro de mago** (brillante, con banda gris), que combina con el saco; se apoya en la frente para que se vea la cara de susto (0.18.2–0.18.3).
