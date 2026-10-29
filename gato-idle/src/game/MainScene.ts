@@ -37,6 +37,18 @@ const OBJECT_QUIPS = 6;
 const MAX_NUMBERS = 28;
 /** Un aliado muestra su número a lo mucho cada tanto (ms). */
 const ALLY_NUMBER_GAP = 140;
+/**
+ * Sacudidas de la cámara (duración en ms y fuerza, fracción del tamaño de la cámara). Suaves: con
+ * la pandilla rompiendo cosas sin parar, una sacudida fuerte en cada rotura cansa la vista.
+ */
+const SHAKES = {
+  rotura: { ms: 70, fuerza: 0.003 },
+  critico: { ms: 70, fuerza: 0.0035 },
+  embestida: { ms: 80, fuerza: 0.004 },
+  viral: { ms: 250, fuerza: 0.007 },
+} as const;
+/** Entre una sacudida por rotura y la siguiente pasa al menos esto (ms). */
+const BREAK_SHAKE_GAP = 500;
 /** Rasguños visibles en los objetos que se "rasgan". */
 const MAX_SCRATCHES = 5;
 
@@ -77,6 +89,7 @@ export class MainScene extends Phaser.Scene {
   private swatTimer?: Phaser.Time.TimerEvent;
   private readonly lean = { angle: 0 };
   private readonly lastAllyNumber = new Map<string, number>();
+  private lastBreakShake = -Infinity;
   private unsubscribers: (() => void)[] = [];
 
   constructor(private readonly controller: Game) {
@@ -561,7 +574,7 @@ export class MainScene extends Phaser.Scene {
     this.cameras.main.flash(160, 255, 241, 224);
     if (viral) {
       this.toast(tr('avisos.viral'));
-      this.cameras.main.shake(300, 0.015);
+      this.shake('viral');
       const colors = [0xe5534b, 0xffd36e, 0x5ec4a8, 0x8e5bd1];
       colors.forEach((color, i) => this.time.delayedCall(i * 120, () => this.shatter(30 + i * 40, this.surfaceTop - 40, color, 24, 200)));
     }
@@ -608,14 +621,14 @@ export class MainScene extends Phaser.Scene {
   private criticalHit(): void {
     this.controller.playSound('critico', { minGapMs: 60 });
     this.burst(0xffd36e, 14);
-    this.cameras.main.shake(90, 0.01);
+    this.shake('critico');
   }
 
   /** Embestida del carrito: motor, chispas azules y sacudida. */
   private rammingHit(): void {
     this.controller.playSound('motor', { minGapMs: 120 });
     this.burst(0x6fd3ff, 12);
-    this.cameras.main.shake(110, 0.012);
+    this.shake('embestida');
   }
 
   // ---- Números de daño ----
@@ -818,8 +831,16 @@ export class MainScene extends Phaser.Scene {
     });
     emitter.setDepth(5);
     emitter.explode(count);
-    this.cameras.main.shake(110, 0.012);
+    if (this.time.now - this.lastBreakShake >= BREAK_SHAKE_GAP) {
+      this.lastBreakShake = this.time.now;
+      this.shake('rotura');
+    }
     this.time.delayedCall(800, () => emitter.destroy());
+  }
+
+  private shake(kind: keyof typeof SHAKES): void {
+    const { ms, fuerza } = SHAKES[kind];
+    this.cameras.main.shake(ms, fuerza);
   }
 
   // ---- Textos sobre la escena (HTML, para que se lean nítidos) ----

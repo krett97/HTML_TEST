@@ -797,3 +797,9 @@ Simulador (5 toques/s, reclamando habilidades):
 | 7–10 | casa | 10.1 → 6.9 → 5.6 → 4.5 | 127 cada uno |
 
 Pendiente: una casa siguiente (edificio, ciudad… hasta la Luna), fondos de PixelLab para los cuartos y un aliado nuevo de la casa.
+
+## 37. Sacudida de pantalla más suave y objetos de la casa más grandes (versión 0.19.1)
+
+- **Sacudida:** al romper un objeto la pantalla temblaba fuerte (110 ms, 1.2 % del tamaño de la cámara) en *cada* rotura, y con la pandilla rompiendo sin parar casi nunca se detenía. Ahora es una cuarta parte (70 ms, 0.3 %) y a lo mucho una cada medio segundo. El crítico, la embestida y el video viral también bajaron (tabla `SHAKES` en `MainScene.ts`). La vibración del celular (háptica) no cambió y se apaga en Ajustes.
+- **Objetos de la casa ×1.5:** se redibujaron con el redimensionado de PixelLab (`/resize`), que conserva el diseño con más detalle en lugar de estirar los píxeles.
+
