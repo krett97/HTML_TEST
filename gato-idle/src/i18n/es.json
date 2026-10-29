@@ -228,7 +228,8 @@
     "puntoCargado": "Volviste al punto {n}.",
     "apagar": "Apagar todos los trucos",
     "apagados": "Trucos apagados. Ahora sí, a jugar limpio.",
-    "canal": "+10 seguidores y +25K visualizaciones"
+    "canal": "+10 seguidores y +25K visualizaciones",
+    "offline": "Simular 1 h fuera"
   },
   "canal": {
     "titulo": "Canal del dueño",
@@ -319,5 +320,13 @@
         "5": "Nuevo, brillante… y frágil"
       }
     }
+  },
+  "offline": {
+    "titulo": "¡Mientras no estabas…!",
+    "trabajo": "La pandilla siguió rompiendo cosas durante {tiempo}",
+    "roturas": "{n} cosas rotas",
+    "tope": "Solo cuentan {horas} h (estuviste fuera {ausente}). ¡Vuelve antes para no perder nada!",
+    "doble": "¡Duplicar! Ver anuncio",
+    "cobrar": "Cobrar"
   }
 }

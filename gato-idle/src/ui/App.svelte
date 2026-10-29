@@ -2,6 +2,7 @@
   import TopBar from './TopBar.svelte';
   import SceneHost from './SceneHost.svelte';
   import Panel from './Panel.svelte';
+  import OfflineModal from './OfflineModal.svelte';
 </script>
 
 <main class="app">
@@ -9,6 +10,7 @@
   <SceneHost />
   <Panel />
 </main>
+<OfflineModal />
 
 <style>
   .app {

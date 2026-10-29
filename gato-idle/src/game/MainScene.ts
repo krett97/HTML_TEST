@@ -121,6 +121,11 @@ export class MainScene extends Phaser.Scene {
         this.popNumber(this.object.x, this.object.y - this.object.height - 10, 'dinero grande', `+${this.controller.formatMoney(dinero)}`, { coin: true });
       }),
       this.controller.events.on('video', ({ video }) => this.onVideo(video.seguidores, video.viral)),
+      this.controller.events.on('offline', ({ dinero }) => {
+        // Lluvia de monedas al cobrar lo de mientras no estabas.
+        this.popNumber(this.object.x, this.object.y - this.object.height - 10, 'dinero grande', `+${this.controller.formatMoney(dinero)}`, { coin: true });
+        this.burst(0xffd36e, 24);
+      }),
       this.controller.events.on('investigacion', ({ researchId }) => {
         const tr = get(t);
         this.toast(tr('avisos.investigacion', { nombre: tr(`laboratorio.proyectos.${researchId}`) }));

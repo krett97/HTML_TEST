@@ -85,6 +85,8 @@ export interface GameState {
     /** Los más recientes primero. */
     videos: VideoRecord[];
   };
+  /** Ganancias de mientras no estabas, esperando a que el jugador las cobre (ventana de bienvenida). */
+  offline: { segundos: number; ausente: number; tope: boolean; roturas: number; dinero: Decimal } | null;
   /** Lo que ya se presentó con viñeta de cómic ("objeto:plato", "aliado:perro", "aspecto:garras"): solo la primera vez. */
   vistos: string[];
   /** Habilidades del Canal compradas (se conservan al subir el video). */
@@ -113,6 +115,7 @@ export function createInitialState(now: number): GameState {
     canal: { seguidores: 0, visualizaciones: ZERO, videos: [] },
     habilidades: [],
     vistos: [],
+    offline: null,
     ajustes: {
       sonido: true,
       musica: true,

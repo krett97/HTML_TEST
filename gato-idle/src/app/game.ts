@@ -16,6 +16,8 @@ import {
 import { playUntil, type PlayGoal } from '../core/bot';
 import { afterBulk, buyBulk, planBulk } from '../core/bulk';
 import { followerMultiplier, uploadVideo, videoPreview } from '../core/canal';
+import { claimOffline, offlineEarnings } from '../core/offline';
+import { formatDuration } from '../core/time';
 import { incomePerSecond, sponsorReward } from '../core/income';
 import { claimSkill, rammingMultiplier, researchDuration, resourceTotal, skillClaimable, skillLevel, skillMaxed, skillRequirement } from '../core/skills';
 import { addAllyLevels, advanceClock, completeAllResearch, discoverAll, discoverNext, finishResearchNow } from '../core/pruebas';
@@ -84,6 +86,8 @@ export interface GameEvents {
   investigacion: { researchId: string };
   /** El dueño subió el video: la partida vuelve a empezar. */
   video: { video: VideoRecord };
+  /** Se cobraron las ganancias de mientras no estabas. */
+  offline: { dinero: Decimal };
   /** Se cobró un patrocinio (anuncio visto completo). */
   patrocinio: { dinero: Decimal };
   /** La partida cambió de golpe (se reinició o se usó el modo pruebas): la escena se redibuja. */
@@ -194,6 +198,18 @@ export interface ViewModel {
   hayCompra: boolean;
   /** Qué partes del juego ya se descubrieron. */
   funciones: { fuerza: boolean; valor: boolean; critico: boolean; danioCritico: boolean; saco: boolean; laboratorio: boolean; canal: boolean; aliados: boolean };
+  /** Ventana de bienvenida: lo que hizo la pandilla mientras no estabas. */
+  offline: {
+    visible: boolean;
+    /** Tiempo que se cuenta (con tope) y tiempo que estuvo fuera. */
+    tiempo: string;
+    ausente: string;
+    tope: boolean;
+    horasMax: number;
+    roturas: string;
+    dinero: string;
+    doble: string;
+  };
   /** Daño por segundo real de los últimos segundos (medidor de la escena). */
   dps: {
     total: string;
@@ -314,6 +330,9 @@ export class Game {
   private sponsorAt = 0;
   private sponsorUntil = 0;
   private sponsorBusy = false;
+  /** Cuándo se fue a segundo plano (para las ganancias de mientras no estabas). */
+  private backgroundAt: number | null = null;
+  private offlineBusy = false;
 
   constructor(
     readonly data: GameData,
@@ -338,6 +357,8 @@ export class Game {
       this.lastSavedAt = loaded.savedAt;
     }
     normalizeState(this.state, this.data);
+    // La pandilla siguió trabajando con el juego cerrado.
+    if (loaded) this.collectOffline((Date.now() - loaded.savedAt) / 1000);
     if (!__PRUEBAS__) this.state.pruebas = pruebasIniciales();
     // Lo que ya se había ganado antes de esta versión se descubre en silencio.
     checkUnlocks(this.state, this.data);
@@ -355,8 +376,15 @@ export class Game {
     setInterval(() => this.tick(), TICK_MS);
     setInterval(() => void this.save(), this.data.balance.autoguardadoSegundos * 1000);
     watchLifecycle({
-      onBackground: () => void this.save(),
-      onForeground: () => this.markDirty(),
+      onBackground: () => {
+        this.backgroundAt = Date.now();
+        void this.save();
+      },
+      onForeground: () => {
+        if (this.backgroundAt !== null) this.collectOffline((Date.now() - this.backgroundAt) / 1000);
+        this.backgroundAt = null;
+        this.markDirty();
+      },
     });
   }
 
@@ -483,6 +511,58 @@ export class Game {
     return this.afterPurchase(claimSkill(this.state, this.data, id));
   }
 
+  // ---- Mientras no estabas ----
+
+  /**
+   * Calcula lo que hizo la pandilla en `seconds` sin jugar. Las ausencias cortas se cobran solas;
+   * las largas quedan pendientes y se muestran en la ventana de bienvenida.
+   */
+  private collectOffline(seconds: number): void {
+    if (!(seconds > 0)) return;
+    const earnings = offlineEarnings(this.state, this.data, seconds);
+    if (earnings.roturas <= 0) return;
+    if (seconds < this.data.balance.offline.minimoSegundos && !this.state.offline) {
+      claimOffline(this.state, this.data, earnings);
+      this.markDirty();
+      return;
+    }
+    // Si ya había algo pendiente (se volvió a salir sin cobrar), se suma.
+    const prev = this.state.offline;
+    this.state.offline = prev
+      ? {
+          segundos: prev.segundos + earnings.segundos,
+          ausente: prev.ausente + earnings.ausente,
+          tope: prev.tope || earnings.tope,
+          roturas: prev.roturas + earnings.roturas,
+          dinero: prev.dinero.add(earnings.dinero),
+        }
+      : earnings;
+    this.markDirty();
+  }
+
+  /** Cobra lo de mientras no estabas; con `doble`, después de ver el anuncio "vacaciones" (×2). */
+  async claimOffline(doble: boolean): Promise<boolean> {
+    const pending = this.state.offline;
+    if (!pending || this.offlineBusy) return false;
+    let mult = 1;
+    if (doble) {
+      this.offlineBusy = true;
+      const result = await this.services.ads.showRewarded('vacaciones');
+      this.offlineBusy = false;
+      // Si cerró el anuncio antes, la ventana sigue ahí para cobrar normal.
+      if (!result.rewarded) return false;
+      mult = 2;
+    }
+    const dinero = claimOffline(this.state, this.data, pending, mult);
+    this.state.offline = null;
+    this.events.emit('offline', { dinero });
+    this.playSound('compra');
+    this.markDirty();
+    this.refreshView();
+    void this.save();
+    return true;
+  }
+
   /** Sonido respetando el ajuste "Sonido". */
   playSound(id: SoundId, options?: PlayOptions): void {
     this.services.audio.play(id, options);
@@ -596,6 +676,12 @@ export class Game {
     this.state.canal.seguidores += seguidores;
     this.state.canal.visualizaciones = this.state.canal.visualizaciones.add(visualizaciones);
     this.afterTest();
+  }
+
+  /** Modo pruebas: como si hubieras salido del juego `seconds` segundos. */
+  testOffline(seconds: number): void {
+    this.collectOffline(seconds);
+    this.refreshView();
   }
 
   /** Muestra la oferta de patrocinio ahora. */
@@ -804,6 +890,20 @@ export class Game {
     };
   }
 
+  private offlineView(fmt: (value: Decimal) => string): ViewModel['offline'] {
+    const o = this.state.offline;
+    return {
+      visible: o !== null,
+      tiempo: formatDuration(o?.segundos ?? 0),
+      ausente: formatDuration(o?.ausente ?? 0),
+      tope: o?.tope ?? false,
+      horasMax: this.data.balance.offline.horasMax,
+      roturas: fmt(num(o?.roturas ?? 0)),
+      dinero: fmt(o?.dinero ?? num(0)),
+      doble: fmt((o?.dinero ?? num(0)).mul(2)),
+    };
+  }
+
   private dpsView(fmt: (value: Decimal) => string): ViewModel['dps'] {
     const reading = this.dpsMeter.read(performance.now());
     const total = reading.total.toNumber();
@@ -988,6 +1088,7 @@ export class Game {
       },
       nuevos: [...this.recentUnlocks.keys()],
       dps: this.dpsView(fmt),
+      offline: this.offlineView(fmt),
       patrocinio: { visible: this.sponsorVisible() && !this.sponsorBusy, recompensa: fmt(sponsorReward(s, d)) },
       proximo: next && {
         id: next.unlock.id,

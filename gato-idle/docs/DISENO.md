@@ -1,6 +1,6 @@
 # Swat to the Moon — Documento de diseño
 
-> **Versión 0.14** · Actualiza el prompt original ([`prompt-original.md`](prompt-original.md)) con las mejoras del análisis.
+> **Versión 0.15** · Actualiza el prompt original ([`prompt-original.md`](prompt-original.md)) con las mejoras del análisis.
 > **Nombre provisional.** *Knock It Off!* ya está en uso (Spin Master vende un juego físico con ese nombre para jugar con tu gato, y hay varios juegos en itch.io). *Swat to the Moon* aún no está verificado en Play Store ni en registros de marca (USPTO / IMPI). El nombre visible se cambia en un solo lugar: `src/i18n/*.json` → `app.title` y `capacitor.config.ts` → `appName`.
 
 ---
@@ -300,7 +300,7 @@ Cada fase responde una pregunta. Se pasa a la siguiente cuando se cumple su crit
 | 0. Esqueleto | ¿Funciona la base? | Proyecto, escena con toque, pestañas, servicios falsos, guardado versionado, números grandes, Android | Se instala en el celular, se toca y el progreso sobrevive al cerrar la app | ✅ |
 | 1. ¿Es divertido tocar? | ¿Dan ganas de seguir tocando sin mejoras? | Manotazo → desliza → cae → rompe; números flotantes, avisos y sonido por objeto ✅. Falta: animación del gato con expresión y un mini tutorial | Tocar se siente bien por sí solo (sonido, vibración, animación) y alguien que no conoce el juego entiende qué hacer sin explicación | Casi |
 | 2. Economía | ¿Hay siempre una compra que valga la pena? | Fuerza, Valor, críticos, 27 objetos, modificadores, investigación gatuna, simulador | El simulador llega al último objeto sin atorarse y sin tramos de más de ~3 min sin novedad | ✅ |
-| 3. Idle | ¿El juego avanza sin mí? | Aliados ✅ y autoguardado ✅. Falta: **ganancias offline** (al volver: "mientras no estabas ganaste $X") y el personal del canal | Al cerrar el juego un rato y volver, hay una recompensa que dé gusto, y los aliados cargan buena parte del daño | Parcial |
+| 3. Idle | ¿El juego avanza sin mí? | Aliados ✅, autoguardado ✅ y **ganancias mientras no estabas** ✅ (§32). Falta: el personal del canal | Al cerrar el juego un rato y volver, hay una recompensa que dé gusto, y los aliados cargan buena parte del daño | Parcial |
 | 4. Meta (reinicios) | ¿Hay razón para jugar días? | **Subir el video** (reinicio con seguidores y visualizaciones) ✅, **Habilidades** ✅. Falta: mudanza a casas más grandes, gatos legendarios, evento "¡Llegó el dueño!" | Subir el video deja al jugador más fuerte y la segunda vuelta es claramente más rápida (simulador: 2.4×) | Parcial |
 | 5. Anuncios y Android | ¿Puede ganar dinero sin molestar? | Patrocinio con anuncio falso ✅, APK de prueba ✅. Falta: AdMob con IDs de prueba, las otras 4 recompensas, consentimiento de privacidad (requisito de Google) | Los anuncios de prueba de Google se ven y pagan en el celular, y la app cumple las políticas de Play | Parcial |
 | 6. Pulido | ¿Está listo para publicar? | Arte de PixelApp, tutorial, layout de PC, balance con testers. Inglés ✅, modo pruebas ✅ | Un grupo de testers juega una semana y el ritmo, el humor y los anuncios se sienten bien | Pendiente |
@@ -694,3 +694,23 @@ Romper cosas grandes da más vistas, y **un canal con más seguidores consigue m
 | 1 | min 36.2 | +24 👥 · +96K 👁️ | 24 / 96K | embestida 3, recolectora 3, pandilla 1, express 1 |
 | 2 | min 13.7 (2.6× más rápida) | +23 · +154K | 47 / 250K | 4, 4, 2, 3 |
 | 3 | min 8.5 | +22 · +175K | 69 / 426K | 5, 6, 3, 4 |
+
+## 32. Ganancias mientras no estabas (versión 0.15.0)
+
+La pandilla sigue rompiendo cosas con el juego cerrado o en segundo plano (`src/core/offline.ts`).
+
+```
+roturas = ⌊ roturas por segundo de los aliados × segundos fuera (tope 2 h) × 0.5 ⌋
+dinero  = roturas × dinero por rotura del objeto actual
+```
+
+- Solo cuentan los **aliados** (nadie toca) a la **mitad** de su ritmo, hasta **2 horas** (`balance.json` → `offline`). El objeto no cambia: el dueño no compra nada mientras no estás. Sin aliados no se gana nada.
+- Al volver aparece la ventana **"¡Mientras no estabas…!"** con los íconos de la pandilla, el dinero y las cosas rotas, y dos botones: **"Cobrar"** o **"📺 ¡Duplicar! Ver anuncio"** (el anuncio "Los dueños se fueron de vacaciones", ×2). Si se cierra el anuncio antes, la ventana sigue para cobrar normal.
+- Si se pasó del tope, lo dice: "Solo cuentan 2 h (estuviste fuera 5 h). ¡Vuelve antes para no perder nada!".
+- Ausencias de menos de 1 minuto se cobran solas, sin ventana.
+- Lo pendiente se guarda: si se cierra el juego sin cobrar, sigue ahí la próxima vez (y si se vuelve a salir, se suma).
+- Las roturas de mientras no estabas también cuentan para el video del Canal.
+- Funciona al abrir el juego (desde el último guardado) y al volver de segundo plano.
+- Modo pruebas: "Simular 1 h fuera".
+
+Pendiente: subir el tope de horas y la eficiencia con investigaciones o habilidades del Canal.

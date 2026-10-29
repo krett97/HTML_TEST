@@ -3,7 +3,7 @@ import { BUY_AMOUNTS } from './bulk';
 import { normalizeCanal } from './canal';
 import { normalizeSkills } from './skills';
 import type { GameData } from './data';
-import { ZERO } from './num';
+import { isDecimal, ZERO } from './num';
 import type { GameState } from './state';
 
 // Partidas guardadas.
@@ -25,6 +25,7 @@ export function normalizeState(state: GameState, data: GameData): void {
   if (!BUY_AMOUNTS.includes(state.ajustes.compra)) state.ajustes.compra = 1;
   normalizeSkills(state, data);
   normalizeCanal(state);
+  if (state.offline && !(isDecimal(state.offline.dinero) && Number.isFinite(state.offline.roturas))) state.offline = null;
   state.vistos = [...new Set(state.vistos.filter((id) => typeof id === 'string'))];
   state.stats.roturasPartida = Math.max(0, Math.floor(state.stats.roturasPartida));
   const pruebas = state.pruebas;

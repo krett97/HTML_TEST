@@ -171,6 +171,13 @@ export interface Balance {
     /** La embestida de la habilidad llega cada tantos manotazos. */
     embestidaCada: number;
   };
+  offline: {
+    /** Qué tanto rinde la pandilla sin ti (0.5 = la mitad) y hasta cuántas horas cuenta. */
+    eficiencia: number;
+    horasMax: number;
+    /** Ausencias más cortas se cobran solas, sin ventana. */
+    minimoSegundos: number;
+  };
   patrocinio: {
     /** Cada cuánto aparece la oferta (s) y cuánto se queda en pantalla (s). */
     cadaSegundos: number;
@@ -398,6 +405,7 @@ export function parseGameData(raw: RawGameData): GameData {
   const aliados = section(file, b, 'aliados');
   const patrocinio = section(file, b, 'patrocinio');
   const canal = section(file, b, 'canal');
+  const offline = section(file, b, 'offline');
   const objetoMinimo = str(file, canal, 'objetoMinimo');
   if (!objectIds.has(objetoMinimo)) throw new DataError(file, `canal.objetoMinimo "${objetoMinimo}" no existe en objects.json`);
   const critico = section(file, b, 'critico');
@@ -446,6 +454,11 @@ export function parseGameData(raw: RawGameData): GameData {
       multViral: n(canal, 'multViral'),
       objetoMinimo,
       embestidaCada: Math.max(1, Math.floor(n(canal, 'embestidaCada'))),
+    },
+    offline: {
+      eficiencia: Math.min(1, n(offline, 'eficiencia')),
+      horasMax: n(offline, 'horasMax'),
+      minimoSegundos: n(offline, 'minimoSegundos'),
     },
     patrocinio: {
       cadaSegundos: n(patrocinio, 'cadaSegundos'),

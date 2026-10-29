@@ -53,5 +53,10 @@
     "multViral": 2,
     "objetoMinimo": "lavadora",
     "embestidaCada": 10
+  },
+  "offline": {
+    "eficiencia": 0.5,
+    "horasMax": 2,
+    "minimoSegundos": 60
   }
 }

@@ -228,7 +228,8 @@
     "puntoCargado": "Back to point {n}.",
     "apagar": "Turn off all cheats",
     "apagados": "Cheats off. Playing fair now.",
-    "canal": "+10 followers and +25K views"
+    "canal": "+10 followers and +25K views",
+    "offline": "Simulate 1 h away"
   },
   "canal": {
     "titulo": "Owner's channel",
@@ -319,5 +320,13 @@
         "5": "New, shiny… and fragile"
       }
     }
+  },
+  "offline": {
+    "titulo": "While you were away…!",
+    "trabajo": "The gang kept breaking stuff for {tiempo}",
+    "roturas": "{n} things broken",
+    "tope": "Only {horas} h count (you were away {ausente}). Come back sooner so nothing is lost!",
+    "doble": "Double it! Watch ad",
+    "cobrar": "Collect"
   }
 }

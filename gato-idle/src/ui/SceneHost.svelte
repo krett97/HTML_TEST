@@ -13,7 +13,7 @@
 </script>
 
 <section class="scene" bind:this={host} data-testid="escena">
-  {#if $view.toques === 0}
+  {#if $view.toques === 0 && $view.roturas === 0}
     <p class="hint">{$t('hud.toca')}</p>
   {/if}
   {#if $view.funciones.canal}
