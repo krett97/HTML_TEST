@@ -7,7 +7,8 @@
 // de arte. Las posiciones y reglas siguen en unidades del mundo; la cámara amplía ×ART.
 export const ART = 2;
 export const SCENE_WIDTH = 180;
-export const MAX_WIDTH = 300;
+/** En pantallas anchas (tableta, escritorio) se ve más pared a los lados en vez de franjas lisas. */
+export const MAX_WIDTH = 480;
 export const MIN_HEIGHT = 160;
 export const MAX_HEIGHT = 300;
 /** Alto del piso, en unidades del mundo. */

@@ -52,7 +52,7 @@
 <style>
   .tuto {
     position: absolute;
-    z-index: 6;
+    z-index: 7;
     top: 6px;
     left: 8px;
     right: 8px;
@@ -126,7 +126,7 @@
   /* La manita señala el centro de la escena: "toca aquí". */
   .dedo {
     position: absolute;
-    z-index: 6;
+    z-index: 7;
     left: 50%;
     bottom: 22%;
     pointer-events: none;

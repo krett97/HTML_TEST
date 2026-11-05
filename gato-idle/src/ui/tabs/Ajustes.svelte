@@ -121,9 +121,12 @@
     background: var(--panel-2);
   }
   select {
+    min-width: 0;
     max-width: 60%;
     min-height: 34px;
     padding: 4px 6px;
+    font-size: 13px;
+    text-overflow: ellipsis;
     border: 2px solid var(--line);
     border-radius: 4px;
     background: var(--bg);
