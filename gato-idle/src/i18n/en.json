@@ -193,7 +193,8 @@
     "duenoGraba": "…and instead of scolding you, started recording! [[canal]]",
     "videoSubido": "[[subir]] Video uploaded! +{seguidores} followers",
     "viral": "[[viral]] IT WENT VIRAL! [[viral]]",
-    "mudanza": "[[mudanza]] The owner moved to: {casa}!"
+    "mudanza": "[[mudanza]] The owner moved to: {casa}!",
+    "ranking": "[[trofeo]] The cat ranking is open! (up top)"
   },
   "aliados": {
     "gatito": "Baby kitten",
@@ -463,5 +464,19 @@
     "tope": "Only {horas} h count (you were away {ausente}). Come back sooner so nothing is lost!",
     "doble": "Double it! Watch ad",
     "cobrar": "Collect"
+  },
+  "ranking": {
+    "abrir": "See the ranking",
+    "titulo": "Cat ranking",
+    "cerrar": "Close",
+    "explica": "Your level is the furthest object you have reached (the glass is level 1). Which cat destroys the most?",
+    "tuGato": "Your cat's name",
+    "guardar": "Save",
+    "guardado": "Done! This is how your cat shows up.",
+    "cargando": "Loading the ranking…",
+    "sinConexion": "The online ranking works in the version shared through Claude. Here you see your record.",
+    "soloLectura": "You can see the table, but to show up in it the page owner has to give you contributor access.",
+    "anonimo": "Mystery cat",
+    "nivel": "Lv. {n}"
   }
 }

@@ -6,12 +6,14 @@ import { Game } from './app/game';
 import { gameData } from './data';
 import { createAds } from './services/ads';
 import { AudioEngine, renderSound } from './services/audio';
+import { RankingService } from './services/ranking';
 import { createStore } from './services/storage';
 import App from './ui/App.svelte';
 import { gameContext } from './ui/context';
 
 const audio = new AudioEngine();
-const game = new Game(gameData, { store: createStore(), ads: createAds(), audio });
+const ranking = new RankingService(gameData.homes.map((h) => h.id), gameData.objects.map((o) => o.id));
+const game = new Game(gameData, { store: createStore(), ads: createAds(), audio, ranking });
 await game.init();
 game.start();
 

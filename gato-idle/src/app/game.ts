@@ -82,7 +82,9 @@ import type { AdResult, AdsService, RewardedPlacement } from '../services/ads';
 import type { AudioEngine, PlayOptions } from '../services/audio';
 import { vibrate, type HapticStrength } from '../services/haptics';
 import { watchLifecycle } from '../services/lifecycle';
+import type { RankingService } from '../services/ranking';
 import type { KeyValueStore } from '../services/storage';
+import { cleanName, rankingUnlocked, recordObject, updateRecord } from '../core/ranking';
 import { DpsMeter } from './dpsMeter';
 import { Emitter } from './emitter';
 import { SaveSlots } from './persistence';
@@ -335,6 +337,8 @@ export interface ViewModel {
   pruebas: Pruebas & { disponible: boolean; activas: boolean };
   /** Paso del tutorial que el gato está explicando (null: ninguno). */
   tutorial: TutorialStep | null;
+  /** Ranking: si ya se abrió (segunda casa), el nombre del gato y su récord. */
+  ranking: { disponible: boolean; nombre: string; nivel: number; objeto: string; casa: string };
 }
 
 export interface SkillView {
@@ -379,6 +383,7 @@ export interface GameServices {
   store: KeyValueStore;
   ads: AdsService;
   audio: AudioEngine;
+  ranking: RankingService;
 }
 
 const TICK_MS = 100;
@@ -458,7 +463,35 @@ export class Game {
     this.applyLocale();
     this.services.audio.enabled = this.state.ajustes.sonido;
     await this.services.ads.init();
+    this.syncRanking();
     this.refreshView();
+  }
+
+  get ranking(): RankingService {
+    return this.services.ranking;
+  }
+
+  /**
+   * Ranking: con la segunda casa se conecta y manda tu fila (nombre, nivel, casa). Solo escribe cuando
+   * algo cambió (el servicio no repite lo mismo). La primera vez el gato recibe un nombre de cajón.
+   */
+  private syncRanking(): void {
+    if (!rankingUnlocked(this.state)) return;
+    const r = this.state.ranking;
+    if (!r.nombre) r.nombre = `Gato ${1000 + Math.floor(Math.random() * 9000)}`;
+    void this.services.ranking.start();
+    this.services.ranking.submit({ nombre: r.nombre, nivel: r.nivel, casa: this.data.homes[this.state.casa]!.id, objeto: recordObject(this.state, this.data) });
+  }
+
+  /** El jugador le pone nombre a su gato para el ranking. */
+  setRankingName(name: string): boolean {
+    const clean = cleanName(name);
+    if (!clean || clean === this.state.ranking.nombre) return false;
+    this.state.ranking.nombre = clean;
+    this.syncRanking();
+    this.refreshView();
+    void this.save();
+    return true;
   }
 
   start(): void {
@@ -618,6 +651,7 @@ export class Game {
   private afterObjectChange(before: ObjectDef, home: number): void {
     const after = currentObject(this.state, this.data);
     if (after === before) return;
+    const record = updateRecord(this.state, this.data);
     const moved = this.state.casa !== home;
     // Al mudarse, la viñeta es la de la casa nueva; el objeto solo lleva su aviso.
     const primeraVez = this.firstTime(`objeto:${after.id}`) && !moved;
@@ -627,6 +661,7 @@ export class Game {
       this.events.emit('mudanza', { casa, primeraVez: this.firstTime(`casa:${casa}`) });
       void this.save();
     }
+    if (record || moved) this.syncRanking();
     // El gato se sube solo al carrito o a la aspiradora al llegar a esos objetos.
     if (after.herramienta !== before.herramienta) {
       this.events.emit('herramienta', { toolId: after.herramienta });
@@ -1494,6 +1529,7 @@ export class Game {
       },
       // También anota los pasos que ya se cumplieron.
       tutorial: updateTutorial(s, d),
+      ranking: { disponible: rankingUnlocked(s), nombre: s.ranking.nombre, nivel: s.ranking.nivel, objeto: recordObject(s, d), casa: d.homes[s.casa]!.id },
     };
   }
 }

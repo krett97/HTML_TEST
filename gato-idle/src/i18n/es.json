@@ -193,7 +193,8 @@
     "duenoGraba": "…y en vez de regañarte, ¡empezó a grabar! [[canal]]",
     "videoSubido": "[[subir]] ¡Video subido! +{seguidores} seguidores",
     "viral": "[[viral]] ¡SE HIZO VIRAL! [[viral]]",
-    "mudanza": "[[mudanza]] ¡El dueño se mudó a: {casa}!"
+    "mudanza": "[[mudanza]] ¡El dueño se mudó a: {casa}!",
+    "ranking": "[[trofeo]] ¡Se abrió el ranking de gatos! (arriba)"
   },
   "aliados": {
     "gatito": "Gatito bebé",
@@ -463,5 +464,19 @@
     "tope": "Solo cuentan {horas} h (estuviste fuera {ausente}). ¡Vuelve antes para no perder nada!",
     "doble": "¡Duplicar! Ver anuncio",
     "cobrar": "Cobrar"
+  },
+  "ranking": {
+    "abrir": "Ver el ranking",
+    "titulo": "Ranking de gatos",
+    "cerrar": "Cerrar",
+    "explica": "Tu nivel es el objeto más lejano al que has llegado (el vaso es el nivel 1). ¿Qué gato destruye más?",
+    "tuGato": "Nombre de tu gato",
+    "guardar": "Guardar",
+    "guardado": "¡Listo! Así aparece tu gato.",
+    "cargando": "Cargando el ranking…",
+    "sinConexion": "El ranking en línea funciona en la versión que se comparte por Claude. Aquí ves tu récord.",
+    "soloLectura": "Puedes ver la tabla, pero para aparecer en ella el dueño de la página tiene que darte permiso de colaborador.",
+    "anonimo": "Gato misterioso",
+    "nivel": "Nv. {n}"
   }
 }

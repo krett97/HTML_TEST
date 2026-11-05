@@ -3,6 +3,7 @@
   import { useGame } from './context';
   import Pruebas from './Pruebas.svelte';
   import Coin from './Coin.svelte';
+  import Ranking from './Ranking.svelte';
 
   const view = useGame().view;
 </script>
@@ -14,6 +15,9 @@
       <Coin size={26} />
       <span class="cifra" data-testid="dinero">{$view.dinero}</span>
     </div>
+    {#if $view.ranking.disponible}
+      <Ranking />
+    {/if}
     {#if $view.pruebas.disponible}
       <Pruebas />
     {/if}

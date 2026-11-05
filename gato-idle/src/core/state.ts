@@ -78,6 +78,8 @@ export interface GameState {
   casa: number;
   /** Jefes derrotados (sus trofeos duran para siempre) y desde cuándo se puede pedir la revancha (ms de reloj). */
   jefes: { derrotados: string[]; revancha: number };
+  /** Ranking: el nombre del gato y su récord (el objeto más lejano al que llegó: el vaso es el nivel 1). */
+  ranking: { nombre: string; nivel: number };
   stats: {
     toques: number;
     roturas: number;
@@ -127,6 +129,7 @@ export function createInitialState(now: number): GameState {
     danioObjeto: ZERO,
     casa: 0,
     jefes: { derrotados: [], revancha: 0 },
+    ranking: { nombre: '', nivel: 1 },
     stats: { toques: 0, roturas: 0, roturasPartida: 0 },
     canal: { seguidores: 0, visualizaciones: ZERO, visualizacionesTotales: ZERO, anunciosReinicio: 0, videos: [] },
     habilidades: [],

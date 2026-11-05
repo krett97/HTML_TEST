@@ -743,6 +743,8 @@ export class MainScene extends Phaser.Scene {
     const tr = get(t);
     if (primeraVez) this.comicPanel('mudanza', this.textures.getBase64('duenio'), tr('vineta.mudanza.titulo'), tr('vineta.mudanza.texto'));
     this.toast(tr('avisos.mudanza', { casa: tr(`casas.${casa}`) }));
+    // La primera mudanza abre el ranking (el trofeo de arriba).
+    if (primeraVez && casa === this.controller.data.homes[1]?.id) this.time.delayedCall(1800, () => this.toast(tr('avisos.ranking')));
     this.controller.playSound('descubrimiento');
     this.cameras.main.flash(200, 255, 241, 224);
   }

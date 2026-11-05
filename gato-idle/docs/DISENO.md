@@ -915,3 +915,11 @@ Los emojis se veían de otro estilo junto al pixel art. Ahora todo usa íconos d
 **Visualizaciones del video, del dinero de la partida.** Antes salían de las roturas (cada rotura sumaba según el objeto). El simulador mostró que en la casa, con bonos, la partida avanza tan rápido que casi no se rompe nada y las visualizaciones por video bajaban hasta cero: el jugador se atoraba sin poder mudarse. Ahora salen del dinero ganado, como los seguidores: ⌊(dinero / 0.064)^½⌋ (`escalaVisualizaciones`, `exponenteVisualizaciones`). Se quitó el bono de visualizaciones por seguidor (los seguidores ya suben el dinero) y `stats.vistasVideo`.
 
 Simulador (5 toques/s, sin anuncios): mudanza a la casa tras la vuelta 5; el Pepino cae en la vuelta 7; la mansión llega en la vuelta 10 (30 min hasta el jet ski); la Aspiradora cae en la vuelta 11. El simulador vence al jefe si en su tiempo le quita toda la vida (al llegar o tras 2 minutos más).
+
+## 46. Ranking de gatos (versión 0.28.0)
+
+Se abre al mudarse a la segunda casa (aviso "¡Se abrió el ranking de gatos!") con un trofeo en la barra de arriba. **El nivel de cada jugador es el objeto más lejano al que ha llegado con Valor** (el vaso es el nivel 1): un récord de todas las partidas (`state.ranking.nivel`), que no baja al subir un video. Cada jugador le pone nombre a su gato (16 letras; de inicio "Gato 1234").
+
+**La ventana:** posición (oro, plata y bronce para los primeros tres), el dibujo del objeto del récord, el nombre del gato, el objeto y la casa, y "Nv. N"; tu fila va resaltada.
+
+**Dónde se guarda** (`services/ranking.ts`): en la versión que se comparte por Claude, con la base de datos de la página (capacidades `db` y `user`): cada jugador escribe solo su documento `ranking/<su id>` (reglas: `ranking` lo leen todos y solo el dueño lo administra; `ranking/{self}` lo escribe cada quien desde Colaborador) y todos ven los 100 de más nivel, en vivo. Se escribe solo cuando sube el récord, cambia de casa o cambia el nombre. Lo que llega de otros jugadores se revisa (nombre limpio, nivel y objeto válidos). Quien solo puede ver la página ve la tabla pero no aparece en ella. Fuera de Claude (APK, navegador) no hay dónde guardarlo todavía: la ventana muestra tu récord y lo avisa; para el APK hará falta un servidor.
