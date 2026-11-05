@@ -239,7 +239,8 @@
     "danioCritico": "Sombrero ridículo",
     "saco": "Saco de jefe",
     "canal": "El canal del dueño",
-    "marca": "Garras marcadoras"
+    "marca": "Garras marcadoras",
+    "suerte": "La maquinita del gato"
   },
   "laboratorio": {
     "titulo": "Investigación gatuna",
@@ -481,5 +482,34 @@
     "soloLectura": "Puedes ver la tabla, pero para aparecer en ella el dueño de la página tiene que darte permiso de colaborador.",
     "anonimo": "Gato misterioso",
     "nivel": "Nv. {n}"
+  },
+  "suerte": {
+    "abrir": "Abrir la maquinita",
+    "titulo": "La maquinita del gato",
+    "invita": "¡Prueba tu suerte! Tres coronas = premio mayor.",
+    "girar": "Girar (1 ficha)",
+    "girarAnuncio": "Girar con anuncio (quedan {n} hoy)",
+    "siguiente": "Otra ficha en {t}",
+    "resultados": {
+      "jackpot": "¡¡PREMIO MAYOR!! +{dinero} y +{vistas} visualizaciones",
+      "trio": "¡Tres iguales! +{dinero}",
+      "coronas": "¡Dos coronas! +{dinero} y una ficha extra",
+      "par": "¡Par! +{dinero}",
+      "pelos": "Bola de pelos… +{dinero} de consuelo"
+    },
+    "dobleONada": "¿Doble o nada?",
+    "dobleSeguro": "×2 seguro",
+    "dobleGano": "¡GANASTE! El premio se duplicó.",
+    "doblePerdio": "Perdiste… el gato tiró el premio de la mesa.",
+    "dobleAnuncio": "¡Premio doblado!",
+    "premios": "Premios",
+    "tabla": {
+      "jackpot": "Premio mayor: 60 min de ganancias y visualizaciones",
+      "trio": "Tres iguales: 15 min de ganancias",
+      "coronas": "Dos coronas: 3 min y una ficha",
+      "par": "Dos iguales: 3 min de ganancias",
+      "pelos": "Nada: medio minuto de consuelo"
+    },
+    "aviso": "Se juega solo con fichas del juego: no se puede comprar nada con dinero real. Una ficha llega cada hora (hasta 3) y vencer a un jefe da 2."
   }
 }

@@ -3,6 +3,7 @@ import { BUY_AMOUNTS } from './bulk';
 import { normalizeCanal } from './canal';
 import { normalizeBosses } from './jefes';
 import { normalizeRanking } from './ranking';
+import { normalizeLuck } from './suerte';
 import { moveIfReady, normalizeHome } from './mudanza';
 import { normalizeSkills } from './skills';
 import type { GameData } from './data';
@@ -36,6 +37,7 @@ export function normalizeState(state: GameState, data: GameData): void {
   // (antes del récord del ranking: si no, contaría el Valor de sobra como objetos de la casa nueva).
   moveIfReady(state, data);
   normalizeRanking(state, data);
+  normalizeLuck(state);
   if (state.offline && !(isDecimal(state.offline.dinero) && Number.isFinite(state.offline.roturas))) state.offline = null;
   state.vistos = [...new Set(state.vistos.filter((id) => typeof id === 'string'))];
   state.stats.roturasPartida = Math.max(0, Math.floor(state.stats.roturasPartida));

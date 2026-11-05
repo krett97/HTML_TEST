@@ -6,7 +6,7 @@ from PIL import Image
 SRC = sys.argv[1]; OUT = sys.argv[2]; ARTE = sys.argv[3]
 PICKS = dict(mejoras=1, laboratorio=1, canal=1, ajustes=1, fuerza=2, valor=1, critico=1, saco=1, marca=1, trofeo=1, candado=1, check=2,
              seguidores=2, visualizaciones=1, anuncio=2, mudanza=1, viral=1, subir=2, reiniciar=1, microscopio=1, mano=1, pregunta=1, dps=1,
-             reloj=2, claqueta=1, pesas=1, esmalte=1, huellas=1, croquetas=1, estetoscopio=1, apreton=1, susto=1, miniatura=2, hashtag=2, pepino=3, calavera=1)
+             reloj=2, claqueta=1, pesas=1, esmalte=1, huellas=1, croquetas=1, estetoscopio=1, apreton=1, susto=1, miniatura=2, hashtag=2, pepino=3, calavera=1, maquinita=1, pescado=9, corona=1, ficha=1, pelos=2)
 
 def clean(im):
     """Deja solo los grupos de píxeles grandes (quita motas sueltas de la orilla)."""
@@ -36,6 +36,6 @@ for name, seed in PICKS.items():
     square(clean(Image.open(f'{SRC}/{name}_s{seed}.png').convert('RGBA'))).save(f'{OUT}/{name}.png')
 # Del arte del juego: los aliados, el gato, el sombrero, el carrito y la aspiradora.
 for name, src in dict(gatito='aliado_gatito', raton='aliado_raton', perro='aliado_perro', perico='aliado_perico', cuervo='aliado_cuervo',
-                      mapache='aliado_mapache', cabra='aliado_cabra', gato='gato', sombrero='sombrero', carrito='carrito', aspiradora='aspiradora').items():
+                      mapache='aliado_mapache', cabra='aliado_cabra', gato='gato', sombrero='sombrero', carrito='carrito', aspiradora='aspiradora', vaso='obj_vaso').items():
     square(Image.open(f'{ARTE}/{src}.png').convert('RGBA')).save(f'{OUT}/{name}.png')
 print('ok')

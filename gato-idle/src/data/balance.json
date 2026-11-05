@@ -44,6 +44,18 @@
     "multHito": 2,
     "probabilidadVoz": 0.15
   },
+  "suerte": {
+    "fichasMax": 3,
+    "minutosFicha": 60,
+    "fichasPorJefe": 2,
+    "girosAnuncioPorDia": 20,
+    "toquesPorSegundo": 3,
+    "minutosPar": 3,
+    "minutosTrio": 15,
+    "minutosJackpot": 60,
+    "minutosConsuelo": 0.5,
+    "vistasJackpot": 0.5
+  },
   "patrocinio": {
     "cadaSegundos": 90,
     "visibleSegundos": 25,

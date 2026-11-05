@@ -43,6 +43,9 @@ body {
   height: 100%;
   margin: 0;
   background: var(--bg);
+  /* La fuente de pixel junta "fi" en un solo signo que parece una "A" ("Acha" en vez de "ficha"). */
+  font-variant-ligatures: none;
+  font-feature-settings: 'liga' 0, 'clig' 0;
   color: var(--text);
   font-family: var(--font);
   /* Jersey 10 solo tiene un grosor: que el navegador no le invente negritas borrosas. */

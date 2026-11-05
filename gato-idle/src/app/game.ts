@@ -85,6 +85,7 @@ import { watchLifecycle } from '../services/lifecycle';
 import type { RankingService } from '../services/ranking';
 import type { KeyValueStore } from '../services/storage';
 import { cleanName, rankingUnlocked, recordObject, updateRecord } from '../core/ranking';
+import { adSpinsLeft, awardBossTokens, doubleOrNothing, doublePrize, nextTokenIn, refillTokens, spin, type SpinResult } from '../core/suerte';
 import { DpsMeter } from './dpsMeter';
 import { Emitter } from './emitter';
 import { SaveSlots } from './persistence';
@@ -240,7 +241,9 @@ export interface ViewModel {
   /** Algo se puede comprar ahora (punto en la pestaña Mejoras). */
   hayCompra: boolean;
   /** Qué partes del juego ya se descubrieron. */
-  funciones: { fuerza: boolean; valor: boolean; critico: boolean; danioCritico: boolean; saco: boolean; marca: boolean; laboratorio: boolean; canal: boolean; aliados: boolean };
+  funciones: { fuerza: boolean; valor: boolean; critico: boolean; danioCritico: boolean; saco: boolean; marca: boolean; laboratorio: boolean; canal: boolean; aliados: boolean; suerte: boolean };
+  /** La maquinita: fichas, cuánto falta para la siguiente, giros con anuncio que quedan hoy y el premio que se puede doblar. */
+  suerte: { fichas: number; max: number; proxima: number; girosAnuncio: number; doblable: string | null };
   /** Ventana de bienvenida: lo que hizo la pandilla mientras no estabas. */
   offline: {
     visible: boolean;
@@ -483,6 +486,54 @@ export class Game {
     this.services.ranking.submit({ nombre: r.nombre, nivel: r.nivel, casa: this.data.homes[this.state.casa]!.id, objeto: recordObject(this.state, this.data) });
   }
 
+  // ---- La maquinita ----
+
+  private luckBusy = false;
+
+  /** Un giro de la maquinita: con una ficha, o viendo un anuncio (si lo cierra antes, no gira). */
+  async spinLuck(pago: 'ficha' | 'anuncio'): Promise<SpinResult | null> {
+    if (this.luckBusy || !hasUnlock(this.state, 'suerte')) return null;
+    if (pago === 'anuncio') {
+      if (adSpinsLeft(this.state, this.data, Date.now()) <= 0) return null;
+      this.luckBusy = true;
+      const result = await this.services.ads.showRewarded('suerte');
+      this.luckBusy = false;
+      if (!result.rewarded) return null;
+    }
+    const result = spin(this.state, this.data, Date.now(), pago);
+    if (!result) return null;
+    this.playSound(result.tipo === 'jackpot' || result.tipo === 'trio' ? 'objeto-nuevo' : result.tipo === 'pelos' ? 'critico' : 'compra');
+    this.markDirty();
+    this.refreshView();
+    void this.save();
+    return result;
+  }
+
+  /** "¿Doble o nada?" con el último premio. */
+  gambleLuck(): boolean | null {
+    const won = doubleOrNothing(this.state);
+    if (won === null) return null;
+    this.playSound(won ? 'objeto-nuevo' : 'critico');
+    this.markDirty();
+    this.refreshView();
+    void this.save();
+    return won;
+  }
+
+  /** Doblar el último premio seguro, viendo un anuncio. */
+  async doubleLuckWithAd(): Promise<boolean> {
+    if (this.luckBusy || !this.state.suerte.doblable) return false;
+    this.luckBusy = true;
+    const result = await this.services.ads.showRewarded('suerte');
+    this.luckBusy = false;
+    if (!result.rewarded || !doublePrize(this.state)) return false;
+    this.playSound('compra');
+    this.markDirty();
+    this.refreshView();
+    void this.save();
+    return true;
+  }
+
   /** El jugador le pone nombre a su gato para el ranking. */
   setRankingName(name: string): boolean {
     const clean = cleanName(name);
@@ -585,7 +636,10 @@ export class Game {
     this.playSound(outcome.gano ? 'objeto-nuevo' : 'critico');
     // Vencer al jefe puede abrir la mudanza: se resuelve ya, sin esperar al siguiente tick (si sobraba
     // Valor, el objeto brincaba un instante a uno de la casa siguiente).
-    if (outcome.gano) this.checkMove();
+    if (outcome.gano) {
+      awardBossTokens(this.state, this.data);
+      this.checkMove();
+    }
     this.markDirty();
     void this.save();
   }
@@ -1133,6 +1187,10 @@ export class Game {
 
   private runDiscoveries(now: number): void {
     this.checkMove();
+    // Las fichas de la maquinita llegan solas (una cada tanto).
+    const fichas = this.state.suerte.fichas;
+    refillTokens(this.state, this.data, Date.now());
+    if (this.state.suerte.fichas !== fichas) this.markDirty();
     for (const unlock of checkUnlocks(this.state, this.data)) {
       this.recentUnlocks.set(unlock.id, now);
       this.events.emit('descubrimiento', { unlockId: unlock.id });
@@ -1491,6 +1549,14 @@ export class Game {
         laboratorio: hasUnlock(s, 'laboratorio'),
         canal: hasUnlock(s, 'canal'),
         aliados: s.desbloqueos.some((id) => id.startsWith('aliado:')),
+        suerte: hasUnlock(s, 'suerte'),
+      },
+      suerte: {
+        fichas: s.suerte.fichas,
+        max: d.balance.suerte.fichasMax,
+        proxima: nextTokenIn(s, d, Date.now()),
+        girosAnuncio: adSpinsLeft(s, d, Date.now()),
+        doblable: s.suerte.doblable ? fmt(s.suerte.doblable) : null,
       },
       nuevos: [...this.recentUnlocks.keys()],
       dps: this.dpsView(fmt),

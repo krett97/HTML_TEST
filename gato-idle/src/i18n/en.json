@@ -239,7 +239,8 @@
     "danioCritico": "Silly hat",
     "saco": "Boss suit",
     "canal": "The owner's channel",
-    "marca": "Marking claws"
+    "marca": "Marking claws",
+    "suerte": "The cat's slot machine"
   },
   "laboratorio": {
     "titulo": "Cat research",
@@ -481,5 +482,34 @@
     "soloLectura": "You can see the table, but to show up in it the page owner has to give you contributor access.",
     "anonimo": "Mystery cat",
     "nivel": "Lv. {n}"
+  },
+  "suerte": {
+    "abrir": "Open the slot machine",
+    "titulo": "The cat's slot machine",
+    "invita": "Try your luck! Three crowns = jackpot.",
+    "girar": "Spin (1 token)",
+    "girarAnuncio": "Spin with an ad ({n} left today)",
+    "siguiente": "Next token in {t}",
+    "resultados": {
+      "jackpot": "JACKPOT!! +{dinero} and +{vistas} views",
+      "trio": "Three of a kind! +{dinero}",
+      "coronas": "Two crowns! +{dinero} and a bonus token",
+      "par": "A pair! +{dinero}",
+      "pelos": "A hairball… +{dinero} consolation"
+    },
+    "dobleONada": "Double or nothing?",
+    "dobleSeguro": "Sure ×2",
+    "dobleGano": "YOU WON! The prize doubled.",
+    "doblePerdio": "You lost… the cat knocked the prize off the table.",
+    "dobleAnuncio": "Prize doubled!",
+    "premios": "Prizes",
+    "tabla": {
+      "jackpot": "Jackpot: 60 min of earnings and views",
+      "trio": "Three of a kind: 15 min of earnings",
+      "coronas": "Two crowns: 3 min and a token",
+      "par": "A pair: 3 min of earnings",
+      "pelos": "Nothing: half a minute consolation"
+    },
+    "aviso": "Played only with in-game tokens: nothing can be bought with real money. A token arrives every hour (up to 3) and beating a boss gives 2."
   }
 }

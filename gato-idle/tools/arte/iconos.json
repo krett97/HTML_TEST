@@ -467,5 +467,83 @@
   "style": ", pixel art game icon, bold dark outline, cartoon, vibrant colors, centered, fills the canvas, isolated, no shadow",
   "transparent": true,
   "guidance": 8
+ },
+ {
+  "name": "maquinita",
+  "desc": "red and gold retro slot machine with a cat face on top and a lever",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game icon, bold dark outline, cartoon, vibrant colors, centered, fills the canvas, isolated, no shadow",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "pescado",
+  "desc": "blue fish skeleton bone, cartoon",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game icon, bold dark outline, cartoon, vibrant colors, centered, fills the canvas, isolated, no shadow",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "corona",
+  "desc": "shiny golden royal crown with red gems",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game icon, bold dark outline, cartoon, vibrant colors, centered, fills the canvas, isolated, no shadow",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "ficha",
+  "desc": "golden casino token coin with a cat paw print",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game icon, bold dark outline, cartoon, vibrant colors, centered, fills the canvas, isolated, no shadow",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "pelos",
+  "desc": "grey fluffy hairball with a sad face",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game icon, bold dark outline, cartoon, vibrant colors, centered, fills the canvas, isolated, no shadow",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "pescadoentero",
+  "desc": "orange fish",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game icon, bold dark outline, cartoon, vibrant colors, centered, fills the canvas, isolated, no shadow",
+  "transparent": true,
+  "guidance": 8
  }
 ]

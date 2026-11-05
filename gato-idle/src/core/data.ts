@@ -124,7 +124,7 @@ export const SKILLS = [
 export type SkillId = (typeof SKILLS)[number];
 
 /** Funciones que se van descubriendo: "fuerza", "valor", "critico", "laboratorio", "aliado:<id>"… */
-export const FEATURES = ['fuerza', 'valor', 'patrocinios', 'critico', 'danioCritico', 'saco', 'marca', 'laboratorio', 'canal'] as const;
+export const FEATURES = ['fuerza', 'valor', 'patrocinios', 'critico', 'danioCritico', 'saco', 'marca', 'laboratorio', 'canal', 'suerte'] as const;
 
 /** Un descubrimiento: se desbloquea al cumplir su condición, en el orden de unlocks.json. */
 export interface UnlockDef {
@@ -243,6 +243,24 @@ export interface Balance {
     horasMax: number;
     /** Ausencias más cortas se cobran solas, sin ventana. */
     minimoSegundos: number;
+  };
+  /** La maquinita del gato (core/suerte.ts). */
+  suerte: {
+    /** Fichas que se juntan solas, como máximo, y cada cuántos minutos llega una. */
+    fichasMax: number;
+    minutosFicha: number;
+    /** Fichas de premio por vencer a un jefe. */
+    fichasPorJefe: number;
+    /** Giros con anuncio por día, como máximo. */
+    girosAnuncioPorDia: number;
+    /** Los premios son minutos de lo que se gana jugando a este ritmo. */
+    toquesPorSegundo: number;
+    minutosPar: number;
+    minutosTrio: number;
+    minutosJackpot: number;
+    minutosConsuelo: number;
+    /** El premio mayor también da esta parte de las visualizaciones del video en grabación. */
+    vistasJackpot: number;
   };
   patrocinio: {
     /** Cada cuánto aparece la oferta (s) y cuánto se queda en pantalla (s). */
@@ -528,6 +546,7 @@ export function parseGameData(raw: RawGameData): GameData {
   const valor = section(file, b, 'valor');
   const aliados = section(file, b, 'aliados');
   const patrocinio = section(file, b, 'patrocinio');
+  const suerte = section(file, b, 'suerte');
   const canal = section(file, b, 'canal');
   const offline = section(file, b, 'offline');
   const objetoMinimo = str(file, canal, 'objetoMinimo');
@@ -592,6 +611,18 @@ export function parseGameData(raw: RawGameData): GameData {
       eficiencia: Math.min(1, n(offline, 'eficiencia')),
       horasMax: n(offline, 'horasMax'),
       minimoSegundos: n(offline, 'minimoSegundos'),
+    },
+    suerte: {
+      fichasMax: Math.max(1, Math.floor(n(suerte, 'fichasMax'))),
+      minutosFicha: n(suerte, 'minutosFicha'),
+      fichasPorJefe: Math.floor(n(suerte, 'fichasPorJefe')),
+      girosAnuncioPorDia: Math.floor(n(suerte, 'girosAnuncioPorDia')),
+      toquesPorSegundo: n(suerte, 'toquesPorSegundo'),
+      minutosPar: n(suerte, 'minutosPar'),
+      minutosTrio: n(suerte, 'minutosTrio'),
+      minutosJackpot: n(suerte, 'minutosJackpot'),
+      minutosConsuelo: n(suerte, 'minutosConsuelo'),
+      vistasJackpot: n(suerte, 'vistasJackpot'),
     },
     patrocinio: {
       cadaSegundos: n(patrocinio, 'cadaSegundos'),
