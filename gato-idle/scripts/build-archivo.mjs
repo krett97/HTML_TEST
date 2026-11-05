@@ -15,6 +15,8 @@ html = html.replace(/<script type="module"[^>]*src="\.\/(assets\/[^"]+\.js)"[^>]
   const js = readFileSync(join(dir, file), 'utf8').replace(/<\/script/gi, '<\\/script');
   return `<script type="module">\n${js}\n</script>`;
 });
+// El ícono (public/icono.png) va dentro del HTML.
+html = html.replace(/href="\.\/(icono\.png)"/g, (_, file) => `href="data:image/png;base64,${readFileSync(join(dir, file)).toString('base64')}"`);
 
 if (/src="\.\/assets|href="\.\/assets/.test(html)) {
   throw new Error('Quedaron referencias a archivos sueltos en el HTML');
