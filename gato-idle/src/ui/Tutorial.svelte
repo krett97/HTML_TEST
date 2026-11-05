@@ -1,4 +1,6 @@
 <script lang="ts">
+  import Icon from './Icon.svelte';
+  import Rich from './Rich.svelte';
   // Globito del tutorial: el gato explica un paso y una manita señala dónde tocar (los botones
   // llevan data-tuto="<paso>"; el brillo está en global.css). La lógica está en core/tutorial.ts.
   import { ART_FILES } from '../game/art';
@@ -33,7 +35,7 @@
     <div class="tuto" class:arriba={step === 'monedas'} role="status" aria-label={$t('tutorial.gato')} data-testid="tutorial">
       <img class="cara" src={ART_FILES.gato} alt="" />
       <div class="globo">
-        <p data-testid="tutorial-{step}">{$t(`tutorial.${step}`)}</p>
+        <p data-testid="tutorial-{step}"><Rich text={$t(`tutorial.${step}`)} /></p>
         <div class="acciones">
           <button type="button" class="saltar" onclick={() => game.skipTutorial()} data-testid="saltar-tutorial">{$t('tutorial.saltar')}</button>
           {#if INFO_STEPS.includes(step)}
@@ -41,7 +43,7 @@
           {/if}
         </div>
       </div>
-      {#if step === 'tocar'}<span class="dedo" aria-hidden="true">👆</span>{/if}
+      {#if step === 'tocar'}<span class="dedo"><Icon name="mano" size={36} /></span>{/if}
     </div>
   {/key}
 {/if}

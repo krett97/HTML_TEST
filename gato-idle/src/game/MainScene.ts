@@ -13,7 +13,8 @@ import { ART, FLOOR_H, SCENE_WIDTH } from './sceneSize';
 import { drawRoom, drawSurface, furnitureArt, GARDEN_STRIP_H, PICTURE_ABOVE_FLOOR, placeOf, WINDOW_ABOVE_FLOOR, type Place, type RoomArt } from './places';
 import { catPortrait } from './catPortrait';
 import { toolLook, type ToolLook } from './sprites';
-import { ALLY_ICONS, ALLY_NUMBER_COLORS } from '../ui/allyIcons';
+import { ALLY_NUMBER_COLORS } from '../ui/allyIcons';
+import { iconImage, setRichText } from '../ui/icons';
 import { COIN_URL } from '../ui/coin';
 import type { Decimal } from '../core/num';
 
@@ -782,10 +783,10 @@ export class MainScene extends Phaser.Scene {
     text.className = 'vineta-texto';
     const title = document.createElement('strong');
     title.className = 'vineta-globo';
-    title.textContent = titleText;
+    setRichText(title, titleText);
     const sub = document.createElement('span');
     sub.className = 'vineta-sub';
-    sub.textContent = subText;
+    setRichText(sub, subText);
     text.append(title, sub);
     panel.append(img, text);
     el.append(panel);
@@ -845,7 +846,7 @@ export class MainScene extends Phaser.Scene {
     this.lastAllyNumber.set(allyId, now);
     const { x, y } = this.numberAnchor();
     this.popNumber(x, y, marcado ? 'aliado marcado' : 'aliado', this.controller.formatMoney(damage), {
-      icon: ALLY_ICONS[allyId],
+      icon: allyId,
       color: marcado ? MARKED_COLOR : ALLY_NUMBER_COLORS[allyId],
       size: 13 + this.damageRatio(damage) * 9,
     });
@@ -887,7 +888,10 @@ export class MainScene extends Phaser.Scene {
       coin.alt = '';
       value.append(sign, coin, text.slice(sign.length));
     } else {
-      value.textContent = opts.icon ? `${opts.icon}${text}` : text;
+      // El número de un aliado lleva su carita: "[perro]120".
+      const icon = opts.icon ? iconImage(opts.icon, 'num-icon') : null;
+      if (icon) value.append(icon, text);
+      else value.textContent = text;
     }
     el.append(value);
     const pos = this.toCss(x, y);
@@ -1041,7 +1045,7 @@ export class MainScene extends Phaser.Scene {
     if (!parent) return;
     const el = document.createElement('div');
     el.className = className;
-    el.textContent = text;
+    setRichText(el, text);
     if (position) {
       el.style.left = `${position.left}px`;
       el.style.top = `${position.top}px`;

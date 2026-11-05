@@ -1,21 +1,21 @@
 <script lang="ts">
+  import Icon from './Icon.svelte';
   // Ventana de bienvenida: lo que rompió la pandilla mientras no estabas. Se cobra normal o ×2
   // viendo el anuncio "Los dueños se fueron de vacaciones".
-  import { ALLY_ICONS } from './allyIcons';
   import Coin from './Coin.svelte';
   import { t } from '../i18n';
   import { useGame } from './context';
 
   const game = useGame();
   const view = game.view;
-  const gang = $derived($view.aliados.filter((a) => a.nivel > 0).map((a) => ALLY_ICONS[a.id] ?? '🐾'));
+  const gang = $derived($view.aliados.filter((a) => a.nivel > 0).map((a) => a.id));
 </script>
 
 {#if $view.offline.visible}
   <div class="backdrop" role="presentation"></div>
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="offline-title" data-testid="offline">
     <h2 id="offline-title">{$t('offline.titulo')}</h2>
-    <div class="gang" aria-hidden="true">{gang.join(' ')}</div>
+    <div class="gang" aria-hidden="true">{#each gang as id (id)}<Icon name={id} size={32} />{/each}</div>
     <p class="muted">{$t('offline.trabajo', { tiempo: $view.offline.tiempo })}</p>
     <p class="loot">
       <span class="cifra big"><Coin />+{$view.offline.dinero}</span>
@@ -25,7 +25,7 @@
       <p class="small warn">{$t('offline.tope', { horas: $view.offline.horasMax, ausente: $view.offline.ausente })}</p>
     {/if}
     <button type="button" class="btn btn--accent double" onclick={() => game.claimOffline(true)} data-testid="offline-doble">
-      <span>📺 {$t('offline.doble')}</span>
+      <span><Icon name="anuncio" /> {$t('offline.doble')}</span>
       <span class="cifra"><Coin />+{$view.offline.doble}</span>
     </button>
     <button type="button" class="btn claim" onclick={() => game.claimOffline(false)} data-testid="offline-cobrar">

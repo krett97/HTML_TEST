@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Icon from './Icon.svelte';
   import Coin from './Coin.svelte';
   import Tutorial from './Tutorial.svelte';
   import { onMount } from 'svelte';
@@ -27,7 +28,7 @@
     <!-- Medidor de daño por segundo: total, y cuánto pone el gato y cuánto la pandilla. -->
     <div class="dps" class:con-rec={$view.funciones.canal} class:racha={$view.dps.racha} data-testid="dps-escena">
       <div class="dps-top">
-        <span class="dps-icon" aria-hidden="true">{$view.dps.racha ? '🔥' : '💥'}</span>
+        <span class="dps-icon"><Icon name={$view.dps.racha ? 'viral' : 'dps'} size={24} /></span>
         {#key $view.dps.total}<strong class="dps-num cifra">{$view.dps.total}</strong>{/key}
         <span class="dps-unit">{$t('hud.dps')}</span>
       </div>
@@ -36,15 +37,15 @@
           <span class="dps-cat" style:width="{$view.dps.parteGato * 100}%"></span>
         </div>
         <div class="dps-legend">
-          <span>🐱 {$view.dps.gato}</span>
-          {#if $view.funciones.aliados}<span>🐾 {$view.dps.aliados}</span>{/if}
+          <span><Icon name="gato" /> {$view.dps.gato}</span>
+          {#if $view.funciones.aliados}<span><Icon name="mejoras" /> {$view.dps.aliados}</span>{/if}
         </div>
       {/if}
       {#if $view.dps.racha}<span class="dps-racha">{$t('hud.racha')}</span>{/if}
       {#if $view.marcaActiva}
         <!-- Garras marcadoras: cuánto le queda a la marca y cuánto más pega la pandilla. -->
         <div class="marca" data-testid="marca">
-          <span class="marca-tag">💢 {$t('hud.marcado')} <span class="cifra">{$view.marcaActiva.mult}</span></span>
+          <span class="marca-tag"><Icon name="marca" /> {$t('hud.marcado')} <span class="cifra">{$view.marcaActiva.mult}</span></span>
           <span class="marca-bar"><span class="marca-fill" style:width="{($view.marcaActiva.restante / $view.marcaActiva.segundos) * 100}%"></span></span>
         </div>
       {/if}
@@ -55,24 +56,24 @@
     <!-- Pelea contra el jefe: nombre, vida que le queda y reloj. -->
     <div class="boss" class:apurado={pelea.restante <= 5} data-testid="pelea-jefe">
       <div class="boss-top">
-        <strong>🥒 {$t(`jefes.${pelea.id}.nombre`)}</strong>
-        <span class="boss-time cifra" data-testid="reloj-jefe">⏱ {pelea.restante.toFixed(1)}</span>
+        <strong><Icon name="pepino" /> {$t(`jefes.${pelea.id}.nombre`)}</strong>
+        <span class="boss-time cifra" data-testid="reloj-jefe"><Icon name="reloj" /> {pelea.restante.toFixed(1)}</span>
       </div>
       <div class="boss-bar"><span class="boss-fill" style:width="{(1 - pelea.progreso) * 100}%"></span></div>
       <div class="boss-hp cifra">{pelea.vida}</div>
     </div>
   {:else if $view.jefe.aqui}
     {#if $view.jefe.revancha > 0}
-      <div class="boss-wait" data-testid="revancha">🥒 {$t('jefe.revancha', { s: $view.jefe.revancha })}</div>
+      <div class="boss-wait" data-testid="revancha"><Icon name="pepino" /> {$t('jefe.revancha', { s: $view.jefe.revancha })}</div>
     {:else}
       <button type="button" class="boss-call" onclick={() => game.challengeBoss()} data-testid="retar-jefe">
-        🥒 {$t('jefe.retar', { jefe: $t(`jefes.${$view.jefe.aqui}.nombre`) })}
+        <Icon name="pepino" /> {$t('jefe.retar', { jefe: $t(`jefes.${$view.jefe.aqui}.nombre`) })}
       </button>
     {/if}
   {/if}
   {#if $view.patrocinio.visible}
     <button type="button" class="sponsor" onclick={() => game.claimSponsor()} data-testid="patrocinio">
-      <span class="sponsor-tag">📺 {$t('patrocinio.titulo')}</span>
+      <span class="sponsor-tag"><Icon name="anuncio" /> {$t('patrocinio.titulo')}</span>
       <strong class="cifra">+<Coin />{$view.patrocinio.recompensa}</strong>
       <span class="sponsor-tag">{$t('patrocinio.ver')}</span>
     </button>

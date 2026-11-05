@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Icon from '../Icon.svelte';
   import Coin from '../Coin.svelte';
   import type { Effect } from '../../core/modifiers';
   import { formatDuration } from '../../core/time';
@@ -37,7 +38,7 @@
 
 <div class="stack">
   <div class="card intro">
-    <strong>🧪 {$t('laboratorio.titulo')}</strong>
+    <strong><Icon name="laboratorio" /> {$t('laboratorio.titulo')}</strong>
     <span class="muted">{$t('laboratorio.intro')}</span>
   </div>
 
@@ -57,7 +58,7 @@
   <ul class="list">
     {#each visible as project (project.id)}
       <li class="card upgrade" class:done={project.estado === 'hecha'} class:locked={project.estado === 'bloqueada'}>
-        <span class="icon" aria-hidden="true">{project.estado === 'hecha' ? '✅' : project.estado === 'bloqueada' ? '🔒' : '🔬'}</span>
+        <span class="icon"><Icon name={project.estado === 'hecha' ? 'check' : project.estado === 'bloqueada' ? 'candado' : 'microscopio'} size={30} /></span>
         <div class="info">
           {#if project.estado === 'bloqueada'}
             <div class="name">{$t('laboratorio.oculta')}</div>

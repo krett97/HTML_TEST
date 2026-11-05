@@ -14,12 +14,12 @@
   },
   "tutorial": {
     "tocar": "Psst, humano. Toca la pantalla y le doy un manotazo a lo que esté en la mesa.",
-    "monedas": "¡Al suelo! 😼 Cada cosa rota da monedas (arriba). Y el dueño pone otra. Nunca aprende.",
+    "monedas": "¡Al suelo! [[gato]] Cada cosa rota da monedas (arriba). Y el dueño pone otra. Nunca aprende.",
     "fuerza": "Compra Fuerza: mis manotazos pegan más fuerte y las cosas caen más rápido.",
     "valor": "Compra Valor: el dueño pone cosas más caras. Más caras = más monedas. Es ciencia.",
     "meta": "Aquí abajo ves qué sigue. Spoiler: más destrucción.",
-    "aliado": "Un gatito quiere unirse a la pandilla. Adóptalo en 🐱 Aliados: rompe cosas solito, aunque no toques.",
-    "video": "¡El dueño ya tiene video! Súbelo en 📱 Canal: empiezas de cero, pero con seguidores que te hacen más fuerte.",
+    "aliado": "Un gatito quiere unirse a la pandilla. Adóptalo en [[gatito]] Aliados: rompe cosas solito, aunque no toques.",
+    "video": "¡El dueño ya tiene video! Súbelo en [[canal]] Canal: empiezas de cero, pero con seguidores que te hacen más fuerte.",
     "ok": "¡Va!",
     "saltar": "Saltar tutorial",
     "gato": "El gato dice"
@@ -89,7 +89,7 @@
     "revancha": "Revancha en {s} s",
     "aparece": "¡Volvió el {jefe}!",
     "victoria": "¡{jefe} DERROTADO!",
-    "premio": "🏆 ¡Le ganaste al {jefe}! +{dinero}",
+    "premio": "[[trofeo]] ¡Le ganaste al {jefe}! +{dinero}",
     "derrota": "El {jefe} se burla de ti… Revancha en 60 s (+{dinero})",
     "bono": "+{pct} % daño"
   },
@@ -120,8 +120,8 @@
     "superZarpazo": "¡SÚPER ZARPAZO!",
     "embestida": "¡EMBESTIDA!",
     "comprar": "Comprar",
-    "valorMudanza": "🚚 ¡Mudanza! El dueño estrena casa: {objeto}",
-    "esperaMudanza": "El dueño ya no tiene dónde poner más cosas… Junta seguidores y visualizaciones para mudarse (📱 Canal).",
+    "valorMudanza": "[[mudanza]] ¡Mudanza! El dueño estrena casa: {objeto}",
+    "esperaMudanza": "El dueño ya no tiene dónde poner más cosas… Junta seguidores y visualizaciones para mudarse ([[canal]] Canal).",
     "marca": "Garras marcadoras",
     "marcaEfecto": "Un crítico marca el objeto {s} s: pandilla {actual} → {siguiente}",
     "marcaMax": "Un crítico marca el objeto {s} s: pandilla {actual} (máximo)",
@@ -162,10 +162,10 @@
     "aliadoDisponible": "¡Nuevo aliado: {aliado}!",
     "investigacion": "Investigación terminada: {nombre}",
     "dueno": "¡El dueño te cachó!",
-    "duenoGraba": "…y en vez de regañarte, ¡empezó a grabar! 📱",
-    "videoSubido": "📤 ¡Video subido! +{seguidores} seguidores",
-    "viral": "🔥 ¡SE HIZO VIRAL! 🔥",
-    "mudanza": "🚚 ¡El dueño se mudó a: {casa}!"
+    "duenoGraba": "…y en vez de regañarte, ¡empezó a grabar! [[canal]]",
+    "videoSubido": "[[subir]] ¡Video subido! +{seguidores} seguidores",
+    "viral": "[[viral]] ¡SE HIZO VIRAL! [[viral]]",
+    "mudanza": "[[mudanza]] ¡El dueño se mudó a: {casa}!"
   },
   "aliados": {
     "gatito": "Gatito bebé",
@@ -283,10 +283,10 @@
     "apagados": "Trucos apagados. Ahora sí, a jugar limpio.",
     "canal": "+25 seguidores y +100K visualizaciones",
     "offline": "Simular 1 h fuera",
-    "mudanza": "🚚 Desbloquear mudanza",
+    "mudanza": "[[mudanza]] Desbloquear mudanza",
     "mudanzaLista": "Mudanza desbloqueada: mejora el Valor en el último objeto.",
     "sinMudanza": "Ya no quedan casas a dónde mudarse.",
-    "jefe": "🥒 Pelear con el jefe"
+    "jefe": "[[pepino]] Pelear con el jefe"
   },
   "canal": {
     "titulo": "Canal del dueño",
@@ -297,22 +297,22 @@
     "resumen": "{n} cosas rotas · va en: {objeto}",
     "siSubes": "Si lo subes ahora: +{seguidores} seguidores · +{visualizaciones} visualizaciones",
     "faltaMas": "Todavía no da para video: mejora el Valor",
-    "subir": "📤 Subir video",
+    "subir": "[[subir]] Subir video",
     "confirmar": "¿Seguro? Toca otra vez para subirlo",
     "explica": "Al subirlo la partida vuelve a empezar: en el vaso, o en la casa nueva si el dueño ya se mudó. Conservas seguidores, visualizaciones, el árbol, investigaciones y descubrimientos.",
     "habilidades": "Árbol del canal",
     "videos": "Videos subidos",
     "sinVideos": "Aún no hay videos. ¡A romper cosas!",
     "videoStats": "+{seguidores} seguidores · {visualizaciones} visualizaciones",
-    "viral": "🔥 Viral",
+    "viral": "[[viral]] Viral",
     "max": "Máx.",
     "titulos": {
-      "0": "MI GATO VS. {objeto} 😱 (NO CLICKBAIT)",
+      "0": "MI GATO VS. {objeto} [[susto]] (NO CLICKBAIT)",
       "1": "{objeto} vs. mi gato: no vas a creer el final",
-      "2": "Mi gato destruyó {n} cosas y no se arrepiente 💀",
+      "2": "Mi gato destruyó {n} cosas y no se arrepiente [[calavera]]",
       "3": "POV: tu gato tiene una pandilla",
       "4": "Reaccionando a mi gato contra: {objeto} (llorando)",
-      "5": "¿Accidente? Mi gato y {objeto} 🤔 #gatos #viral"
+      "5": "¿Accidente? Mi gato y {objeto} [[pregunta]] #gatos #viral"
     },
     "nombres": {
       "embestida": "Embestida del carrito",
@@ -353,7 +353,7 @@
     },
     "record": "Récord del canal",
     "totalHistorico": "juntadas en total",
-    "subirDoble": "📺 Subir ×2 con anuncio: +{seguidores} · +{visualizaciones}",
+    "subirDoble": "[[anuncio]] Subir ×2 con anuncio: +{seguidores} · +{visualizaciones}",
     "probViral": "{pct}% de probabilidad de hacerse viral",
     "ramas": {
       "manotazo": "Manotazo",
@@ -370,7 +370,7 @@
       "completa": "¡Al máximo!",
       "reiniciar": "Reiniciar árbol",
       "reiniciarExplica": "Te devuelve las {gastado} visualizaciones gastadas para escoger otra ruta. Cuesta ver {max} anuncios (se guardan aunque los veas en distintos momentos).",
-      "verAnuncio": "📺 Ver anuncio {n} de {max}",
+      "verAnuncio": "[[anuncio]] Ver anuncio {n} de {max}",
       "reiniciado": "¡Árbol reiniciado! Te devolvieron {n} visualizaciones."
     }
   },
@@ -410,7 +410,7 @@
     "objeto": {
       "titulo": "¡El dueño compró: {objeto}!",
       "frases": {
-        "0": "Se ve carísimo… sería una pena que se cayera 😼",
+        "0": "Se ve carísimo… sería una pena que se cayera [[gato]]",
         "1": "El dueño dice que es «de colección»",
         "2": "Garantía: 0 días",
         "3": "Lo dejó justo en la orilla. Qué descuidado",

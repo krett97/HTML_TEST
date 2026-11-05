@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Icon from './Icon.svelte';
   import { t } from '../i18n';
   import { useGame } from './context';
 
@@ -8,7 +9,7 @@
 </script>
 
 <div class="card" data-testid="proximo" data-tuto="meta">
-  <span class="icon" aria-hidden="true">❓</span>
+  <span class="icon"><Icon name="pregunta" size={30} /></span>
   <div class="info">
     <div class="label">{$t('descubrimientos.proximo')}</div>
     {#if next}

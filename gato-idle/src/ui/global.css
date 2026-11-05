@@ -132,6 +132,17 @@ select {
   color: var(--text);
 }
 
+/* Íconos de PixelLab: sin tamaño miden como el texto; nítidos (sin suavizar los píxeles). */
+.icono {
+  display: inline-block;
+  width: 1.25em;
+  height: 1.25em;
+  vertical-align: -0.28em;
+  image-rendering: pixelated;
+  object-fit: contain;
+  flex: none;
+}
+
 .muted {
   color: var(--muted);
 }
@@ -259,6 +270,14 @@ select {
 .num-value {
   display: inline-flex;
   align-items: center;
+}
+.num-icon {
+  width: 1.1em;
+  height: 1.1em;
+  margin-right: 0.08em;
+  vertical-align: -0.12em;
+  image-rendering: pixelated;
+  object-fit: contain;
 }
 .num-coin {
   width: 0.85em;
@@ -613,13 +632,15 @@ html[data-tuto='valor'] [data-tuto='valor']::after,
 html[data-tuto='meta'] [data-tuto='meta']::after,
 html[data-tuto='aliado'] [data-tuto='aliado']::after,
 html[data-tuto='video'] [data-tuto='video']::after {
-  content: '👆';
+  content: '';
   position: absolute;
   z-index: 5;
   right: 2px;
   bottom: -8px;
-  font-size: 26px;
-  line-height: 1;
+  width: 28px;
+  height: 28px;
+  background: url('../assets/iconos/mano.png') center / contain no-repeat;
+  image-rendering: pixelated;
   pointer-events: none;
   animation: tuto-dedo 700ms ease-in-out infinite alternate;
 }

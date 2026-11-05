@@ -14,12 +14,12 @@
   },
   "tutorial": {
     "tocar": "Psst, human. Tap the screen and I'll swat whatever is on the table.",
-    "monedas": "Down it goes! 😼 Every broken thing gives coins (up top). And the owner puts out another one. Never learns.",
+    "monedas": "Down it goes! [[gato]] Every broken thing gives coins (up top). And the owner puts out another one. Never learns.",
     "fuerza": "Buy Strength: my swats hit harder and things fall faster.",
     "valor": "Buy Value: the owner puts out pricier stuff. Pricier = more coins. It's science.",
     "meta": "Down here you can see what's next. Spoiler: more destruction.",
-    "aliado": "A kitten wants to join the gang. Adopt it in 🐱 Allies: it breaks things on its own, even when you don't tap.",
-    "video": "The owner's video is ready! Upload it in 📱 Channel: you start over, but with followers that make you stronger.",
+    "aliado": "A kitten wants to join the gang. Adopt it in [[gatito]] Allies: it breaks things on its own, even when you don't tap.",
+    "video": "The owner's video is ready! Upload it in [[canal]] Channel: you start over, but with followers that make you stronger.",
     "ok": "Got it!",
     "saltar": "Skip tutorial",
     "gato": "The cat says"
@@ -89,7 +89,7 @@
     "revancha": "Rematch in {s} s",
     "aparece": "The {jefe} is back!",
     "victoria": "{jefe} DEFEATED!",
-    "premio": "🏆 You beat the {jefe}! +{dinero}",
+    "premio": "[[trofeo]] You beat the {jefe}! +{dinero}",
     "derrota": "The {jefe} laughs at you… Rematch in 60 s (+{dinero})",
     "bono": "+{pct}% damage"
   },
@@ -120,8 +120,8 @@
     "superZarpazo": "SUPER SWIPE!",
     "embestida": "RAM!",
     "comprar": "Buy",
-    "valorMudanza": "🚚 Moving day! The owner gets a new house: {objeto}",
-    "esperaMudanza": "The owner has no room for more stuff… Get followers and views so they can move (📱 Channel).",
+    "valorMudanza": "[[mudanza]] Moving day! The owner gets a new house: {objeto}",
+    "esperaMudanza": "The owner has no room for more stuff… Get followers and views so they can move ([[canal]] Channel).",
     "marca": "Marking claws",
     "marcaEfecto": "A crit marks the object for {s} s: gang {actual} → {siguiente}",
     "marcaMax": "A crit marks the object for {s} s: gang {actual} (max)",
@@ -162,10 +162,10 @@
     "aliadoDisponible": "New ally: {aliado}!",
     "investigacion": "Research done: {nombre}",
     "dueno": "The owner caught you!",
-    "duenoGraba": "…and instead of scolding you, started recording! 📱",
-    "videoSubido": "📤 Video uploaded! +{seguidores} followers",
-    "viral": "🔥 IT WENT VIRAL! 🔥",
-    "mudanza": "🚚 The owner moved to: {casa}!"
+    "duenoGraba": "…and instead of scolding you, started recording! [[canal]]",
+    "videoSubido": "[[subir]] Video uploaded! +{seguidores} followers",
+    "viral": "[[viral]] IT WENT VIRAL! [[viral]]",
+    "mudanza": "[[mudanza]] The owner moved to: {casa}!"
   },
   "aliados": {
     "gatito": "Baby kitten",
@@ -283,10 +283,10 @@
     "apagados": "Cheats off. Playing fair now.",
     "canal": "+25 followers and +100K views",
     "offline": "Simulate 1 h away",
-    "mudanza": "🚚 Unlock moving",
+    "mudanza": "[[mudanza]] Unlock moving",
     "mudanzaLista": "Moving unlocked: upgrade Value on the last object.",
     "sinMudanza": "There are no more houses to move to.",
-    "jefe": "🥒 Fight the boss"
+    "jefe": "[[pepino]] Fight the boss"
   },
   "canal": {
     "titulo": "Owner's channel",
@@ -297,22 +297,22 @@
     "resumen": "{n} things broken · now at: {objeto}",
     "siSubes": "Upload now: +{seguidores} followers · +{visualizaciones} views",
     "faltaMas": "Not enough for a video yet: upgrade Value",
-    "subir": "📤 Upload video",
+    "subir": "[[subir]] Upload video",
     "confirmar": "Sure? Tap again to upload",
     "explica": "Uploading restarts the run: at the glass, or in the new house if the owner already moved. You keep followers, views, the tree, research and discoveries.",
     "habilidades": "Channel tree",
     "videos": "Uploaded videos",
     "sinVideos": "No videos yet. Go break stuff!",
     "videoStats": "+{seguidores} followers · {visualizaciones} views",
-    "viral": "🔥 Viral",
+    "viral": "[[viral]] Viral",
     "max": "Max",
     "titulos": {
-      "0": "MY CAT VS. {objeto} 😱 (NOT CLICKBAIT)",
+      "0": "MY CAT VS. {objeto} [[susto]] (NOT CLICKBAIT)",
       "1": "{objeto} vs. my cat: you won't believe the ending",
-      "2": "My cat destroyed {n} things and has no regrets 💀",
+      "2": "My cat destroyed {n} things and has no regrets [[calavera]]",
       "3": "POV: your cat has a gang",
       "4": "Reacting to my cat vs. {objeto} (crying)",
-      "5": "Accident? My cat and {objeto} 🤔 #cats #viral"
+      "5": "Accident? My cat and {objeto} [[pregunta]] #cats #viral"
     },
     "nombres": {
       "embestida": "Cart ram",
@@ -353,7 +353,7 @@
     },
     "record": "Channel record",
     "totalHistorico": "earned in total",
-    "subirDoble": "📺 Upload ×2 with an ad: +{seguidores} · +{visualizaciones}",
+    "subirDoble": "[[anuncio]] Upload ×2 with an ad: +{seguidores} · +{visualizaciones}",
     "probViral": "{pct}% chance to go viral",
     "ramas": {
       "manotazo": "Swat",
@@ -370,7 +370,7 @@
       "completa": "Maxed out!",
       "reiniciar": "Reset tree",
       "reiniciarExplica": "Refunds the {gastado} views you spent so you can pick another path. Costs {max} ads (progress is kept between sessions).",
-      "verAnuncio": "📺 Watch ad {n} of {max}",
+      "verAnuncio": "[[anuncio]] Watch ad {n} of {max}",
       "reiniciado": "Tree reset! You got {n} views back."
     }
   },
@@ -410,7 +410,7 @@
     "objeto": {
       "titulo": "The owner bought: {objeto}!",
       "frases": {
-        "0": "Looks expensive… shame if it fell 😼",
+        "0": "Looks expensive… shame if it fell [[gato]]",
         "1": "The owner says it's a \"collectible\"",
         "2": "Warranty: 0 days",
         "3": "Left right on the edge. So careless",

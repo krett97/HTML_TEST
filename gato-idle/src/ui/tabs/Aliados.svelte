@@ -1,6 +1,6 @@
 <script lang="ts">
+  import Icon from '../Icon.svelte';
   import Coin from '../Coin.svelte';
-  import { ALLY_ICONS } from '../allyIcons';
   import BuyAmount from '../BuyAmount.svelte';
   import { t } from '../../i18n';
   import { useGame } from '../context';
@@ -24,7 +24,7 @@
 
   {#each unlocked as ally (ally.id)}
     <div class="card upgrade" class:fresh={$view.nuevos.includes(`aliado:${ally.id}`)}>
-      <span class="icon" aria-hidden="true">{ALLY_ICONS[ally.id] ?? '🐾'}</span>
+      <span class="icon"><Icon name={ally.id} size={32} /></span>
       <div class="info">
         <div class="name">
           {$t(`aliados.${ally.id}`)}
@@ -69,11 +69,11 @@
 
   {#if teaser}
     <div class="card upgrade locked" data-testid="aliado-oculto">
-      <span class="icon" aria-hidden="true">❔</span>
+      <span class="icon"><Icon name="pregunta" size={32} /></span>
       <div class="info">
         <div class="name">{$t('aliados.oculto')}</div>
         <div class="effect">
-          🔒 {$t('aliados.pista')} ·
+          <Icon name="candado" /> {$t('aliados.pista')} ·
           {teaser.condicion.objeto
             ? $t('descubrimientos.objeto')
             : $t('descubrimientos.roturas', { n: Math.max(0, (teaser.condicion.roturas ?? 0) - $view.roturas) })}

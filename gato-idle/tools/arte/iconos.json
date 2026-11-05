@@ -1,0 +1,471 @@
+[
+ {
+  "name": "mejoras",
+  "desc": "orange cat paw print",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game icon, bold dark outline, cartoon, vibrant colors, centered, fills the canvas, isolated, no shadow",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "laboratorio",
+  "desc": "green bubbling chemistry flask",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game icon, bold dark outline, cartoon, vibrant colors, centered, fills the canvas, isolated, no shadow",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "canal",
+  "desc": "smartphone with a red recording dot on its screen",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game icon, bold dark outline, cartoon, vibrant colors, centered, fills the canvas, isolated, no shadow",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "ajustes",
+  "desc": "grey metal gear cog",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game icon, bold dark outline, cartoon, vibrant colors, centered, fills the canvas, isolated, no shadow",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "fuerza",
+  "desc": "flexing muscular arm",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game icon, bold dark outline, cartoon, vibrant colors, centered, fills the canvas, isolated, no shadow",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "valor",
+  "desc": "shiny blue diamond gem",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game icon, bold dark outline, cartoon, vibrant colors, centered, fills the canvas, isolated, no shadow",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "critico",
+  "desc": "three sharp white cat claws",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game icon, bold dark outline, cartoon, vibrant colors, centered, fills the canvas, isolated, no shadow",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "saco",
+  "desc": "black tuxedo jacket with a red bow tie",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game icon, bold dark outline, cartoon, vibrant colors, centered, fills the canvas, isolated, no shadow",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "marca",
+  "desc": "red anger symbol, comic cross popping vein mark",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game icon, bold dark outline, cartoon, vibrant colors, centered, fills the canvas, isolated, no shadow",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "trofeo",
+  "desc": "golden trophy cup",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game icon, bold dark outline, cartoon, vibrant colors, centered, fills the canvas, isolated, no shadow",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "candado",
+  "desc": "golden padlock, closed",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game icon, bold dark outline, cartoon, vibrant colors, centered, fills the canvas, isolated, no shadow",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "check",
+  "desc": "bold green check mark",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game icon, bold dark outline, cartoon, vibrant colors, centered, fills the canvas, isolated, no shadow",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "seguidores",
+  "desc": "two happy little people silhouettes, blue and pink",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game icon, bold dark outline, cartoon, vibrant colors, centered, fills the canvas, isolated, no shadow",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "visualizaciones",
+  "desc": "cartoon eye wide open",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game icon, bold dark outline, cartoon, vibrant colors, centered, fills the canvas, isolated, no shadow",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "anuncio",
+  "desc": "retro television with antenna",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game icon, bold dark outline, cartoon, vibrant colors, centered, fills the canvas, isolated, no shadow",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "mudanza",
+  "desc": "small orange moving truck with boxes",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game icon, bold dark outline, cartoon, vibrant colors, centered, fills the canvas, isolated, no shadow",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "viral",
+  "desc": "bright orange flame",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game icon, bold dark outline, cartoon, vibrant colors, centered, fills the canvas, isolated, no shadow",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "subir",
+  "desc": "white upward arrow coming out of a red box",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game icon, bold dark outline, cartoon, vibrant colors, centered, fills the canvas, isolated, no shadow",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "reiniciar",
+  "desc": "two green circular arrows, refresh symbol",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game icon, bold dark outline, cartoon, vibrant colors, centered, fills the canvas, isolated, no shadow",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "microscopio",
+  "desc": "white and blue microscope",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game icon, bold dark outline, cartoon, vibrant colors, centered, fills the canvas, isolated, no shadow",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "mano",
+  "desc": "white cartoon glove hand pointing up with index finger",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game icon, bold dark outline, cartoon, vibrant colors, centered, fills the canvas, isolated, no shadow",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "pregunta",
+  "desc": "yellow question mark",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game icon, bold dark outline, cartoon, vibrant colors, centered, fills the canvas, isolated, no shadow",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "dps",
+  "desc": "yellow and orange explosion burst",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game icon, bold dark outline, cartoon, vibrant colors, centered, fills the canvas, isolated, no shadow",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "reloj",
+  "desc": "silver stopwatch",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game icon, bold dark outline, cartoon, vibrant colors, centered, fills the canvas, isolated, no shadow",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "claqueta",
+  "desc": "black and white movie clapperboard",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game icon, bold dark outline, cartoon, vibrant colors, centered, fills the canvas, isolated, no shadow",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "pesas",
+  "desc": "black dumbbell",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game icon, bold dark outline, cartoon, vibrant colors, centered, fills the canvas, isolated, no shadow",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "esmalte",
+  "desc": "pink nail polish bottle",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game icon, bold dark outline, cartoon, vibrant colors, centered, fills the canvas, isolated, no shadow",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "huellas",
+  "desc": "three small brown paw prints",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game icon, bold dark outline, cartoon, vibrant colors, centered, fills the canvas, isolated, no shadow",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "croquetas",
+  "desc": "bowl full of brown cat kibble",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game icon, bold dark outline, cartoon, vibrant colors, centered, fills the canvas, isolated, no shadow",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "estetoscopio",
+  "desc": "doctor stethoscope",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game icon, bold dark outline, cartoon, vibrant colors, centered, fills the canvas, isolated, no shadow",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "apreton",
+  "desc": "handshake of two hands",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game icon, bold dark outline, cartoon, vibrant colors, centered, fills the canvas, isolated, no shadow",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "susto",
+  "desc": "yellow round face screaming in shock with hands on cheeks",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game icon, bold dark outline, cartoon, vibrant colors, centered, fills the canvas, isolated, no shadow",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "miniatura",
+  "desc": "small picture thumbnail with a red play button",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game icon, bold dark outline, cartoon, vibrant colors, centered, fills the canvas, isolated, no shadow",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "hashtag",
+  "desc": "bold purple hashtag symbol",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game icon, bold dark outline, cartoon, vibrant colors, centered, fills the canvas, isolated, no shadow",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "pepino",
+  "desc": "angry green cucumber with thick eyebrows and muscular arms",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game icon, bold dark outline, cartoon, vibrant colors, centered, fills the canvas, isolated, no shadow",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "calavera",
+  "desc": "funny white skull",
+  "w": 32,
+  "h": 32,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game icon, bold dark outline, cartoon, vibrant colors, centered, fills the canvas, isolated, no shadow",
+  "transparent": true,
+  "guidance": 8
+ }
+]

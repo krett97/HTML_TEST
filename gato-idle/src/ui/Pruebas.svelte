@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Rich from './Rich.svelte';
   // Panel del modo pruebas: el botón 🛠 de la barra superior abre atajos para probar etapas
   // avanzadas sin empezar de cero. No existe en la versión de tienda (PRUEBAS=no al compilar).
   import { onDestroy } from 'svelte';
@@ -175,9 +176,9 @@
           <button type="button" class="btn" onclick={() => game.testResearch(true)}>{$t('pruebas.todasInvestigaciones')}</button>
           <button type="button" class="btn" onclick={() => game.testSponsor()}>{$t('pruebas.patrocinio')}</button>
           <button type="button" class="btn" data-testid="regalo-canal" onclick={() => game.testCanal(25, 100000)}>{$t('pruebas.canal')}</button>
-          <button type="button" class="btn" data-testid="probar-jefe" onclick={() => { if (game.testBoss()) open = false; }}>{$t('pruebas.jefe')}</button>
+          <button type="button" class="btn" data-testid="probar-jefe" onclick={() => { if (game.testBoss()) open = false; }}><Rich text={$t('pruebas.jefe')} /></button>
           <button type="button" class="btn" data-testid="probar-mudanza" onclick={() => say(game.testMudanza() ? $t('pruebas.mudanzaLista') : $t('pruebas.sinMudanza'))}
-            >{$t('pruebas.mudanza')}</button
+            ><Rich text={$t('pruebas.mudanza')} /></button
           >
           <button type="button" class="btn" onclick={() => { game.testOffline(3600); open = false; }}>{$t('pruebas.offline')}</button>
         </div>

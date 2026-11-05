@@ -1,4 +1,6 @@
 <script lang="ts">
+  import Icon from '../Icon.svelte';
+  import Rich from '../Rich.svelte';
   import Coin from '../Coin.svelte';
   import { t } from '../../i18n';
   import { useGame } from '../context';
@@ -35,7 +37,7 @@
 
   {#if $view.funciones.fuerza}
   <div class="card upgrade" class:fresh={$view.nuevos.includes('fuerza')}>
-    <span class="icon" aria-hidden="true">💪</span>
+    <span class="icon"><Icon name="fuerza" size={32} /></span>
     <div class="info">
       <div class="name">
         {$t('mejoras.fuerza')} <span class="level">{$t('mejoras.nivel', { n: $view.fuerza.nivel })}</span>
@@ -59,20 +61,20 @@
 
   {#if $view.jefe.trofeos.length > 0}
     <div class="trofeos" data-testid="trofeos">
-      🏆 {#each $view.jefe.trofeos as trofeo (trofeo.id)}<span>{$t(`jefes.${trofeo.id}.nombre`)} · {$t('jefe.bono', { pct: trofeo.bono })}</span>{/each}
+      <Icon name="trofeo" /> {#each $view.jefe.trofeos as trofeo (trofeo.id)}<span>{$t(`jefes.${trofeo.id}.nombre`)} · {$t('jefe.bono', { pct: trofeo.bono })}</span>{/each}
     </div>
   {/if}
 
   {#if $view.funciones.valor}
   <div class="card upgrade" class:fresh={$view.nuevos.includes('valor')}>
-    <span class="icon" aria-hidden="true">💎</span>
+    <span class="icon"><Icon name="valor" size={32} /></span>
     <div class="info">
       <div class="name">
         {$t('mejoras.valor')} <span class="level">{$t('mejoras.nivel', { n: $view.valor.nivel })}</span>
         {#if $view.nuevos.includes('valor')}<NewBadge />{/if}
       </div>
       {#if $view.valor.mudanza && $view.valor.nuevoObjeto}
-        <div class="effect gold" data-testid="valor-mudanza">{$t('mejoras.valorMudanza', { objeto: $t(`objetos.${$view.valor.nuevoObjeto}`) })}</div>
+        <div class="effect gold" data-testid="valor-mudanza"><Rich text={$t('mejoras.valorMudanza', { objeto: $t(`objetos.${$view.valor.nuevoObjeto}`) })} /></div>
       {:else if $view.valor.nuevoObjeto}
         <div class="effect gold">{$t('mejoras.valorNuevo', { objeto: $t(`objetos.${$view.valor.nuevoObjeto}`) })}</div>
       {:else}
@@ -81,7 +83,7 @@
       {#if $view.valor.ultimoObjeto}
         <div class="steps muted">{$t('mejoras.valorUltimo')}</div>
         {#if $view.valor.esperaMudanza}
-          <div class="steps muted" data-testid="espera-mudanza">🔒 {$t('mejoras.esperaMudanza')}</div>
+          <div class="steps muted" data-testid="espera-mudanza"><Icon name="candado" /> <Rich text={$t('mejoras.esperaMudanza')} /></div>
         {/if}
       {:else}
         <div class="steps" title={$t('mejoras.valorEtapa', { n: $view.valor.enObjeto, total: $view.valor.porObjeto })}>
@@ -107,7 +109,7 @@
 
   {#if $view.funciones.critico}
   <div class="card upgrade" class:fresh={$view.nuevos.includes('critico')}>
-    <span class="icon" aria-hidden="true">🗡️</span>
+    <span class="icon"><Icon name="critico" size={32} /></span>
     <div class="info">
       <div class="name">
         {$t('mejoras.critico')} <span class="level">{$t('mejoras.nivel', { n: $view.critico.nivel })}</span>
@@ -127,14 +129,14 @@
       data-testid="comprar-critico"
     >
       {#if !$view.critico.maximo}{#if $view.critico.cantidad > 1}<span class="qty">×{$view.critico.cantidad}</span>{/if}{/if}
-      {#if $view.critico.maximo}✓{:else}<span class="price"><Coin />{$view.critico.costo}</span>{/if}
+      {#if $view.critico.maximo}<Icon name="check" />{:else}<span class="price"><Coin />{$view.critico.costo}</span>{/if}
     </button>
   </div>
   {/if}
 
   {#if $view.funciones.danioCritico}
   <div class="card upgrade" class:fresh={$view.nuevos.includes('danioCritico')}>
-    <span class="icon" aria-hidden="true">🎩</span>
+    <span class="icon"><Icon name="sombrero" size={32} /></span>
     <div class="info">
       <div class="name">
         {$t('mejoras.danioCritico')} <span class="level">{$t('mejoras.nivel', { n: $view.danioCritico.nivel })}</span>
@@ -159,7 +161,7 @@
 
   {#if $view.funciones.saco}
   <div class="card upgrade" class:fresh={$view.nuevos.includes('saco')}>
-    <span class="icon" aria-hidden="true">🤵</span>
+    <span class="icon"><Icon name="saco" size={32} /></span>
     <div class="info">
       <div class="name">
         {$t('mejoras.saco')} <span class="level">{$t('mejoras.nivel', { n: $view.saco.nivel })}</span>
@@ -182,7 +184,7 @@
 
   {#if $view.funciones.marca}
   <div class="card upgrade" class:fresh={$view.nuevos.includes('marca')}>
-    <span class="icon" aria-hidden="true">💢</span>
+    <span class="icon"><Icon name="marca" size={32} /></span>
     <div class="info">
       <div class="name">
         {$t('mejoras.marca')} <span class="level">{$view.marca.maximo ? $t('mejoras.max') : $t('mejoras.nivel', { n: $view.marca.nivel })}</span>
@@ -201,7 +203,7 @@
       onclick={() => game.buyMark()}
       data-testid="comprar-marca"
     >
-      {#if $view.marca.maximo}✓{:else}
+      {#if $view.marca.maximo}<Icon name="check" />{:else}
         {#if $view.marca.cantidad > 1}<span class="qty">×{$view.marca.cantidad}</span>{/if}
         <span class="price"><Coin />{$view.marca.costo}</span>
       {/if}

@@ -1,4 +1,6 @@
 <script lang="ts">
+  import Icon from '../Icon.svelte';
+  import Rich from '../Rich.svelte';
   import { onDestroy } from 'svelte';
   import { t } from '../../i18n';
   import { useGame } from '../context';
@@ -40,15 +42,15 @@
 
 <div class="stack">
   <div class="card stats">
-    <div class="stat-title small gold">🏆 {$t('canal.record')}</div>
+    <div class="stat-title small gold"><Icon name="trofeo" /> {$t('canal.record')}</div>
     <div class="stat">
       <span class="muted">{$t('canal.seguidores')}</span>
-      <strong class="cifra" data-testid="seguidores">👥 {$view.canal.seguidores}</strong>
+      <strong class="cifra" data-testid="seguidores"><Icon name="seguidores" /> {$view.canal.seguidores}</strong>
       <span class="small gold">{$t('canal.bono', { pct: $view.canal.bono })}</span>
     </div>
     <div class="stat">
       <span class="muted">{$t('canal.visualizaciones')}</span>
-      <strong class="cifra" data-testid="visualizaciones">👁️ {$view.canal.totales}</strong>
+      <strong class="cifra" data-testid="visualizaciones"><Icon name="visualizaciones" /> {$view.canal.totales}</strong>
       <span class="small muted">{$t('canal.totalHistorico')}</span>
     </div>
   </div>
@@ -64,7 +66,7 @@
       </div>
       <div class="small muted">{$t('canal.probViral', { pct: $view.canal.viral })}</div>
     {:else}
-      <div class="small muted">🔒 {$t('canal.faltaMas')}</div>
+      <div class="small muted"><Icon name="candado" /> {$t('canal.faltaMas')}</div>
     {/if}
     <button
       type="button"
@@ -75,11 +77,11 @@
       data-testid="subir-video"
       data-tuto="video"
     >
-      {confirming ? $t('canal.confirmar') : $t('canal.subir')}
+      {#if confirming}{$t('canal.confirmar')}{:else}<Rich text={$t('canal.subir')} />{/if}
     </button>
     {#if $view.canal.grabando.listo}
       <button type="button" class="btn btn--gold upload doble" disabled={watchingAd} onclick={uploadWithAd} data-testid="subir-doble">
-        {$t('canal.subirDoble', { seguidores: $view.canal.grabando.seguidoresDoble, visualizaciones: $view.canal.grabando.visualizacionesDoble })}
+        <Rich text={$t('canal.subirDoble', { seguidores: $view.canal.grabando.seguidoresDoble, visualizaciones: $view.canal.grabando.visualizacionesDoble })} />
       </button>
     {/if}
     <p class="small muted note">{$t('canal.explica')}</p>
@@ -89,13 +91,13 @@
     {@const mudanza = $view.canal.mudanza}
     <!-- La mudanza: se desbloquea al juntar seguidores y visualizaciones (no se gastan). -->
     <div class="card move" class:ready={mudanza.desbloqueada} data-testid="mudanza">
-      <div class="name">🚚 {$t('canal.mudanza.titulo', { casa: $t(`casas.${mudanza.siguiente}`) })}</div>
+      <div class="name"><Icon name="mudanza" /> {$t('canal.mudanza.titulo', { casa: $t(`casas.${mudanza.siguiente}`) })}</div>
       <p class="small muted note">
         {mudanza.desbloqueada ? $t('canal.mudanza.lista') : $t('canal.mudanza.explica')}
       </p>
-      {#each [['seguidores', '👥', mudanza.seguidores], ['visualizaciones', '👁️', mudanza.visualizaciones]] as const as [recurso, icono, meta] (recurso)}
+      {#each [['seguidores', mudanza.seguidores], ['visualizaciones', mudanza.visualizaciones]] as const as [recurso, meta] (recurso)}
         <div class="goal" title={$t(`canal.meta.${recurso}`, { tiene: meta.tiene, meta: meta.meta })}>
-          <span class="goal-icon" aria-hidden="true">{icono}</span>
+          <span class="goal-icon"><Icon name={recurso} /></span>
           <span class="goal-bar"><span class="goal-fill" style:width="{meta.progreso * 100}%"></span></span>
           <span class="goal-text cifra">{meta.tiene}/{meta.meta}</span>
         </div>
@@ -115,11 +117,11 @@
         <li class="card video">
           <span class="thumb" aria-hidden="true">▶</span>
           <div class="info">
-            <div class="video-title">{title(video.plantilla, video.objeto, video.roturas)}</div>
+            <div class="video-title"><Rich text={title(video.plantilla, video.objeto, video.roturas)} /></div>
             <div class="small muted">
               {$t('canal.videoStats', { seguidores: video.seguidores, visualizaciones: video.visualizaciones })}
-              {#if video.viral}<span class="viral">{$t('canal.viral')}</span>{/if}
-              {#if video.doble}<span class="viral">📺 ×2</span>{/if}
+              {#if video.viral}<span class="viral"><Rich text={$t('canal.viral')} /></span>{/if}
+              {#if video.doble}<span class="viral"><Icon name="anuncio" /> ×2</span>{/if}
             </div>
           </div>
         </li>

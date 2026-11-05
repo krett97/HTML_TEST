@@ -1,4 +1,6 @@
 <script lang="ts">
+  import Icon from '../Icon.svelte';
+  import Rich from '../Rich.svelte';
   import { t } from '../../i18n';
   import type { SkillView } from '../../app/game';
   import { useGame } from '../context';
@@ -7,20 +9,20 @@
   const view = game.view;
 
   const BRANCHES = ['manotazo', 'pandilla', 'produccion', 'viral'] as const;
-  const BRANCH_ICONS: Record<string, string> = { manotazo: '🐱', pandilla: '🐶', produccion: '🎬', viral: '🔥' };
+  const BRANCH_ICONS: Record<string, string> = { manotazo: 'gato', pandilla: 'perro', produccion: 'claqueta', viral: 'viral' };
   const SKILL_ICONS: Record<string, string> = {
-    embestida: '🏎️',
-    pesas: '🏋️',
-    garrasLargas: '💅',
-    pandilla: '🐾',
-    croquetas: '🦴',
-    veterinario: '🩺',
-    recolectora: '🤖',
-    express: '🧪',
-    patrocinador: '🤝',
-    clickbait: '😱',
-    miniaturas: '🖼️',
-    hashtags: '#️⃣',
+    embestida: 'carrito',
+    pesas: 'pesas',
+    garrasLargas: 'esmalte',
+    pandilla: 'huellas',
+    croquetas: 'croquetas',
+    veterinario: 'estetoscopio',
+    recolectora: 'aspiradora',
+    express: 'laboratorio',
+    patrocinador: 'apreton',
+    clickbait: 'susto',
+    miniaturas: 'miniatura',
+    hashtags: 'hashtag',
   };
 
   const arbol = $derived($view.canal.arbol);
@@ -54,11 +56,11 @@
 <div class="tree-head card">
   <div>
     <span class="muted small">{$t('canal.arbol.paraGastar')}</span>
-    <strong class="cifra" data-testid="para-gastar">👁️ {$view.canal.visualizaciones}</strong>
+    <strong class="cifra" data-testid="para-gastar"><Icon name="visualizaciones" /> {$view.canal.visualizaciones}</strong>
   </div>
   <div class="right">
     <span class="muted small">{$t('canal.seguidores')}</span>
-    <strong class="cifra">👥 {$view.canal.seguidores}</strong>
+    <strong class="cifra"><Icon name="seguidores" /> {$view.canal.seguidores}</strong>
   </div>
 </div>
 <p class="small muted intro">{$t('canal.arbol.intro')}</p>
@@ -66,7 +68,7 @@
 <div class="tree" data-testid="arbol">
   <div class="row heads">
     {#each BRANCHES as rama (rama)}
-      <div class="head"><span aria-hidden="true">{BRANCH_ICONS[rama]}</span>{$t(`canal.ramas.${rama}`)}</div>
+      <div class="head"><Icon name={BRANCH_ICONS[rama]!} size={24} />{$t(`canal.ramas.${rama}`)}</div>
     {/each}
   </div>
   {#each floors as floor (floor.i)}
@@ -86,7 +88,7 @@
             aria-label={st === 'secreto' ? '???' : $t(`canal.nombres.${skill.id}`)}
             data-testid="nodo-{skill.id}"
           >
-            <span class="node-icon" aria-hidden="true">{st === 'secreto' ? '?' : SKILL_ICONS[skill.id]}</span>
+            <span class="node-icon"><Icon name={st === 'secreto' ? 'pregunta' : SKILL_ICONS[skill.id]!} size={32} /></span>
             {#if st !== 'secreto'}
               <span class="badge cifra">{skill.maximo ? $t('canal.max') : `${skill.nivel}/${skill.max}`}</span>
             {/if}
@@ -96,7 +98,7 @@
         {/if}
       {/each}
       {#if !floor.abierto}
-        <div class="lock small">🔒 {$t('canal.arbol.pisoBloqueado', { meta: floor.meta })}</div>
+        <div class="lock small"><Icon name="candado" /> {$t('canal.arbol.pisoBloqueado', { meta: floor.meta })}</div>
       {/if}
     </div>
   {/each}
@@ -109,7 +111,7 @@
     <div class="effect">{$t('canal.arbol.pisoBloqueado', { meta: arbol.pisos[selected.piso]!.meta })}</div>
   {:else}
     <div class="name">
-      <span aria-hidden="true">{SKILL_ICONS[selected.id]}</span>
+      <Icon name={SKILL_ICONS[selected.id]!} size={24} />
       {$t(`canal.nombres.${selected.id}`)}
       <span class="level">{selected.maximo ? $t('canal.max') : `${selected.nivel}/${selected.max}`}</span>
     </div>
@@ -117,9 +119,9 @@
       {$t(`canal.efectos.${selected.id}`, { actual: selected.actual, siguiente: selected.maximo ? selected.actual : selected.siguiente })}
     </div>
     {#if selected.maximo}
-      <div class="small gold">✓ {$t('canal.arbol.completa')}</div>
+      <div class="small gold"><Icon name="check" /> {$t('canal.arbol.completa')}</div>
     {:else if !selected.disponible}
-      <div class="small muted">🔒 {$t('canal.arbol.requiere', { padre: $t(`canal.nombres.${selected.padre}`) })}</div>
+      <div class="small muted"><Icon name="candado" /> {$t('canal.arbol.requiere', { padre: $t(`canal.nombres.${selected.padre}`) })}</div>
     {:else}
       <button
         type="button"
@@ -128,7 +130,7 @@
         onclick={() => game.buySkill(selected.id)}
         data-testid="comprar-habilidad"
       >
-        {$t('canal.arbol.subir')} · 👁️ <span class="cifra">{selected.costo}</span>
+        {$t('canal.arbol.subir')} · <Icon name="visualizaciones" /> <span class="cifra">{selected.costo}</span>
       </button>
     {/if}
   {/if}
@@ -136,15 +138,15 @@
 
 {#if !arbol.vacio}
   <div class="card reset" data-testid="reiniciar-arbol">
-    <div class="name">🔄 {$t('canal.arbol.reiniciar')}</div>
+    <div class="name"><Icon name="reiniciar" /> {$t('canal.arbol.reiniciar')}</div>
     <p class="small muted note">{$t('canal.arbol.reiniciarExplica', { gastado: arbol.gastado, max: arbol.anunciosMax })}</p>
     <div class="ads" aria-label="{arbol.anuncios}/{arbol.anunciosMax}">
       {#each Array.from({ length: arbol.anunciosMax }, (_, i) => i) as i (i)}
-        <span class="ad-dot" class:done={i < arbol.anuncios}>📺</span>
+        <span class="ad-dot" class:done={i < arbol.anuncios}><Icon name="anuncio" size={24} /></span>
       {/each}
     </div>
     <button type="button" class="btn" disabled={watching} onclick={watchResetAd} data-testid="anuncio-arbol">
-      {$t('canal.arbol.verAnuncio', { n: arbol.anuncios + 1, max: arbol.anunciosMax })}
+      <Rich text={$t('canal.arbol.verAnuncio', { n: arbol.anuncios + 1, max: arbol.anunciosMax })} />
     </button>
   </div>
 {/if}

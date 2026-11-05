@@ -888,3 +888,12 @@ Los 8 cuartos dejan los rectángulos y usan arte de PixelLab (`src/assets/arte`)
 - Recetas en `tools/arte/cuartos.json` y `tools/arte/muebles.json` (se generan con `tools/arte/generar.py`).
 
 **0.24.1:** se quita el fundido a negro en cada rotura. Con las medidas de los muebles, `placeOf` arma una superficie nueva cada vez y la escena la comparaba por referencia: creía que era otro cuarto. Ahora compara cuarto y tipo de superficie.
+
+## 43. Íconos de PixelLab en lugar de emojis (versión 0.25.0)
+
+Los emojis se veían de otro estilo junto al pixel art. Ahora todo usa íconos de PixelLab (`src/assets/iconos/<nombre>.png`): pestañas, mejoras, aliados (su propio dibujo, también junto a su número de daño en la escena), laboratorio, canal y árbol (una por habilidad: carrito, pesas, esmalte, croquetas, estetoscopio, aspiradora, apretón de manos, cara de susto, miniatura, hashtag…), HUD (daño, racha, marca, pepino, reloj, patrocinio), tutorial (la manita) y avisos.
+
+- **Componentes:** `ui/Icon.svelte` (`<Icon name="fuerza" size={32} />`; sin tamaño mide como el texto) y `ui/Rich.svelte` para textos con íconos. En los textos (i18n) un ícono se escribe `[[nombre]]` ("Súbelo en [[canal]] Canal"); la escena arma los avisos, viñetas y números con `setRichText` / `iconImage` (`ui/icons.ts`).
+- **Nítidos:** `image-rendering: pixelated`.
+- 36 íconos generados (recetas en `tools/arte/iconos.json`, se procesan con `tools/arte/iconos.py`, que quita puntitos sueltos y los centra); 11 salen del arte del juego (aliados, gato, sombrero, carrito y aspiradora).
+- Quedan emojis solo en el modo pruebas y en la pantalla del anuncio falso, que no ve el jugador.

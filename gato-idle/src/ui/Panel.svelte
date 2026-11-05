@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Icon from './Icon.svelte';
   import { t } from '../i18n';
   import { useGame } from './context';
   import Mejoras from './tabs/Mejoras.svelte';
@@ -9,11 +10,11 @@
   import NewBadge from './NewBadge.svelte';
 
   const ALL_TABS = [
-    { id: 'mejoras', icon: '🐾', component: Mejoras },
-    { id: 'aliados', icon: '🐱', component: Aliados },
-    { id: 'laboratorio', icon: '🧪', component: Laboratorio },
-    { id: 'canal', icon: '📱', component: Canal },
-    { id: 'ajustes', icon: '⚙️', component: Ajustes },
+    { id: 'mejoras', icon: 'mejoras', component: Mejoras },
+    { id: 'aliados', icon: 'gatito', component: Aliados },
+    { id: 'laboratorio', icon: 'laboratorio', component: Laboratorio },
+    { id: 'canal', icon: 'canal', component: Canal },
+    { id: 'ajustes', icon: 'ajustes', component: Ajustes },
   ] as const;
   type TabId = (typeof ALL_TABS)[number]['id'];
   /** Pestaña que señala el tutorial en cada paso. */
@@ -67,7 +68,7 @@
         data-tuto={TAB_STEP[tab.id]}
       >
         <span class="tab-icon" aria-hidden="true">
-          {tab.icon}
+          <Icon name={tab.icon} size={26} />
           {#if hasDot(tab.id)}
             <span class="dot" data-testid="aviso-{tab.id}"></span>
           {/if}
