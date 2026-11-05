@@ -151,7 +151,8 @@
     "victoria": "{jefe} {derrotado}!",
     "premio": "[[trofeo]] You beat {al}! +{dinero}",
     "derrota": "{El} laughs at you… Rematch in 60 s (+{dinero})",
-    "bono": "+{pct}% damage"
+    "bono": "+{pct}% damage",
+    "revanchaYa": "Now!"
   },
   "mejoras": {
     "enLaMesa": "On the table",
@@ -273,7 +274,8 @@
     "saco": "Boss suit",
     "canal": "The owner's channel",
     "marca": "Marking claws",
-    "suerte": "The cat's slot machine"
+    "suerte": "The cat's slot machine",
+    "turbo": "Turbo ×1.5 (ad)"
   },
   "laboratorio": {
     "titulo": "Cat research",
@@ -548,5 +550,9 @@
       "pelos": "Nothing: half a minute consolation"
     },
     "aviso": "Played only with in-game tokens: nothing can be bought with real money. A token arrives every hour (up to 3) and beating a boss gives 2."
+  },
+  "turbo": {
+    "boton": "Turbo ×1.5",
+    "aviso": "[[turbo]] TURBO! ×1.5 damage and money for 3 minutes"
   }
 }

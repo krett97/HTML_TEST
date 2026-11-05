@@ -135,9 +135,19 @@ function buyCheapestSkills(state: GameState, data: GameData): void {
  * (lo más barato primero). Responde "¿cuánto más rápida es la segunda vuelta?" y "¿cuándo
  * se muda?".
  */
-export function simulateRuns(data: GameData, runs = 24): RunRow[] {
+/** Qué anuncios ve el jugador: ninguno; solo el ×2 de cada video; o además el turbo cada vez que se puede. */
+export type AdHabit = 'ninguno' | 'videos' | 'todos';
+
+export function simulateRuns(data: GameData, runs = 24, anuncios: AdHabit = 'ninguno'): RunRow[] {
   const state = createInitialState(0);
   normalizeState(state, data);
+  if (anuncios === 'todos') {
+    // Turbo cada vez que se puede: dura `segundos` y luego hay `esperaMinutos` de espera. Se modela
+    // como un turbo siempre prendido de fuerza media (mult elevado a la fracción del tiempo que dura).
+    const { segundos, esperaMinutos, mult } = data.balance.turbo;
+    data = { ...data, balance: { ...data.balance, turbo: { ...data.balance.turbo, mult: Math.pow(mult, segundos / (segundos + esperaMinutos * 60)) } } };
+    state.turboHasta = Number.MAX_SAFE_INTEGER;
+  }
   const rows: RunRow[] = [];
   for (let vuelta = 1; vuelta <= runs; vuelta++) {
     const minutos: Record<string, number> = {};
@@ -159,7 +169,7 @@ export function simulateRuns(data: GameData, runs = 24): RunRow[] {
     // Si al llegar (o tras jugar 2 minutos más) le quita toda la vida, lo vence y se lleva el trofeo.
     const boss = bossHere(state, data);
     if (boss && jefe && Number(jefe.split(' → ')[1]!.replace('%', '')) >= 100) state.jefes.derrotados.push(boss.id);
-    const video = uploadVideo(state, data, 0, () => 0.5)!;
+    const video = uploadVideo(state, data, 0, () => 0.5, anuncios !== 'ninguno')!;
     buyCheapestSkills(state, data);
     rows.push({
       vuelta,
@@ -176,6 +186,21 @@ export function simulateRuns(data: GameData, runs = 24): RunRow[] {
   return rows;
 }
 
+/** Horas de juego (sumando cada vuelta) hasta mudarse a cada casa y hasta vencer al último jefe. */
+function milestones(data: GameData, anuncios: AdHabit): string {
+  const rows = simulateRuns(data, 24, anuncios);
+  let hours = 0;
+  const seen = new Map<string, number>();
+  let final: number | null = null;
+  for (const r of rows) {
+    if (!seen.has(r.casa)) seen.set(r.casa, hours);
+    hours += (Object.values(r.minutos).at(-1) ?? 0) / 60;
+    if (final === null && r.jefe?.startsWith(`${data.bosses.at(-1)!.id}:`) && Number(r.jefe.split(' → ')[1]!.replace('%', '')) >= 100) final = hours;
+  }
+  const casas = [...seen].map(([casa, h]) => `${casa} ${h.toFixed(1)} h`).join(' · ');
+  return `${casas} · último jefe ${final === null ? 'no' : `${final.toFixed(1)} h`}`;
+}
+
 function main(): void {
   const { rows: simRows, counts } = simulate(gameData);
   const rows = simRows.map((r) => [r.minuto.toFixed(1), r.hito, String(r.fuerza), String(r.valor), String(r.golpes), r.pagoPorRotura, `${r.aliadosPct}%`]);
@@ -187,6 +212,9 @@ function main(): void {
   console.log(widths.map((w) => '-'.repeat(w)).join('  '));
   for (const row of rows) console.log(line(row));
   console.log(`\nCompras: ${Object.entries(counts).map(([k, v]) => `${k} ×${v}`).join(', ')}`);
+
+  console.log('\nCon y sin anuncios (horas de juego activo hasta llegar a cada casa):');
+  for (const habit of ['ninguno', 'videos', 'todos'] as const) console.log(`  ${habit.padEnd(8)} ${milestones(gameData, habit)}`);
 
   console.log('\nVueltas (sube el video al llegar al último objeto alcanzable y compra en el árbol):');
   for (const run of simulateRuns(gameData)) {

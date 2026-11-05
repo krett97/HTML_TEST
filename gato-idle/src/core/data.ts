@@ -129,7 +129,7 @@ export const SKILLS = [
 export type SkillId = (typeof SKILLS)[number];
 
 /** Funciones que se van descubriendo: "fuerza", "valor", "critico", "laboratorio", "aliado:<id>"… */
-export const FEATURES = ['fuerza', 'valor', 'patrocinios', 'critico', 'danioCritico', 'saco', 'marca', 'laboratorio', 'canal', 'suerte'] as const;
+export const FEATURES = ['fuerza', 'valor', 'patrocinios', 'critico', 'danioCritico', 'saco', 'marca', 'laboratorio', 'canal', 'suerte', 'turbo'] as const;
 
 /** Un descubrimiento: se desbloquea al cumplir su condición, en el orden de unlocks.json. */
 export interface UnlockDef {
@@ -249,6 +249,8 @@ export interface Balance {
     /** Ausencias más cortas se cobran solas, sin ventana. */
     minimoSegundos: number;
   };
+  /** Turbo: viendo un anuncio, ×mult a todo el daño y el dinero por `segundos`. */
+  turbo: { segundos: number; mult: number; esperaMinutos: number };
   /** La maquinita del gato (core/suerte.ts). */
   suerte: {
     /** Fichas que se juntan solas, como máximo, y cada cuántos minutos llega una. */
@@ -552,6 +554,7 @@ export function parseGameData(raw: RawGameData): GameData {
   const aliados = section(file, b, 'aliados');
   const patrocinio = section(file, b, 'patrocinio');
   const suerte = section(file, b, 'suerte');
+  const turbo = section(file, b, 'turbo');
   const canal = section(file, b, 'canal');
   const offline = section(file, b, 'offline');
   const objetoMinimo = str(file, canal, 'objetoMinimo');
@@ -617,6 +620,7 @@ export function parseGameData(raw: RawGameData): GameData {
       horasMax: n(offline, 'horasMax'),
       minimoSegundos: n(offline, 'minimoSegundos'),
     },
+    turbo: { segundos: n(turbo, 'segundos'), mult: n(turbo, 'mult'), esperaMinutos: n(turbo, 'esperaMinutos') },
     suerte: {
       fichasMax: Math.max(1, Math.floor(n(suerte, 'fichasMax'))),
       minutosFicha: n(suerte, 'minutosFicha'),

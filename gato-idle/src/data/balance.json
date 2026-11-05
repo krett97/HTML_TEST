@@ -44,6 +44,11 @@
     "multHito": 2,
     "probabilidadVoz": 0.15
   },
+  "turbo": {
+    "segundos": 180,
+    "mult": 1.5,
+    "esperaMinutos": 10
+  },
   "suerte": {
     "fichasMax": 3,
     "minutosFicha": 60,

@@ -185,6 +185,10 @@ export class MainScene extends Phaser.Scene {
         this.popNumber(this.object.x, this.object.y - this.heightOf(this.object) - 10, 'dinero grande', `+${this.controller.formatMoney(dinero)}`, { coin: true });
       }),
       this.controller.events.on('video', ({ video }) => this.onVideo(video.seguidores, video.viral)),
+      this.controller.events.on('turbo', () => {
+        this.toast(get(t)('turbo.aviso'));
+        this.cameras.main.flash(160, 255, 211, 110);
+      }),
       this.controller.events.on('mudanza', ({ casa, primeraVez }) => this.onMove(casa, primeraVez)),
       this.controller.events.on('jefe', (event) => {
         if (event.fase === 'inicio') this.onBossStart(event.id, event.primeraVez);

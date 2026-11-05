@@ -7,6 +7,7 @@
   { "id": "critico",        "condicion": { "objeto": "florero" } },
   { "id": "aliado:perro",   "condicion": { "objeto": "papel" } },
   { "id": "danioCritico",   "condicion": { "objeto": "cortinas" } },
+  { "id": "turbo",          "condicion": { "objeto": "colchon" } },
   { "id": "laboratorio",    "condicion": { "objeto": "lampara" } },
   { "id": "aliado:perico",  "condicion": { "objeto": "consola" } },
   { "id": "saco",           "condicion": { "objeto": "tv" } },

@@ -951,3 +951,19 @@ Como el árbol va a crecer, en la pestaña Canal ahora hay una **vista previa** 
 **La Luna** (cuarta casa): cabina del cohete (paneles con remaches, consola de control, ojo de buey con la Tierra, foto del gato astronauta), laboratorio lunar (blanco con franja azul, mesa, póster "I WANT TO BELIEVE") y superficie lunar (estrellas, polvo con cráteres, la Tierra donde se para el cuervo, un ovni donde se para el perico). 12 objetos: casco con orejitas, pizza en tubo, pecera espacial, traje de astronauta, telescopio, roca lunar, alien en frasco, robot ayudante, bandera gatuna, satélite, rover y el cohete del dueño. Para mudarse: 2,500 seguidores, 60M visualizaciones en total y vencer a la Aspiradora. Vida ×3 al llegar y ×1.5 por objeto (con más, la primera vuelta duraba horas y el jefe quedaba imposible; las siguientes se volvían instantáneas).
 
 **Duración** (simulador: 5 toques/s sin parar, compra óptima): el juego completo en ~2.8 h; un jugador real tarda varias veces más (estimado 10–15 h de juego, más lo que la pandilla avanza sola). Es el contenido de una primera versión para medir interés; se expande agregando casas (cada una con su jefe).
+
+## 50. Anuncios que dan ganas de ver (versión 0.31.0)
+
+Todos los anuncios son **recompensados y opcionales** (el jugador decide verlos; no hay anuncios que interrumpan). Puntos donde aparecen:
+
+| Dónde | Qué da |
+|---|---|
+| Patrocinio (cada 90 s, se queda 25 s) | 60 s de lo que se gana jugando activo |
+| "Mientras no estabas" | ×2 a lo ganado sin jugar |
+| Subir video | ×2 seguidores y visualizaciones |
+| **Turbo** (nuevo; se descubre en el colchón) | ×1.5 a todo el daño y el dinero por 3 minutos; después hay 10 minutos de espera |
+| **¡Revancha ya!** (nuevo) | Quita la espera de 60 s tras perder contra un jefe |
+| Maquinita | Un giro (20 al día) y ×2 seguro a un premio |
+| Reiniciar el árbol | 3 anuncios devuelven lo gastado |
+
+El turbo empezó en ×2 sin espera: con un anuncio cada 3 minutos el juego se acababa en 0.6 h (4.6 veces más rápido). Con ×1.5 y 10 minutos de espera, el simulador da (horas de juego activo hasta vencer al último jefe): sin anuncios 2.8 h · solo videos ×2 2.2 h · videos y turbo siempre que se pueda 1.8 h. Ver anuncios se nota (hasta ~1.6 veces más rápido) sin vaciar el juego. `npm run simular` imprime esta tabla ("Con y sin anuncios").

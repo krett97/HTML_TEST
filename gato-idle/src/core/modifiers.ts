@@ -42,6 +42,11 @@ export function collectModifiers(state: GameState, data: GameData): Modifier[] {
   if (pesas > 0) mods.push({ stat: 'danio', op: 'mult', valor: 1 + pesas, fuente: 'habilidad:pesas' });
   const croquetas = skillAmount(state, data, 'croquetas');
   if (croquetas > 0) mods.push({ stat: 'danioAliados', op: 'mult', valor: 1 + croquetas, fuente: 'habilidad:croquetas' });
+  // Turbo (se activa viendo un anuncio): ×mult a todo el daño y el dinero mientras dura.
+  if (turboActive(state, Date.now())) {
+    const mult = data.balance.turbo.mult;
+    for (const stat of ['danio', 'danioAliados', 'vistas'] as const) mods.push({ stat, op: 'mult', valor: mult, fuente: 'turbo' });
+  }
   // Saco de jefe: el gato de traje dirige a la pandilla y todos los aliados pegan más.
   if (state.nivelSaco > 0) {
     mods.push({ stat: 'danioAliados', op: 'mult', valor: sacoMultiplier(state, data), fuente: 'mejora:saco' });
@@ -58,6 +63,23 @@ export function collectModifiers(state: GameState, data: GameData): Modifier[] {
     }
   }
   return mods;
+}
+
+export function turboActive(state: GameState, now: number): boolean {
+  return state.turboHasta > now;
+}
+
+/** Segundos para poder prender otro turbo (tras uno, hay que esperar `esperaMinutos`). */
+export function turboCooldown(state: GameState, data: GameData, now: number): number {
+  if (turboActive(state, now) || state.turboHasta <= 0) return 0;
+  return Math.max(0, Math.ceil((state.turboHasta + data.balance.turbo.esperaMinutos * 60_000 - now) / 1000));
+}
+
+/** Prende el turbo (tras ver el anuncio): dura `segundos`. No se puede mientras dura ni durante la espera. */
+export function startTurbo(state: GameState, data: GameData, now: number): boolean {
+  if (turboActive(state, now) || turboCooldown(state, data, now) > 0) return false;
+  state.turboHasta = now + data.balance.turbo.segundos * 1000;
+  return true;
 }
 
 /** Por cuánto multiplica el Saco de jefe el daño de los aliados. */

@@ -65,12 +65,28 @@
     </div>
   {:else if $view.jefe.aqui}
     {#if $view.jefe.revancha > 0}
-      <div class="boss-wait" data-testid="revancha"><Icon name="reloj" /> {$t('jefe.revancha', { s: $view.jefe.revancha })}</div>
+      <div class="boss-wait" data-testid="revancha">
+        <Icon name="reloj" /> {$t('jefe.revancha', { s: $view.jefe.revancha })}
+        <button type="button" class="btn btn--gold revancha-ya" onclick={() => game.skipRematchWait()} data-testid="revancha-ya"><Icon name="anuncio" /> {$t('jefe.revanchaYa')}</button>
+      </div>
     {:else}
       <button type="button" class="boss-call" onclick={() => game.challengeBoss()} data-testid="retar-jefe">
         <Icon name={$view.jefe.aqui} /> {$t('jefe.retar', bossText($t, $view.jefe.aqui))}
       </button>
     {/if}
+  {/if}
+  {#if $view.turbo.disponible && !$view.jefe.pelea}
+    <!-- Turbo: ×2 daño y dinero por 3 minutos viendo un anuncio; mientras dura, la cuenta regresiva. -->
+    <button type="button" class="turbo" class:activo={$view.turbo.restante > 0} disabled={$view.turbo.restante > 0 || $view.turbo.espera > 0} onclick={() => game.startTurbo()} data-testid="turbo">
+      <Icon name="turbo" size={22} />
+      {#if $view.turbo.restante > 0}
+        <span class="cifra">×1.5 {Math.floor($view.turbo.restante / 60)}:{String($view.turbo.restante % 60).padStart(2, '0')}</span>
+      {:else if $view.turbo.espera > 0}
+        <span class="cifra">{Math.floor($view.turbo.espera / 60)}:{String($view.turbo.espera % 60).padStart(2, '0')}</span>
+      {:else}
+        <span>{$t('turbo.boton')}</span><Icon name="anuncio" size={16} />
+      {/if}
+    </button>
   {/if}
   {#if $view.patrocinio.visible}
     <button type="button" class="sponsor" onclick={() => game.claimSponsor()} data-testid="patrocinio">
@@ -161,7 +177,11 @@
     }
   }
   .boss-wait {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     padding: 0 4px;
+    pointer-events: auto;
     color: var(--muted);
     font-size: 13px;
     pointer-events: none;
@@ -357,6 +377,44 @@
   @keyframes parpadeo {
     to {
       visibility: hidden;
+    }
+  }
+  .revancha-ya {
+    min-height: 30px;
+    font-size: 12px;
+  }
+  /* Turbo: a la derecha, a media altura (debajo del patrocinio). */
+  .turbo {
+    position: absolute;
+    z-index: 4;
+    right: 10px;
+    top: 42%;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 4px;
+    border: 7px solid transparent;
+    border-image: url('../assets/ui/boton_morado.png') 7 fill / 7px stretch;
+    background: none;
+    image-rendering: pixelated;
+    color: var(--text);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .turbo:disabled:not(.activo) {
+    opacity: 0.6;
+    cursor: default;
+  }
+  .turbo.activo {
+    border-image-source: url('../assets/ui/boton_oro.png');
+    color: var(--line);
+    animation: turbo-brillo 600ms ease-in-out infinite alternate;
+  }
+  @keyframes turbo-brillo {
+    to {
+      filter: brightness(1.2);
     }
   }
   /* Oferta de patrocinio: arriba a la derecha, salta para llamar la atención. */

@@ -39,7 +39,7 @@ import { addAllyLevels, advanceClock, completeAllResearch, discoverAll, discover
 import { deserialize, serialize } from '../core/save';
 import { canAfford } from '../core/wallet';
 import type { AllyDef, GameData, ObjectDef, SkillDef } from '../core/data';
-import { sacoMultiplier, type Effect } from '../core/modifiers';
+import { sacoMultiplier, startTurbo, turboActive, turboCooldown, type Effect } from '../core/modifiers';
 import { finishResearch, researchRemaining, researchStatus, startResearch, type ResearchStatus } from '../core/research';
 import { checkUnlocks, hasUnlock, nextUnlock } from '../core/unlocks';
 import { lastObjectIndex, moveIfReady, moveUnlocked, nextHome } from '../core/mudanza';
@@ -111,6 +111,8 @@ export interface GameEvents {
   investigacion: { researchId: string };
   /** El dueño subió el video: la partida vuelve a empezar. */
   video: { video: VideoRecord };
+  /** Se prendió el turbo (anuncio). */
+  turbo: undefined;
   /** Se reinició el árbol del Canal: se devolvieron estas visualizaciones. */
   arbolReiniciado: { visualizaciones: Decimal };
   /** Empezó o terminó la pelea contra un jefe (jefes.json). */
@@ -242,6 +244,8 @@ export interface ViewModel {
   hayCompra: boolean;
   /** Qué partes del juego ya se descubrieron. */
   funciones: { fuerza: boolean; valor: boolean; critico: boolean; danioCritico: boolean; saco: boolean; marca: boolean; laboratorio: boolean; canal: boolean; aliados: boolean; suerte: boolean };
+  /** Turbo: si ya se descubrió y cuántos segundos le quedan (0: apagado). */
+  turbo: { disponible: boolean; restante: number; espera: number };
   /** La maquinita: fichas, cuánto falta para la siguiente, giros con anuncio que quedan hoy y el premio que se puede doblar. */
   suerte: { fichas: number; max: number; proxima: number; girosAnuncio: number; doblable: string | null };
   /** Ventana de bienvenida: lo que hizo la pandilla mientras no estabas. */
@@ -484,6 +488,42 @@ export class Game {
     if (!r.nombre) r.nombre = `Gato ${1000 + Math.floor(Math.random() * 9000)}`;
     void this.services.ranking.start();
     this.services.ranking.submit({ nombre: r.nombre, nivel: r.nivel, casa: this.data.homes[this.state.casa]!.id, objeto: recordObject(this.state, this.data) });
+  }
+
+  // ---- Turbo y revancha (anuncios) ----
+
+  private adBusy = false;
+  private wasTurbo = false;
+  private lastTurboRefresh = 0;
+
+  /** Turbo: tras ver el anuncio, ×2 a todo el daño y el dinero por 3 minutos (se alarga si ya estaba). */
+  async startTurbo(): Promise<boolean> {
+    const now = Date.now();
+    if (this.adBusy || !hasUnlock(this.state, 'turbo') || turboActive(this.state, now) || turboCooldown(this.state, this.data, now) > 0) return false;
+    this.adBusy = true;
+    const result = await this.services.ads.showRewarded('turbo');
+    this.adBusy = false;
+    if (!result.rewarded) return false;
+    if (!startTurbo(this.state, this.data, Date.now())) return false;
+    this.events.emit('turbo', undefined);
+    this.playSound('descubrimiento');
+    this.markDirty();
+    this.refreshView();
+    void this.save();
+    return true;
+  }
+
+  /** "¡Revancha ya!": tras ver el anuncio, el jefe se puede retar sin esperar. */
+  async skipRematchWait(): Promise<boolean> {
+    if (this.adBusy || rematchIn(this.state, Date.now()) <= 0) return false;
+    this.adBusy = true;
+    const result = await this.services.ads.showRewarded('jefe');
+    this.adBusy = false;
+    if (!result.rewarded) return false;
+    this.state.jefes.revancha = 0;
+    this.markDirty();
+    this.refreshView();
+    return true;
   }
 
   // ---- La maquinita ----
@@ -1149,6 +1189,13 @@ export class Game {
     } else if (this.state.jefes.revancha > Date.now() && now - this.lastSecond < TICK_MS) {
       this.markDirty();
     }
+    // El turbo cuenta los segundos (cada segundo, y una vez más al acabarse).
+    const turbo = turboActive(this.state, Date.now()) || turboCooldown(this.state, this.data, Date.now()) > 0;
+    if (turbo !== this.wasTurbo || (turbo && now - this.lastTurboRefresh > 1000)) {
+      this.wasTurbo = turbo;
+      this.lastTurboRefresh = now;
+      this.markDirty();
+    }
     // El medidor de daño baja solo cuando se deja de golpear: se actualiza aunque no pase nada más.
     if (this.dpsMeter.active && now - this.lastDpsRefresh > 250) {
       this.lastDpsRefresh = now;
@@ -1551,6 +1598,7 @@ export class Game {
         aliados: s.desbloqueos.some((id) => id.startsWith('aliado:')),
         suerte: hasUnlock(s, 'suerte'),
       },
+      turbo: { disponible: hasUnlock(s, 'turbo'), restante: Math.max(0, Math.ceil((s.turboHasta - Date.now()) / 1000)), espera: turboCooldown(s, d, Date.now()) },
       suerte: {
         fichas: s.suerte.fichas,
         max: d.balance.suerte.fichasMax,

@@ -78,6 +78,8 @@ export interface GameState {
   casa: number;
   /** Jefes derrotados (sus trofeos duran para siempre) y desde cuándo se puede pedir la revancha (ms de reloj). */
   jefes: { derrotados: string[]; revancha: number };
+  /** Turbo (anuncio): hasta cuándo dura el ×2 de daño y dinero (ms; 0: apagado). */
+  turboHasta: number;
   /** La maquinita: fichas, cuándo llega la siguiente, giros con anuncio de hoy y el premio que se puede doblar. */
   suerte: { fichas: number; proximaFicha: number; girosAnuncio: number; dia: number; doblable: Decimal | null };
   /** Ranking: el nombre del gato y su récord (el objeto más lejano al que llegó: el vaso es el nivel 1). */
@@ -134,6 +136,7 @@ export function createInitialState(now: number): GameState {
     casa: 0,
     jefes: { derrotados: [], revancha: 0 },
     ranking: { nombre: '', nivel: 1 },
+    turboHasta: 0,
     suerte: { fichas: 1, proximaFicha: 0, girosAnuncio: 0, dia: 0, doblable: null },
     stats: { toques: 0, roturas: 0, roturasPartida: 0 },
     canal: { seguidores: 0, visualizaciones: ZERO, visualizacionesTotales: ZERO, anunciosReinicio: 0, gastadoArbol: ZERO, videos: [] },

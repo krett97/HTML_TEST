@@ -151,7 +151,8 @@
     "victoria": "¡{jefe} {derrotado}!",
     "premio": "[[trofeo]] ¡Le ganaste {al}! +{dinero}",
     "derrota": "{El} se burla de ti… Revancha en 60 s (+{dinero})",
-    "bono": "+{pct} % daño"
+    "bono": "+{pct} % daño",
+    "revanchaYa": "¡Ya!"
   },
   "mejoras": {
     "enLaMesa": "En la mesa",
@@ -273,7 +274,8 @@
     "saco": "Saco de jefe",
     "canal": "El canal del dueño",
     "marca": "Garras marcadoras",
-    "suerte": "La maquinita del gato"
+    "suerte": "La maquinita del gato",
+    "turbo": "Turbo ×1.5 (anuncio)"
   },
   "laboratorio": {
     "titulo": "Investigación gatuna",
@@ -548,5 +550,9 @@
       "pelos": "Nada: medio minuto de consuelo"
     },
     "aviso": "Se juega solo con fichas del juego: no se puede comprar nada con dinero real. Una ficha llega cada hora (hasta 3) y vencer a un jefe da 2."
+  },
+  "turbo": {
+    "boton": "Turbo ×1.5",
+    "aviso": "[[turbo]] ¡TURBO! ×1.5 daño y dinero por 3 minutos"
   }
 }

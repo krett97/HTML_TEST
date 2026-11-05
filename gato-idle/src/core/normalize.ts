@@ -38,6 +38,7 @@ export function normalizeState(state: GameState, data: GameData): void {
   moveIfReady(state, data);
   normalizeRanking(state, data);
   normalizeLuck(state);
+  if (!Number.isFinite(state.turboHasta)) state.turboHasta = 0;
   if (state.offline && !(isDecimal(state.offline.dinero) && Number.isFinite(state.offline.roturas))) state.offline = null;
   state.vistos = [...new Set(state.vistos.filter((id) => typeof id === 'string'))];
   state.stats.roturasPartida = Math.max(0, Math.floor(state.stats.roturasPartida));
