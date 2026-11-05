@@ -935,3 +935,7 @@ Recorrido automático en 6 pantallas (320×568, 360×740, 390×844, tableta, hor
 - **Avisos detrás del patrocinio:** los avisos van encima del medidor, del patrocinio y de la barra del jefe.
 - **Pantallas anchas:** el mundo puede medir hasta 480 de ancho (en escritorio ya no quedan franjas lisas a los lados). En horizontal, lo que limita es lo bajito de la pantalla; la app de Android va fija en vertical.
 - **Ajustes en pantalla chica:** los selectores ya no se cortan.
+
+## 48. El árbol del canal en pantalla completa (versión 0.29.0)
+
+Como el árbol va a crecer, en la pestaña Canal ahora hay una **vista previa** (las visualizaciones para gastar, los íconos de cada piso —apagados los que aún no se pueden subir, con brillo dorado los que alcanzan— y "N mejoras listas para subir") y al tocarla el árbol se abre **en pantalla completa**: cubre la escena y el panel (justo debajo de la barra de arriba) y las pestañas de abajo se quedan. Se cierra con "← Volver con el gato", tocando cualquier pestaña o con Escape. No hizo falta una pestaña de "casa": la escena sigue corriendo detrás y al volver el gato está donde lo dejaste. (`ui/pantalla.ts` guarda si está abierto; `tabs/ArbolVistaPrevia.svelte` y `tabs/ArbolPantalla.svelte`; los íconos del árbol, en `ui/arbolIcons.ts`.)

@@ -4,26 +4,10 @@
   import { t } from '../../i18n';
   import type { SkillView } from '../../app/game';
   import { useGame } from '../context';
+  import { BRANCH_ICONS, BRANCHES, SKILL_ICONS } from '../arbolIcons';
 
   const game = useGame();
   const view = game.view;
-
-  const BRANCHES = ['manotazo', 'pandilla', 'produccion', 'viral'] as const;
-  const BRANCH_ICONS: Record<string, string> = { manotazo: 'gato', pandilla: 'perro', produccion: 'claqueta', viral: 'viral' };
-  const SKILL_ICONS: Record<string, string> = {
-    embestida: 'carrito',
-    pesas: 'pesas',
-    garrasLargas: 'esmalte',
-    pandilla: 'huellas',
-    croquetas: 'croquetas',
-    veterinario: 'estetoscopio',
-    recolectora: 'aspiradora',
-    express: 'laboratorio',
-    patrocinador: 'apreton',
-    clickbait: 'susto',
-    miniaturas: 'miniatura',
-    hashtags: 'hashtag',
-  };
 
   const arbol = $derived($view.canal.arbol);
   const floors = $derived(arbol.pisos.map((piso, i) => ({ ...piso, i, nodos: BRANCHES.map((rama) => arbol.habilidades.find((h) => h.rama === rama && h.piso === i)) })));

@@ -8,6 +8,8 @@
   import Canal from './tabs/Canal.svelte';
   import Ajustes from './tabs/Ajustes.svelte';
   import NewBadge from './NewBadge.svelte';
+  import ArbolPantalla from './tabs/ArbolPantalla.svelte';
+  import { arbolAbierto } from './pantalla';
 
   const ALL_TABS = [
     { id: 'mejoras', icon: 'mejoras', component: Mejoras },
@@ -52,9 +54,10 @@
   }
 </script>
 
-<section class="panel">
+<!-- Con el árbol abierto, el panel cubre también la escena (las pestañas se quedan abajo). -->
+<section class="panel" class:expandida={$arbolAbierto}>
   <div class="content" role="tabpanel">
-    <Current />
+    {#if $arbolAbierto}<ArbolPantalla />{:else}<Current />{/if}
   </div>
   <div class="tabs" role="tablist" style:grid-template-columns="repeat({tabs.length}, 1fr)">
     {#each tabs as tab (tab.id)}
@@ -64,7 +67,10 @@
         class="tab"
         class:active={tab.id === active}
         aria-selected={tab.id === active}
-        onclick={() => (active = tab.id)}
+        onclick={() => {
+          active = tab.id;
+          arbolAbierto.set(false);
+        }}
         data-tuto={TAB_STEP[tab.id]}
       >
         <span class="tab-icon" aria-hidden="true">
@@ -88,6 +94,16 @@
     flex-direction: column;
     background: var(--panel);
     border-top: 2px solid var(--line);
+  }
+  .panel.expandida {
+    position: absolute;
+    z-index: 30;
+    top: var(--arriba, 0px);
+    right: 0;
+    bottom: env(safe-area-inset-bottom);
+    left: 0;
+    height: auto;
+    border-top: 0;
   }
   .content {
     flex: 1 1 0;

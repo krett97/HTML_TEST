@@ -401,7 +401,10 @@
       "reiniciar": "Reiniciar árbol",
       "reiniciarExplica": "Te devuelve las {gastado} visualizaciones gastadas para escoger otra ruta. Cuesta ver {max} anuncios (se guardan aunque los veas en distintos momentos).",
       "verAnuncio": "[[anuncio]] Ver anuncio {n} de {max}",
-      "reiniciado": "¡Árbol reiniciado! Te devolvieron {n} visualizaciones."
+      "reiniciado": "¡Árbol reiniciado! Te devolvieron {n} visualizaciones.",
+      "abrir": "Ver el árbol completo",
+      "listas": "{n} mejoras listas para subir",
+      "volver": "Volver con el gato"
     }
   },
   "vineta": {

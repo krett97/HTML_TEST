@@ -5,7 +5,7 @@
   import { onDestroy } from 'svelte';
   import { t } from '../../i18n';
   import { useGame } from '../context';
-  import Arbol from './Arbol.svelte';
+  import ArbolVistaPrevia from './ArbolVistaPrevia.svelte';
 
   const game = useGame();
   const view = game.view;
@@ -113,7 +113,7 @@
   {/if}
 
   <h3>{$t('canal.habilidades')}</h3>
-  <Arbol />
+  <ArbolVistaPrevia />
 
   <h3>{$t('canal.videos')}</h3>
   {#if $view.canal.videos.length === 0}

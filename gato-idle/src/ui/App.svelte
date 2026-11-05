@@ -3,10 +3,13 @@
   import SceneHost from './SceneHost.svelte';
   import Panel from './Panel.svelte';
   import OfflineModal from './OfflineModal.svelte';
+
+  // Alto de la barra de arriba: el árbol en pantalla completa empieza justo debajo.
+  let topHeight = $state(0);
 </script>
 
-<main class="app">
-  <TopBar />
+<main class="app" style:--arriba="{topHeight}px">
+  <div bind:clientHeight={topHeight}><TopBar /></div>
   <SceneHost />
   <Panel />
 </main>
@@ -14,6 +17,7 @@
 
 <style>
   .app {
+    position: relative;
     width: 100%;
     max-width: 480px;
     height: 100%;

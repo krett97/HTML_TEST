@@ -401,7 +401,10 @@
       "reiniciar": "Reset tree",
       "reiniciarExplica": "Refunds the {gastado} views you spent so you can pick another path. Costs {max} ads (progress is kept between sessions).",
       "verAnuncio": "[[anuncio]] Watch ad {n} of {max}",
-      "reiniciado": "Tree reset! You got {n} views back."
+      "reiniciado": "Tree reset! You got {n} views back.",
+      "abrir": "Open the full tree",
+      "listas": "{n} upgrades ready",
+      "volver": "Back to the cat"
     }
   },
   "vineta": {
