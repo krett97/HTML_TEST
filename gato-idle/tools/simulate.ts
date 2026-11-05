@@ -117,7 +117,7 @@ function bossCheck(state: GameState, data: GameData): string | null {
 }
 
 /** Objetos que se marcan en cada vuelta (los que caen entre el inicio y el último alcanzable). */
-const RUN_MARKS = ['lampara', 'tostadora', 'lavadora', 'refri', 'maceta', 'aro', 'silla', 'parrilla', 'moto', 'coche'];
+const RUN_MARKS = ['lampara', 'tostadora', 'lavadora', 'refri', 'maceta', 'aro', 'silla', 'parrilla', 'moto', 'coche', 'jarron', 'armadura', 'palomitas', 'sillon', 'sombrilla', 'jetski'];
 
 /** Gasta las visualizaciones en el árbol: siempre el nivel más barato que pueda pagar. */
 function buyCheapestSkills(state: GameState, data: GameData): void {
@@ -135,7 +135,7 @@ function buyCheapestSkills(state: GameState, data: GameData): void {
  * (lo más barato primero). Responde "¿cuánto más rápida es la segunda vuelta?" y "¿cuándo
  * se muda?".
  */
-export function simulateRuns(data: GameData, runs = 10): RunRow[] {
+export function simulateRuns(data: GameData, runs = 16): RunRow[] {
   const state = createInitialState(0);
   normalizeState(state, data);
   const rows: RunRow[] = [];
@@ -154,7 +154,11 @@ export function simulateRuns(data: GameData, runs = 10): RunRow[] {
       minutos[objeto] = seconds / 60;
     }
     const casa = data.homes[state.casa]!.id;
-    const jefe = bossCheck(state, data);
+    const jefeAqui = bossHere(state, data);
+    const jefe = jefeAqui && `${jefeAqui.id}: ${bossCheck(state, data)}`;
+    // Si al llegar (o tras jugar 2 minutos más) le quita toda la vida, lo vence y se lleva el trofeo.
+    const boss = bossHere(state, data);
+    if (boss && jefe && Number(jefe.split(' → ')[1]!.replace('%', '')) >= 100) state.jefes.derrotados.push(boss.id);
     const video = uploadVideo(state, data, 0, () => 0.5)!;
     buyCheapestSkills(state, data);
     rows.push({

@@ -39,6 +39,5 @@ export function claimOffline(state: GameState, data: GameData, earnings: { rotur
   state.dineroPartida = state.dineroPartida.add(dinero);
   state.stats.roturas += earnings.roturas;
   state.stats.roturasPartida += earnings.roturas;
-  state.stats.vistasVideo += earnings.roturas * (objectIndex(state, data) + 1);
   return dinero;
 }

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { bossText } from './bossText';
   import Icon from './Icon.svelte';
   import Coin from './Coin.svelte';
   import Tutorial from './Tutorial.svelte';
@@ -56,7 +57,7 @@
     <!-- Pelea contra el jefe: nombre, vida que le queda y reloj. -->
     <div class="boss" class:apurado={pelea.restante <= 5} data-testid="pelea-jefe">
       <div class="boss-top">
-        <strong><Icon name="pepino" /> {$t(`jefes.${pelea.id}.nombre`)}</strong>
+        <strong><Icon name={pelea.id} /> {$t(`jefes.${pelea.id}.nombre`)}</strong>
         <span class="boss-time cifra" data-testid="reloj-jefe"><Icon name="reloj" /> {pelea.restante.toFixed(1)}</span>
       </div>
       <div class="boss-bar"><span class="boss-fill" style:width="{(1 - pelea.progreso) * 100}%"></span></div>
@@ -64,10 +65,10 @@
     </div>
   {:else if $view.jefe.aqui}
     {#if $view.jefe.revancha > 0}
-      <div class="boss-wait" data-testid="revancha"><Icon name="pepino" /> {$t('jefe.revancha', { s: $view.jefe.revancha })}</div>
+      <div class="boss-wait" data-testid="revancha"><Icon name="reloj" /> {$t('jefe.revancha', { s: $view.jefe.revancha })}</div>
     {:else}
       <button type="button" class="boss-call" onclick={() => game.challengeBoss()} data-testid="retar-jefe">
-        <Icon name="pepino" /> {$t('jefe.retar', { jefe: $t(`jefes.${$view.jefe.aqui}.nombre`) })}
+        <Icon name={$view.jefe.aqui} /> {$t('jefe.retar', bossText($t, $view.jefe.aqui))}
       </button>
     {/if}
   {/if}

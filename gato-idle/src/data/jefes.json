@@ -7,8 +7,36 @@
     "premioEnRoturas": 60,
     "esperaDerrota": 60,
     "efectos": [
-      { "stat": "danio", "op": "mult", "valor": 1.25 },
-      { "stat": "danioAliados", "op": "mult", "valor": 1.25 }
+      {
+        "stat": "danio",
+        "op": "mult",
+        "valor": 1.25
+      },
+      {
+        "stat": "danioAliados",
+        "op": "mult",
+        "valor": 1.25
+      }
+    ]
+  },
+  {
+    "id": "industrial",
+    "casa": "mansion",
+    "segundos": 30,
+    "vidaEnRoturas": 2.5,
+    "premioEnRoturas": 60,
+    "esperaDerrota": 60,
+    "efectos": [
+      {
+        "stat": "danio",
+        "op": "mult",
+        "valor": 1.3
+      },
+      {
+        "stat": "vistas",
+        "op": "mult",
+        "valor": 1.3
+      }
     ]
   }
 ]

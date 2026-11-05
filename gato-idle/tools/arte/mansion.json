@@ -1,0 +1,377 @@
+[
+ {
+  "name": "jarron",
+  "desc": "tall blue and white chinese porcelain vase with a big price tag hanging from it",
+  "w": 40,
+  "h": 56,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", isolated object, no shadow, pixel art game item, side view, bold black outline, cartoon, vibrant colors",
+  "transparent": true
+ },
+ {
+  "name": "busto",
+  "desc": "white marble bust statue of a smug man wearing sunglasses, on a small pedestal",
+  "w": 48,
+  "h": 56,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", isolated object, no shadow, pixel art game item, side view, bold black outline, cartoon, vibrant colors",
+  "transparent": true
+ },
+ {
+  "name": "placaoro",
+  "desc": "shiny golden award plaque in a frame with a big play triangle and the text 1M",
+  "w": 48,
+  "h": 56,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", isolated object, no shadow, pixel art game item, side view, bold black outline, cartoon, vibrant colors",
+  "transparent": true
+ },
+ {
+  "name": "armadura",
+  "desc": "medieval knight armor suit standing, holding a tiny feather cat toy instead of a sword",
+  "w": 56,
+  "h": 112,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", isolated object, no shadow, pixel art game item, side view, bold black outline, cartoon, vibrant colors",
+  "transparent": true
+ },
+ {
+  "name": "piano",
+  "desc": "black grand piano, side view, shiny, lid open",
+  "w": 120,
+  "h": 96,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", isolated object, no shadow, pixel art game item, side view, bold black outline, cartoon, vibrant colors",
+  "transparent": true
+ },
+ {
+  "name": "palomitas",
+  "desc": "red retro popcorn machine cart overflowing with popcorn",
+  "w": 64,
+  "h": 96,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", isolated object, no shadow, pixel art game item, side view, bold black outline, cartoon, vibrant colors",
+  "transparent": true
+ },
+ {
+  "name": "proyector",
+  "desc": "home cinema projector, black and silver, with a blue light beam coming out of the lens",
+  "w": 64,
+  "h": 48,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", isolated object, no shadow, pixel art game item, side view, bold black outline, cartoon, vibrant colors",
+  "transparent": true
+ },
+ {
+  "name": "sillon",
+  "desc": "red velvet reclining cinema armchair with a cup holder holding a soda",
+  "w": 96,
+  "h": 88,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", isolated object, no shadow, pixel art game item, side view, bold black outline, cartoon, vibrant colors",
+  "transparent": true
+ },
+ {
+  "name": "flotador",
+  "desc": "inflatable pink unicorn pool float with a rainbow mane",
+  "w": 112,
+  "h": 80,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", isolated object, no shadow, pixel art game item, side view, bold black outline, cartoon, vibrant colors",
+  "transparent": true
+ },
+ {
+  "name": "sombrilla",
+  "desc": "striped red and white beach umbrella open on a pole",
+  "w": 96,
+  "h": 128,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", isolated object, no shadow, pixel art game item, side view, bold black outline, cartoon, vibrant colors",
+  "transparent": true
+ },
+ {
+  "name": "dron",
+  "desc": "white camera drone with four propellers and a red recording light",
+  "w": 72,
+  "h": 40,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", isolated object, no shadow, pixel art game item, side view, bold black outline, cartoon, vibrant colors",
+  "transparent": true
+ },
+ {
+  "name": "jetski",
+  "desc": "yellow and blue jet ski on a small trailer, side view, shiny",
+  "w": 200,
+  "h": 96,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", isolated object, no shadow, pixel art game item, side view, bold black outline, cartoon, vibrant colors",
+  "transparent": true
+ },
+ {
+  "name": "jefe_industrial",
+  "desc": "giant industrial vacuum cleaner monster boss, yellow and black hazard stripes, big hose like an arm, angry glowing red eyes, a mouth on the nozzle, funny video game boss",
+  "w": 96,
+  "h": 128,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game sprite, side view, bold black outline, cartoon, vibrant colors, isolated, no shadow",
+  "transparent": true
+ },
+ {
+  "name": "salon_ventana",
+  "desc": "tall elegant arched window with heavy golden curtains and a night sky outside",
+  "w": 96,
+  "h": 80,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game sprite, front view, bold outline, cozy cartoon, vibrant colors, isolated, no shadow",
+  "transparent": true
+ },
+ {
+  "name": "cine_ventana",
+  "desc": "glowing green EXIT sign box on the wall",
+  "w": 96,
+  "h": 80,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game sprite, front view, bold outline, cozy cartoon, vibrant colors, isolated, no shadow",
+  "transparent": true
+ },
+ {
+  "name": "alberca_ventana",
+  "desc": "big window with white frame showing palm trees and blue sky outside",
+  "w": 96,
+  "h": 80,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game sprite, front view, bold outline, cozy cartoon, vibrant colors, isolated, no shadow",
+  "transparent": true
+ },
+ {
+  "name": "salon_cuadro",
+  "desc": "oil painting portrait of an orange cat wearing a royal crown and cape, in an ornate golden frame",
+  "w": 64,
+  "h": 48,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game sprite, front view, bold outline, cozy cartoon, vibrant colors, isolated, no shadow",
+  "transparent": true
+ },
+ {
+  "name": "cine_cuadro",
+  "desc": "funny movie poster with an angry orange cat wearing sunglasses in front of explosions",
+  "w": 64,
+  "h": 48,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game sprite, front view, bold outline, cozy cartoon, vibrant colors, isolated, no shadow",
+  "transparent": true
+ },
+ {
+  "name": "alberca_cuadro",
+  "desc": "orange and white life ring buoy hanging on a hook",
+  "w": 64,
+  "h": 48,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game sprite, front view, bold outline, cozy cartoon, vibrant colors, isolated, no shadow",
+  "transparent": true
+ },
+ {
+  "name": "salon_mesa",
+  "desc": "long elegant table with a white marble top and golden curved legs",
+  "w": 280,
+  "h": 56,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game sprite, straight side view, flat empty top surface with nothing on it, bold dark outline, cozy cartoon, vibrant colors, isolated, no shadow",
+  "transparent": true,
+  "guidance": 7
+ },
+ {
+  "name": "salon_mueble",
+  "desc": "long ornate antique wooden sideboard cabinet with golden handles",
+  "w": 272,
+  "h": 68,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game sprite, straight side view, flat empty top surface with nothing on it, bold dark outline, cozy cartoon, vibrant colors, isolated, no shadow",
+  "transparent": true,
+  "guidance": 7
+ },
+ {
+  "name": "cine_mueble",
+  "desc": "long low black media console cabinet with glowing blue lights",
+  "w": 272,
+  "h": 68,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game sprite, straight side view, flat empty top surface with nothing on it, bold dark outline, cozy cartoon, vibrant colors, isolated, no shadow",
+  "transparent": true,
+  "guidance": 7
+ },
+ {
+  "name": "alberca_mesa",
+  "desc": "long white plastic poolside table with thin legs",
+  "w": 280,
+  "h": 56,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game sprite, straight side view, flat empty top surface with nothing on it, bold dark outline, cozy cartoon, vibrant colors, isolated, no shadow",
+  "transparent": true,
+  "guidance": 7
+ },
+ {
+  "name": "salon_pared_k60",
+  "desc": "red damask wallpaper with golden fleur de lis pattern, luxury mansion",
+  "w": 64,
+  "h": 64,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art texture, flat front view, cozy cartoon game, seamless repeating tile, even lighting, no vignette, fills the whole image",
+  "transparent": false,
+  "init": "tools/arte/bases/base_salon_pared.png",
+  "strength": 60,
+  "guidance": 6
+ },
+ {
+  "name": "salon_piso_k60",
+  "desc": "polished black and white marble checkered floor, luxury",
+  "w": 64,
+  "h": 64,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art texture, flat front view, cozy cartoon game, seamless repeating tile, even lighting, no vignette, fills the whole image",
+  "transparent": false,
+  "init": "tools/arte/bases/base_salon_piso.png",
+  "strength": 60,
+  "guidance": 6
+ },
+ {
+  "name": "cine_pared_k60",
+  "desc": "dark red padded velvet wall panels, home cinema",
+  "w": 64,
+  "h": 64,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art texture, flat front view, cozy cartoon game, seamless repeating tile, even lighting, no vignette, fills the whole image",
+  "transparent": false,
+  "init": "tools/arte/bases/base_cine_pared.png",
+  "strength": 60,
+  "guidance": 6
+ },
+ {
+  "name": "cine_piso_k60",
+  "desc": "red cinema carpet with small golden pattern",
+  "w": 64,
+  "h": 64,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art texture, flat front view, cozy cartoon game, seamless repeating tile, even lighting, no vignette, fills the whole image",
+  "transparent": false,
+  "init": "tools/arte/bases/base_cine_piso.png",
+  "strength": 60,
+  "guidance": 6
+ },
+ {
+  "name": "alberca_pared_k60",
+  "desc": "blue mosaic tiles, indoor swimming pool wall",
+  "w": 64,
+  "h": 64,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art texture, flat front view, cozy cartoon game, seamless repeating tile, even lighting, no vignette, fills the whole image",
+  "transparent": false,
+  "init": "tools/arte/bases/base_alberca_pared.png",
+  "strength": 60,
+  "guidance": 6
+ },
+ {
+  "name": "alberca_piso_k60",
+  "desc": "white poolside floor tiles with light blue grout",
+  "w": 64,
+  "h": 64,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art texture, flat front view, cozy cartoon game, seamless repeating tile, even lighting, no vignette, fills the whole image",
+  "transparent": false,
+  "init": "tools/arte/bases/base_alberca_piso.png",
+  "strength": 60,
+  "guidance": 6
+ }
+]

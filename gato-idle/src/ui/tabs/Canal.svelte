@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { bossText } from '../bossText';
   import Icon from '../Icon.svelte';
   import Rich from '../Rich.svelte';
   import { onDestroy } from 'svelte';
@@ -102,6 +103,12 @@
           <span class="goal-text cifra">{meta.tiene}/{meta.meta}</span>
         </div>
       {/each}
+      {#if mudanza.jefe}
+        <div class="goal-boss small" class:done={mudanza.jefe.derrotado} data-testid="mudanza-jefe">
+          <Icon name={mudanza.jefe.derrotado ? 'check' : mudanza.jefe.id} />
+          {$t('canal.mudanza.jefe', bossText($t, mudanza.jefe.id))}
+        </div>
+      {/if}
     </div>
   {/if}
 
@@ -226,6 +233,13 @@
   .move {
     display: grid;
     gap: 4px;
+  }
+  .goal-boss {
+    margin-top: 4px;
+    color: var(--muted);
+  }
+  .goal-boss.done {
+    color: var(--gold);
   }
   .move .name {
     font-weight: 700;

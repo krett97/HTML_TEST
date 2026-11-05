@@ -83,8 +83,6 @@ export interface GameState {
     roturas: number;
     /** Roturas de la partida actual (el video en grabación). */
     roturasPartida: number;
-    /** Vistas del video en grabación: cada rotura suma según el tamaño del objeto (vaso 1 … refri 27). */
-    vistasVideo: number;
   };
   /** El canal del dueño: lo que sobrevive al subir el video. */
   canal: {
@@ -129,7 +127,7 @@ export function createInitialState(now: number): GameState {
     danioObjeto: ZERO,
     casa: 0,
     jefes: { derrotados: [], revancha: 0 },
-    stats: { toques: 0, roturas: 0, roturasPartida: 0, vistasVideo: 0 },
+    stats: { toques: 0, roturas: 0, roturasPartida: 0 },
     canal: { seguidores: 0, visualizaciones: ZERO, visualizacionesTotales: ZERO, anunciosReinicio: 0, videos: [] },
     habilidades: [],
     vistos: [],

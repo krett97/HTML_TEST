@@ -1,6 +1,7 @@
-// La mudanza: el dueño se va del departamento a una casa (casas.json) cuando el Canal junta los
-// seguidores y visualizaciones que pide (totales, nunca se gastan). La partida sigue después del
-// último objeto del departamento con los de la casa; desde entonces cada video reinicia en la casa.
+// La mudanza: el dueño se va a la siguiente casa (casas.json: departamento → casa → mansión) cuando
+// el Canal junta los seguidores y visualizaciones que pide (totales que nunca bajan) y, si lo pide,
+// tras vencer al jefe de la casa anterior. La partida sigue después del último objeto con los de la
+// casa nueva; desde entonces cada video reinicia en ella.
 import type { GameData, HomeDef } from './data';
 import { ZERO } from './num';
 import type { GameState } from './state';
@@ -14,6 +15,7 @@ export function nextHome(state: GameState, data: GameData): HomeDef | null {
 export function moveUnlocked(state: GameState, data: GameData): boolean {
   const req = nextHome(state, data)?.requisito;
   if (!req) return false;
+  if (req.jefe && !state.jefes.derrotados.includes(req.jefe)) return false;
   return state.canal.seguidores >= req.seguidores && state.canal.visualizacionesTotales.gte(req.visualizaciones);
 }
 

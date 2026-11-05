@@ -70,27 +70,54 @@
     "parrilla": "BBQ grill",
     "bici": "Bike",
     "moto": "Motorbike",
-    "coche": "Owner's car"
+    "coche": "Owner's car",
+    "jarron": "Priceless Ming vase",
+    "busto": "Owner's bust",
+    "placaoro": "Gold plaque (1M)",
+    "armadura": "Suit of armor",
+    "piano": "Grand piano",
+    "palomitas": "Popcorn machine",
+    "proyector": "Projector",
+    "sillon": "Cinema recliner",
+    "flotador": "Inflatable unicorn",
+    "sombrilla": "Beach umbrella",
+    "dron": "Drone",
+    "jetski": "Jet ski"
   },
   "casas": {
     "departamento": "Apartment",
-    "casa": "House with a garden"
+    "casa": "House with a garden",
+    "mansion": "Mansion"
   },
   "jefes": {
     "pepino": {
       "nombre": "Giant Cucumber",
       "titulo": "THE GIANT CUCUMBER APPEARED!",
       "frase": "The cat is terrified… you have 30 seconds!",
-      "trofeo": "Trophy: +25% damage forever"
+      "trofeo": "Trophy: +25% damage forever",
+      "al": "the Giant Cucumber",
+      "el": "the Giant Cucumber",
+      "El": "The Giant Cucumber",
+      "derrotado": "DEFEATED"
+    },
+    "industrial": {
+      "nombre": "Industrial Vacuum",
+      "titulo": "THE INDUSTRIAL VACUUM IS HERE!",
+      "frase": "It makes a horrible noise and swallows everything… you have 30 seconds!",
+      "trofeo": "Trophy: +30% damage and +30% money forever",
+      "al": "the Industrial Vacuum",
+      "el": "the Industrial Vacuum",
+      "El": "The Industrial Vacuum",
+      "derrotado": "DEFEATED"
     }
   },
   "jefe": {
-    "retar": "Challenge the {jefe}!",
+    "retar": "Challenge {al}!",
     "revancha": "Rematch in {s} s",
-    "aparece": "The {jefe} is back!",
-    "victoria": "{jefe} DEFEATED!",
-    "premio": "[[trofeo]] You beat the {jefe}! +{dinero}",
-    "derrota": "The {jefe} laughs at you… Rematch in 60 s (+{dinero})",
+    "aparece": "{El} is back!",
+    "victoria": "{jefe} {derrotado}!",
+    "premio": "[[trofeo]] You beat {al}! +{dinero}",
+    "derrota": "{El} laughs at you… Rematch in 60 s (+{dinero})",
     "bono": "+{pct}% damage"
   },
   "mejoras": {
@@ -125,7 +152,8 @@
     "marca": "Marking claws",
     "marcaEfecto": "A crit marks the object for {s} s: gang {actual} → {siguiente}",
     "marcaMax": "A crit marks the object for {s} s: gang {actual} (max)",
-    "max": "Max"
+    "max": "Max",
+    "esperaJefe": "The owner won't move until you beat {al}… and get followers and views ([[canal]] Channel)."
   },
   "ajustes": {
     "sonido": "Sound",
@@ -349,7 +377,8 @@
     "mudanza": {
       "titulo": "Moving: {casa}",
       "explica": "With more followers and views, the owner moves to a bigger house (with more stuff to knock over). Total views count, even if you spend them on the tree.",
-      "lista": "Ready! Reach the last object and keep upgrading Value: the owner moves and the run continues in the new house."
+      "lista": "Ready! Reach the last object and keep upgrading Value: the owner moves and the run continues in the new house.",
+      "jefe": "Beat {al}"
     },
     "record": "Channel record",
     "totalHistorico": "earned in total",

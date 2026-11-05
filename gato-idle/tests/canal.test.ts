@@ -58,9 +58,9 @@ describe('Canal: subir el video es el reinicio', () => {
     expect(video.viral).toBe(false);
     expect(video.objeto).toBe('refri');
     expect(state.canal.seguidores).toBe(seguidores);
-    // Primer video: cada rotura suma según el objeto (vaso 1 … refri 27), sin bono de seguidores todavía.
+    // Primer video: las visualizaciones salen del dinero ganado en la partida.
     expect(state.canal.visualizaciones.toNumber()).toBeGreaterThan(50_000);
-    expect(state.stats.vistasVideo).toBe(0);
+    expect(state.dineroPartida.eq(0)).toBe(true);
     expect(state.canal.videos).toHaveLength(1);
     expect(state.nivelValor).toBe(0);
     expect(state.nivelFuerza).toBe(0);
@@ -151,11 +151,9 @@ describe('Árbol de habilidades', () => {
     base.nivelValor = 60;
     base.desbloqueos.push('canal');
     base.dineroPartida = num(1e12);
-    base.stats.vistasVideo = 1000;
     const withSkill = (id: string, nivel: number) => {
       const s = newState();
       Object.assign(s, { nivelValor: base.nivelValor, dineroPartida: base.dineroPartida, desbloqueos: [...base.desbloqueos] });
-      s.stats.vistasVideo = base.stats.vistasVideo;
       s.habilidades = [{ id, nivel }];
       return s;
     };
@@ -164,7 +162,7 @@ describe('Árbol de habilidades', () => {
     const gatito = gameData.allies.find((a) => a.id === 'gatito')!;
     expect(allyCost(withSkill('veterinario', 2), gameData, gatito).lt(allyCost(base, gameData, gatito))).toBe(true);
     expect(sponsorReward(withSkill('patrocinador', 1), gameData).gt(sponsorReward(base, gameData))).toBe(true);
-    expect(videoPreview(withSkill('miniaturas', 5), gameData).visualizaciones.toNumber()).toBe(videoPreview(base, gameData).visualizaciones.toNumber() * 1.5);
+    expect(videoPreview(withSkill('miniaturas', 5), gameData).visualizaciones.toNumber()).toBe(Math.floor(videoPreview(base, gameData).visualizaciones.toNumber() * 1.5));
     expect(videoPreview(withSkill('hashtags', 10), gameData).seguidores).toBe(Math.floor(videoPreview(base, gameData).seguidores * 1.5));
   });
 
@@ -180,15 +178,12 @@ describe('Árbol de habilidades', () => {
     expect(loaded.ok && loaded.state.habilidades).toEqual([{ id: 'recolectora', nivel: 4 }]);
   });
 
-  it('más seguidores, más visualizaciones por video', () => {
+  it('las visualizaciones crecen con el dinero de la partida (raíz cuadrada)', () => {
     const a = newState();
-    a.desbloqueos.push('canal');
-    a.stats.vistasVideo = 1000;
+    a.dineroPartida = num(1e9);
     const b = newState();
-    b.desbloqueos.push('canal');
-    b.stats.vistasVideo = 1000;
-    b.canal.seguidores = 50;
-    expect(videoPreview(b, gameData).visualizaciones.toNumber()).toBe(videoPreview(a, gameData).visualizaciones.toNumber() * 6);
+    b.dineroPartida = num(1e11);
+    expect(videoPreview(b, gameData).visualizaciones.toNumber()).toBeCloseTo(videoPreview(a, gameData).visualizaciones.toNumber() * 10, -1);
   });
 
   it('embestida: cada 10 manotazos, uno pega ×(1 + 2 × nivel)', () => {

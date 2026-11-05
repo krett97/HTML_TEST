@@ -51,7 +51,6 @@ describe('mientras no estabas', () => {
     expect(paid.eq(earnings.dinero.mul(2))).toBe(true);
     expect(state.dinero.eq(paid)).toBe(true);
     expect(state.stats.roturasPartida).toBe(earnings.roturas);
-    expect(state.stats.vistasVideo).toBe(earnings.roturas * 7); // papel de baño = objeto 7
   });
 
   it('lo pendiente se guarda si se cierra el juego sin cobrar', () => {

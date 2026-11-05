@@ -32,9 +32,14 @@ export function followerMultiplier(state: GameState, data: GameData): number {
   return 1 + state.canal.seguidores * data.balance.canal.bonoPorSeguidor;
 }
 
-/** Un canal con más seguidores consigue más visualizaciones: ×(1 + vistasPorSeguidor × seguidores). */
-export function viewsBoost(state: GameState, data: GameData): number {
-  return 1 + state.canal.seguidores * data.balance.canal.vistasPorSeguidor;
+/**
+ * Visualizaciones que daría un video con lo ganado en la partida: ⌊(dinero / escala)^exponente⌋.
+ * Salen del dinero (no de cuántas cosas se rompieron): una partida rápida, con la pandilla ya fuerte,
+ * rompe menos cosas pero gana más, y no debe dar menos visualizaciones.
+ */
+export function viewsFor(dineroPartida: Decimal, data: GameData): Decimal {
+  const { escalaVisualizaciones, exponenteVisualizaciones } = data.balance.canal;
+  return dineroPartida.div(escalaVisualizaciones).pow(exponenteVisualizaciones).floor();
 }
 
 /** Probabilidad de que el video se haga viral (con la habilidad "clickbait", más). */
@@ -52,10 +57,9 @@ export interface VideoPreview {
 export function videoPreview(state: GameState, data: GameData): VideoPreview {
   const seguidores = Math.floor(followersFor(state.dineroPartida, data) * (1 + skillAmount(state, data, 'hashtags')) + 1e-6);
   const minimo = data.objects.findIndex((o) => o.id === data.balance.canal.objetoMinimo);
-  const vistas = state.stats.vistasVideo * data.balance.canal.visualizacionesPorVista * viewsBoost(state, data);
   return {
     seguidores,
-    visualizaciones: num(vistas * (1 + skillAmount(state, data, 'miniaturas'))).floor(),
+    visualizaciones: viewsFor(state.dineroPartida, data).mul(1 + skillAmount(state, data, 'miniaturas')).floor(),
     listo: hasUnlock(state, 'canal') && objectIndex(state, data) >= minimo && seguidores > 0,
   };
 }
@@ -106,7 +110,6 @@ function restartRun(state: GameState, data: GameData): void {
   state.marcaHasta = 0;
   state.danioObjeto = ZERO;
   state.stats.roturasPartida = 0;
-  state.stats.vistasVideo = 0;
   // Habilidad "pandilla": los primeros aliados ya vienen entrenados.
   const levels = skillAmount(state, data, 'pandilla');
   state.aliados = levels > 0

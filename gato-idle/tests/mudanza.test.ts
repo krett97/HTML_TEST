@@ -47,6 +47,23 @@ describe('mudanza', () => {
     expect(purchase.home?.id).toBe('casa');
     expect(state.casa).toBe(1);
     expect(currentObject(state, gameData).id).toBe('maceta');
+    expect(nextHome(state, gameData)?.id).toBe('mansion');
+  });
+
+  it('a la mansión solo se muda tras vencer al Pepino Gigante', () => {
+    const state = atRefri();
+    state.casa = 1;
+    state.nivelValor = (gameData.objects.findIndex((o) => o.id === 'coche')) * PER_OBJECT;
+    const req = gameData.homes[2]!.requisito!;
+    state.canal.seguidores = req.seguidores;
+    state.canal.visualizacionesTotales = req.visualizaciones;
+    expect(req.jefe).toBe('pepino');
+    expect(moveUnlocked(state, gameData)).toBe(false);
+    state.jefes.derrotados.push('pepino');
+    expect(moveUnlocked(state, gameData)).toBe(true);
+    state.nivelValor = homeStartLevel(gameData, 2);
+    expect(moveIfReady(state, gameData)?.id).toBe('mansion');
+    expect(currentObject(state, gameData).id).toBe('jarron');
     expect(nextHome(state, gameData)).toBe(null);
   });
 

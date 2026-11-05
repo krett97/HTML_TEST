@@ -30,6 +30,12 @@ describe('jefes', () => {
     expect(bossHere(refri, gameData)).toBe(null);
   });
 
+  it('la Aspiradora Industrial espera en el jet ski, el último objeto de la mansión', () => {
+    const inMansion = (id: string) => Object.assign(inHouse(id), { casa: 2 });
+    expect(bossHere(inMansion('jetski'), gameData)?.id).toBe('industrial');
+    expect(bossHere(inMansion('dron'), gameData)).toBe(null);
+  });
+
   it('su vida es la de varios coches', () => {
     const coche = gameData.objects.find((o) => o.id === 'coche')!;
     expect(bossHp(gameData, pepino).eq(coche.hp.mul(pepino.vidaEnRoturas).floor())).toBe(true);

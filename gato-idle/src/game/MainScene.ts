@@ -14,6 +14,7 @@ import { drawRoom, drawSurface, furnitureArt, GARDEN_STRIP_H, PICTURE_ABOVE_FLOO
 import { catPortrait } from './catPortrait';
 import { toolLook, type ToolLook } from './sprites';
 import { ALLY_NUMBER_COLORS } from '../ui/allyIcons';
+import { bossText } from '../ui/bossText';
 import { iconImage, setRichText } from '../ui/icons';
 import { COIN_URL } from '../ui/coin';
 import type { Decimal } from '../core/num';
@@ -381,9 +382,8 @@ export class MainScene extends Phaser.Scene {
     this.popIn();
     this.shake('viral');
     this.cameras.main.flash(180, 120, 220, 90);
-    const jefe = tr(`jefes.${id}.nombre`);
     if (primeraVez) this.comicPanel('jefe', this.textures.getBase64(`jefe_${id}`), tr(`jefes.${id}.titulo`), tr(`jefes.${id}.frase`));
-    else this.toast(tr('jefe.aparece', { jefe }));
+    else this.toast(tr('jefe.aparece', bossText(tr, id)));
   }
 
   private onBossHit(event: { damage: Decimal; critico: boolean; embestida: boolean; aliado: string | null; marcado: boolean }): void {
@@ -411,7 +411,6 @@ export class MainScene extends Phaser.Scene {
   /** Ganó: el jefe se marea y cae, confeti y trofeo. Perdió: el jefe se burla y se va. Después vuelve el objeto. */
   private onBossEnd(id: string, gano: boolean, premio: Decimal, primeraVez: boolean): void {
     const tr = get(t);
-    const jefe = tr(`jefes.${id}.nombre`);
     const dinero = this.controller.formatMoney(premio);
     this.tweens.killTweensOf(this.object);
     this.object.clearTint().setScale(S);
@@ -427,13 +426,13 @@ export class MainScene extends Phaser.Scene {
       const colors = [0xe5534b, 0xffd36e, 0x5ec4a8, 0x8e5bd1];
       colors.forEach((color, i) => this.time.delayedCall(i * 120, () => this.shatter(40 + i * 35, this.surfaceTop - 40, color, 24, 200)));
       if (primeraVez) {
-        this.comicPanel('trofeo', this.textures.getBase64(`jefe_${id}_derrotado`), tr('jefe.victoria', { jefe }), tr(`jefes.${id}.trofeo`));
+        this.comicPanel('trofeo', this.textures.getBase64(`jefe_${id}_derrotado`), tr('jefe.victoria', bossText(tr, id)), tr(`jefes.${id}.trofeo`));
       }
-      this.toast(tr('jefe.premio', { jefe, dinero }));
+      this.toast(tr('jefe.premio', { ...bossText(tr, id), dinero }));
     } else {
       // Se ríe: tres brinquitos.
       this.tweens.add({ targets: this.object, y: this.object.y - 8, duration: 110, yoyo: true, repeat: 2, ease: 'Quad.out' });
-      this.toast(tr('jefe.derrota', { jefe, dinero }));
+      this.toast(tr('jefe.derrota', { ...bossText(tr, id), dinero }));
     }
     if (premio.gt(0)) this.popNumber(this.object.x, this.object.y - this.heightOf(this.object) - 10, 'dinero grande', `+${dinero}`, { coin: true });
     this.time.delayedCall(gano ? 1700 : 1200, () => {

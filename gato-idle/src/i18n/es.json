@@ -70,27 +70,54 @@
     "parrilla": "Asador",
     "bici": "Bici",
     "moto": "Moto",
-    "coche": "Coche del dueño"
+    "coche": "Coche del dueño",
+    "jarron": "Jarrón chino carísimo",
+    "busto": "Busto del dueño",
+    "placaoro": "Placa de oro (1M)",
+    "armadura": "Armadura medieval",
+    "piano": "Piano de cola",
+    "palomitas": "Máquina de palomitas",
+    "proyector": "Proyector",
+    "sillon": "Sillón de cine",
+    "flotador": "Unicornio inflable",
+    "sombrilla": "Sombrilla",
+    "dron": "Dron",
+    "jetski": "Jet ski"
   },
   "casas": {
     "departamento": "Departamento",
-    "casa": "Casa con jardín"
+    "casa": "Casa con jardín",
+    "mansion": "Mansión"
   },
   "jefes": {
     "pepino": {
       "nombre": "Pepino Gigante",
       "titulo": "¡APARECIÓ EL PEPINO GIGANTE!",
       "frase": "El gato está aterrado… ¡tienes 30 segundos!",
-      "trofeo": "Trofeo: +25 % de daño para siempre"
+      "trofeo": "Trofeo: +25 % de daño para siempre",
+      "al": "al Pepino Gigante",
+      "el": "el Pepino Gigante",
+      "El": "El Pepino Gigante",
+      "derrotado": "DERROTADO"
+    },
+    "industrial": {
+      "nombre": "Aspiradora Industrial",
+      "titulo": "¡LLEGÓ LA ASPIRADORA INDUSTRIAL!",
+      "frase": "Hace un ruido espantoso y se traga todo… ¡tienes 30 segundos!",
+      "trofeo": "Trofeo: +30 % de daño y +30 % de dinero para siempre",
+      "al": "a la Aspiradora Industrial",
+      "el": "la Aspiradora Industrial",
+      "El": "La Aspiradora Industrial",
+      "derrotado": "DERROTADA"
     }
   },
   "jefe": {
-    "retar": "¡Retar al {jefe}!",
+    "retar": "¡Retar {al}!",
     "revancha": "Revancha en {s} s",
-    "aparece": "¡Volvió el {jefe}!",
-    "victoria": "¡{jefe} DERROTADO!",
-    "premio": "[[trofeo]] ¡Le ganaste al {jefe}! +{dinero}",
-    "derrota": "El {jefe} se burla de ti… Revancha en 60 s (+{dinero})",
+    "aparece": "¡Volvió {el}!",
+    "victoria": "¡{jefe} {derrotado}!",
+    "premio": "[[trofeo]] ¡Le ganaste {al}! +{dinero}",
+    "derrota": "{El} se burla de ti… Revancha en 60 s (+{dinero})",
     "bono": "+{pct} % daño"
   },
   "mejoras": {
@@ -125,7 +152,8 @@
     "marca": "Garras marcadoras",
     "marcaEfecto": "Un crítico marca el objeto {s} s: pandilla {actual} → {siguiente}",
     "marcaMax": "Un crítico marca el objeto {s} s: pandilla {actual} (máximo)",
-    "max": "Máx."
+    "max": "Máx.",
+    "esperaJefe": "El dueño no se muda hasta que venzas {al}… y juntes seguidores y visualizaciones ([[canal]] Canal)."
   },
   "ajustes": {
     "sonido": "Sonido",
@@ -349,7 +377,8 @@
     "mudanza": {
       "titulo": "Mudanza: {casa}",
       "explica": "Con más seguidores y visualizaciones, el dueño se muda a una casa más grande (con más cosas que tirar). Cuenta el total de visualizaciones, aunque las gastes en el árbol.",
-      "lista": "¡Listo! Llega al último objeto y sigue mejorando el Valor: el dueño se muda y la partida sigue en la casa nueva."
+      "lista": "¡Listo! Llega al último objeto y sigue mejorando el Valor: el dueño se muda y la partida sigue en la casa nueva.",
+      "jefe": "Vence {al}"
     },
     "record": "Récord del canal",
     "totalHistorico": "juntadas en total",

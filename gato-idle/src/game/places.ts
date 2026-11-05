@@ -1,11 +1,11 @@
-// Escenarios: cada objeto está en un cuarto (cocina, sala, baño, recámara, cuarto de lavado y, en
-// la casa nueva, jardín, estudio y cochera) y sobre una superficie (barra, mesa, mueble, repisa,
+// Escenarios: cada objeto está en un cuarto (cocina, sala, baño, recámara, cuarto de lavado; en la
+// casa, jardín, estudio y cochera; en la mansión, salón, cine y alberca) y sobre una superficie (barra, mesa, mueble, repisa,
 // cama, escritorio o el piso). Con arte de PixelLab (pared_*, piso_*, ventana_*, cuadro_*, mueble_*)
 // la escena lo usa; lo que no tenga PNG se dibuja aquí con rectángulos, con las mismas medidas.
 import type Phaser from 'phaser';
 import type { PlaceId } from '../core/data';
 
-export type Room = 'cocina' | 'sala' | 'bano' | 'recamara' | 'lavado' | 'jardin' | 'estudio' | 'cochera';
+export type Room = 'cocina' | 'sala' | 'bano' | 'recamara' | 'lavado' | 'jardin' | 'estudio' | 'cochera' | 'salon' | 'cine' | 'alberca';
 export type SurfaceKind = 'barra' | 'mesa' | 'mueble' | 'repisa' | 'cama' | 'escritorio' | 'piso';
 
 export interface Surface {
@@ -46,6 +46,10 @@ const FURNITURE: Partial<Record<PlaceId, { ancho: number; alto: number; sobresal
   'jardin-mesa': { ancho: 112, alto: 16 },
   'estudio-escritorio': { ancho: 123, alto: 33 },
   'estudio-repisa': { ancho: 109, alto: 62 },
+  'salon-mesa': { ancho: 99, alto: 20.5 },
+  'salon-mueble': { ancho: 128, alto: 26.5 },
+  'cine-mueble': { ancho: 125, alto: 21 },
+  'alberca-mesa': { ancho: 94.5, alto: 18.5 },
 };
 
 export function placeOf(id: PlaceId): Place {
@@ -99,6 +103,10 @@ const ROOMS: Record<Room, RoomLook> = {
   estudio: { wall: 0x2a2140, wallDark: 0x221a35, floor: 0x4a3434, floorLine: 0x3d2b2b, frame: 0xff5ec4, picture: 0x5ec4ff },
   // Cochera: block gris, ventanita alta y tablero de herramientas.
   cochera: { wall: 0x6b6f76, wallDark: 0x5a5e65, floor: 0x8a8d93, floorLine: 0x7a7d83, frame: 0x8a6a4a, picture: 0xc9a27a },
+  // La mansión: salón de tapiz rojo y mármol, sala de cine y alberca techada.
+  salon: { wall: 0x7a1f2b, wallDark: 0x5a1520, floor: 0xe8e4dc, floorLine: 0x2a2630, frame: 0xd9a441, picture: 0xe8a050 },
+  cine: { wall: 0x5a1220, wallDark: 0x3a0a14, floor: 0x8a1c2c, floorLine: 0x6a1420, frame: 0x2b1d2f, picture: 0xffd36e },
+  alberca: { wall: 0x5fb8d8, wallDark: 0x3a8aaa, floor: 0xf0ece2, floorLine: 0xbcd6e0, frame: 0xff7a3d, picture: 0xffffff },
 };
 
 /** Alinea un patrón a la cuadrícula aunque la cámara esté corrida a la izquierda (x negativas). */

@@ -31,13 +31,14 @@ export interface ObjectDef {
 }
 
 /**
- * Una casa (casas.json, en orden): el departamento, la casa… La primera ya está; a cada una de
- * las demás el dueño se muda al juntar `requisito` en el Canal (totales, nunca se gastan), y
- * desde entonces cada partida empieza en ella con `fuerzaInicial` niveles de Fuerza.
+ * Una casa (casas.json, en orden): el departamento, la casa, la mansión… La primera ya está; a
+ * cada una de las demás el dueño se muda al juntar `requisito` en el Canal (totales que nunca
+ * bajan) y, si lo pide, tras vencer al `jefe` de la casa anterior; desde entonces cada partida
+ * empieza en ella con `fuerzaInicial` niveles de Fuerza.
  */
 export interface HomeDef {
   id: string;
-  requisito: { seguidores: number; visualizaciones: Decimal } | null;
+  requisito: { seguidores: number; visualizaciones: Decimal; jefe?: string } | null;
   fuerzaInicial: number;
 }
 
@@ -95,6 +96,13 @@ export const PLACES = [
   'estudio-repisa',
   'estudio-piso',
   'cochera-piso',
+  'salon-mesa',
+  'salon-mueble',
+  'salon-piso',
+  'cine-mueble',
+  'cine-piso',
+  'alberca-mesa',
+  'alberca-piso',
 ] as const;
 export type PlaceId = (typeof PLACES)[number];
 
@@ -218,10 +226,9 @@ export interface Balance {
     exponenteSeguidores: number;
     /** Cada seguidor da +2 % de dinero, para siempre. */
     bonoPorSeguidor: number;
-    /** Visualizaciones del video por cada "vista" de la partida (stats.vistasVideo). */
-    visualizacionesPorVista: number;
-    /** Cada seguidor que ya tiene el canal trae +10 % de visualizaciones a cada video. */
-    vistasPorSeguidor: number;
+    /** Visualizaciones del video: ⌊(dinero de la partida / escala)^exponente⌋, como los seguidores. */
+    escalaVisualizaciones: number;
+    exponenteVisualizaciones: number;
     /** Probabilidad de que el video se haga viral y cuánto multiplica. */
     probabilidadViral: number;
     multViral: number;
@@ -386,6 +393,7 @@ export function parseGameData(raw: RawGameData): GameData {
       requisito: {
         seguidores: positive('casas.json', req, 'seguidores').toNumber(),
         visualizaciones: positive('casas.json', req, 'visualizaciones'),
+        ...(typeof req.jefe === 'string' ? { jefe: req.jefe } : {}),
       },
       fuerzaInicial: Math.floor(positive('casas.json', item, 'fuerzaInicial').toNumber()),
     };
@@ -456,6 +464,10 @@ export function parseGameData(raw: RawGameData): GameData {
     };
   });
   uniqueIds('jefes.json', bosses);
+  for (const home of homes) {
+    const jefe = home.requisito?.jefe;
+    if (jefe && !bosses.some((b) => b.id === jefe)) throw new DataError('casas.json', `"${home.id}": el jefe "${jefe}" no existe en jefes.json`);
+  }
   if (new Set(bosses.map((b) => b.casa)).size !== bosses.length) throw new DataError('jefes.json', 'cada casa tiene a lo mucho un jefe');
 
   const objectIds = new Set(objects.map((o) => o.id));
@@ -569,8 +581,8 @@ export function parseGameData(raw: RawGameData): GameData {
       escalaSeguidores: n(canal, 'escalaSeguidores'),
       exponenteSeguidores: Math.min(1, n(canal, 'exponenteSeguidores')),
       bonoPorSeguidor: n(canal, 'bonoPorSeguidor'),
-      visualizacionesPorVista: n(canal, 'visualizacionesPorVista'),
-      vistasPorSeguidor: n(canal, 'vistasPorSeguidor'),
+      escalaVisualizaciones: n(canal, 'escalaVisualizaciones'),
+      exponenteVisualizaciones: n(canal, 'exponenteVisualizaciones'),
       probabilidadViral: Math.min(1, n(canal, 'probabilidadViral')),
       multViral: n(canal, 'multViral'),
       objetoMinimo,

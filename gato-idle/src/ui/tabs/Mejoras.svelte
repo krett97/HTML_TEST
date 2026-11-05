@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { bossText } from '../bossText';
   import Icon from '../Icon.svelte';
   import Rich from '../Rich.svelte';
   import Coin from '../Coin.svelte';
@@ -83,7 +84,7 @@
       {#if $view.valor.ultimoObjeto}
         <div class="steps muted">{$t('mejoras.valorUltimo')}</div>
         {#if $view.valor.esperaMudanza}
-          <div class="steps muted" data-testid="espera-mudanza"><Icon name="candado" /> <Rich text={$t('mejoras.esperaMudanza')} /></div>
+          <div class="steps muted" data-testid="espera-mudanza"><Icon name="candado" /> <Rich text={$view.valor.esperaJefe ? $t('mejoras.esperaJefe', bossText($t, $view.valor.esperaJefe)) : $t('mejoras.esperaMudanza')} /></div>
         {/if}
       {:else}
         <div class="steps" title={$t('mejoras.valorEtapa', { n: $view.valor.enObjeto, total: $view.valor.porObjeto })}>

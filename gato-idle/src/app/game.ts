@@ -213,6 +213,8 @@ export interface ViewModel {
     ultimoObjeto: boolean;
     /** Está en el último objeto de la casa y falta juntar lo de la mudanza (ver el Canal). */
     esperaMudanza: boolean;
+    /** El jefe que falta vencer para mudarse (null: no falta ninguno). */
+    esperaJefe: string | null;
     /** El siguiente nivel de Valor muda al dueño a la casa nueva. */
     mudanza: boolean;
     cantidad: number;
@@ -325,6 +327,8 @@ export interface ViewModel {
       desbloqueada: boolean;
       seguidores: { tiene: string; meta: string; progreso: number };
       visualizaciones: { tiene: string; meta: string; progreso: number };
+      /** Jefe de esta casa que hay que vencer para mudarse (null: no pide). */
+      jefe: { id: string; derrotado: boolean } | null;
     } | null;
   };
   /** Modo pruebas: si existe en esta versión, los trucos y si alguno está prendido. */
@@ -897,6 +901,8 @@ export class Game {
     const canal = this.state.canal;
     canal.seguidores = Math.max(canal.seguidores, req.seguidores);
     if (canal.visualizacionesTotales.lt(req.visualizaciones)) canal.visualizacionesTotales = req.visualizaciones;
+    // Si la casa pide vencer a un jefe, cuenta como vencido.
+    if (req.jefe && !this.state.jefes.derrotados.includes(req.jefe)) this.state.jefes.derrotados.push(req.jefe);
     this.checkMove();
     this.afterTest();
     return true;
@@ -1282,6 +1288,7 @@ export class Game {
         meta: fmt(visualizaciones),
         progreso: Math.min(1, s.canal.visualizacionesTotales.div(visualizaciones).toNumber()),
       },
+      jefe: home.requisito.jefe ? { id: home.requisito.jefe, derrotado: s.jefes.derrotados.includes(home.requisito.jefe) } : null,
     };
   }
 
@@ -1378,6 +1385,10 @@ export class Game {
         porObjeto: d.balance.valor.nivelesPorObjeto,
         ultimoObjeto: objectIndex(s, d) === lastObjectIndex(s, d),
         esperaMudanza: objectIndex(s, d) === lastObjectIndex(s, d) && nextHome(s, d) !== null && !moveUnlocked(s, d),
+        esperaJefe: (() => {
+          const jefe = nextHome(s, d)?.requisito?.jefe;
+          return jefe && !s.jefes.derrotados.includes(jefe) ? jefe : null;
+        })(),
         mudanza: nuevoObjeto !== object && nextHome(s, d) !== null && nuevoObjeto.casa === nextHome(s, d)!.id,
         cantidad: valor.cantidad,
         costo: valor.costo,

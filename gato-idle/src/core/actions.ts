@@ -34,7 +34,6 @@ export function hit(state: GameState, data: GameData, damage: Decimal): HitResul
   state.dineroPartida = state.dineroPartida.add(dinero);
   state.stats.roturas += 1;
   state.stats.roturasPartida += 1;
-  state.stats.vistasVideo += objectIndex(state, data) + 1;
   state.danioObjeto = ZERO;
   return { objectId: obj.id, damage, progress: 1, broke: true, reward: { vistas, dinero } };
 }
