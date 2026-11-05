@@ -1,7 +1,7 @@
 {
   "name": "gato-idle",
   "private": true,
-  "version": "0.31.0",
+  "version": "0.32.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -16,7 +16,8 @@
     "android:sync": "npm run build && cap sync android",
     "android:open": "cap open android",
     "apk:prueba": "bash apk-prueba/build.sh",
-    "simular": "tsx tools/simulate.ts"
+    "simular": "tsx tools/simulate.ts",
+    "e2e": "npm run build && npm run build:compartir && node tests/e2e/flujos.cjs"
   },
   "dependencies": {
     "@capacitor-community/admob": "^8.3.0",

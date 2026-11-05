@@ -181,9 +181,9 @@
     align-items: center;
     gap: 6px;
     padding: 0 4px;
-    pointer-events: auto;
     color: var(--muted);
     font-size: 13px;
+    /* El recuadro deja pasar los toques a la escena; el botón "¡Ya!" sí se toca. */
     pointer-events: none;
   }
   .boss {
@@ -381,6 +381,7 @@
     }
   }
   .revancha-ya {
+    pointer-events: auto;
     min-height: 30px;
     font-size: 12px;
   }

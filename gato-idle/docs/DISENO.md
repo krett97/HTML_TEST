@@ -967,3 +967,21 @@ Todos los anuncios son **recompensados y opcionales** (el jugador decide verlos;
 | Reiniciar el árbol | 3 anuncios devuelven lo gastado |
 
 El turbo empezó en ×2 sin espera: con un anuncio cada 3 minutos el juego se acababa en 0.6 h (4.6 veces más rápido). Con ×1.5 y 10 minutos de espera, el simulador da (horas de juego activo hasta vencer al último jefe): sin anuncios 2.8 h · solo videos ×2 2.2 h · videos y turbo siempre que se pueda 1.8 h. Ver anuncios se nota (hasta ~1.6 veces más rápido) sin vaciar el juego. `npm run simular` imprime esta tabla ("Con y sin anuncios").
+
+## 51. Pruebas de punta a punta (versión 0.32.0)
+
+Además de las 171 pruebas unitarias (`npm test`), `npm run e2e` juega el juego real en Chromium (Playwright) y revisa 11 flujos, cada uno en una partida nueva y sin errores en la consola:
+
+1. Tutorial: tocar, monedas, primera compra de Fuerza y saltarlo.
+2. Canal: subir video (seguidores > 0), árbol en pantalla completa, comprar una habilidad y volver con las pestañas.
+3. Maquinita: giro con ficha (gasta una) y giro con anuncio.
+4. Turbo con anuncio.
+5. Jefe: perder (30 s), revancha con anuncio y ganar; el jefe vencido ya no aparece.
+6. Mudanza a la casa, ranking con nombre y guardado al recargar.
+7. "Mientras no estabas" ×2.
+8–10. Pantallas de 320×568, 390×844 y 768×1024: ninguna pestaña se desborda a lo ancho.
+11. La versión para compartir no trae el modo pruebas.
+
+La primera corrida encontró un error real: el botón **¡Ya!** de la revancha no se podía tocar (el recuadro tenía `pointer-events: none` y el botón lo heredaba). Corregido: el recuadro deja pasar los toques a la escena y el botón sí responde.
+
+Antes de cada versión: `npm test`, `npx tsc --noEmit -p .`, `npx svelte-check` y `npm run e2e`. Lo que falta para la tienda (cuentas, firma, política de privacidad en línea, prueba cerrada) está en `docs/PUBLICAR.md`.
