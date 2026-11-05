@@ -11,3 +11,8 @@ android/.idea/
 *.apk
 *.aab
 dist-archivo/
+# Llaves y IDs privados (AdMob, firma): nunca al repo
+.env.local
+.env.*.local
+*.jks
+*.keystore

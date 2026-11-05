@@ -1,6 +1,9 @@
-// Anuncios recompensados detrás de una interfaz común. Cada plataforma tendrá su versión:
-// AdMob en Android (fase 5), H5 Games Ads o el SDK del portal en web. Por ahora solo existe la
-// versión falsa, que muestra una pantalla de prueba y siempre da la recompensa si la ves completa.
+// Anuncios recompensados detrás de una interfaz común. En la app de Android (Capacitor) son de
+// AdMob (AdMobAds); en el navegador y en el APK de prueba, una pantalla falsa que da la recompensa
+// si la ves completa (MockAds). Los IDs de AdMob vienen de VITE_ADMOB_REWARDED_ID al compilar; sin
+// él se usan los IDs de prueba de Google (anuncios de prueba, nunca cobran).
+
+import { isNative } from './platform';
 
 export type RewardedPlacement = 'zoomies' | 'patrocinio' | 'vacaciones' | 'caja' | 'culpa_perro' | 'dinero' | 'arbol' | 'video' | 'suerte' | 'turbo' | 'jefe';
 
@@ -69,6 +72,70 @@ class MockAds implements AdsService {
   }
 }
 
+/** ID del bloque de anuncios recompensados de prueba de Google (siempre muestra un anuncio de prueba). */
+const TEST_REWARDED_ID = 'ca-app-pub-3940256099942544/5224354917';
+
+/**
+ * AdMob (plugin @capacitor-community/admob). Pide el consentimiento (UMP: Europa y otros lugares que
+ * lo exigen), precarga un anuncio y al terminar uno precarga el siguiente. La recompensa se da solo si
+ * AdMob avisa "Rewarded" antes de que se cierre el anuncio.
+ */
+class AdMobAds implements AdsService {
+  readonly name = 'admob';
+  private plugin: typeof import('@capacitor-community/admob') | null = null;
+  private loaded = false;
+  private showing = false;
+  private readonly adId = (import.meta.env.VITE_ADMOB_REWARDED_ID as string | undefined) || TEST_REWARDED_ID;
+
+  async init(): Promise<void> {
+    try {
+      this.plugin = await import('@capacitor-community/admob');
+      const { AdMob, AdmobConsentStatus } = this.plugin;
+      await AdMob.initialize({ initializeForTesting: this.adId === TEST_REWARDED_ID });
+      const consent = await AdMob.requestConsentInfo();
+      if (consent.isConsentFormAvailable && consent.status === AdmobConsentStatus.REQUIRED) await AdMob.showConsentForm();
+      void this.preload();
+    } catch {
+      this.plugin = null; // Sin AdMob (p. ej. sin Google Play Services): los anuncios no se ofrecen.
+    }
+  }
+
+  private async preload(): Promise<void> {
+    if (!this.plugin || this.loaded) return;
+    try {
+      await this.plugin.AdMob.prepareRewardVideoAd({ adId: this.adId, isTesting: this.adId === TEST_REWARDED_ID });
+      this.loaded = true;
+    } catch {
+      this.loaded = false;
+    }
+  }
+
+  isReady(): boolean {
+    return this.plugin !== null && !this.showing;
+  }
+
+  async showRewarded(): Promise<AdResult> {
+    if (!this.plugin || this.showing) return { rewarded: false };
+    const { AdMob, RewardAdPluginEvents } = this.plugin;
+    if (!this.loaded) await this.preload();
+    if (!this.loaded) return { rewarded: false };
+    this.showing = true;
+    let rewarded = false;
+    const onReward = await AdMob.addListener(RewardAdPluginEvents.Rewarded, () => (rewarded = true));
+    try {
+      await AdMob.showRewardVideoAd();
+    } catch {
+      // No se pudo mostrar: sin recompensa.
+    } finally {
+      await onReward.remove();
+      this.showing = false;
+      this.loaded = false;
+      void this.preload();
+    }
+    return { rewarded };
+  }
+}
+
 export function createAds(): AdsService {
-  return new MockAds();
+  return isNative ? new AdMobAds() : new MockAds();
 }

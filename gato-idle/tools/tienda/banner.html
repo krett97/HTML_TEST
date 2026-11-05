@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<title>Banner de la tienda</title>
+<style>
+  @font-face { font-family: 'Pixelify'; src: url('../../node_modules/@fontsource/pixelify-sans/files/pixelify-sans-latin-700-normal.woff') format('woff'); font-weight: 700; }
+  html, body { margin: 0; }
+  .banner {
+    position: relative; width: 1024px; height: 500px; overflow: hidden;
+    background: url('../../src/assets/arte/pared_superficie.png') 0 0 / 256px 256px repeat;
+    image-rendering: pixelated; font-family: 'Pixelify', sans-serif;
+  }
+  .floor { position: absolute; left: 0; right: 0; bottom: 0; height: 96px; background: url('../../src/assets/arte/piso_superficie.png') 0 0 / 192px 192px repeat; border-top: 6px solid #0a0a1e; }
+  .earth { position: absolute; right: 70px; top: 40px; width: 210px; image-rendering: pixelated; }
+  .px { position: absolute; image-rendering: pixelated; }
+  h1 {
+    position: absolute; left: 44px; top: 30px; margin: 0; font-size: 92px; line-height: 0.95; color: #ffd36e; letter-spacing: 2px;
+    text-shadow: 0 6px 0 #120b16, 6px 0 0 #120b16, -6px 0 0 #120b16, 0 -6px 0 #120b16, 6px 6px 0 #120b16, -6px 6px 0 #120b16, 6px -6px 0 #120b16, -6px -6px 0 #120b16, 0 14px 0 #e5534b;
+  }
+  p {
+    position: absolute; z-index: 2; left: 0; right: 0; bottom: 14px; margin: 0; text-align: center; font-size: 34px; color: #fff1e0;
+    text-shadow: 0 4px 0 #120b16, 4px 0 0 #120b16, -4px 0 0 #120b16, 0 -4px 0 #120b16;
+  }
+</style>
+</head>
+<body>
+<div class="banner">
+  <img class="earth" src="../../src/assets/arte/ventana_superficie.png" alt="" />
+  <h1>SWAT TO<br />THE MOON</h1>
+  <p>¡El gato tira todo… hasta la Luna!</p>
+  <div class="floor"></div>
+  <img class="px" src="../../src/assets/arte/obj_cohete.png" alt="" style="right: 330px; bottom: 70px; height: 300px" />
+  <img class="px" src="../../src/assets/arte/gato_saco_golpe.png" alt="" style="left: 470px; bottom: 76px; height: 168px" />
+  <img class="px" src="../../src/assets/arte/sombrero.png" alt="" style="left: 532px; bottom: 214px; height: 72px" />
+  <img class="px" src="../../src/assets/arte/obj_vaso.png" alt="" style="left: 700px; bottom: 210px; height: 84px; transform: rotate(38deg)" />
+  <img class="px" src="../../src/assets/arte/aliado_perro.png" alt="" style="left: 60px; bottom: 76px; height: 132px" />
+  <img class="px" src="../../src/assets/arte/aliado_mapache.png" alt="" style="left: 190px; bottom: 76px; height: 132px" />
+  <img class="px" src="../../src/assets/arte/aliado_cabra.png" alt="" style="left: 318px; bottom: 76px; height: 132px" />
+  <img class="px" src="../../src/assets/arte/aliado_gatito.png" alt="" style="left: 410px; bottom: 76px; height: 84px" />
+  <img class="px" src="../../src/assets/arte/jefe_veterinario.png" alt="" style="right: 40px; bottom: 76px; height: 230px" />
+</div>
+</body>
+</html>

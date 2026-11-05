@@ -11,6 +11,13 @@
   </head>
   <body>
     <div id="app"></div>
+    <!-- Pantalla de carga (main.ts la quita al montar el juego). -->
+    <div id="carga" style="position:fixed;inset:0;display:grid;place-items:center;background:#1e1424;color:#ffd36e;font:700 18px system-ui,sans-serif">
+      <div style="display:grid;justify-items:center;gap:12px">
+        <img src="/icono.png" alt="" width="96" height="96" style="image-rendering:pixelated;border-radius:18px" />
+        <span>Swat to the Moon</span>
+      </div>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

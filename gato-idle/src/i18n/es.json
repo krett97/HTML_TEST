@@ -209,7 +209,10 @@
     "probarAnuncio": "Probar anuncio recompensado",
     "anuncioOk": "Recompensa recibida",
     "anuncioNo": "Sin recompensa (lo cerraste antes)",
-    "version": "Versión {version} · {plataforma} · anuncios: {anuncios}"
+    "version": "Versión {version} · {plataforma} · anuncios: {anuncios}",
+    "privacidad": "Privacidad",
+    "privacidadTexto": "Tu partida se guarda solo en este teléfono; no tenemos cuentas ni servidor. Los anuncios (opcionales) son de Google AdMob, que puede usar el identificador de publicidad del dispositivo para mostrarlos. No hay compras: la maquinita usa solo fichas del juego.",
+    "privacidadVer": "Ver la política de privacidad completa"
   },
   "herramientas": {
     "pata": "Pata",

@@ -8,6 +8,17 @@ export interface LifecycleHandlers {
   onForeground(): void;
 }
 
+/**
+ * Botón "atrás" de Android: primero cierra lo que esté abierto (el árbol en pantalla completa, una
+ * ventana); si no hay nada, manda la app al fondo en vez de cerrarla (así no se pierde nada).
+ */
+export function watchBackButton(closeSomething: () => boolean): void {
+  if (!isNative) return;
+  void App.addListener('backButton', () => {
+    if (!closeSomething()) void App.minimizeApp();
+  });
+}
+
 export function watchLifecycle(handlers: LifecycleHandlers): void {
   if (isNative) {
     void App.addListener('pause', handlers.onBackground);

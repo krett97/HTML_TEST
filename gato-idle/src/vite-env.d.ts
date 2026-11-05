@@ -5,3 +5,10 @@
 declare const __APP_VERSION__: string;
 /** Modo pruebas disponible (botón 🛠). Se apaga con PRUEBAS=no al compilar la versión de tienda. */
 declare const __PRUEBAS__: boolean;
+
+interface ImportMetaEnv {
+  /** Bloque de anuncios recompensados de AdMob (sin él, el de prueba de Google). */
+  readonly VITE_ADMOB_REWARDED_ID?: string;
+  /** Página con la política de privacidad completa (se enlaza en Ajustes). */
+  readonly VITE_PRIVACIDAD_URL?: string;
+}

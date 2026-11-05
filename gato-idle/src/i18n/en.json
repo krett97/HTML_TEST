@@ -209,7 +209,10 @@
     "probarAnuncio": "Test rewarded ad",
     "anuncioOk": "Reward received",
     "anuncioNo": "No reward (closed early)",
-    "version": "Version {version} · {plataforma} · ads: {anuncios}"
+    "version": "Version {version} · {plataforma} · ads: {anuncios}",
+    "privacidad": "Privacy",
+    "privacidadTexto": "Your save stays on this phone only; there are no accounts or servers. The optional ads come from Google AdMob, which may use the device advertising ID to show them. There are no purchases: the slot machine uses in-game tokens only.",
+    "privacidadVer": "Read the full privacy policy"
   },
   "herramientas": {
     "pata": "Paw",

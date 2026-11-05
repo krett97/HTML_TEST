@@ -1,4 +1,6 @@
 <script lang="ts">
+  /** Política de privacidad completa (VITE_PRIVACIDAD_URL al compilar; sin ella, solo el resumen). */
+  const PRIVACY_URL = (import.meta.env.VITE_PRIVACIDAD_URL as string | undefined) ?? '';
   import type { Notation } from '../../core/format';
   import type { Locale, Settings } from '../../core/state';
   import { isLocale, LOCALES, t } from '../../i18n';
@@ -93,12 +95,20 @@
   </button>
 </div>
 
-<h3>{$t('ajustes.pruebas')}</h3>
-<div class="buttons">
-  <button type="button" class="btn btn--accent" onclick={testAd}>{$t('ajustes.probarAnuncio')}</button>
-</div>
-{#if adMessage}
-  <p class="small" data-testid="resultado-anuncio">{adMessage}</p>
+<h3>{$t('ajustes.privacidad')}</h3>
+<p class="muted small" data-testid="privacidad">{$t('ajustes.privacidadTexto')}</p>
+{#if PRIVACY_URL}
+  <p class="small"><a href={PRIVACY_URL} target="_blank" rel="noopener noreferrer">{$t('ajustes.privacidadVer')}</a></p>
+{/if}
+
+{#if __PRUEBAS__}
+  <h3>{$t('ajustes.pruebas')}</h3>
+  <div class="buttons">
+    <button type="button" class="btn btn--accent" onclick={testAd}>{$t('ajustes.probarAnuncio')}</button>
+  </div>
+  {#if adMessage}
+    <p class="small" data-testid="resultado-anuncio">{adMessage}</p>
+  {/if}
 {/if}
 <p class="muted small">
   {$t('ajustes.version', { version: __APP_VERSION__, plataforma: platform, anuncios: game.ads.name })}

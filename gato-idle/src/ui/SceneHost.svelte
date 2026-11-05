@@ -187,7 +187,8 @@
     pointer-events: none;
   }
   .boss {
-    width: min(200px, calc(100% - 150px));
+    /* Sin encimarse con el medidor de daño (a la izquierda) en pantallas angostas. */
+    width: min(200px, calc(100% - 186px));
     padding: 0 2px;
     color: var(--text);
     pointer-events: none;
