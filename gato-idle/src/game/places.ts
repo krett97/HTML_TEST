@@ -1,11 +1,12 @@
 // Escenarios: cada objeto está en un cuarto (cocina, sala, baño, recámara, cuarto de lavado; en la
-// casa, jardín, estudio y cochera; en la mansión, salón, cine y alberca) y sobre una superficie (barra, mesa, mueble, repisa,
+// casa, jardín, estudio y cochera; en la mansión, salón, cine y alberca; en la Luna, cohete,
+// laboratorio lunar y superficie) y sobre una superficie (barra, mesa, mueble, repisa,
 // cama, escritorio o el piso). Con arte de PixelLab (pared_*, piso_*, ventana_*, cuadro_*, mueble_*)
 // la escena lo usa; lo que no tenga PNG se dibuja aquí con rectángulos, con las mismas medidas.
 import type Phaser from 'phaser';
 import type { PlaceId } from '../core/data';
 
-export type Room = 'cocina' | 'sala' | 'bano' | 'recamara' | 'lavado' | 'jardin' | 'estudio' | 'cochera' | 'salon' | 'cine' | 'alberca';
+export type Room = 'cocina' | 'sala' | 'bano' | 'recamara' | 'lavado' | 'jardin' | 'estudio' | 'cochera' | 'salon' | 'cine' | 'alberca' | 'cohete' | 'labluna' | 'superficie';
 export type SurfaceKind = 'barra' | 'mesa' | 'mueble' | 'repisa' | 'cama' | 'escritorio' | 'piso';
 
 export interface Surface {
@@ -50,6 +51,8 @@ const FURNITURE: Partial<Record<PlaceId, { ancho: number; alto: number; sobresal
   'salon-mueble': { ancho: 128, alto: 26.5 },
   'cine-mueble': { ancho: 125, alto: 21 },
   'alberca-mesa': { ancho: 94.5, alto: 18.5 },
+  'cohete-mueble': { ancho: 134, alto: 25.5 },
+  'labluna-mesa': { ancho: 83, alto: 14.5 },
 };
 
 export function placeOf(id: PlaceId): Place {
@@ -107,6 +110,10 @@ const ROOMS: Record<Room, RoomLook> = {
   salon: { wall: 0x7a1f2b, wallDark: 0x5a1520, floor: 0xe8e4dc, floorLine: 0x2a2630, frame: 0xd9a441, picture: 0xe8a050 },
   cine: { wall: 0x5a1220, wallDark: 0x3a0a14, floor: 0x8a1c2c, floorLine: 0x6a1420, frame: 0x2b1d2f, picture: 0xffd36e },
   alberca: { wall: 0x5fb8d8, wallDark: 0x3a8aaa, floor: 0xf0ece2, floorLine: 0xbcd6e0, frame: 0xff7a3d, picture: 0xffffff },
+  // La Luna: la cabina del cohete, el laboratorio lunar y la superficie (con la Tierra en el cielo).
+  cohete: { wall: 0x5a6270, wallDark: 0x3a404a, floor: 0x3a404a, floorLine: 0x2a2e36, frame: 0xc99a3a, picture: 0x8fc7e8 },
+  labluna: { wall: 0xc8d2d8, wallDark: 0x9aa8b0, floor: 0xd8e2e8, floorLine: 0xb8c4cc, frame: 0x2a2e36, picture: 0x5ec4a8 },
+  superficie: { wall: 0x0a0a1e, wallDark: 0x1a1a2e, floor: 0x9a9aa4, floorLine: 0x7a7a84, frame: 0x8a8a94, picture: 0x7be07b },
 };
 
 /** Alinea un patrón a la cuadrícula aunque la cámara esté corrida a la izquierda (x negativas). */

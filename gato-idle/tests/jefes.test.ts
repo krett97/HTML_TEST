@@ -27,6 +27,9 @@ describe('jefes', () => {
     const refri = createInitialState(0);
     normalizeState(refri, gameData);
     refri.nivelValor = homeStartLevel(gameData, 1) - 1;
+    // En el refri, el último objeto del departamento, espera la Escoba Furiosa.
+    expect(bossHere(refri, gameData)?.id).toBe('escoba');
+    refri.jefes.derrotados.push('escoba');
     expect(bossHere(refri, gameData)).toBe(null);
   });
 

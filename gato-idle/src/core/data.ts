@@ -103,6 +103,11 @@ export const PLACES = [
   'cine-piso',
   'alberca-mesa',
   'alberca-piso',
+  'cohete-mueble',
+  'cohete-piso',
+  'labluna-mesa',
+  'labluna-piso',
+  'superficie-piso',
 ] as const;
 export type PlaceId = (typeof PLACES)[number];
 

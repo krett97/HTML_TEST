@@ -511,6 +511,9 @@ html[data-tuto] .avisos {
 .vineta--trofeo {
   --fondo: #ffd36e;
 }
+.vineta--final {
+  --fondo: #9fd8ff;
+}
 .vineta--marca {
   --fondo: #ff8a95;
 }

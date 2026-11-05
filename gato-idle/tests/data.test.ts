@@ -17,8 +17,9 @@ import en from '../src/i18n/en.json';
 
 describe('datos de balance', () => {
   it('los JSON del juego son válidos', () => {
-    expect(gameData.objects.length).toBe(51);
-    expect(gameData.homes.map((h) => h.id)).toEqual(['departamento', 'casa', 'mansion']);
+    expect(gameData.objects.length).toBe(63);
+    expect(gameData.homes.map((h) => h.id)).toEqual(['departamento', 'casa', 'mansion', 'luna']);
+    expect(gameData.bosses.map((b) => b.id)).toEqual(['escoba', 'pepino', 'industrial', 'veterinario']);
     expect(gameData.objects.filter((o) => o.casa === 'casa').length).toBe(12);
     expect(gameData.objects.filter((o) => o.casa === 'mansion').length).toBe(12);
     expect(gameData.objects.filter((o) => o.casa === 'departamento').length).toBe(27);

@@ -82,12 +82,25 @@
     "flotador": "Inflatable unicorn",
     "sombrilla": "Beach umbrella",
     "dron": "Drone",
-    "jetski": "Jet ski"
+    "jetski": "Jet ski",
+    "casco": "Helmet with ears",
+    "comida": "Pizza in a tube",
+    "pecera": "Space fishbowl",
+    "traje": "Space suit",
+    "telescopio": "Telescope",
+    "roca": "Moon rock",
+    "alien": "Alien in a jar",
+    "robot": "Helper robot",
+    "bandera": "Cat flag",
+    "satelite": "Satellite",
+    "rover": "Moon rover",
+    "cohete": "The owner's rocket"
   },
   "casas": {
     "departamento": "Apartment",
     "casa": "House with a garden",
-    "mansion": "Mansion"
+    "mansion": "Mansion",
+    "luna": "The Moon"
   },
   "jefes": {
     "pepino": {
@@ -108,6 +121,26 @@
       "al": "the Industrial Vacuum",
       "el": "the Industrial Vacuum",
       "El": "The Industrial Vacuum",
+      "derrotado": "DEFEATED"
+    },
+    "escoba": {
+      "nombre": "Furious Broom",
+      "titulo": "THE FURIOUS BROOM GUARDS THE FRIDGE!",
+      "frase": "The owner is tired of sweeping… you have 30 seconds!",
+      "trofeo": "Trophy: +15% damage forever",
+      "al": "the Furious Broom",
+      "el": "the Furious Broom",
+      "El": "The Furious Broom",
+      "derrotado": "DEFEATED"
+    },
+    "veterinario": {
+      "nombre": "Space Vet",
+      "titulo": "THE SPACE VET IS COMING FOR YOU!",
+      "frase": "Bringing the biggest shot in the universe… you have 30 seconds!",
+      "trofeo": "Trophy: +40% damage, money and gang damage",
+      "al": "the Space Vet",
+      "el": "the Space Vet",
+      "El": "The Space Vet",
       "derrotado": "DEFEATED"
     }
   },
@@ -230,7 +263,7 @@
     "roturas": "Knock off {n} more items",
     "objeto": "Upgrade Value",
     "nuevo": "New!",
-    "todo": "You have discovered everything in this version. Get followers on the Channel to move… and see what comes next.",
+    "todo": "You have discovered everything in this version. Get followers in the Channel to move… and beat every boss. Will the cat reach the Moon?",
     "fuerza": "Strength",
     "valor": "Value",
     "laboratorio": "Cat research",
@@ -459,6 +492,10 @@
     "marca": {
       "titulo": "MARKING CLAWS!",
       "texto": "Every critical swat marks the object: the gang hits harder"
+    },
+    "final": {
+      "titulo": "SWAT TO THE MOON!",
+      "texto": "The cat knocked over everything on Earth… and now on the Moon too. The owner has nowhere left to move. To be continued…"
     }
   },
   "offline": {

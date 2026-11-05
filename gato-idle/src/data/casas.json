@@ -1,5 +1,6 @@
 [
   { "id": "departamento" },
   { "id": "casa", "requisito": { "seguidores": 80, "visualizaciones": 450000 }, "fuerzaInicial": 50 },
-  { "id": "mansion", "requisito": { "seguidores": 400, "visualizaciones": 2500000, "jefe": "pepino" }, "fuerzaInicial": 120 }
+  { "id": "mansion", "requisito": { "seguidores": 400, "visualizaciones": 2500000, "jefe": "pepino" }, "fuerzaInicial": 120 },
+  { "id": "luna", "requisito": { "seguidores": 2500, "visualizaciones": 60000000, "jefe": "industrial" }, "fuerzaInicial": 200 }
 ]

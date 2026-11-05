@@ -1,0 +1,362 @@
+[
+ {
+  "name": "casco",
+  "desc": "white astronaut helmet with little cat ears on top and a golden visor",
+  "w": 40,
+  "h": 40,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", isolated object, no shadow, pixel art game item, side view, bold black outline, cartoon, vibrant colors",
+  "transparent": true
+ },
+ {
+  "name": "comida",
+  "desc": "squeezable tube of space food with a pizza label",
+  "w": 24,
+  "h": 48,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", isolated object, no shadow, pixel art game item, side view, bold black outline, cartoon, vibrant colors",
+  "transparent": true
+ },
+ {
+  "name": "pecera",
+  "desc": "round glass fishbowl space helmet with a goldfish inside",
+  "w": 40,
+  "h": 40,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", isolated object, no shadow, pixel art game item, side view, bold black outline, cartoon, vibrant colors",
+  "transparent": true
+ },
+ {
+  "name": "traje",
+  "desc": "empty white astronaut space suit standing upright with a NASA-like cat paw patch",
+  "w": 56,
+  "h": 104,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", isolated object, no shadow, pixel art game item, side view, bold black outline, cartoon, vibrant colors",
+  "transparent": true
+ },
+ {
+  "name": "telescopio",
+  "desc": "brass telescope on a wooden tripod pointing up",
+  "w": 64,
+  "h": 96,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", isolated object, no shadow, pixel art game item, side view, bold black outline, cartoon, vibrant colors",
+  "transparent": true
+ },
+ {
+  "name": "roca",
+  "desc": "grey moon rock with glowing green crystals",
+  "w": 48,
+  "h": 40,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", isolated object, no shadow, pixel art game item, side view, bold black outline, cartoon, vibrant colors",
+  "transparent": true
+ },
+ {
+  "name": "alien",
+  "desc": "glass jar with a tiny cute green alien waving inside",
+  "w": 40,
+  "h": 56,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", isolated object, no shadow, pixel art game item, side view, bold black outline, cartoon, vibrant colors",
+  "transparent": true
+ },
+ {
+  "name": "robot",
+  "desc": "small cute white helper robot with one big eye and antenna",
+  "w": 64,
+  "h": 80,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", isolated object, no shadow, pixel art game item, side view, bold black outline, cartoon, vibrant colors",
+  "transparent": true
+ },
+ {
+  "name": "bandera",
+  "desc": "flag on a pole with a big cat paw print on it",
+  "w": 56,
+  "h": 104,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", isolated object, no shadow, pixel art game item, side view, bold black outline, cartoon, vibrant colors",
+  "transparent": true
+ },
+ {
+  "name": "satelite",
+  "desc": "satellite with blue solar panels and a dish antenna",
+  "w": 112,
+  "h": 72,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", isolated object, no shadow, pixel art game item, side view, bold black outline, cartoon, vibrant colors",
+  "transparent": true
+ },
+ {
+  "name": "rover",
+  "desc": "six wheeled moon rover buggy with an antenna, side view",
+  "w": 128,
+  "h": 80,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", isolated object, no shadow, pixel art game item, side view, bold black outline, cartoon, vibrant colors",
+  "transparent": true
+ },
+ {
+  "name": "cohete",
+  "desc": "tall white and red rocket ship standing upright with fins",
+  "w": 96,
+  "h": 200,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", isolated object, no shadow, pixel art game item, side view, bold black outline, cartoon, vibrant colors",
+  "transparent": true
+ },
+ {
+  "name": "jefe_escoba",
+  "desc": "angry living broom monster boss with furious eyes, bristles like wild hair, thin arms holding a dustpan like a shield, funny video game boss",
+  "w": 96,
+  "h": 128,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game sprite, side view, bold black outline, cartoon, vibrant colors, isolated, no shadow",
+  "transparent": true
+ },
+ {
+  "name": "jefe_veterinario",
+  "desc": "evil space veterinarian boss in a white astronaut suit with a fishbowl helmet, holding a giant syringe, mad scientist grin, funny video game boss",
+  "w": 96,
+  "h": 128,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game sprite, side view, bold black outline, cartoon, vibrant colors, isolated, no shadow",
+  "transparent": true
+ },
+ {
+  "name": "cohete_ventana",
+  "desc": "round porthole window with metal rivets showing planet Earth in space",
+  "w": 96,
+  "h": 80,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game sprite, front view, bold outline, cozy cartoon, vibrant colors, isolated, no shadow",
+  "transparent": true
+ },
+ {
+  "name": "labluna_ventana",
+  "desc": "big round porthole window showing stars and the moon surface",
+  "w": 96,
+  "h": 80,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game sprite, front view, bold outline, cozy cartoon, vibrant colors, isolated, no shadow",
+  "transparent": true
+ },
+ {
+  "name": "superficie_ventana",
+  "desc": "planet Earth floating in space, blue and green, glowing",
+  "w": 96,
+  "h": 80,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game sprite, front view, bold outline, cozy cartoon, vibrant colors, isolated, no shadow",
+  "transparent": true
+ },
+ {
+  "name": "cohete_cuadro",
+  "desc": "framed photo of an orange cat wearing an astronaut helmet giving a thumbs up",
+  "w": 64,
+  "h": 48,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game sprite, front view, bold outline, cozy cartoon, vibrant colors, isolated, no shadow",
+  "transparent": true
+ },
+ {
+  "name": "labluna_cuadro",
+  "desc": "poster with a flying saucer and the text I WANT TO BELIEVE",
+  "w": 64,
+  "h": 48,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game sprite, front view, bold outline, cozy cartoon, vibrant colors, isolated, no shadow",
+  "transparent": true
+ },
+ {
+  "name": "superficie_cuadro",
+  "desc": "small grey flying saucer ufo with green lights",
+  "w": 64,
+  "h": 48,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art game sprite, front view, bold outline, cozy cartoon, vibrant colors, isolated, no shadow",
+  "transparent": true
+ },
+ {
+  "name": "cohete_mueble",
+  "desc": "long spaceship control console with colorful buttons, levers and small screens on the front",
+  "w": 272,
+  "h": 68,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game sprite, straight side view, flat empty top surface with nothing on it, bold dark outline, cozy cartoon, vibrant colors, isolated, no shadow",
+  "transparent": true,
+  "guidance": 7
+ },
+ {
+  "name": "labluna_mesa",
+  "desc": "long white laboratory table with metal legs",
+  "w": 280,
+  "h": 56,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game sprite, straight side view, flat empty top surface with nothing on it, bold dark outline, cozy cartoon, vibrant colors, isolated, no shadow",
+  "transparent": true,
+  "guidance": 7
+ },
+ {
+  "name": "cohete_pared_k60",
+  "desc": "grey metal spaceship wall panels with rivets",
+  "w": 64,
+  "h": 64,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art texture, flat front view, cozy cartoon game, seamless repeating tile, even lighting, no vignette, fills the whole image",
+  "transparent": false,
+  "init": "tools/arte/bases/base_cohete_pared.png",
+  "strength": 60,
+  "guidance": 6
+ },
+ {
+  "name": "cohete_piso_k60",
+  "desc": "dark metal grate floor of a spaceship",
+  "w": 64,
+  "h": 64,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art texture, flat front view, cozy cartoon game, seamless repeating tile, even lighting, no vignette, fills the whole image",
+  "transparent": false,
+  "init": "tools/arte/bases/base_cohete_piso.png",
+  "strength": 60,
+  "guidance": 6
+ },
+ {
+  "name": "labluna_pared_k60",
+  "desc": "clean white futuristic laboratory wall panels with a blue stripe",
+  "w": 64,
+  "h": 64,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art texture, flat front view, cozy cartoon game, seamless repeating tile, even lighting, no vignette, fills the whole image",
+  "transparent": false,
+  "init": "tools/arte/bases/base_labluna_pared.png",
+  "strength": 60,
+  "guidance": 6
+ },
+ {
+  "name": "labluna_piso_k60",
+  "desc": "white and light blue laboratory floor tiles",
+  "w": 64,
+  "h": 64,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art texture, flat front view, cozy cartoon game, seamless repeating tile, even lighting, no vignette, fills the whole image",
+  "transparent": false,
+  "init": "tools/arte/bases/base_labluna_piso.png",
+  "strength": 60,
+  "guidance": 6
+ },
+ {
+  "name": "superficie_pared_k60",
+  "desc": "deep space background with small stars, dark blue",
+  "w": 64,
+  "h": 64,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art texture, flat front view, cozy cartoon game, seamless repeating tile, even lighting, no vignette, fills the whole image",
+  "transparent": false,
+  "init": "tools/arte/bases/base_superficie_pared.png",
+  "strength": 60,
+  "guidance": 6
+ },
+ {
+  "name": "superficie_piso_k60",
+  "desc": "grey moon surface dust with small craters",
+  "w": 64,
+  "h": 64,
+  "seeds": [
+   1,
+   2
+  ],
+  "style": ", pixel art texture, flat front view, cozy cartoon game, seamless repeating tile, even lighting, no vignette, fills the whole image",
+  "transparent": false,
+  "init": "tools/arte/bases/base_superficie_piso.png",
+  "strength": 60,
+  "guidance": 6
+ }
+]

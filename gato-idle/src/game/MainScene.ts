@@ -427,6 +427,9 @@ export class MainScene extends Phaser.Scene {
       colors.forEach((color, i) => this.time.delayedCall(i * 120, () => this.shatter(40 + i * 35, this.surfaceTop - 40, color, 24, 200)));
       if (primeraVez) {
         this.comicPanel('trofeo', this.textures.getBase64(`jefe_${id}_derrotado`), tr('jefe.victoria', bossText(tr, id)), tr(`jefes.${id}.trofeo`));
+        // El último jefe: el final del juego (por ahora). "Swat to the Moon" cumplido.
+        const lastBoss = this.controller.data.bosses.at(-1)?.id;
+        if (id === lastBoss) this.time.delayedCall(4200, () => this.comicPanel('final', this.textures.getBase64('gato'), tr('vineta.final.titulo'), tr('vineta.final.texto')));
       }
       this.toast(tr('jefe.premio', { ...bossText(tr, id), dinero }));
     } else {

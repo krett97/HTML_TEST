@@ -117,7 +117,7 @@ function bossCheck(state: GameState, data: GameData): string | null {
 }
 
 /** Objetos que se marcan en cada vuelta (los que caen entre el inicio y el último alcanzable). */
-const RUN_MARKS = ['lampara', 'tostadora', 'lavadora', 'refri', 'maceta', 'aro', 'silla', 'parrilla', 'moto', 'coche', 'jarron', 'armadura', 'palomitas', 'sillon', 'sombrilla', 'jetski'];
+const RUN_MARKS = ['lampara', 'tostadora', 'lavadora', 'refri', 'maceta', 'aro', 'silla', 'parrilla', 'moto', 'coche', 'jarron', 'armadura', 'palomitas', 'sillon', 'sombrilla', 'jetski', 'casco', 'telescopio', 'robot', 'satelite', 'cohete'];
 
 /** Gasta las visualizaciones en el árbol: siempre el nivel más barato que pueda pagar. */
 function buyCheapestSkills(state: GameState, data: GameData): void {
@@ -135,7 +135,7 @@ function buyCheapestSkills(state: GameState, data: GameData): void {
  * (lo más barato primero). Responde "¿cuánto más rápida es la segunda vuelta?" y "¿cuándo
  * se muda?".
  */
-export function simulateRuns(data: GameData, runs = 16): RunRow[] {
+export function simulateRuns(data: GameData, runs = 24): RunRow[] {
   const state = createInitialState(0);
   normalizeState(state, data);
   const rows: RunRow[] = [];

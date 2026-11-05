@@ -82,12 +82,25 @@
     "flotador": "Unicornio inflable",
     "sombrilla": "Sombrilla",
     "dron": "Dron",
-    "jetski": "Jet ski"
+    "jetski": "Jet ski",
+    "casco": "Casco con orejitas",
+    "comida": "Pizza en tubo",
+    "pecera": "Pecera espacial",
+    "traje": "Traje de astronauta",
+    "telescopio": "Telescopio",
+    "roca": "Roca lunar",
+    "alien": "Alien en frasco",
+    "robot": "Robot ayudante",
+    "bandera": "Bandera gatuna",
+    "satelite": "Satélite",
+    "rover": "Rover lunar",
+    "cohete": "El cohete del dueño"
   },
   "casas": {
     "departamento": "Departamento",
     "casa": "Casa con jardín",
-    "mansion": "Mansión"
+    "mansion": "Mansión",
+    "luna": "La Luna"
   },
   "jefes": {
     "pepino": {
@@ -109,6 +122,26 @@
       "el": "la Aspiradora Industrial",
       "El": "La Aspiradora Industrial",
       "derrotado": "DERROTADA"
+    },
+    "escoba": {
+      "nombre": "Escoba Furiosa",
+      "titulo": "¡LA ESCOBA FURIOSA DEFIENDE EL REFRI!",
+      "frase": "El dueño ya se hartó de barrer… ¡tienes 30 segundos!",
+      "trofeo": "Trofeo: +15 % de daño para siempre",
+      "al": "a la Escoba Furiosa",
+      "el": "la Escoba Furiosa",
+      "El": "La Escoba Furiosa",
+      "derrotado": "DERROTADA"
+    },
+    "veterinario": {
+      "nombre": "Veterinario Espacial",
+      "titulo": "¡EL VETERINARIO ESPACIAL VIENE POR TI!",
+      "frase": "Trae la vacuna más grande del universo… ¡tienes 30 segundos!",
+      "trofeo": "Trofeo: +40 % de daño, de dinero y de daño de la pandilla",
+      "al": "al Veterinario Espacial",
+      "el": "el Veterinario Espacial",
+      "El": "El Veterinario Espacial",
+      "derrotado": "DERROTADO"
     }
   },
   "jefe": {
@@ -230,7 +263,7 @@
     "roturas": "Tira {n} objetos más",
     "objeto": "Mejora el Valor",
     "nuevo": "¡Nuevo!",
-    "todo": "Ya descubriste todo lo de esta versión. Junta seguidores en el Canal para mudarte… y que venga lo que sigue.",
+    "todo": "Ya descubriste todo lo de esta versión. Junta seguidores en el Canal para mudarte… y vence a cada jefe. ¿Llegará el gato a la Luna?",
     "fuerza": "Fuerza",
     "valor": "Valor",
     "laboratorio": "Investigación gatuna",
@@ -459,6 +492,10 @@
     "marca": {
       "titulo": "¡GARRAS MARCADORAS!",
       "texto": "Cada zarpazo crítico marca el objeto: la pandilla pega más"
+    },
+    "final": {
+      "titulo": "¡SWAT TO THE MOON!",
+      "texto": "El gato tiró todo lo que había en la Tierra… y ahora también en la Luna. El dueño ya no sabe a dónde mudarse. Continuará…"
     }
   },
   "offline": {

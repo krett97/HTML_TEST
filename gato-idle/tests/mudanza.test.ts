@@ -64,7 +64,15 @@ describe('mudanza', () => {
     state.nivelValor = homeStartLevel(gameData, 2);
     expect(moveIfReady(state, gameData)?.id).toBe('mansion');
     expect(currentObject(state, gameData).id).toBe('jarron');
-    expect(nextHome(state, gameData)).toBe(null);
+    expect(nextHome(state, gameData)?.id).toBe('luna');
+    // A la Luna, tras vencer a la Aspiradora Industrial.
+    const luna = gameData.homes[3]!.requisito!;
+    expect(luna.jefe).toBe('industrial');
+    state.canal.seguidores = luna.seguidores;
+    state.canal.visualizacionesTotales = luna.visualizaciones;
+    expect(moveUnlocked(state, gameData)).toBe(false);
+    state.jefes.derrotados.push('industrial');
+    expect(moveUnlocked(state, gameData)).toBe(true);
   });
 
   it('si sobraba Valor en el refri, se muda a la maceta (no se salta objetos)', () => {
