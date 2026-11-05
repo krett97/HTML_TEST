@@ -32,7 +32,8 @@
 
 {#if step}
   {#key step}
-    <div class="tuto" class:arriba={step === 'monedas'} role="status" aria-label={$t('tutorial.gato')} data-testid="tutorial">
+    <!-- Arriba de la escena, chiquito: el gato y lo que rompe quedan a la vista. -->
+    <div class="tuto" role="status" aria-label={$t('tutorial.gato')} data-testid="tutorial">
       <img class="cara" src={ART_FILES.gato} alt="" />
       <div class="globo">
         <p data-testid="tutorial-{step}"><Rich text={$t(`tutorial.${step}`)} /></p>
@@ -43,8 +44,8 @@
           {/if}
         </div>
       </div>
-      {#if step === 'tocar'}<span class="dedo"><Icon name="mano" size={36} /></span>{/if}
     </div>
+    {#if step === 'tocar'}<span class="dedo"><Icon name="mano" size={36} /></span>{/if}
   {/key}
 {/if}
 
@@ -52,27 +53,21 @@
   .tuto {
     position: absolute;
     z-index: 6;
+    top: 6px;
     left: 8px;
     right: 8px;
-    bottom: 8px;
     display: flex;
-    align-items: flex-end;
-    gap: 6px;
-    max-width: 420px;
+    align-items: flex-start;
+    gap: 4px;
+    max-width: 360px;
     margin: 0 auto;
     /* Los toques pasan a la escena, salvo en los botones. */
     pointer-events: none;
     animation: entra 260ms ease-out;
   }
-  /* "Monedas" señala el contador de arriba: el globito se sube. */
-  .tuto.arriba {
-    top: 8px;
-    bottom: auto;
-    align-items: flex-start;
-  }
   .cara {
     flex: none;
-    width: 48px;
+    width: 34px;
     height: auto;
     image-rendering: pixelated;
     filter: drop-shadow(0 2px 0 var(--line));
@@ -81,32 +76,28 @@
     position: relative;
     flex: 1;
     display: grid;
-    gap: 6px;
-    padding: 8px 10px;
+    gap: 2px;
+    padding: 5px 8px;
     border: 2px solid var(--line);
     border-radius: 8px;
-    background: #fff8e8;
+    background: rgba(255, 248, 232, 0.94);
     color: #2b1d2f;
-    box-shadow: 0 3px 0 var(--line);
+    box-shadow: 0 2px 0 var(--line);
   }
   /* Piquito del globo hacia la cara del gato. */
   .globo::before {
     content: '';
     position: absolute;
+    top: 9px;
     left: -9px;
-    bottom: 12px;
-    border: 8px solid transparent;
+    border: 7px solid transparent;
     border-right-color: var(--line);
     border-left: 0;
   }
-  .arriba .globo::before {
-    top: 12px;
-    bottom: auto;
-  }
   p {
     margin: 0;
-    font-size: 15px;
-    line-height: 1.3;
+    font-size: 13px;
+    line-height: 1.25;
     font-weight: 700;
   }
   .acciones {
@@ -119,24 +110,26 @@
     pointer-events: auto;
   }
   .saltar {
-    padding: 4px 0;
+    padding: 2px 0;
     border: 0;
     background: none;
     color: #7a6a80;
-    font-size: 12px;
+    font-size: 11px;
     text-decoration: underline;
     cursor: pointer;
   }
   .ok {
-    min-height: 36px;
-    padding: 4px 16px;
-    font-size: 15px;
+    min-height: 30px;
+    padding: 2px 14px;
+    font-size: 14px;
   }
+  /* La manita señala el centro de la escena: "toca aquí". */
   .dedo {
     position: absolute;
-    left: 36%;
-    top: -64px;
-    font-size: 34px;
+    z-index: 6;
+    left: 50%;
+    bottom: 22%;
+    pointer-events: none;
     animation: toca 700ms ease-in-out infinite alternate;
   }
   @keyframes toca {
@@ -147,7 +140,7 @@
   @keyframes entra {
     from {
       opacity: 0;
-      transform: translateY(10px);
+      transform: translateY(-8px);
     }
   }
   @media (prefers-reduced-motion: reduce) {

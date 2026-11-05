@@ -407,6 +407,10 @@ select {
   gap: 6px;
   pointer-events: none;
 }
+/* Con el globito del tutorial arriba, los avisos salen debajo de él. */
+html[data-tuto] .avisos {
+  top: 76px;
+}
 .aviso {
   max-width: 100%;
   padding: 6px 12px;
