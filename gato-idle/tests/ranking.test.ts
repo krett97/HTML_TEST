@@ -39,6 +39,19 @@ describe('ranking', () => {
     expect(state.ranking.nivel).toBe(2);
   });
 
+  it('al cargar, la mudanza pendiente va antes del récord (no cuenta el Valor de sobra)', () => {
+    const state = newState();
+    state.desbloqueos.push('valor', 'canal');
+    const refri = gameData.objects.findIndex((o) => o.id === 'refri');
+    state.nivelValor = refri * PER_OBJECT + 20;
+    const req = gameData.homes[1]!.requisito!;
+    state.canal.seguidores = req.seguidores;
+    state.canal.visualizacionesTotales = req.visualizaciones;
+    normalizeState(state, gameData);
+    expect(state.casa).toBe(1);
+    expect(state.ranking.nivel).toBe(refri + 2); // la maceta
+  });
+
   it('limpia los nombres y los guarda con la partida', () => {
     expect(cleanName('  Michi\u0007 ')).toBe('Michi');
     expect(cleanName('x'.repeat(40))).toHaveLength(MAX_NAME);

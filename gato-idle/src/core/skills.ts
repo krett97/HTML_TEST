@@ -73,21 +73,23 @@ export function skillBuyable(state: GameState, data: GameData, def: SkillDef): b
 export function buySkill(state: GameState, data: GameData, id: string): boolean {
   const def = data.skills.find((s) => s.id === id);
   if (!def || !skillBuyable(state, data, def)) return false;
-  if (!state.pruebas.dineroInfinito) state.canal.visualizaciones = state.canal.visualizaciones.sub(skillCost(state, def));
+  if (!state.pruebas.dineroInfinito) {
+    const cost = skillCost(state, def);
+    state.canal.visualizaciones = state.canal.visualizaciones.sub(cost);
+    state.canal.gastadoArbol = state.canal.gastadoArbol.add(cost);
+  }
   const entry = state.habilidades.find((s) => s.id === id);
   if (entry) entry.nivel += 1;
   else state.habilidades.push({ id, nivel: 1 });
   return true;
 }
 
-/** Visualizaciones metidas en el árbol (lo que devuelve reiniciarlo). */
-export function treeSpent(state: GameState, data: GameData): Decimal {
-  let total = ZERO;
-  for (const { id, nivel } of state.habilidades) {
-    const def = data.skills.find((s) => s.id === id);
-    for (let level = 1; def && level <= nivel; level++) total = total.add(skillCostAt(def, level));
-  }
-  return total;
+/**
+ * Visualizaciones metidas en el árbol (lo que devuelve reiniciarlo): lo que de verdad se pagó, no lo
+ * que costarían los niveles (los de guardados viejos se reclamaron gratis; los del modo pruebas, también).
+ */
+export function treeSpent(state: GameState): Decimal {
+  return state.canal.gastadoArbol;
 }
 
 /**
@@ -98,8 +100,9 @@ export function watchResetAd(state: GameState, data: GameData): Decimal | null {
   if (state.habilidades.length === 0) return null;
   state.canal.anunciosReinicio += 1;
   if (state.canal.anunciosReinicio < RESET_ADS) return null;
-  const refund = treeSpent(state, data);
+  const refund = treeSpent(state);
   state.canal.visualizaciones = state.canal.visualizaciones.add(refund);
+  state.canal.gastadoArbol = ZERO;
   state.habilidades = [];
   state.canal.anunciosReinicio = 0;
   return refund;
@@ -127,6 +130,12 @@ export function normalizeSkills(state: GameState, data: GameData): void {
     entry.nivel = Math.min(def.max, Math.max(0, Math.floor(Number(entry.nivel) || 0)));
     return entry.nivel > 0;
   });
+  // Los niveles de antes del árbol (reclamados por metas) pueden no cumplir sus reglas: piso abierto
+  // y la de arriba con nivel. Esos se quitan (piso por piso, para que caiga también lo que colgaba).
+  for (const def of [...data.skills].sort((a, b) => a.piso - b.piso)) {
+    if (skillLevel(state, def.id) > 0 && !skillAvailable(state, data, def)) state.habilidades = state.habilidades.filter((h) => h.id !== def.id);
+  }
+  if (state.canal.gastadoArbol.lt(0)) state.canal.gastadoArbol = ZERO;
   const ads = Math.floor(Number(state.canal.anunciosReinicio) || 0);
   state.canal.anunciosReinicio = Math.min(RESET_ADS - 1, Math.max(0, ads));
 }

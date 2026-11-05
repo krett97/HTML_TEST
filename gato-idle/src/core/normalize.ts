@@ -32,9 +32,10 @@ export function normalizeState(state: GameState, data: GameData): void {
   normalizeCanal(state);
   normalizeHome(state, data);
   normalizeBosses(state, data);
-  normalizeRanking(state, data);
-  // Un guardado que ya juntó lo de la mudanza y tenía Valor de sobra en el último objeto se muda ya.
+  // Un guardado que ya juntó lo de la mudanza y tenía Valor de sobra en el último objeto se muda ya
+  // (antes del récord del ranking: si no, contaría el Valor de sobra como objetos de la casa nueva).
   moveIfReady(state, data);
+  normalizeRanking(state, data);
   if (state.offline && !(isDecimal(state.offline.dinero) && Number.isFinite(state.offline.roturas))) state.offline = null;
   state.vistos = [...new Set(state.vistos.filter((id) => typeof id === 'string'))];
   state.stats.roturasPartida = Math.max(0, Math.floor(state.stats.roturasPartida));

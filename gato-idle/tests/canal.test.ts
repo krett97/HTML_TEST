@@ -133,7 +133,7 @@ describe('Árbol de habilidades', () => {
     state.canal.seguidores = 1e6;
     state.canal.visualizaciones = num(2_000_000);
     for (const id of ['embestida', 'embestida', 'pesas', 'clickbait']) expect(buySkill(state, gameData, id)).toBe(true);
-    const spent = treeSpent(state, gameData);
+    const spent = treeSpent(state);
     expect(state.canal.visualizaciones.add(spent).eq(2_000_000)).toBe(true);
     for (let i = 1; i < RESET_ADS; i++) expect(watchResetAd(state, gameData)).toBe(null);
     expect(state.canal.anunciosReinicio).toBe(RESET_ADS - 1);
@@ -144,6 +144,21 @@ describe('Árbol de habilidades', () => {
     // Con el árbol vacío no hay nada que reiniciar.
     expect(watchResetAd(state, gameData)).toBe(null);
     expect(state.canal.anunciosReinicio).toBe(0);
+  });
+
+  it('un guardado de antes del árbol: los niveles gratis no se devuelven y los que no cumplen sus reglas se quitan', () => {
+    const state = newState();
+    state.canal.visualizaciones = num(100_000);
+    state.canal.seguidores = 10;
+    // Reclamados gratis por metas (como antes de 0.22): express sin recolectora y pesas sin el piso 2.
+    state.habilidades = [{ id: 'embestida', nivel: 5 }, { id: 'pesas', nivel: 2 }, { id: 'express', nivel: 2 }];
+    const loaded = deserialize(serialize(state, 0), 0);
+    if (!loaded.ok) throw new Error('no cargó');
+    normalizeState(loaded.state, gameData);
+    expect(loaded.state.habilidades).toEqual([{ id: 'embestida', nivel: 5 }]);
+    for (let i = 0; i < RESET_ADS; i++) watchResetAd(loaded.state, gameData);
+    expect(loaded.state.habilidades).toEqual([]);
+    expect(loaded.state.canal.visualizaciones.eq(100_000)).toBe(true);
   });
 
   it('cada rama hace lo suyo', () => {

@@ -583,6 +583,9 @@ export class Game {
     const primeraVez = outcome.gano && this.firstTime(`trofeo:${outcome.id}`);
     this.events.emit('jefe', { fase: 'fin', id: outcome.id, gano: outcome.gano, premio: outcome.premio, primeraVez });
     this.playSound(outcome.gano ? 'objeto-nuevo' : 'critico');
+    // Vencer al jefe puede abrir la mudanza: se resuelve ya, sin esperar al siguiente tick (si sobraba
+    // Valor, el objeto brincaba un instante a uno de la casa siguiente).
+    if (outcome.gano) this.checkMove();
     this.markDirty();
     void this.save();
   }
@@ -1278,7 +1281,7 @@ export class Game {
       arbol: {
         habilidades,
         pisos: d.skillFloors.map((meta, piso) => ({ meta: fmt(num(meta)), abierto: floorOpen(s, d, piso) })),
-        gastado: fmt(treeSpent(s, d)),
+        gastado: fmt(treeSpent(s)),
         vacio: s.habilidades.length === 0,
         anuncios: s.canal.anunciosReinicio,
         anunciosMax: RESET_ADS,

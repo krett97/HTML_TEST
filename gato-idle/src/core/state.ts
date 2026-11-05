@@ -96,6 +96,8 @@ export interface GameState {
     visualizacionesTotales: Decimal;
     /** Anuncios ya vistos para reiniciar el árbol (al llegar a RESET_ADS se reinicia). */
     anunciosReinicio: number;
+    /** Visualizaciones gastadas en el árbol: lo que devuelve reiniciarlo (los niveles reclamados gratis antes de 0.22 no cuentan). */
+    gastadoArbol: Decimal;
     /** Los más recientes primero. */
     videos: VideoRecord[];
   };
@@ -131,7 +133,7 @@ export function createInitialState(now: number): GameState {
     jefes: { derrotados: [], revancha: 0 },
     ranking: { nombre: '', nivel: 1 },
     stats: { toques: 0, roturas: 0, roturasPartida: 0 },
-    canal: { seguidores: 0, visualizaciones: ZERO, visualizacionesTotales: ZERO, anunciosReinicio: 0, videos: [] },
+    canal: { seguidores: 0, visualizaciones: ZERO, visualizacionesTotales: ZERO, anunciosReinicio: 0, gastadoArbol: ZERO, videos: [] },
     habilidades: [],
     vistos: [],
     offline: null,

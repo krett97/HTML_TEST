@@ -76,8 +76,14 @@ export class RankingService {
       this.statusStore.set('sinConexion');
       return;
     }
-    const [db, user] = (await Promise.all([host.use('db'), host.use('user')])) as [Db | null, UserCap | null];
-    this.uid = user ? await user.id() : null;
+    let db: Db | null = null;
+    try {
+      const [dbCap, user] = (await Promise.all([host.use('db'), host.use('user')])) as [Db | null, UserCap | null];
+      db = dbCap;
+      this.uid = user ? await user.id() : null;
+    } catch {
+      db = null;
+    }
     if (!db || !this.uid) {
       this.statusStore.set('sinConexion');
       return;

@@ -923,3 +923,15 @@ Se abre al mudarse a la segunda casa (aviso "¡Se abrió el ranking de gatos!") 
 **La ventana:** posición (oro, plata y bronce para los primeros tres), el dibujo del objeto del récord, el nombre del gato, el objeto y la casa, y "Nv. N"; tu fila va resaltada.
 
 **Dónde se guarda** (`services/ranking.ts`): en la versión que se comparte por Claude, con la base de datos de la página (capacidades `db` y `user`): cada jugador escribe solo su documento `ranking/<su id>` (reglas: `ranking` lo leen todos y solo el dueño lo administra; `ranking/{self}` lo escribe cada quien desde Colaborador) y todos ven los 100 de más nivel, en vivo. Se escribe solo cuando sube el récord, cambia de casa o cambia el nombre. Lo que llega de otros jugadores se revisa (nombre limpio, nivel y objeto válidos). Quien solo puede ver la página ve la tabla pero no aparece en ella. Fuera de Claude (APK, navegador) no hay dónde guardarlo todavía: la ventana muestra tu récord y lo avisa; para el APK hará falta un servidor.
+
+## 47. Pruebas generales (versión 0.28.1)
+
+Recorrido automático en 6 pantallas (320×568, 360×740, 390×844, tableta, horizontal y escritorio) y en inglés, buscando desbordes, botones fuera de la pantalla y errores; más flujos a mano (tutorial, mientras no estabas con ×2, pelea contra el jefe ganando y perdiendo, mansión, árbol, ranking) y una revisión del código de 0.21 a 0.28. Se corrigió:
+
+- **El árbol devolvía visualizaciones que nunca se pagaron:** en guardados de antes de 0.22 las habilidades se habían reclamado gratis, y reiniciar el árbol "devolvía" su costo (100K → 426K en una prueba). Ahora el árbol lleva la cuenta de lo gastado (`canal.gastadoArbol`) y devuelve solo eso; al cargar se quitan los niveles que no cumplen sus reglas (piso abierto, la de arriba con nivel).
+- **Récord del ranking inflado al cargar:** se calculaba antes de la mudanza pendiente y contaba el Valor de sobra como objetos de la casa nueva.
+- **Tras vencer a un jefe, el objeto brincaba un instante** a uno de la casa siguiente: la mudanza se resuelve al terminar la pelea.
+- **El ranking podía quedarse en "Cargando…"** si la plataforma rechaza la conexión: ahora queda sin conexión.
+- **Avisos detrás del patrocinio:** los avisos van encima del medidor, del patrocinio y de la barra del jefe.
+- **Pantallas anchas:** el mundo puede medir hasta 480 de ancho (en escritorio ya no quedan franjas lisas a los lados). En horizontal, lo que limita es lo bajito de la pantalla; la app de Android va fija en vertical.
+- **Ajustes en pantalla chica:** los selectores ya no se cortan.
