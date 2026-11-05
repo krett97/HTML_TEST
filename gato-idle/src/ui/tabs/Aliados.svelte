@@ -88,12 +88,6 @@
     display: grid;
     gap: 8px;
   }
-  .card {
-    padding: 10px 12px;
-    border: 2px solid var(--line);
-    border-radius: 4px;
-    background: var(--panel-2);
-  }
   .summary {
     display: grid;
     gap: 2px;

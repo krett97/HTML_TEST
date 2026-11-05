@@ -87,47 +87,65 @@ select {
   white-space: nowrap;
 }
 
-/* Botón con relieve de pixel art. */
+/* Botón con relieve de pixel art (marcos de PixelLab en src/assets/ui: se estiran sin deformar las esquinas). */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
   min-height: 44px;
-  padding: 8px 14px;
-  border: 2px solid var(--line);
-  border-radius: 4px;
-  background: var(--panel-2);
-  box-shadow: 0 3px 0 var(--line);
+  padding: 1px 7px;
+  border: 7px solid transparent;
+  border-image: url('../assets/ui/boton_morado.png') 7 fill / 7px stretch;
+  background: none;
+  color: var(--text);
+  image-rendering: pixelated;
   cursor: pointer;
   touch-action: manipulation;
 }
 .btn:active {
   transform: translateY(2px);
-  box-shadow: 0 1px 0 var(--line);
 }
 .btn:disabled {
-  opacity: 0.5;
+  opacity: 0.6;
   cursor: default;
 }
 .btn--accent {
-  background: var(--accent);
+  border-image-source: url('../assets/ui/boton.png');
   color: var(--line);
   font-weight: 700;
 }
 /* Sin dinero suficiente: apagado, pero el precio se sigue leyendo. */
-.btn--accent:disabled {
+.btn--accent:disabled,
+.btn--gold:disabled {
   opacity: 1;
-  background: var(--bg);
+  border-image-source: url('../assets/ui/boton_apagado.png');
   color: var(--muted);
 }
 /* Con anuncio: dorado, para que se note que vale más. */
 .btn--gold {
-  background: var(--gold);
+  border-image-source: url('../assets/ui/boton_oro.png');
   color: var(--line);
   font-weight: 700;
 }
+/* Tarjetas: panel morado con adornos en las esquinas; lo que ya se puede tomar, con marco dorado. */
+.card {
+  padding: 2px 4px;
+  border: 10px solid transparent;
+  border-image: url('../assets/ui/panel.png') 11 fill / 10px stretch;
+  background: none;
+  image-rendering: pixelated;
+}
+.card.ready,
+.card.fresh,
+.card.detail {
+  border-image: url('../assets/ui/panel_oro.png') 12 fill / 11px stretch;
+  box-shadow: none;
+}
 .btn--danger {
+  border: 2px solid var(--line);
+  border-image: none;
+  border-radius: 4px;
   background: var(--danger);
   color: var(--text);
 }

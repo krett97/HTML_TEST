@@ -36,20 +36,20 @@
   button {
     min-width: 56px;
     min-height: 36px;
-    padding: 4px 10px;
-    border: 2px solid var(--line);
-    border-radius: 4px;
-    background: var(--panel-2);
-    box-shadow: 0 3px 0 var(--line);
+    padding: 0 4px;
+    border: 7px solid transparent;
+    border-image: url('../assets/ui/boton_morado.png') 7 fill / 7px stretch;
+    background: none;
+    color: var(--text);
+    image-rendering: pixelated;
     font-weight: 700;
     cursor: pointer;
   }
   button:active {
     transform: translateY(2px);
-    box-shadow: 0 1px 0 var(--line);
   }
   .active {
-    background: var(--accent);
+    border-image-source: url('../assets/ui/boton.png');
     color: var(--line);
   }
 </style>

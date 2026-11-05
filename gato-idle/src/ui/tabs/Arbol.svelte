@@ -155,12 +155,6 @@
 {/if}
 
 <style>
-  .card {
-    padding: 10px 12px;
-    border: 2px solid var(--line);
-    border-radius: 4px;
-    background: var(--panel-2);
-  }
   .tree-head {
     display: flex;
     justify-content: space-between;

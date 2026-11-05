@@ -135,12 +135,6 @@
     display: grid;
     gap: 8px;
   }
-  .card {
-    padding: 10px 12px;
-    border: 2px solid var(--line);
-    border-radius: 4px;
-    background: var(--panel-2);
-  }
   .stats {
     display: grid;
     grid-template-columns: 1fr 1fr;

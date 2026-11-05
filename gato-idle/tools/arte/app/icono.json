@@ -1,0 +1,48 @@
+[
+ {
+  "name": "meme4_k30",
+  "desc": "app icon, extreme close-up of an orange tabby cat face staring at the viewer, the cat leans into the camera and punches toward the viewer, its big paw huge in the foreground with motion lines, a clear glass of water in the foreground at the bottom, blurry room behind",
+  "w": 128,
+  "h": 128,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art, bold dark outline, cartoon, vibrant colors, fisheye perspective, full bleed square image, no border, no frame",
+  "transparent": false,
+  "guidance": 8,
+  "init": "plout/app/base4.png",
+  "strength": 30
+ },
+ {
+  "name": "meme4_k45",
+  "desc": "app icon, extreme close-up of an orange tabby cat face staring at the viewer, the cat leans into the camera and punches toward the viewer, its big paw huge in the foreground with motion lines, a clear glass of water in the foreground at the bottom, blurry room behind",
+  "w": 128,
+  "h": 128,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art, bold dark outline, cartoon, vibrant colors, fisheye perspective, full bleed square image, no border, no frame",
+  "transparent": false,
+  "guidance": 8,
+  "init": "plout/app/base4.png",
+  "strength": 45
+ },
+ {
+  "name": "meme4_txt",
+  "desc": "app icon, extreme close-up of an orange tabby cat face staring at the viewer, the cat leans into the camera and punches toward the viewer, its big paw huge in the foreground with motion lines, a clear glass of water in the foreground at the bottom, blurry room behind",
+  "w": 128,
+  "h": 128,
+  "seeds": [
+   4,
+   5,
+   6
+  ],
+  "style": ", pixel art, bold dark outline, cartoon, vibrant colors, fisheye perspective, full bleed square image, no border, no frame",
+  "transparent": false,
+  "guidance": 10
+ }
+]

@@ -1,0 +1,86 @@
+[
+ {
+  "name": "panel",
+  "desc": "empty rectangular game menu panel frame, dark purple fill, slightly lighter purple bevel border, thick dark outline, small rounded corners",
+  "w": 64,
+  "h": 64,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game UI element, front view, flat, crisp, bold dark outline, cozy cartoon, fills the whole canvas edge to edge, no text, no icon",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "panel_dorado",
+  "desc": "empty rectangular game menu panel frame, dark purple fill, golden yellow border with rivets in the corners, thick dark outline",
+  "w": 64,
+  "h": 64,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game UI element, front view, flat, crisp, bold dark outline, cozy cartoon, fills the whole canvas edge to edge, no text, no icon",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "boton",
+  "desc": "empty wide orange game button, rounded corners, light highlight on top edge, darker orange bottom edge, thick dark outline",
+  "w": 64,
+  "h": 32,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game UI element, front view, flat, crisp, bold dark outline, cozy cartoon, fills the whole canvas edge to edge, no text, no icon",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "boton_oro",
+  "desc": "empty wide golden yellow game button, rounded corners, light highlight on top edge, darker bottom edge, thick dark outline",
+  "w": 64,
+  "h": 32,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game UI element, front view, flat, crisp, bold dark outline, cozy cartoon, fills the whole canvas edge to edge, no text, no icon",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "boton_apagado",
+  "desc": "empty wide dark grey purple game button, rounded corners, subtle top highlight, thick dark outline",
+  "w": 64,
+  "h": 32,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game UI element, front view, flat, crisp, bold dark outline, cozy cartoon, fills the whole canvas edge to edge, no text, no icon",
+  "transparent": true,
+  "guidance": 8
+ },
+ {
+  "name": "boton_morado",
+  "desc": "empty wide purple game button, rounded corners, light highlight on top edge, darker bottom edge, thick dark outline",
+  "w": 64,
+  "h": 32,
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "style": ", pixel art game UI element, front view, flat, crisp, bold dark outline, cozy cartoon, fills the whole canvas edge to edge, no text, no icon",
+  "transparent": true,
+  "guidance": 8
+ }
+]

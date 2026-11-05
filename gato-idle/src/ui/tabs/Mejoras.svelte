@@ -217,12 +217,6 @@
     display: grid;
     gap: 8px;
   }
-  .card {
-    padding: 10px 12px;
-    border: 2px solid var(--line);
-    border-radius: 4px;
-    background: var(--panel-2);
-  }
   .row {
     display: flex;
     justify-content: space-between;

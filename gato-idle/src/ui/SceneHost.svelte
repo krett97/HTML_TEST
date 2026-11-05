@@ -124,9 +124,13 @@
   .boss {
     position: absolute;
     z-index: 5;
-    border: 2px solid var(--line);
-    border-radius: 6px;
-    box-shadow: 0 3px 0 var(--line);
+    image-rendering: pixelated;
+  }
+  /* Marcos de PixelLab: el del HUD deja ver la escena detrás. */
+  .boss-wait,
+  .boss {
+    border: 8px solid transparent;
+    border-image: url('../assets/ui/panel_hud.png') 11 fill / 8px stretch;
   }
   .boss-call,
   .boss-wait {
@@ -140,9 +144,11 @@
     right: 12px;
   }
   .boss-call {
-    padding: 8px 12px;
-    background: #8fe36b;
-    color: #1d3b12;
+    padding: 1px 6px;
+    border: 7px solid transparent;
+    border-image: url('../assets/ui/boton.png') 7 fill / 7px stretch;
+    background: none;
+    color: var(--line);
     font-size: 15px;
     font-weight: 700;
     cursor: pointer;
@@ -154,16 +160,14 @@
     }
   }
   .boss-wait {
-    padding: 4px 10px;
-    background: rgba(18, 11, 22, 0.75);
+    padding: 0 4px;
     color: var(--muted);
     font-size: 13px;
     pointer-events: none;
   }
   .boss {
     width: min(200px, calc(100% - 150px));
-    padding: 6px 8px;
-    background: rgba(18, 11, 22, 0.85);
+    padding: 0 2px;
     color: var(--text);
     pointer-events: none;
   }
@@ -231,10 +235,10 @@
     display: grid;
     gap: 3px;
     min-width: 92px;
-    padding: 5px 8px 6px;
-    border: 2px solid var(--line);
-    border-radius: 4px;
-    background: rgba(18, 11, 22, 0.72);
+    padding: 0 2px 1px;
+    border: 8px solid transparent;
+    border-image: url('../assets/ui/panel_hud.png') 11 fill / 8px stretch;
+    image-rendering: pixelated;
     color: var(--text);
     pointer-events: none;
     transition: box-shadow 200ms;
@@ -364,11 +368,11 @@
     flex-direction: column;
     align-items: center;
     gap: 0;
-    padding: 6px 10px;
-    border: 2px solid var(--line);
-    border-radius: 6px;
-    background: var(--gold);
-    box-shadow: 0 3px 0 var(--line);
+    padding: 0 4px;
+    border: 7px solid transparent;
+    border-image: url('../assets/ui/boton_oro.png') 7 fill / 7px stretch;
+    background: none;
+    image-rendering: pixelated;
     color: var(--line);
     font: inherit;
     cursor: pointer;
