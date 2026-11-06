@@ -57,8 +57,8 @@ const MAX_SCRATCHES = 5;
 const BG_MARGIN = Math.ceil((MAX_WIDTH - SCENE_WIDTH) / 2);
 /** Qué tanto se acerca la cámara a su destino en cada cuadro (sigue al gato con suavidad). */
 const CAMERA_EASE = 0.1;
-/** Respiración de los personajes en reposo: cuánto se estiran y cada cuánto (ms por ciclo). */
-const BREATH = { gato: 0.025, pandilla: 0.035, ms: 2400 };
+/** Respiración de la pandilla en reposo: cuánto se estira y cada cuánto (ms por ciclo). El gato no: con el manotazo se veía raro. */
+const BREATH = { pandilla: 0.035, ms: 2400 };
 
 const COLORS = {
   scratch: 0x2b1d2f,
@@ -255,8 +255,8 @@ export class MainScene extends Phaser.Scene {
     const now = this.time.now;
     const breath = (amount: number, phase: number) => S * (1 + amount * Math.sin((now / BREATH.ms) * Math.PI * 2 + phase));
     const swat = this.swatting ? SWAT_HAT : { dx: 0, dy: 0 };
-    this.cat.setAngle(this.lean.angle).setScale(S, breath(BREATH.gato, 0));
-    this.hat.setPosition(this.cat.x + HAT_X + swat.dx, this.cat.y + HAT_Y * (this.cat.scaleY / S) + swat.dy).setAngle(this.lean.angle);
+    this.cat.setAngle(this.lean.angle);
+    this.hat.setPosition(this.cat.x + HAT_X + swat.dx, this.cat.y + HAT_Y + swat.dy).setAngle(this.lean.angle);
     let n = 0;
     for (const [id, visual] of this.allies) {
       n++;
@@ -1032,12 +1032,17 @@ export class MainScene extends Phaser.Scene {
         },
       });
     } else {
-      // Se va de la orilla y cae; lo que se vuelca gira más.
+      // Un empujón corto y cae; lo que se vuelca gira más. Si ya estaba en la orilla se va por ella;
+      // si se tiró de un golpe desde el inicio, cae por el frente ahí mismo (no salta hasta la orilla,
+      // que puede estar fuera de la cámara).
+      const edge = this.place.surface.right + this.widthOf(piece) / 2 + 3;
+      const visible = this.cameras.main.scrollX + this.worldW - this.widthOf(piece) / 2 - 4;
+      const x = Math.min(edge, piece.x + 14, visible);
       this.tweens.chain({
         targets: piece,
         tweens: [
-          { x: this.place.surface.right + this.widthOf(piece) / 2 + 3, duration: 80, ease: 'Quad.out' },
-          { y: floorY, angle: def.estiloRotura === 'volcar' ? 90 : 75, duration: 260, ease: 'Quad.in' },
+          { x, duration: 80, ease: 'Quad.out' },
+          { y: floorY, angle: def.estiloRotura === 'volcar' ? 90 : 75, duration: 300, ease: 'Quad.in' },
         ],
         onComplete: () => {
           piece.destroy();
