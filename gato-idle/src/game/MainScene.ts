@@ -21,12 +21,17 @@ import type { Decimal } from '../core/num';
 // Medidas en unidades del mundo (ver sceneSize.ts). La escena se ancla abajo: si hay más alto, crece la pared.
 // La superficie (alto, inicio y orilla) depende del lugar del objeto: ver places.ts.
 const START_X = 74;
-const CAT_W = 19;
+const CAT_W = 16;
 /** Escala de las imágenes: el arte trae ART píxeles por unidad y la cámara amplía ×ART. */
 const S = 1 / ART;
 /** Dónde va el sombrero de copa respecto al gato (origen abajo a la izquierda): apoyado en la frente, tapando la uva. */
-const HAT_X = 11.5;
-const HAT_Y = -16;
+const HAT_X = 9.5;
+const HAT_Y = -17.5;
+/**
+ * Tamaño de cada aliado respecto a su dibujo (todos se generan a ~96 px para que tengan detalle;
+ * el gatito bebé, el ratón y los pájaros deben verse chicos junto al gato).
+ */
+const ALLY_SCALE: Record<string, number> = { gatito: 0.6, raton: 0.5, perico: 0.65, cuervo: 0.65, perro: 0.85, mapache: 0.85, cabra: 0.9 };
 /** Cuánto dura el cuadro del manotazo (ms) y cuánto se mueve la cabeza (y el sombrero) en ese cuadro. */
 const SWAT_MS = 75;
 const SWAT_HAT = { dx: -1.5, dy: 2 };
@@ -130,13 +135,23 @@ export class MainScene extends Phaser.Scene {
     loadArt(this);
   }
 
-  /** Medidas de una imagen en unidades del mundo (sin contar su escala animada). */
+  /** Escala de un aliado en reposo (ver ALLY_SCALE). */
+  private allyScale(id: string): number {
+    return S * (ALLY_SCALE[id] ?? 1);
+  }
+
+  /** Medidas de una imagen en unidades del mundo (sin contar su escala animada; los aliados llevan la suya). */
   private widthOf(img: Phaser.GameObjects.Image): number {
-    return img.width * S;
+    return img.width * this.restScale(img);
   }
 
   private heightOf(img: Phaser.GameObjects.Image): number {
-    return img.height * S;
+    return img.height * this.restScale(img);
+  }
+
+  private restScale(img: Phaser.GameObjects.Image): number {
+    for (const [id, visual] of this.allies) if (visual.sprite === img) return this.allyScale(id);
+    return S;
   }
 
   /** Ancho y alto visibles del mundo. */
@@ -166,7 +181,7 @@ export class MainScene extends Phaser.Scene {
     this.scratches = this.add.graphics().setDepth(3.5);
     this.markScratches = this.add.graphics().setDepth(3.6);
     for (const ally of this.controller.data.allies) {
-      const sprite = this.add.image(0, 0, `aliado_${ally.id}`).setOrigin(0, 1).setScale(S).setDepth(2.2);
+      const sprite = this.add.image(0, 0, `aliado_${ally.id}`).setOrigin(0, 1).setScale(this.allyScale(ally.id)).setDepth(2.2);
       this.allies.set(ally.id, { sprite, hop: { dx: 0, dy: 0 } });
     }
 
@@ -547,7 +562,7 @@ export class MainScene extends Phaser.Scene {
     switch (id) {
       case 'gatito':
         // A un lado del gato, llorando con el pulgar arriba.
-        return { x: this.cat.x - 13, y: this.cat.y };
+        return { x: this.cat.x - 10, y: this.cat.y };
       case 'perro':
         return { x: 1, y: floorY + 5 };
       case 'raton':
@@ -579,7 +594,7 @@ export class MainScene extends Phaser.Scene {
     if (!visual) return;
     visual.sprite.setVisible(true).setScale(0);
     this.update();
-    this.tweens.add({ targets: visual.sprite, scale: S, duration: 260, ease: 'Back.out' });
+    this.tweens.add({ targets: visual.sprite, scale: this.allyScale(allyId), duration: 260, ease: 'Back.out' });
     const tr = get(t);
     const ally = tr(`aliados.${allyId}`);
     if (primeraVez) {

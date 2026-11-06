@@ -27,5 +27,5 @@ def run(seed):
             open(out, 'wb').write(base64.b64decode(imgs[0])); return out
     print('FAIL', seed, str(d)[:200])
 
-with ThreadPoolExecutor(4) as ex:
+with ThreadPoolExecutor(2) as ex:
     print(list(ex.map(run, seeds)))
