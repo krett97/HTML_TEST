@@ -150,9 +150,15 @@ export class MainScene extends Phaser.Scene {
   }
 
   private restScale(img: Phaser.GameObjects.Image): number {
+    if (img === this.object) return this.objectScale;
     for (const [id, visual] of this.allies) if (visual.sprite === img) return this.allyScale(id);
     return S;
   }
+
+  /** Escala en reposo del objeto en la mesa: S, salvo los jefes, que se encogen para caber debajo del marcador. */
+  private objectScale = S;
+  /** Lo que un jefe debe dejar libre arriba (unidades) para el marcador de la pelea. */
+  private static readonly BOSS_HEADROOM = 34;
 
   /** Ancho y alto visibles del mundo. */
   private get worldW(): number {
@@ -414,6 +420,7 @@ export class MainScene extends Phaser.Scene {
       return;
     }
     const progress = this.controller.progress();
+    this.objectScale = S;
     this.object.setTexture(this.objectDef.sprite).setScale(S).setAlpha(1).setVisible(true);
     this.object.setPosition(this.objectX(progress), this.surfaceTop).setAngle(this.objectAngle(progress));
     this.applyLook();
@@ -427,6 +434,9 @@ export class MainScene extends Phaser.Scene {
   private placeBoss(id: string): void {
     this.scratches.clear();
     this.object.setTexture(`jefe_${id}`).setScale(S).setAlpha(1).setAngle(0).setVisible(true);
+    const room = this.surfaceTop - MainScene.BOSS_HEADROOM;
+    this.objectScale = S * Math.min(1, room / (this.object.height * S));
+    this.object.setScale(this.objectScale);
     const x = Math.max(START_X, this.place.surface.left + CAT_W + 6 + this.widthOf(this.object) / 2);
     this.object.setPosition(x, this.surfaceTop);
     this.applyLook();
@@ -459,8 +469,8 @@ export class MainScene extends Phaser.Scene {
     }
     // El pepino se apachurra y parpadea en blanco con cada golpe.
     this.tweens.killTweensOf(this.object);
-    this.object.setScale(S);
-    this.tweens.add({ targets: this.object, scaleY: 0.93 * S, scaleX: 1.05 * S, duration: 50, yoyo: true });
+    this.object.setScale(this.objectScale);
+    this.tweens.add({ targets: this.object, scaleY: 0.93 * this.objectScale, scaleX: 1.05 * this.objectScale, duration: 50, yoyo: true });
     this.object.setTint(0xffffff).setTintMode(Phaser.TintModes.FILL);
     this.time.delayedCall(45, () => this.object.clearTint().setTintMode(Phaser.TintModes.MULTIPLY));
   }
@@ -470,7 +480,7 @@ export class MainScene extends Phaser.Scene {
     const tr = get(t);
     const dinero = this.controller.formatMoney(premio);
     this.tweens.killTweensOf(this.object);
-    this.object.clearTint().setScale(S);
+    this.object.clearTint().setScale(this.objectScale);
     if (gano) {
       this.object.setTexture(`jefe_${id}_derrotado`);
       this.tweens.chain({
@@ -978,10 +988,10 @@ export class MainScene extends Phaser.Scene {
   private pushObject(progress: number): void {
     const x = this.objectX(progress);
     this.tweens.killTweensOf([this.object, this.cat]);
-    this.object.setScale(S).setVisible(true);
+    this.object.setScale(this.objectScale).setVisible(true);
     this.tweens.add({ targets: this.object, x, angle: this.objectAngle(progress), duration: 90, ease: 'Quad.out' });
     // Pequeño apachurrón para que el golpe se sienta.
-    this.tweens.add({ targets: this.object, scaleY: 0.88 * S, scaleX: 1.08 * S, duration: 50, yoyo: true });
+    this.tweens.add({ targets: this.object, scaleY: 0.88 * this.objectScale, scaleX: 1.08 * this.objectScale, duration: 50, yoyo: true });
     this.moveCat(this.catXFor(x), true);
     // Lo que se rasga no se mueve, así que los rasguños van ya en su lugar.
     this.drawScratches(progress);
@@ -1050,7 +1060,7 @@ export class MainScene extends Phaser.Scene {
 
   private popIn(delay = 0): void {
     this.object.setScale(0);
-    this.tweens.add({ targets: this.object, scale: S, delay, duration: 220, ease: 'Back.out' });
+    this.tweens.add({ targets: this.object, scale: this.objectScale, delay, duration: 220, ease: 'Back.out' });
   }
 
   private shatter(x: number, y: number, tint: number, count: number, gravity: number): void {
