@@ -1,4 +1,4 @@
-// Dibujos provisionales en pixel art, como mapas de caracteres (un carácter = un píxel).
+// Dibujos provisionales en pixel art, como mapas de caracteres (un carácter = una unidad del mundo).
 // Sin Phaser, para poder probarlos. Cuando llegue el arte de PixelApp se reemplazan por PNG.
 
 export const PALETTE: Record<string, string> = {

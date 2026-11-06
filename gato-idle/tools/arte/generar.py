@@ -28,7 +28,7 @@ def run(job, seed):
     print('FAIL', job['name'], seed, code, str(d)[:200]); return None
 
 tasks = [(j, s) for j in jobs for s in j['seeds']]
-with ThreadPoolExecutor(6) as ex:
+with ThreadPoolExecutor(2) as ex:
     results = list(ex.map(lambda t: run(*t), tasks))
 
 # Montaje: una fila por asset, ampliado ×4 sobre fondo de cuarto.

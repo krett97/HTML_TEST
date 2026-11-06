@@ -12,21 +12,28 @@ describe('tope de toques', () => {
 });
 
 describe('tamaño de la escena', () => {
-  it('celular: escala entera de píxeles, cámara cerca y alto que llena el espacio', () => {
-    // 390×380 CSS a densidad 2: cada píxel de arte mide 3 del dispositivo (1.5 CSS); se ven 130 de las 180 unidades.
-    expect(computeSceneSize(390, 380, 2)).toEqual({ pixelScale: 3, width: 130, height: 126, zoom: 1.5 });
-    // A densidad 3 (1170 px): 4 por píxel de arte; se ven 146 unidades.
-    expect(computeSceneSize(390, 420, 3)).toEqual({ pixelScale: 4, width: 146, height: 157, zoom: 4 / 3 });
+  it('celular: cámara cerca y alto que llena el espacio', () => {
+    // 390×380 CSS a densidad 2: ~1.58 px del dispositivo por píxel de arte (lo limita el alto); se ven 123 de las 180 unidades.
+    const phone = computeSceneSize(390, 380, 2);
+    expect(phone.pixelScale).toBeCloseTo(1.583, 2);
+    expect(phone.width).toBe(123);
+    expect(phone.height).toBe(120);
+    expect(phone.zoom * 2).toBeCloseTo(phone.pixelScale);
+    // A densidad 3 (1170 px): 2 enteros por píxel de arte; se ven 146 unidades.
+    expect(computeSceneSize(390, 420, 3)).toEqual({ pixelScale: 2, width: 146, height: 157, zoom: 2 / 3 });
   });
 
-  it('PC (densidad 1): columna de 476 px, a 1.5 porque el doble no cabe', () => {
-    expect(computeSceneSize(476, 500, 1)).toEqual({ pixelScale: 1.5, width: 158, height: 166, zoom: 1.5 });
-    // Ventana bajita: se queda a 1 y se ve el mundo completo.
-    expect(computeSceneSize(476, 330, 1)).toEqual({ pixelScale: 1, width: 238, height: 165, zoom: 1 });
+  it('PC (densidad 1): columna de 476 px, apenas abajo de 1; en ventanas bajitas se encoge para que quepa', () => {
+    const pc = computeSceneSize(476, 500, 1);
+    expect(pc.pixelScale).toBeCloseTo(0.992, 2);
+    expect(pc.width).toBe(120);
+    const low = computeSceneSize(476, 330, 1);
+    expect(low.pixelScale).toBeCloseTo(0.6875, 3);
+    expect(low).toMatchObject({ width: 173, height: 120 });
   });
 
-  it('nunca baja de escala 1 ni del ancho y alto mínimos', () => {
-    expect(computeSceneSize(100, 100, 1)).toEqual({ pixelScale: 1, width: 120, height: 120, zoom: 1 });
+  it('nunca baja de media escala ni del ancho y alto mínimos', () => {
+    expect(computeSceneSize(100, 100, 1)).toEqual({ pixelScale: 0.5, width: 120, height: 120, zoom: 0.5 });
   });
 
   it('la cámara sigue al gato sin salirse del mundo; en pantallas anchas centra el mundo', () => {

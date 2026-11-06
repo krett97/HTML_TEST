@@ -4,9 +4,9 @@
 // gato y al objeto (ver MainScene.updateCamera). En pantallas anchas se ve el mundo completo y más
 // cuarto a los lados.
 //
-// El arte (PixelLab) tiene el doble de detalle que el mundo: cada unidad del mundo mide ART píxeles
-// de arte. Las posiciones y reglas siguen en unidades del mundo; la cámara amplía ×ART.
-export const ART = 2;
+// El arte (PixelLab) tiene más detalle que el mundo: cada unidad del mundo mide ART píxeles de arte
+// (4: alta definición). Las posiciones y reglas siguen en unidades del mundo; la cámara amplía ×ART.
+export const ART = 4;
 /** Ancho del mundo (el área de juego: la barra, la mesa…). */
 export const SCENE_WIDTH = 180;
 /** Lo menos que se ve a lo ancho: decide qué tan cerca está la cámara. */
@@ -19,7 +19,7 @@ export const MAX_HEIGHT = 300;
 export const FLOOR_H = 30;
 
 export interface SceneSize {
-  /** Cuántos píxeles del dispositivo mide cada píxel de arte. */
+  /** Cuántos píxeles del dispositivo mide cada píxel de arte (entero a partir de 2; entre 1 y 2 puede ser fracción). */
   pixelScale: number;
   /** Tamaño visible del mundo (el canvas mide ART veces esto). */
   width: number;
@@ -34,8 +34,10 @@ export function computeSceneSize(cssWidth: number, cssHeight: number, dpr: numbe
   const deviceW = cssWidth * dpr;
   const deviceH = cssHeight * dpr;
   const raw = Math.min(deviceW / (VIEW_MIN_WIDTH * ART), deviceH / (MIN_HEIGHT * ART));
-  // En pantallas de densidad 1 (PC) no cabe el doble: se acepta 1.5 (píxeles de 1 y 2) antes que quedarse lejos.
-  const pixelScale = raw >= 2 ? Math.floor(raw) : raw >= 1.5 ? 1.5 : 1;
+  // Con el arte a 4 píxeles por unidad, un píxel de arte es diminuto: abajo de 2 se acepta una fracción
+  // (píxeles de 1 y 2 del dispositivo, que no se notan) antes que quedarse lejos; en ventanas chicas de
+  // densidad 1 incluso se encoge (hasta la mitad) para que quepa el cuarto.
+  const pixelScale = raw >= 2 ? Math.floor(raw) : Math.max(0.5, raw);
   const unit = pixelScale * ART;
   return {
     pixelScale,
