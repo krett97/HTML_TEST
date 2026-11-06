@@ -355,7 +355,8 @@ export class MainScene extends Phaser.Scene {
     // Ventana y cuadro: abajo al centro de su lugar (el cuervo y el perico se paran encima).
     const { windowY, pictureY } = perchTops(this.floorY);
     r.ventana.setVisible(art.ventana);
-    if (r.ventana.visible) r.ventana.setTexture(`ventana_${room}`).setPosition(WINDOW_X, windowY + 40);
+    // En el jardín la "ventana" es un árbol parado en el pasto (el cuervo se sube a la copa).
+    if (r.ventana.visible) r.ventana.setTexture(`ventana_${room}`).setPosition(WINDOW_X, room === 'jardin' ? this.floorY : windowY + 40);
     r.cuadro.setVisible(art.cuadro);
     if (r.cuadro.visible) r.cuadro.setTexture(`cuadro_${room}`).setPosition(131, pictureY + 22);
     r.sol.setVisible(room === 'jardin' && has('sol'));

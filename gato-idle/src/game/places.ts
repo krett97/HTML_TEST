@@ -39,19 +39,19 @@ const SURFACES: Record<SurfaceKind, Surface> = {
  */
 const FURNITURE: Partial<Record<PlaceId, { ancho: number; alto: number; sobresale?: number }>> = {
   'cocina-barra': { ancho: 136.25, alto: 23.25 },
-  'sala-mesa': { ancho: 132.5, alto: 16 },
-  'sala-mueble': { ancho: 125.5, alto: 17.5 },
-  'bano-repisa': { ancho: 102.5, alto: 62, sobresale: 1.5 },
-  'recamara-cama': { ancho: 113, alto: 24.5, sobresale: 13 },
+  'sala-mesa': { ancho: 132.5, alto: 11.75 },
+  'sala-mueble': { ancho: 125.5, alto: 13.25 },
+  'bano-repisa': { ancho: 102.5, alto: 62 },
+  'recamara-cama': { ancho: 113, alto: 21.5, sobresale: 12 },
   'recamara-escritorio': { ancho: 95, alto: 27 },
-  'jardin-mesa': { ancho: 112, alto: 16 },
-  'estudio-escritorio': { ancho: 123, alto: 33 },
+  'jardin-mesa': { ancho: 112, alto: 13 },
+  'estudio-escritorio': { ancho: 123, alto: 26.75 },
   'estudio-repisa': { ancho: 109, alto: 62 },
-  'salon-mesa': { ancho: 99, alto: 20.5 },
-  'salon-mueble': { ancho: 128, alto: 26.5 },
-  'cine-mueble': { ancho: 125, alto: 21 },
-  'alberca-mesa': { ancho: 94.5, alto: 18.5 },
-  'cohete-mueble': { ancho: 134, alto: 25.5 },
+  'salon-mesa': { ancho: 99, alto: 19.75 },
+  'salon-mueble': { ancho: 128, alto: 20 },
+  'cine-mueble': { ancho: 125, alto: 16.75 },
+  'alberca-mesa': { ancho: 94.5, alto: 17 },
+  'cohete-mueble': { ancho: 134, alto: 19 },
   'labluna-mesa': { ancho: 83, alto: 14.5 },
 };
 
@@ -160,7 +160,7 @@ export function drawRoom(g: Phaser.GameObjects.Graphics, room: Room, left: numbe
   // Ventana y cuadro (en el jardín: un árbol y una casita de pájaros, donde se paran el cuervo y el perico).
   const { windowY, pictureY } = perchTops(floorY);
   if (room === 'jardin') {
-    if (art.ventana && art.cuadro) drawGardenPosts(g, windowY, pictureY, floorY);
+    if (art.ventana && art.cuadro) drawGardenPost(g, pictureY, floorY);
     else drawGardenPerches(g, windowY, pictureY, floorY);
   } else if (!art.ventana) {
     const wx = WINDOW_X - 24;
@@ -310,11 +310,8 @@ function drawFloor(g: Phaser.GameObjects.Graphics, room: Room, left: number, w: 
 }
 
 /** Rama (donde se para el cuervo) y casita de pájaros (el perico se para en el techo). */
-/** Con arte (ventana_jardin.png = copa del árbol, cuadro_jardin.png = casita): el tronco y el poste hasta el piso. */
-function drawGardenPosts(g: Phaser.GameObjects.Graphics, windowY: number, pictureY: number, floorY: number): void {
-  const trunkTop = windowY + 40 - 6;
-  g.fillStyle(0x6b4a2a).fillRect(WINDOW_X - 5, trunkTop, 10, floorY - trunkTop);
-  g.fillStyle(0x4a3018).fillRect(WINDOW_X + 3, trunkTop, 2, floorY - trunkTop).fillRect(WINDOW_X - 2, trunkTop + 8, 1, 12);
+/** Con arte (ventana_jardin.png = árbol parado en el pasto, cuadro_jardin.png = casita): el poste de la casita hasta el piso. */
+function drawGardenPost(g: Phaser.GameObjects.Graphics, pictureY: number, floorY: number): void {
   const postTop = pictureY + 22 - 4;
   g.fillStyle(0x9a6a3c).fillRect(129, postTop, 4, floorY - postTop);
   g.fillStyle(0x6b4a2a).fillRect(132, postTop, 1, floorY - postTop);

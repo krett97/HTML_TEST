@@ -985,3 +985,26 @@ Además de las 171 pruebas unitarias (`npm test`), `npm run e2e` juega el juego 
 La primera corrida encontró un error real: el botón **¡Ya!** de la revancha no se podía tocar (el recuadro tenía `pointer-events: none` y el botón lo heredaba). Corregido: el recuadro deja pasar los toques a la escena y el botón sí responde.
 
 Antes de cada versión: `npm test`, `npx tsc --noEmit -p .`, `npx svelte-check` y `npm run e2e`. Lo que falta para la tienda (cuentas, firma, política de privacidad en línea, prueba cerrada) está en `docs/PUBLICAR.md`.
+
+## 52. Arte en alta resolución con un solo estilo (versión 0.33.0)
+
+El problema: el juego se veía disparejo. Los personajes medían 28 px y PixelLab no alcanzaba a dibujarles cara; cada tanda de arte se había pedido con palabras distintas, así que el gato, la pandilla, los objetos y los cuartos no parecían del mismo juego.
+
+La solución, en dos partes:
+
+1. **El doble de píxeles.** `ART` pasa de 2 a 4 píxeles por unidad del mundo (`sceneSize.ts`); las unidades, los lugares y la lógica no cambian, solo la escala con que se dibuja el arte. La escena enseña al menos 120 unidades de ancho (`VIEW_MIN_WIDTH`) y la cámara sigue al gato cuando el cuarto no cabe (`cameraScroll`); en pantallas chicas la escala puede ser fraccionaria (antes era entera y en PC no había acercamiento).
+2. **Un solo estilo.** Todo se pidió con el mismo remate: "detailed high resolution pixel art, thick dark outline, 3-tone cel shading, vibrant colors". Elenco (gato y sus 5 poses, 7 aliados, dueño, sombrero), 63 objetos, 4 jefes con su derrotado y los 14 cuartos (pared, piso, ventana, cuadro y mueble) se regeneraron con PixelLab a partir del arte viejo escalado como guía de forma, para que cada cosa siguiera siendo la misma.
+
+Técnicas (todas en `tools/arte/`):
+
+| Qué | Cómo |
+|---|---|
+| Objetos y cuadros/ventanas ≤256 px | `edit-image-pixen` (redibuja respetando la forma); `editar.py` |
+| Jefes y objetos grandes (≤400 px) | `create-image-pixflux` con `init_image` (fuerza 90–110); `generar.py` |
+| Texturas de pared y piso | pixflux 128×128 con fuerza 60 (se repiten); se copian tal cual |
+| Muebles más anchos que 400 px | se generan **completos** a 400 px (`muebles_hd.py`) y `ensanchar.py` los estira a su ancho real repitiendo la franja vertical más lisa (la que mejor se repite sin costura); partirlos en mitades no sirvió (cada mitad inventaba cajones o almohadas) |
+| Instalar | `instalar.py`: quita motas, quita fondos sólidos por inundación desde las esquinas y recorta; `clave=nombre:marco` da el mismo recorte a los cuadros del manotazo |
+
+Cambios de escena que salieron de esto: los personajes ya no "respiran" (se veía raro en los aliados); el pedazo de un objeto que cae de un solo golpe cae en su lugar y no fuera de la pantalla; el gato ya no se sube al carro ni a la aspiradora; los jefes se encogen lo necesario para caber bajo el marcador (`BOSS_HEADROOM`); el jardín usa sprites (árbol parado en el pasto con el cuervo en la copa, casita de pájaros sobre un poste y sol) en vez de rectángulos. Las medidas de `FURNITURE` en `places.ts` salen del PNG final (ancho y alto entre 4; `sobresale` es lo que el dibujo sube por encima de la cubierta, como la cabecera de la cama).
+
+Pendiente: un segundo cuadro de reposo dibujado por personaje (en vez de estirar el sprite) y la tanda de eventos aleatorios.
