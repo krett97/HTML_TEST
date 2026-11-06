@@ -95,8 +95,6 @@ export interface GameEvents {
   hit: HitResult;
   /** El dueño compró un objeto nuevo (subió Valor de etapa). `primeraVez`: nunca se había visto (viñeta). */
   objeto: { objectId: string; primeraVez: boolean };
-  /** El gato empezó a usar otra herramienta (llegó a una familia nueva de objetos). */
-  herramienta: { toolId: string };
   /** El gato cambió de aspecto por una mejora: garras (crítico), sombrero (daño crítico) o saco (aliados). */
   aspecto: { cambio: LookChange; primeraVez: boolean };
   /** Un aliado golpeó solo. */
@@ -759,11 +757,6 @@ export class Game {
       void this.save();
     }
     if (record || moved) this.syncRanking();
-    // El gato se sube solo al carrito o a la aspiradora al llegar a esos objetos.
-    if (after.herramienta !== before.herramienta) {
-      this.events.emit('herramienta', { toolId: after.herramienta });
-      this.playSound('herramienta');
-    }
   }
 
   /** Garras afiladas: +probabilidad de crítico. */

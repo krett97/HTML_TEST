@@ -221,7 +221,6 @@
   },
   "avisos": {
     "objetoNuevo": "¡El dueño compró: {objeto}!",
-    "herramienta": "¡El gato consiguió: {herramienta}!",
     "aliadoNuevo": "¡Llegó {aliado}!",
     "descubrimiento": "¡Nuevo: {nombre}!",
     "aliadoDisponible": "¡Nuevo aliado: {aliado}!",

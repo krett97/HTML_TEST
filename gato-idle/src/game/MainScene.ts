@@ -12,7 +12,6 @@ import { createPlaceholders } from './placeholders';
 import { ART, cameraScroll, FLOOR_H, MAX_WIDTH, SCENE_WIDTH } from './sceneSize';
 import { drawRoom, drawShading, drawSurface, furnitureArt, GARDEN_STRIP_H, perchTops, placeOf, SHADOW, WINDOW_X, type Place, type RoomArt } from './places';
 import { catPortrait } from './catPortrait';
-import { toolLook, type ToolLook } from './sprites';
 import { ALLY_NUMBER_COLORS } from '../ui/allyIcons';
 import { bossText } from '../ui/bossText';
 import { iconImage, setRichText } from '../ui/icons';
@@ -57,8 +56,6 @@ const MAX_SCRATCHES = 5;
 const BG_MARGIN = Math.ceil((MAX_WIDTH - SCENE_WIDTH) / 2);
 /** Qué tanto se acerca la cámara a su destino en cada cuadro (sigue al gato con suavidad). */
 const CAMERA_EASE = 0.1;
-/** Respiración de la pandilla en reposo: cuánto se estira y cada cuánto (ms por ciclo). El gato no: con el manotazo se veía raro. */
-const BREATH = { pandilla: 0.035, ms: 2400 };
 
 const COLORS = {
   scratch: 0x2b1d2f,
@@ -100,12 +97,10 @@ export class MainScene extends Phaser.Scene {
   /** Rasguños brillantes de las Garras marcadoras (se dibujan cada cuadro mientras dura la marca). */
   private markScratches!: Phaser.GameObjects.Graphics;
   private cat!: Phaser.GameObjects.Image;
-  private vehicle!: Phaser.GameObjects.Image;
   private hat!: Phaser.GameObjects.Image;
   private owner!: Phaser.GameObjects.Image;
   private object!: Phaser.GameObjects.Image;
   private objectDef!: ObjectDef;
-  private look: ToolLook = toolLook('pata');
   private readonly allies = new Map<string, AllyVisual>();
   /** El gato está soltando un manotazo (cuadro de golpe) y cuánto se inclina hacia el objeto. */
   private swatting = false;
@@ -165,7 +160,6 @@ export class MainScene extends Phaser.Scene {
     const piece = () => this.add.image(0, 0, '__DEFAULT').setOrigin(0.5, 1).setScale(S).setDepth(-1).setVisible(false);
     this.room = { pared: tile(), piso: tile(), ventana: piece(), cuadro: piece(), mueble: piece().setOrigin(0, 0), inodoro: piece() };
     this.cat = this.add.image(0, 0, 'gato').setOrigin(0, 1).setScale(S).setDepth(2);
-    this.vehicle = this.add.image(0, 0, 'carrito').setOrigin(0.5, 1).setScale(S).setDepth(2.5).setVisible(false);
     this.hat = this.add.image(0, 0, 'sombrero').setOrigin(0.5, 1).setScale(S).setDepth(2.8).setVisible(false);
     this.owner = this.add.image(0, 0, 'duenio').setOrigin(0.5, 1).setScale(S).setDepth(4.5).setVisible(false);
     this.object = this.add.image(0, 0, '__DEFAULT').setOrigin(0.5, 1).setScale(S).setDepth(3);
@@ -185,7 +179,6 @@ export class MainScene extends Phaser.Scene {
     this.unsubscribers.push(
       this.controller.events.on('hit', (result) => this.onHit(result)),
       this.controller.events.on('objeto', ({ objectId, primeraVez }) => this.onNewObject(objectId, primeraVez)),
-      this.controller.events.on('herramienta', ({ toolId }) => this.onNewTool(toolId)),
       this.controller.events.on('aspecto', ({ cambio, primeraVez }) => this.onNewLook(cambio, primeraVez)),
       this.controller.events.on('aliado', ({ allyId, result, marcado }) => this.onAllyHit(allyId, result, marcado)),
       this.controller.events.on('marca', ({ nueva }) => this.onMark(nueva)),
@@ -248,23 +241,21 @@ export class MainScene extends Phaser.Scene {
     cam.setScroll(Math.round(next * ART) / ART, 0);
   }
 
-  /** Cada cuadro: la cámara, el sombrero en la cabeza del gato, los aliados en su lugar (respirando) y las sombras. */
+  /**
+   * Cada cuadro: la cámara, el sombrero en la cabeza del gato, los aliados en su lugar y las sombras.
+   * (Sin "respiración" estirando los dibujos: en pixel art las filas bailan. Si se quiere, va con
+   * un segundo cuadro dibujado por personaje.)
+   */
   update(): void {
     this.updateCamera(false);
     this.drawMarkScratches();
-    const now = this.time.now;
-    const breath = (amount: number, phase: number) => S * (1 + amount * Math.sin((now / BREATH.ms) * Math.PI * 2 + phase));
     const swat = this.swatting ? SWAT_HAT : { dx: 0, dy: 0 };
     this.cat.setAngle(this.lean.angle);
     this.hat.setPosition(this.cat.x + HAT_X + swat.dx, this.cat.y + HAT_Y + swat.dy).setAngle(this.lean.angle);
-    let n = 0;
     for (const [id, visual] of this.allies) {
-      n++;
       if (!visual.sprite.visible) continue;
       const base = this.allyRest(id);
       visual.sprite.setPosition(Math.round(base.x + visual.hop.dx), Math.round(base.y + visual.hop.dy));
-      // Respira desde los pies (origen abajo); no mientras está apareciendo (su escala crece de 0 a S).
-      if (visual.sprite.scaleX === S) visual.sprite.scaleY = breath(BREATH.pandilla, n * 1.7);
       // El mapache sigue al objeto con la mirada: el gato lo va empujando y termina pasándolo
       // (su dibujo mira a la izquierda; volteado, a la derecha).
       if (id === 'mapache') visual.sprite.setFlipX(this.object.x > base.x + this.widthOf(visual.sprite) / 2);
@@ -401,7 +392,7 @@ export class MainScene extends Phaser.Scene {
   private placeObject(): void {
     this.objectDef = this.controller.data.objects.find((o) => o.id === this.controller.currentObjectId())!;
     this.enterPlace(true);
-    this.tweens.killTweensOf([this.object, this.cat, this.vehicle]);
+    this.tweens.killTweensOf([this.object, this.cat]);
     const boss = this.controller.bossFightId();
     if (boss) {
       this.placeBoss(boss);
@@ -496,26 +487,19 @@ export class MainScene extends Phaser.Scene {
     });
   }
 
-  /** Vehículo según la herramienta del objeto en la mesa; garras, sombrero y saco según las mejoras. */
+  /** Garras, sombrero y saco según las mejoras. */
   private applyLook(): void {
-    this.look = toolLook(this.objectDef.herramienta);
     this.applyCatTexture();
     this.hat.setVisible(this.controller.catLook().sombrero);
-    this.vehicle.setVisible(this.look.vehicle !== null);
-    if (this.look.vehicle) this.vehicle.setTexture(this.look.vehicle);
-    this.cat.y = this.surfaceTop - this.look.lift;
-    this.vehicle.y = this.surfaceTop;
+    this.cat.y = this.surfaceTop;
   }
 
   private moveCat(x: number, animate: boolean): void {
-    const vehicleX = x + CAT_W / 2;
     if (!animate) {
       this.cat.x = x;
-      this.vehicle.x = vehicleX;
       return;
     }
     this.tweens.add({ targets: this.cat, x, duration: 140, ease: 'Sine.out' });
-    this.tweens.add({ targets: this.vehicle, x: vehicleX, duration: 140, ease: 'Sine.out' });
   }
 
   private drawScratches(progress: number): void {
@@ -735,13 +719,6 @@ export class MainScene extends Phaser.Scene {
     } else {
       this.toast(tr('avisos.objetoNuevo', { objeto }));
     }
-  }
-
-  private onNewTool(toolId: string): void {
-    const herramienta = get(t)(`herramientas.${toolId}`);
-    this.toast(get(t)('avisos.herramienta', { herramienta }));
-    // Saltito de gusto.
-    this.tweens.add({ targets: this.cat, y: this.cat.y - 6, duration: 120, yoyo: true, ease: 'Quad.out' });
   }
 
   /** Compró su primera Garra afilada, Sombrero o Saco: se lo pone, salta y presume. */
@@ -966,7 +943,7 @@ export class MainScene extends Phaser.Scene {
     const golpe = this.swatting ? `${mejoras.garras ? '_garra' : ''}_golpe` : '';
     this.cat.setTexture(`gato${traje}${golpe}`);
     // En el manotazo pasa delante del objeto para que la pata le llegue (en un vehículo no: va sentado adentro).
-    this.cat.setDepth(this.swatting && !this.look.vehicle ? 3.2 : 2);
+    this.cat.setDepth(this.swatting ? 3.2 : 2);
   }
 
   /** El manotazo: el gato se para, suelta la pata hacia el objeto inclinándose y se vuelve a sentar. */
@@ -985,7 +962,7 @@ export class MainScene extends Phaser.Scene {
 
   private pushObject(progress: number): void {
     const x = this.objectX(progress);
-    this.tweens.killTweensOf([this.object, this.cat, this.vehicle]);
+    this.tweens.killTweensOf([this.object, this.cat]);
     this.object.setScale(S).setVisible(true);
     this.tweens.add({ targets: this.object, x, angle: this.objectAngle(progress), duration: 90, ease: 'Quad.out' });
     // Pequeño apachurrón para que el golpe se sienta.

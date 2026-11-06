@@ -9,13 +9,13 @@ export const PALETTE: Record<string, string> = {
   p: '#ff8fab', // nariz y cojinetes
   e: '#1a1020', // ojo
   c: '#e8e8f0', // garras
-  r: '#e5534b', // carrito
-  R: '#a83a34', // carrito, sombra
+  r: '#e5534b', // corbata
+  R: '#a83a34', // rojo oscuro
   y: '#ffd36e', // faro
   g: '#8a8a9a', // rin
-  s: '#4a4a5a', // aspiradora
-  S: '#6a6a7a', // aspiradora, costado
-  G: '#5ec4a8', // luz de la aspiradora
+  s: '#4a4a5a', // gris oscuro (dueño)
+  S: '#6a6a7a', // gris medio
+  G: '#5ec4a8', // verde agua
   a: '#b8b0c0', // gris (gatito, mapache)
   A: '#8a8296', // gris oscuro
   b: '#a8693a', // café (perro)
@@ -87,28 +87,6 @@ export const HAT = [
   'kkkuuuuUkkk',
   'kuuuuuuuuUk',
   'kkkkkkkkkkk',
-];
-
-// Carrito a control remoto; el gato va sentado encima.
-export const CAR = [
-  '..kkkkkkkkkkkkkkkkkkkk..',
-  '.krrrrrrrrrrrrrrrrrrrrk.',
-  'krrrrrrrrrrrrrrrrrrrrryk',
-  'kRRRRRRRRRRRRRRRRRRRRRRk',
-  '.kkkkkkkkkkkkkkkkkkkkkk.',
-  '..kkkk..........kkkk....',
-  '.kkggkk........kkggkk...',
-  '..kkkk..........kkkk....',
-];
-
-// Aspiradora robot vista de lado.
-export const VACUUM = [
-  '....kkkkkkkkkkkkkkkk....',
-  '..kksssssssGsssssssskk..',
-  '.kssssssssssssssssssssk.',
-  'kSSSSSSSSSSSSSSSSSSSSSSk',
-  'kSSSSSSSSSSSSSSSSSSSSSSk',
-  '.kkkkkkkkkkkkkkkkkkkkkk.',
 ];
 
 // Gatito bebé gris, mirando a la derecha.
@@ -245,8 +223,6 @@ export const SPRITES = {
   gato_saco_garra_golpe: CAT_SUIT,
   sombrero: HAT,
   duenio: OWNER,
-  carrito: CAR,
-  aspiradora: VACUUM,
   aliado_gatito: KITTEN,
   aliado_gatito_golpe: KITTEN,
   aliado_perro: DOG,
@@ -256,22 +232,3 @@ export const SPRITES = {
   aliado_cuervo: CROW,
   aliado_cabra: GOAT,
 };
-
-/** Cómo luce el gato según la herramienta del objeto en la mesa (las garras van aparte: son la mejora de crítico). */
-export interface ToolLook {
-  /** Vehículo bajo el gato, si hay. */
-  vehicle: 'carrito' | 'aspiradora' | null;
-  /** Cuánto sube el gato para ir sentado en el vehículo. */
-  lift: number;
-}
-
-export function toolLook(toolId: string): ToolLook {
-  switch (toolId) {
-    case 'carrito':
-      return { vehicle: 'carrito', lift: 6 };
-    case 'aspiradora':
-      return { vehicle: 'aspiradora', lift: 10 };
-    default:
-      return { vehicle: null, lift: 0 };
-  }
-}
