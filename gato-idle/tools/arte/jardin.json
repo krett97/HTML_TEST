@@ -1,0 +1,5 @@
+[
+  {"name": "arbol_copa", "desc": "round leafy green tree canopy with a thick brown branch sticking out to the right at its bottom and a short trunk stub below, cartoon, no background", "w": 160, "h": 128, "seeds": [1, 2, 3], "style": ", detailed high resolution pixel art, thick dark outline, 3-tone cel shading, vibrant colors, no background"},
+  {"name": "casita_pajaros", "desc": "small wooden birdhouse with a red pitched roof and a round dark entrance hole, front view, cartoon, no background", "w": 96, "h": 96, "seeds": [1, 2, 3], "style": ", detailed high resolution pixel art, thick dark outline, 3-tone cel shading, vibrant colors, no background"},
+  {"name": "sol", "desc": "cartoon smiling sun, bright yellow with orange rays, no background", "w": 80, "h": 80, "seeds": [1, 2, 3], "style": ", detailed high resolution pixel art, thick dark outline, 3-tone cel shading, vibrant colors, no background"}
+]

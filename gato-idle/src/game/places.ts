@@ -78,7 +78,7 @@ export interface RoomArt {
 
 /** La barda del jardín (pared_jardin.png) es una franja junto al piso; arriba sigue el cielo de su color. */
 export const GARDEN_STRIP_H = 32;
-const GARDEN_SKY = 0x47e2fd;
+const GARDEN_SKY = 0x60dfe6; // el cielo de pared_jardin.png
 
 /** Ventana y cuadro (el perico se para en el cuadro y el cuervo en la ventana), medidos desde el piso. */
 export const WINDOW_ABOVE_FLOOR = 140;
@@ -148,10 +148,8 @@ export function drawRoom(g: Phaser.GameObjects.Graphics, room: Room, left: numbe
   const look = ROOMS[room];
   if (art.pared) {
     if (room === 'jardin') {
-      // Arriba de la barda: cielo, sol y nubes.
+      // Arriba de la barda sigue el cielo (las nubes vienen en la barda; el sol es un sprite).
       g.fillStyle(GARDEN_SKY).fillRect(left, 0, w, floorY - GARDEN_STRIP_H);
-      g.fillStyle(0xffe27a).fillRect(150, 12, 14, 14);
-      g.fillStyle(0xffffff).fillRect(snap(left, 2) + 30, 20, 22, 6).fillRect(snap(left, 2) + 36, 16, 12, 4).fillRect(90, 34, 18, 5);
     } else {
       g.fillStyle(look.wallDark).fillRect(left, floorY - 6, w, 6); // zoclo
     }
@@ -159,10 +157,11 @@ export function drawRoom(g: Phaser.GameObjects.Graphics, room: Room, left: numbe
     drawWall(g, room, left, w, floorY);
   }
 
-  // Ventana y cuadro (en el jardín: una rama y una casita de pájaros, donde se paran el cuervo y el perico).
+  // Ventana y cuadro (en el jardín: un árbol y una casita de pájaros, donde se paran el cuervo y el perico).
   const { windowY, pictureY } = perchTops(floorY);
   if (room === 'jardin') {
-    drawGardenPerches(g, windowY, pictureY, floorY);
+    if (art.ventana && art.cuadro) drawGardenPosts(g, windowY, pictureY, floorY);
+    else drawGardenPerches(g, windowY, pictureY, floorY);
   } else if (!art.ventana) {
     const wx = WINDOW_X - 24;
     g.fillStyle(0xe8d8c4).fillRect(wx, windowY, 48, 40);
@@ -311,6 +310,16 @@ function drawFloor(g: Phaser.GameObjects.Graphics, room: Room, left: number, w: 
 }
 
 /** Rama (donde se para el cuervo) y casita de pájaros (el perico se para en el techo). */
+/** Con arte (ventana_jardin.png = copa del árbol, cuadro_jardin.png = casita): el tronco y el poste hasta el piso. */
+function drawGardenPosts(g: Phaser.GameObjects.Graphics, windowY: number, pictureY: number, floorY: number): void {
+  const trunkTop = windowY + 40 - 6;
+  g.fillStyle(0x6b4a2a).fillRect(WINDOW_X - 5, trunkTop, 10, floorY - trunkTop);
+  g.fillStyle(0x4a3018).fillRect(WINDOW_X + 3, trunkTop, 2, floorY - trunkTop).fillRect(WINDOW_X - 2, trunkTop + 8, 1, 12);
+  const postTop = pictureY + 22 - 4;
+  g.fillStyle(0x9a6a3c).fillRect(129, postTop, 4, floorY - postTop);
+  g.fillStyle(0x6b4a2a).fillRect(132, postTop, 1, floorY - postTop);
+}
+
 function drawGardenPerches(g: Phaser.GameObjects.Graphics, windowY: number, pictureY: number, floorY: number): void {
   // Árbol a la izquierda con una rama a la altura de la "ventana".
   const branchY = windowY;

@@ -97,6 +97,8 @@ export class MainScene extends Phaser.Scene {
     cuadro: Phaser.GameObjects.Image;
     mueble: Phaser.GameObjects.Image;
     inodoro: Phaser.GameObjects.Image;
+    /** El sol del jardín. */
+    sol: Phaser.GameObjects.Image;
   };
   private scratches!: Phaser.GameObjects.Graphics;
   /** Rasguños brillantes de las Garras marcadoras (se dibujan cada cuadro mientras dura la marca). */
@@ -179,7 +181,7 @@ export class MainScene extends Phaser.Scene {
     this.shadows = this.add.graphics().setDepth(1.5);
     const tile = () => this.add.tileSprite(0, 0, 1, 1, '__DEFAULT').setOrigin(0, 0).setTileScale(S).setDepth(-3).setVisible(false);
     const piece = () => this.add.image(0, 0, '__DEFAULT').setOrigin(0.5, 1).setScale(S).setDepth(-1).setVisible(false);
-    this.room = { pared: tile(), piso: tile(), ventana: piece(), cuadro: piece(), mueble: piece().setOrigin(0, 0), inodoro: piece() };
+    this.room = { pared: tile(), piso: tile(), ventana: piece(), cuadro: piece(), mueble: piece().setOrigin(0, 0), inodoro: piece(), sol: piece().setDepth(-2.5) };
     this.cat = this.add.image(0, 0, 'gato').setOrigin(0, 1).setScale(S).setDepth(2);
     this.hat = this.add.image(0, 0, 'sombrero').setOrigin(0.5, 1).setScale(S).setDepth(2.8).setVisible(false);
     this.owner = this.add.image(0, 0, 'duenio').setOrigin(0.5, 1).setScale(S).setDepth(4.5).setVisible(false);
@@ -352,10 +354,12 @@ export class MainScene extends Phaser.Scene {
     if (art.piso) r.piso.setTexture(`piso_${room}`).setPosition(left, this.floorY).setSize(w, this.worldH - this.floorY);
     // Ventana y cuadro: abajo al centro de su lugar (el cuervo y el perico se paran encima).
     const { windowY, pictureY } = perchTops(this.floorY);
-    r.ventana.setVisible(art.ventana && room !== 'jardin');
+    r.ventana.setVisible(art.ventana);
     if (r.ventana.visible) r.ventana.setTexture(`ventana_${room}`).setPosition(WINDOW_X, windowY + 40);
-    r.cuadro.setVisible(art.cuadro && room !== 'jardin');
+    r.cuadro.setVisible(art.cuadro);
     if (r.cuadro.visible) r.cuadro.setTexture(`cuadro_${room}`).setPosition(131, pictureY + 22);
+    r.sol.setVisible(room === 'jardin' && has('sol'));
+    if (r.sol.visible) r.sol.setTexture('sol').setPosition(152, 34);
     drawRoom(g, room, left, w, this.worldH, this.floorY, art);
     drawShading(this.shading.clear(), room, surface, left, w, this.worldH, this.floorY);
     // El mueble: su cubierta queda a la altura de la superficie.
@@ -580,8 +584,8 @@ export class MainScene extends Phaser.Scene {
       case 'perico':
         return { x: 125, y: this.perchTop('cuadro', perchTops(floorY).pictureY) + 1 };
       case 'cuervo':
-        // En la ventana (en el jardín, en la rama del árbol).
-        return { x: this.place.room === 'jardin' ? 40 : WINDOW_X - 6, y: this.perchTop('ventana', perchTops(floorY).windowY) + 1 };
+        // En la ventana (en el jardín, arriba del árbol).
+        return { x: WINDOW_X - 6, y: this.perchTop('ventana', perchTops(floorY).windowY) + 1 };
       case 'cabra':
         return { x: 162, y: floorY + 5 };
       default:
