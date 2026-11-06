@@ -29,12 +29,22 @@ def clean(im):
             for p in g: out.putpixel(p, (0, 0, 0, 0))
     return out
 
+def sin_fondo(im):
+    """Si la imagen trae fondo sólido (esquinas opacas), lo vuelve transparente desde las esquinas."""
+    from PIL import ImageDraw
+    corners = [(0, 0), (im.width - 1, 0), (0, im.height - 1), (im.width - 1, im.height - 1)]
+    if all(im.getpixel(c)[3] < 40 for c in corners): return im
+    out = im.copy()
+    for c in corners:
+        if out.getpixel(c)[3] >= 40: ImageDraw.floodfill(out, c, (0, 0, 0, 0), thresh=36)
+    return out
+
 items = []
 for arg in sys.argv[3:]:
     key, rest = arg.split('=', 1)
     name, _, frame = rest.partition(':')
     path = f'{SRC}/{name}.png' if not os.path.exists(f'{SRC}/{name}') else f'{SRC}/{name}'
-    items.append((key, clean(Image.open(path).convert('RGBA')), frame or None))
+    items.append((key, clean(sin_fondo(Image.open(path).convert('RGBA'))), frame or None))
 
 # Marcos compartidos: la unión de los contenidos.
 frames = {}
