@@ -83,6 +83,19 @@ const GARDEN_SKY = 0x47e2fd;
 /** Ventana y cuadro (el perico se para en el cuadro y el cuervo en la ventana), medidos desde el piso. */
 export const WINDOW_ABOVE_FLOOR = 140;
 export const PICTURE_ABOVE_FLOOR = 114;
+/** Con la cámara cerca el cuarto es bajito: la ventana y el cuadro bajan hasta quedar a la vista. */
+const WINDOW_MIN_TOP = 16;
+const PICTURE_MIN_TOP = 18;
+/** Centro de la ventana: a la derecha del medidor de daño (arriba a la izquierda), para que no la tape. */
+export const WINDOW_X = 92;
+
+/** Dónde queda arriba la ventana y el cuadro según el alto del cuarto. */
+export function perchTops(floorY: number): { windowY: number; pictureY: number } {
+  return { windowY: Math.max(WINDOW_MIN_TOP, floorY - WINDOW_ABOVE_FLOOR), pictureY: Math.max(PICTURE_MIN_TOP, floorY - PICTURE_ABOVE_FLOOR) };
+}
+
+/** Color de las sombras del cuarto (el morado oscuro de la interfaz). */
+export const SHADOW = 0x120b16;
 
 interface RoomLook {
   wall: number;
@@ -146,23 +159,45 @@ export function drawRoom(g: Phaser.GameObjects.Graphics, room: Room, left: numbe
     drawWall(g, room, left, w, floorY);
   }
 
-  // Ventana y cuadro, si caben (en el jardín: una rama y una casita de pájaros, donde se paran el cuervo y el perico).
-  const windowY = floorY - WINDOW_ABOVE_FLOOR;
+  // Ventana y cuadro (en el jardín: una rama y una casita de pájaros, donde se paran el cuervo y el perico).
+  const { windowY, pictureY } = perchTops(floorY);
   if (room === 'jardin') {
-    drawGardenPerches(g, windowY, floorY - PICTURE_ABOVE_FLOOR, floorY);
-  } else if (windowY >= 6 && !art.ventana) {
-    g.fillStyle(0xe8d8c4).fillRect(22, windowY, 48, 40);
-    g.fillStyle(0x8fc7e8).fillRect(25, windowY + 3, 42, 34);
-    g.fillStyle(0xe8d8c4).fillRect(45, windowY + 3, 2, 34).fillRect(25, windowY + 19, 42, 2);
+    drawGardenPerches(g, windowY, pictureY, floorY);
+  } else if (!art.ventana) {
+    const wx = WINDOW_X - 24;
+    g.fillStyle(0xe8d8c4).fillRect(wx, windowY, 48, 40);
+    g.fillStyle(0x8fc7e8).fillRect(wx + 3, windowY + 3, 42, 34);
+    g.fillStyle(0xe8d8c4).fillRect(wx + 23, windowY + 3, 2, 34).fillRect(wx + 3, windowY + 19, 42, 2);
     if (room === 'recamara') {
       // Cortinas.
-      g.fillStyle(0xb85c7a).fillRect(19, windowY - 2, 8, 44).fillRect(65, windowY - 2, 8, 44);
+      g.fillStyle(0xb85c7a).fillRect(wx - 3, windowY - 2, 8, 44).fillRect(wx + 43, windowY - 2, 8, 44);
     }
   }
-  const pictureY = floorY - PICTURE_ABOVE_FLOOR;
-  if (room !== 'jardin' && pictureY >= 6 && !art.cuadro) drawPicture(g, room, pictureY);
+  if (room !== 'jardin' && !art.cuadro) drawPicture(g, room, pictureY);
 
   if (!art.piso) drawFloor(g, room, left, w, h, floorY);
+}
+
+/**
+ * Luz del cuarto, en bandas (como se sombrea en pixel art): el techo queda en penumbra, la pared se
+ * oscurece un poco para que los personajes resalten y el mueble deja sombra en el piso. Va encima
+ * de la pared y el piso y debajo del mueble y los personajes.
+ */
+export function drawShading(g: Phaser.GameObjects.Graphics, room: Room, surface: Surface, left: number, w: number, h: number, floorY: number): void {
+  const outdoors = room === 'jardin' || room === 'superficie';
+  if (!outdoors) {
+    g.fillStyle(SHADOW, 0.1).fillRect(left, 0, w, floorY);
+    const bands = [0.28, 0.18, 0.1, 0.05];
+    bands.forEach((alpha, i) => g.fillStyle(SHADOW, alpha).fillRect(left, i * 3, w, 3));
+  }
+  // La unión de la pared con el piso y la sombra del mueble.
+  g.fillStyle(SHADOW, 0.14).fillRect(left, floorY, w, 2);
+  if (surface.height > 0) {
+    const bands = [0.26, 0.16, 0.08];
+    bands.forEach((alpha, i) => g.fillStyle(SHADOW, alpha).fillRect(surface.left, floorY + i * 2, surface.right - surface.left + 2 + i * 2, 2));
+  }
+  // Un poco más oscuro abajo del todo: el piso se aleja de la luz.
+  g.fillStyle(SHADOW, 0.08).fillRect(left, h - 6, w, 6);
 }
 
 /** Pared con su detalle (azulejos, lambrín, barda, espuma…) y el zoclo. */
@@ -278,12 +313,12 @@ function drawFloor(g: Phaser.GameObjects.Graphics, room: Room, left: number, w: 
 /** Rama (donde se para el cuervo) y casita de pájaros (el perico se para en el techo). */
 function drawGardenPerches(g: Phaser.GameObjects.Graphics, windowY: number, pictureY: number, floorY: number): void {
   // Árbol a la izquierda con una rama a la altura de la "ventana".
-  const branchY = windowY >= 6 ? windowY : floorY - 84;
+  const branchY = windowY;
   g.fillStyle(0x6b4a2a).fillRect(8, branchY - 30, 8, floorY - branchY + 30);
   g.fillStyle(0x4a8030).fillRect(-6, branchY - 46, 36, 22).fillRect(0, branchY - 54, 24, 10);
   g.fillStyle(0x6b4a2a).fillRect(14, branchY, 60, 3);
   // Casita de pájaros en un poste, con el techo a la altura del "cuadro".
-  const top = pictureY >= 18 ? pictureY : floorY - 78;
+  const top = pictureY;
   g.fillStyle(0x9a6a3c).fillRect(129, top + 20, 4, floorY - top - 20);
   g.fillStyle(0xc0504d).fillRect(118, top, 26, 4);
   g.fillStyle(0xe8c48a).fillRect(121, top + 4, 20, 16);

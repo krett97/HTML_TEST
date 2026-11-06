@@ -9,8 +9,8 @@ import type { Game, LookChange } from '../app/game';
 import { t } from '../i18n';
 import { loadArt } from './art';
 import { createPlaceholders } from './placeholders';
-import { ART, FLOOR_H, SCENE_WIDTH } from './sceneSize';
-import { drawRoom, drawSurface, furnitureArt, GARDEN_STRIP_H, PICTURE_ABOVE_FLOOR, placeOf, WINDOW_ABOVE_FLOOR, type Place, type RoomArt } from './places';
+import { ART, cameraScroll, FLOOR_H, MAX_WIDTH, SCENE_WIDTH } from './sceneSize';
+import { drawRoom, drawShading, drawSurface, furnitureArt, GARDEN_STRIP_H, perchTops, placeOf, SHADOW, WINDOW_X, type Place, type RoomArt } from './places';
 import { catPortrait } from './catPortrait';
 import { toolLook, type ToolLook } from './sprites';
 import { ALLY_NUMBER_COLORS } from '../ui/allyIcons';
@@ -53,6 +53,12 @@ const SHAKES = {
 const BREAK_SHAKE_GAP = 500;
 /** Rasguños visibles en los objetos que se "rasgan". */
 const MAX_SCRATCHES = 5;
+/** La pared y el piso se pintan más allá del mundo, por si la pantalla es ancha (hasta MAX_WIDTH). */
+const BG_MARGIN = Math.ceil((MAX_WIDTH - SCENE_WIDTH) / 2);
+/** Qué tanto se acerca la cámara a su destino en cada cuadro (sigue al gato con suavidad). */
+const CAMERA_EASE = 0.1;
+/** Respiración de los personajes en reposo: cuánto se estiran y cada cuánto (ms por ciclo). */
+const BREATH = { gato: 0.025, pandilla: 0.035, ms: 2400 };
 
 const COLORS = {
   scratch: 0x2b1d2f,
@@ -79,6 +85,8 @@ interface AllyVisual {
 
 export class MainScene extends Phaser.Scene {
   private background!: Phaser.GameObjects.Graphics;
+  private shading!: Phaser.GameObjects.Graphics;
+  private shadows!: Phaser.GameObjects.Graphics;
   /** Arte del cuarto (PixelLab): pared y piso que se repiten, ventana, cuadro y mueble. */
   private room!: {
     pared: Phaser.GameObjects.TileSprite;
@@ -150,6 +158,9 @@ export class MainScene extends Phaser.Scene {
     this.cameras.main.setOrigin(0, 0).setZoom(ART);
 
     this.background = this.add.graphics().setDepth(-2);
+    // Luz del cuarto (bandas) entre la pared y el mueble; sombras de los personajes sobre el piso y el mueble.
+    this.shading = this.add.graphics().setDepth(-1.5);
+    this.shadows = this.add.graphics().setDepth(1.5);
     const tile = () => this.add.tileSprite(0, 0, 1, 1, '__DEFAULT').setOrigin(0, 0).setTileScale(S).setDepth(-3).setVisible(false);
     const piece = () => this.add.image(0, 0, '__DEFAULT').setOrigin(0.5, 1).setScale(S).setDepth(-1).setVisible(false);
     this.room = { pared: tile(), piso: tile(), ventana: piece(), cuadro: piece(), mueble: piece().setOrigin(0, 0), inodoro: piece() };
@@ -217,28 +228,62 @@ export class MainScene extends Phaser.Scene {
 
   /** Redibuja el fondo y recoloca todo según el tamaño actual. */
   private layout(): void {
-    // El área de juego (0..180) queda centrada; lo que sobra a los lados es más cuarto.
-    this.cameras.main.setScroll(-Math.floor((this.worldW - SCENE_WIDTH) / 2), 0);
     // Al redibujar (inicio, cambio de tamaño) se entra directo al cuarto, sin fundido.
     this.place = placeOf(this.controller.data.objects.find((o) => o.id === this.controller.currentObjectId())!.lugar);
     this.drawBackground();
     this.placeObject();
     this.refreshAllies();
+    this.updateCamera(true);
   }
 
-  /** Cada cuadro: el sombrero va en la cabeza del gato y los aliados siguen su lugar (el gatito, junto al gato). */
+  /**
+   * La cámara sigue al gato y al objeto (en un celular no cabe todo el mundo). Se mueve en píxeles
+   * de arte enteros para que el pixel art no tiemble.
+   */
+  private updateCamera(snap: boolean): void {
+    const cam = this.cameras.main;
+    const focus = this.object.visible ? (this.cat.x + CAT_W / 2 + this.object.x) / 2 : this.cat.x + CAT_W / 2;
+    const target = cameraScroll(focus, this.worldW);
+    const next = snap ? target : cam.scrollX + (target - cam.scrollX) * CAMERA_EASE;
+    cam.setScroll(Math.round(next * ART) / ART, 0);
+  }
+
+  /** Cada cuadro: la cámara, el sombrero en la cabeza del gato, los aliados en su lugar (respirando) y las sombras. */
   update(): void {
+    this.updateCamera(false);
     this.drawMarkScratches();
+    const now = this.time.now;
+    const breath = (amount: number, phase: number) => S * (1 + amount * Math.sin((now / BREATH.ms) * Math.PI * 2 + phase));
     const swat = this.swatting ? SWAT_HAT : { dx: 0, dy: 0 };
-    this.cat.setAngle(this.lean.angle);
-    this.hat.setPosition(this.cat.x + HAT_X + swat.dx, this.cat.y + HAT_Y + swat.dy).setAngle(this.lean.angle);
+    this.cat.setAngle(this.lean.angle).setScale(S, breath(BREATH.gato, 0));
+    this.hat.setPosition(this.cat.x + HAT_X + swat.dx, this.cat.y + HAT_Y * (this.cat.scaleY / S) + swat.dy).setAngle(this.lean.angle);
+    let n = 0;
     for (const [id, visual] of this.allies) {
+      n++;
       if (!visual.sprite.visible) continue;
       const base = this.allyRest(id);
       visual.sprite.setPosition(Math.round(base.x + visual.hop.dx), Math.round(base.y + visual.hop.dy));
+      // Respira desde los pies (origen abajo); no mientras está apareciendo (su escala crece de 0 a S).
+      if (visual.sprite.scaleX === S) visual.sprite.scaleY = breath(BREATH.pandilla, n * 1.7);
       // El mapache sigue al objeto con la mirada: el gato lo va empujando y termina pasándolo
       // (su dibujo mira a la izquierda; volteado, a la derecha).
       if (id === 'mapache') visual.sprite.setFlipX(this.object.x > base.x + this.widthOf(visual.sprite) / 2);
+    }
+    this.drawShadows();
+  }
+
+  /** Sombra en el piso (o en el mueble) debajo de cada personaje y del objeto: así están "dentro" del cuarto. */
+  private drawShadows(): void {
+    const g = this.shadows.clear();
+    g.fillStyle(SHADOW, 0.22);
+    const blob = (cx: number, y: number, w: number) => g.fillEllipse(cx, y, Math.max(8, w), 4);
+    if (this.cat.visible) blob(this.cat.x + CAT_W / 2, this.cat.y, CAT_W * 1.2);
+    if (this.object.visible && this.object.scale > 0) blob(this.object.x, this.object.y, this.widthOf(this.object) * 1.05);
+    if (this.owner.visible) blob(this.owner.x, this.owner.y, this.widthOf(this.owner));
+    for (const visual of this.allies.values()) {
+      if (!visual.sprite.visible) continue;
+      // La sombra se queda en el piso aunque el aliado brinque.
+      blob(visual.sprite.x + this.widthOf(visual.sprite) / 2, visual.sprite.y - visual.hop.dy, this.widthOf(visual.sprite) * 0.9);
     }
   }
 
@@ -281,24 +326,26 @@ export class MainScene extends Phaser.Scene {
   private drawBackground(): void {
     const g = this.background.clear();
     const { room, surface } = this.place;
-    const left = this.cameras.main.scrollX;
+    // La pared y el piso cubren el mundo y un margen a cada lado (la cámara se mueve sobre ellos).
+    const left = -BG_MARGIN;
+    const w = SCENE_WIDTH + 2 * BG_MARGIN;
     const has = (key: string) => this.textures.exists(key);
     const art: RoomArt = { pared: has(`pared_${room}`), piso: has(`piso_${room}`), ventana: has(`ventana_${room}`), cuadro: has(`cuadro_${room}`) };
     const r = this.room;
     // Pared y piso: se repiten a lo ancho de todo el canvas. La barda del jardín es solo una franja junto al piso.
     const wallTop = room === 'jardin' ? this.floorY - GARDEN_STRIP_H : 0;
     r.pared.setVisible(art.pared);
-    if (art.pared) r.pared.setTexture(`pared_${room}`).setPosition(left, wallTop).setSize(this.worldW, this.floorY - wallTop);
+    if (art.pared) r.pared.setTexture(`pared_${room}`).setPosition(left, wallTop).setSize(w, this.floorY - wallTop);
     r.piso.setVisible(art.piso);
-    if (art.piso) r.piso.setTexture(`piso_${room}`).setPosition(left, this.floorY).setSize(this.worldW, this.worldH - this.floorY);
+    if (art.piso) r.piso.setTexture(`piso_${room}`).setPosition(left, this.floorY).setSize(w, this.worldH - this.floorY);
     // Ventana y cuadro: abajo al centro de su lugar (el cuervo y el perico se paran encima).
-    const windowY = this.floorY - WINDOW_ABOVE_FLOOR;
-    const pictureY = this.floorY - PICTURE_ABOVE_FLOOR;
-    r.ventana.setVisible(art.ventana && room !== 'jardin' && windowY >= 6);
-    if (r.ventana.visible) r.ventana.setTexture(`ventana_${room}`).setPosition(46, windowY + 40);
-    r.cuadro.setVisible(art.cuadro && room !== 'jardin' && pictureY >= 6);
+    const { windowY, pictureY } = perchTops(this.floorY);
+    r.ventana.setVisible(art.ventana && room !== 'jardin');
+    if (r.ventana.visible) r.ventana.setTexture(`ventana_${room}`).setPosition(WINDOW_X, windowY + 40);
+    r.cuadro.setVisible(art.cuadro && room !== 'jardin');
     if (r.cuadro.visible) r.cuadro.setTexture(`cuadro_${room}`).setPosition(131, pictureY + 22);
-    drawRoom(g, room, left, this.worldW, this.worldH, this.floorY, art);
+    drawRoom(g, room, left, w, this.worldH, this.floorY, art);
+    drawShading(this.shading.clear(), room, surface, left, w, this.worldH, this.floorY);
     // El mueble: su cubierta queda a la altura de la superficie.
     const mueble = furnitureArt(room, surface);
     const conMueble = mueble !== null && has(mueble.key);
@@ -521,14 +568,11 @@ export class MainScene extends Phaser.Scene {
         return { x: 1, y: floorY + 5 };
       case 'raton':
         return { x: 66, y: floorY + 4 };
-      case 'perico': {
-        const pictureY = floorY - PICTURE_ABOVE_FLOOR;
-        return pictureY >= 18 ? { x: 125, y: this.perchTop('cuadro', pictureY) + 1 } : { x: 132, y: floorY - 78 };
-      }
-      case 'cuervo': {
-        const windowY = floorY - WINDOW_ABOVE_FLOOR;
-        return windowY >= 16 ? { x: 40, y: this.perchTop('ventana', windowY) + 1 } : { x: 100, y: floorY - 84 };
-      }
+      case 'perico':
+        return { x: 125, y: this.perchTop('cuadro', perchTops(floorY).pictureY) + 1 };
+      case 'cuervo':
+        // En la ventana (en el jardín, en la rama del árbol).
+        return { x: this.place.room === 'jardin' ? 40 : WINDOW_X - 6, y: this.perchTop('ventana', perchTops(floorY).windowY) + 1 };
       case 'cabra':
         return { x: 162, y: floorY + 5 };
       default:

@@ -25,9 +25,11 @@
     <div class="visor" aria-hidden="true"></div>
     <div class="rec" data-testid="rec"><span class="rec-dot"></span> REC</div>
   {/if}
+  <!-- Columna de arriba a la izquierda: el medidor y el turbo, uno abajo del otro, sin tapar el cuarto. -->
+  <div class="hud-izq">
   {#if $view.roturas > 0}
     <!-- Medidor de daño por segundo: total, y cuánto pone el gato y cuánto la pandilla. -->
-    <div class="dps" class:con-rec={$view.funciones.canal} class:racha={$view.dps.racha} data-testid="dps-escena">
+    <div class="dps" class:racha={$view.dps.racha} data-testid="dps-escena">
       <div class="dps-top">
         <span class="dps-icon"><Icon name={$view.dps.racha ? 'viral' : 'dps'} size={24} /></span>
         {#key $view.dps.total}<strong class="dps-num cifra">{$view.dps.total}</strong>{/key}
@@ -52,6 +54,20 @@
       {/if}
     </div>
   {/if}
+  {#if $view.turbo.disponible && !$view.jefe.pelea}
+    <!-- Turbo: ×1.5 daño y dinero por 3 minutos viendo un anuncio; mientras dura, la cuenta regresiva. -->
+    <button type="button" class="turbo" class:activo={$view.turbo.restante > 0} disabled={$view.turbo.restante > 0 || $view.turbo.espera > 0} onclick={() => game.startTurbo()} data-testid="turbo">
+      <Icon name="turbo" size={18} />
+      {#if $view.turbo.restante > 0}
+        <span class="cifra">×1.5 {Math.floor($view.turbo.restante / 60)}:{String($view.turbo.restante % 60).padStart(2, '0')}</span>
+      {:else if $view.turbo.espera > 0}
+        <span class="cifra">{Math.floor($view.turbo.espera / 60)}:{String($view.turbo.espera % 60).padStart(2, '0')}</span>
+      {:else}
+        <span>{$t('turbo.boton')}</span><Icon name="anuncio" size={14} />
+      {/if}
+    </button>
+  {/if}
+  </div>
   {#if $view.jefe.pelea}
     {@const pelea = $view.jefe.pelea}
     <!-- Pelea contra el jefe: nombre, vida que le queda y reloj. -->
@@ -74,19 +90,6 @@
         <Icon name={$view.jefe.aqui} /> {$t('jefe.retar', bossText($t, $view.jefe.aqui))}
       </button>
     {/if}
-  {/if}
-  {#if $view.turbo.disponible && !$view.jefe.pelea}
-    <!-- Turbo: ×2 daño y dinero por 3 minutos viendo un anuncio; mientras dura, la cuenta regresiva. -->
-    <button type="button" class="turbo" class:activo={$view.turbo.restante > 0} disabled={$view.turbo.restante > 0 || $view.turbo.espera > 0} onclick={() => game.startTurbo()} data-testid="turbo">
-      <Icon name="turbo" size={22} />
-      {#if $view.turbo.restante > 0}
-        <span class="cifra">×1.5 {Math.floor($view.turbo.restante / 60)}:{String($view.turbo.restante % 60).padStart(2, '0')}</span>
-      {:else if $view.turbo.espera > 0}
-        <span class="cifra">{Math.floor($view.turbo.espera / 60)}:{String($view.turbo.espera % 60).padStart(2, '0')}</span>
-      {:else}
-        <span>{$t('turbo.boton')}</span><Icon name="anuncio" size={16} />
-      {/if}
-    </button>
   {/if}
   {#if $view.patrocinio.visible}
     <button type="button" class="sponsor" onclick={() => game.claimSponsor()} data-testid="patrocinio">
@@ -151,7 +154,8 @@
   }
   .boss-call,
   .boss-wait {
-    bottom: calc(var(--piso, 0px) + 8px);
+    /* Sobre la parte baja del piso, sin tapar al gato ni a la pandilla (sus patas quedan más arriba). */
+    bottom: 10px;
     left: 50%;
     translate: -50% 0;
     white-space: nowrap;
@@ -248,25 +252,29 @@
     background: #ff4d5e;
     transition: width 120ms linear;
   }
-  /* Medidor de daño por segundo (arriba a la izquierda, debajo del REC). */
-  .dps {
+  /* Columna de arriba a la izquierda: el medidor y, debajo, el turbo. */
+  .hud-izq {
     position: absolute;
     z-index: 3;
-    top: 12px;
-    left: 12px;
+    top: 10px;
+    left: 10px;
     display: grid;
-    gap: 3px;
-    min-width: 92px;
-    padding: 0 2px 1px;
+    gap: 4px;
+    justify-items: start;
+    pointer-events: none;
+  }
+  /* Medidor de daño por segundo: compacto, para tapar lo menos posible el cuarto. */
+  .dps {
+    display: grid;
+    gap: 2px;
+    min-width: 80px;
+    padding: 0 2px 0;
     border: 8px solid transparent;
     border-image: url('../assets/ui/panel_hud.png') 11 fill / 8px stretch;
     image-rendering: pixelated;
     color: var(--text);
     pointer-events: none;
     transition: box-shadow 200ms;
-  }
-  .dps.con-rec {
-    top: 34px;
   }
   .dps-top {
     display: flex;
@@ -277,7 +285,7 @@
     font-size: 14px;
   }
   .dps-num {
-    font-size: 22px;
+    font-size: 18px;
     line-height: 1;
     color: var(--gold);
     text-shadow: 0 2px 0 var(--line);
@@ -294,7 +302,7 @@
   }
   /* Barra: naranja = gato, morado = pandilla. */
   .dps-bar {
-    height: 6px;
+    height: 5px;
     border: 1px solid var(--line);
     background: #8e5bd1;
   }
@@ -357,8 +365,9 @@
   .rec {
     position: absolute;
     z-index: 2;
-    top: 14px;
-    left: 16px;
+    top: 12px;
+    left: 50%;
+    translate: -50% 0;
     display: flex;
     align-items: center;
     gap: 5px;
@@ -385,23 +394,20 @@
     min-height: 30px;
     font-size: 12px;
   }
-  /* Turbo: a la derecha, a media altura (debajo del patrocinio). */
+  /* Turbo: debajo del medidor. */
   .turbo {
-    position: absolute;
-    z-index: 4;
-    right: 10px;
-    top: 42%;
+    pointer-events: auto;
     display: flex;
     align-items: center;
-    gap: 4px;
-    padding: 0 4px;
+    gap: 3px;
+    padding: 0 3px;
     border: 7px solid transparent;
     border-image: url('../assets/ui/boton_morado.png') 7 fill / 7px stretch;
     background: none;
     image-rendering: pixelated;
     color: var(--text);
     font: inherit;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
     cursor: pointer;
   }
@@ -440,7 +446,7 @@
     animation: llamar 1.2s ease-in-out infinite;
   }
   .sponsor strong {
-    font-size: 20px;
+    font-size: 18px;
   }
   .sponsor-tag {
     font-size: 11px;
