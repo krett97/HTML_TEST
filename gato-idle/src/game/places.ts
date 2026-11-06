@@ -38,7 +38,7 @@ const SURFACES: Record<SurfaceKind, Surface> = {
  * cubierta. `sobresale`: lo que el dibujo sube por encima de la cubierta (la cabecera de la cama).
  */
 const FURNITURE: Partial<Record<PlaceId, { ancho: number; alto: number; sobresale?: number }>> = {
-  'cocina-barra': { ancho: 149.5, alto: 31.5 },
+  'cocina-barra': { ancho: 136.25, alto: 23.25 },
   'sala-mesa': { ancho: 132.5, alto: 16 },
   'sala-mueble': { ancho: 125.5, alto: 17.5 },
   'bano-repisa': { ancho: 102.5, alto: 62, sobresale: 1.5 },
