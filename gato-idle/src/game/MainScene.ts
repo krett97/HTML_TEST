@@ -25,8 +25,8 @@ const CAT_W = 16;
 /** Escala de las imágenes: el arte trae ART píxeles por unidad y la cámara amplía ×ART. */
 const S = 1 / ART;
 /** Dónde va el sombrero de copa respecto al gato (origen abajo a la izquierda): apoyado en la frente, tapando la uva. */
-const HAT_X = 9.5;
-const HAT_Y = -17.5;
+const HAT_X = 10.5;
+const HAT_Y = -16.5;
 /**
  * Tamaño de cada aliado respecto a su dibujo (todos se generan a ~96 px para que tengan detalle;
  * el gatito bebé, el ratón y los pájaros deben verse chicos junto al gato).
