@@ -33,7 +33,9 @@ const clamp = (value: number, min: number, max: number) => Math.min(max, Math.ma
 export function computeSceneSize(cssWidth: number, cssHeight: number, dpr: number): SceneSize {
   const deviceW = cssWidth * dpr;
   const deviceH = cssHeight * dpr;
-  const pixelScale = Math.max(1, Math.floor(Math.min(deviceW / (VIEW_MIN_WIDTH * ART), deviceH / (MIN_HEIGHT * ART))));
+  const raw = Math.min(deviceW / (VIEW_MIN_WIDTH * ART), deviceH / (MIN_HEIGHT * ART));
+  // En pantallas de densidad 1 (PC) no cabe el doble: se acepta 1.5 (píxeles de 1 y 2) antes que quedarse lejos.
+  const pixelScale = raw >= 2 ? Math.floor(raw) : raw >= 1.5 ? 1.5 : 1;
   const unit = pixelScale * ART;
   return {
     pixelScale,

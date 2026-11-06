@@ -19,8 +19,10 @@ describe('tamaño de la escena', () => {
     expect(computeSceneSize(390, 420, 3)).toEqual({ pixelScale: 4, width: 146, height: 157, zoom: 4 / 3 });
   });
 
-  it('PC: columna de 476 px', () => {
-    expect(computeSceneSize(476, 500, 1)).toEqual({ pixelScale: 1, width: 238, height: 250, zoom: 1 });
+  it('PC (densidad 1): columna de 476 px, a 1.5 porque el doble no cabe', () => {
+    expect(computeSceneSize(476, 500, 1)).toEqual({ pixelScale: 1.5, width: 158, height: 166, zoom: 1.5 });
+    // Ventana bajita: se queda a 1 y se ve el mundo completo.
+    expect(computeSceneSize(476, 330, 1)).toEqual({ pixelScale: 1, width: 238, height: 165, zoom: 1 });
   });
 
   it('nunca baja de escala 1 ni del ancho y alto mínimos', () => {
