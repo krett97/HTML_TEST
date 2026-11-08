@@ -49,8 +49,10 @@ const NOMBRE_LIBRO_NUEVO = 'Directorio Space 1.0 — Base de Datos';
 const NOMBRE_EQUIPO_SEMILLA = 'Equipo Space 1.0';
 const ESPERA_BLOQUEO_MS = 15000;          // escrituras normales
 const ESPERA_VISITA_MS = 3000;            // contador de visitas (no crítico)
-const ESPERA_SECUNDARIA_MS = 5000;        // registro de accesos / reparaciones
+const ESPERA_SECUNDARIA_MS = 200;         // registro de accesos / reparaciones no críticas: si está ocupado, se omite
 const VENTANA_ACCESO_MS = 30 * 60 * 1000; // 30 min entre actualizaciones de acceso
+const VENTANA_VISITA_S = 30 * 60;         // una visita contabilizada por persona y enlace cada 30 min (CacheService)
+const CRECIMIENTO_BITACORA = 500;         // filas que se agregan de una vez a BITACORA cuando se llena
 const MAX_BITACORA_PANEL = 300;
 const MAX_IMPORTACION = 2000;
 const FORMATO_FECHA_HOJA = 'yyyy-mm-dd hh:mm';
@@ -292,15 +294,17 @@ function doGet(e) {
 function obtenerCatalogoHerramientas() {
   return ejecutar_('obtenerCatalogoHerramientas', function (ctx) {
     asegurarDatosIniciales_(ctx);
-    registrarAcceso_(ctx);
     const yo = usuarioActual_(ctx);
     const items = leerItems_(ctx, true)
       .filter(function (it) { return !it.eliminado; })
       .map(function (it) { return publicarItem_(ctx, it); });
+    const categorias = leerCategorias_(ctx).map(publicarCategoria_);
+    // Al final: su bloqueo vacía la caché del contexto y no debe obligar a releer el catálogo.
+    registrarAcceso_(ctx);
     return {
       usuario: resumenUsuario_(yo),
       items: items,
-      categorias: leerCategorias_(ctx).map(publicarCategoria_),
+      categorias: categorias,
       secciones: JSON.parse(JSON.stringify(SECCIONES)),
       config: {
         titulo: CONFIG.TITULO,
@@ -392,13 +396,23 @@ function fijarHerramienta(id, fijado) {
   });
 }
 
-/** Incrementa el contador de visitas (cualquier visitante; sin bitácora). */
+/**
+ * Incrementa el contador de visitas (cualquier visitante; sin bitácora).
+ * Cuenta una visita por persona y enlace cada 30 min (marca en CacheService): los clics repetidos
+ * no toman el bloqueo ni escriben en la hoja, así un ciclo de llamadas no retiene a los escritores.
+ */
 function registrarVisita(id) {
   return ejecutar_('registrarVisita', function (ctx) {
     const clave = textoLinea_(id);
     if (!clave) throw errorUsuario_('Identificador de enlace no válido.');
+    const marca = marcaVisita_(ctx, clave);
+    if (marca && cacheLeer_(marca)) {
+      const visto = exigirItem_(ctx, clave);
+      if (visto.eliminado) throw errorUsuario_(MSG_NO_ENCONTRADO);
+      return { visitas: visto.visitas, contabilizada: false };
+    }
     try {
-      return conBloqueo_(ctx, function () {
+      const r = conBloqueo_(ctx, function () {
         const it = exigirItem_(ctx, clave);
         if (it.eliminado) throw errorUsuario_(MSG_NO_ENCONTRADO);
         const visitas = (it.visitas || 0) + 1;
@@ -406,6 +420,8 @@ function registrarVisita(id) {
         ctx.cache.items = null;
         return { visitas: visitas, contabilizada: true };
       }, ESPERA_VISITA_MS);
+      if (marca) cacheGuardar_(marca, VENTANA_VISITA_S);
+      return r;
     } catch (e) {
       if (!e || !e.ocupado) throw e;
       // Sin bloqueo disponible: no se cuenta la visita, pero no es un error para el usuario.
@@ -456,7 +472,7 @@ function purgarHerramienta(id) {
     return conBloqueo_(ctx, function () {
       const it = exigirItem_(ctx, id);
       if (!it.eliminado) throw errorUsuario_('Solo se pueden eliminar definitivamente los enlaces que están en la papelera.');
-      borrarFila_(tabla_(ctx, 'LINKS').hoja, it._fila);
+      borrarFila_(tabla_(ctx, 'LINKS'), it._fila);
       registrarBitacora_(ctx, 'PURGAR', it.id, it.nombre, { categoria: it.categoriaId, url: it.url });
       ctx.cache.items = null;
       return { id: it.id };
@@ -470,7 +486,7 @@ function guardarRolUsuario(email, rol) {
     const yo = exigirAdmin_(ctx);
     const correo = normalizarEmail_(textoLinea_(email));
     if (!esEmailValido_(correo)) throw errorUsuario_('El correo electrónico no es válido.');
-    const r = sinAcentos_(String(rol === null || rol === undefined ? '' : rol).trim().toLowerCase());
+    const r = sinAcentos_(texto_(rol).trim().toLowerCase());
     const rolNuevo = (r === 'admin' || r === 'administrador') ? 'ADMIN' : (r === 'usuario' ? 'USUARIO' : '');
     if (!rolNuevo) throw errorUsuario_('Rol no válido. Usa "admin" o "usuario".');
     if (rolNuevo === 'ADMIN' && !dominioPermitido_(correo) && correo !== ctx.owner) {
@@ -487,16 +503,20 @@ function guardarRolUsuario(email, rol) {
       }
       const tabla = tabla_(ctx, 'USUARIOS');
       const actual = usuarios.porEmail[correo] || null;
+      const anterior = actual ? actual.rol : '';
       let reg;
+      // La caché de usuarios se actualiza en sitio: la respuesta (usuarioPanel_) no relee la hoja.
       if (actual) {
-        reg = Object.assign({}, actual, { rol: rolNuevo });
-        escribirFilas_(tabla, actual._fila, [reg], ['rol']);
+        escribirFilas_(tabla, actual._fila, [{ rol: rolNuevo }], ['rol']);
+        actual.rol = rolNuevo;
+        reg = actual;
       } else {
         reg = { email: correo, nombre: nombreDesdeEmail_(correo), rol: rolNuevo, fechaAlta: aIso_(new Date()), ultimoAcceso: '', accesos: 0 };
         agregarRegistros_(tabla, [reg]);
+        usuarios.lista.push(reg);
+        usuarios.porEmail[correo] = reg;
       }
-      ctx.cache.usuarios = null;
-      registrarBitacora_(ctx, 'ROL', correo, reg.nombre, { rol: rolNuevo, anterior: actual ? actual.rol : '' });
+      registrarBitacora_(ctx, 'ROL', correo, reg.nombre, { rol: rolNuevo, anterior: anterior });
       const activos = leerItems_(ctx, false).filter(function (it) { return !it.eliminado; });
       return { usuario: usuarioPanel_(ctx, reg, contarPorAutor_(activos)) };
     });
@@ -545,7 +565,7 @@ function eliminarCategoria(id) {
       if (enUso > 0) {
         throw errorUsuario_('La categoría tiene ' + enUso + (enUso === 1 ? ' enlace' : ' enlaces') + '. Muévelos o desactívala.');
       }
-      borrarFila_(tabla_(ctx, 'CATEGORIAS').hoja, cat._fila);
+      borrarFila_(tabla_(ctx, 'CATEGORIAS'), cat._fila);
       ctx.cache.categorias = null;
       registrarBitacora_(ctx, 'CATEGORIA_ELIMINAR', cat.id, cat.nombre, { seccion: cat.seccion });
       return { id: cat.id };
@@ -563,14 +583,17 @@ function actualizarMiPerfil(nombre) {
     }
     return conBloqueo_(ctx, function () {
       const tabla = tabla_(ctx, 'USUARIOS');
-      const actual = leerUsuarios_(ctx).porEmail[yo.email] || null;
+      const usuarios = leerUsuarios_(ctx);
+      validarNombrePerfil_(limpio, yo.email, usuarios, leerItems_(ctx, false));
+      const actual = usuarios.porEmail[yo.email] || null;
       const anterior = actual ? actual.nombre : '';
       if (actual) {
         escribirFilas_(tabla, actual._fila, [{ nombre: limpio }], ['nombre']);
       } else {
+        // Rol guardado USUARIO: el de propietario / ADMINS_INICIALES se calcula en cada ejecución (rolDeEmail_).
         const ahora = aIso_(new Date());
         agregarRegistros_(tabla, [{
-          email: yo.email, nombre: limpio, rol: yo.rol === 'admin' ? 'ADMIN' : 'USUARIO',
+          email: yo.email, nombre: limpio, rol: 'USUARIO',
           fechaAlta: ahora, ultimoAcceso: ahora, accesos: 1
         }]);
       }
@@ -597,26 +620,28 @@ function importarHerramientas(items) {
 
     return conBloqueo_(ctx, function () {
       const tabla = tabla_(ctx, 'LINKS');
-      const porId = {};
+      // Diccionarios sin prototipo: ids como "constructor" o "__proto__" no deben encontrar miembros heredados.
+      const porId = nuevoMapa_();
       leerItems_(ctx, false).forEach(function (it) { porId[it.id] = it; });
       const nuevos = [];
-      const modificados = {};
+      const modificados = nuevoMapa_();
       const errores = [];
       const res = { creados: 0, actualizados: 0, omitidos: 0 };
       const ahora = aIso_(new Date());
 
       lista.forEach(function (entrada, i) {
-        const etiqueta = 'Elemento ' + (i + 1) +
-          (esObjeto_(entrada) && entrada.nombre ? ' ("' + recortar_(textoLinea_(entrada.nombre), 60) + '")' : '');
+        const nombreEntrada = esObjeto_(entrada) ? textoLinea_(entrada.nombre) : '';
+        const etiqueta = 'Elemento ' + (i + 1) + (nombreEntrada ? ' ("' + recortar_(nombreEntrada, 60) + '")' : '');
         try {
           if (!esObjeto_(entrada)) throw errorUsuario_('no es un objeto de enlace válido.');
           let id = textoLinea_(entrada.id);
-          if (id && !/^[A-Za-z0-9_.:\-]{1,80}$/.test(id)) id = ''; // id no seguro → se genera uno nuevo
+          if (id && !esIdSeguro_(id)) id = ''; // id no seguro → se genera uno nuevo
           const existente = id ? porId[id] || null : null;
           if (existente && existente.eliminado) throw errorUsuario_('está en la papelera; restáuralo antes de importarlo.');
           const datos = validarItem_(ctx, entrada, existente);
           const autor = autorImportado_(ctx, entrada, existente, yo, ahora);
-          const visitasEntrada = Number(entrada.visitas);
+          const tipoVisitas = typeof entrada.visitas;
+          const visitasEntrada = (tipoVisitas === 'number' || tipoVisitas === 'string') ? Number(entrada.visitas) : NaN;
           const visitas = (isFinite(visitasEntrada) && visitasEntrada >= 0 && entrada.visitas !== '' && entrada.visitas !== null)
             ? Math.floor(visitasEntrada) : (existente ? existente.visitas : 0);
           if (existente) {
@@ -641,16 +666,26 @@ function importarHerramientas(items) {
 
       // Escritura en bloque: filas modificadas contiguas en un solo setValues.
       const filas = Object.keys(modificados).map(Number).sort(function (a, b) { return a - b; });
-      let bloque = [];
-      filas.forEach(function (f, idx) {
-        bloque.push(modificados[f]);
-        const siguiente = filas[idx + 1];
-        if (siguiente !== f + 1) {
-          escribirFilas_(tabla, bloque[0]._fila, bloque);
-          bloque = [];
-        }
-      });
-      agregarRegistros_(tabla, nuevos);
+      try {
+        let bloque = [];
+        filas.forEach(function (f, idx) {
+          bloque.push(modificados[f]);
+          const siguiente = filas[idx + 1];
+          if (siguiente !== f + 1) {
+            escribirFilas_(tabla, bloque[0]._fila, bloque);
+            bloque = [];
+          }
+        });
+        agregarRegistros_(tabla, nuevos);
+      } catch (e) {
+        // Una falla a mitad de la escritura puede dejar cambios parciales: se registran en la bitácora.
+        ctx.cache.items = null;
+        registrarBitacora_(ctx, 'IMPORTAR', '', '', {
+          incompleta: true, error: recortar_(e && e.message ? e.message : String(e), 200),
+          creados: res.creados, actualizados: res.actualizados, omitidos: res.omitidos
+        });
+        throw e;
+      }
       ctx.cache.items = null;
       registrarBitacora_(ctx, 'IMPORTAR', '', '', res);
       return { creados: res.creados, actualizados: res.actualizados, omitidos: res.omitidos, errores: errores };
@@ -670,10 +705,16 @@ function cargarSemillaFaltante() {
   });
 }
 
-/** Ejecutar manualmente desde el editor: crea/repara hojas, siembra datos y registra al propietario. */
+/**
+ * Ejecutar manualmente desde el editor: crea/repara hojas, siembra datos y registra al propietario.
+ * Como toda función sin "_" también se puede llamar con google.script.run: exige rol admin
+ * (desde el editor quien ejecuta es el propietario, que siempre es admin).
+ */
 function instalarDirectorio() {
   return ejecutar_('instalarDirectorio', function (ctx) {
+    exigirInstalador_(ctx);
     return conBloqueo_(ctx, function () {
+      exigirInstalador_(ctx); // re-verificación con datos frescos (caso de arranque sin administradores)
       Object.keys(ESQUEMAS).forEach(function (clave) { tabla_(ctx, clave); });
       asegurarDatosIniciales_(ctx);
       const propietario = ctx.owner || ctx.email;
@@ -727,13 +768,15 @@ function crearContexto_() {
 function conBloqueo_(ctx, fn, esperaMs) {
   if (ctx.bloqueado) return fn();
   const lock = LockService.getScriptLock();
-  if (!lock.tryLock(esperaMs || ESPERA_BLOQUEO_MS)) {
+  if (!lock.tryLock(esperaMs === undefined ? ESPERA_BLOQUEO_MS : esperaMs)) {
     const err = errorUsuario_(MSG_OCUPADO);
     err.ocupado = true;
     throw err;
   }
   ctx.bloqueado = true;
-  ctx.cache = {}; // releer datos frescos: otra ejecución pudo escribir antes de obtener el bloqueo
+  // Releer datos frescos: otra ejecución pudo escribir antes de obtener el bloqueo.
+  ctx.cache = {};
+  Object.keys(ctx.tablas).forEach(function (k) { ctx.tablas[k].datos = null; ctx.tablas[k].ultimaFila = null; });
   try {
     return fn();
   } finally {
@@ -817,6 +860,17 @@ function exigirAdmin_(ctx) {
   return yo;
 }
 
+/**
+ * instalarDirectorio: solo admin. Excepción de arranque: sin propietario identificable y sin
+ * ningún administrador, quien instala (identificado y con dominio permitido) queda como ADMIN.
+ */
+function exigirInstalador_(ctx) {
+  const yo = usuarioActual_(ctx);
+  if (yo.rol === 'admin') return yo;
+  if (!ctx.owner && yo.rol === 'usuario' && contarAdmins_(ctx) === 0) return yo;
+  throw errorUsuario_('Esta acción requiere permisos de administrador.');
+}
+
 function puedeEditar_(ctx, it) {
   const yo = usuarioActual_(ctx);
   if (yo.rol === 'admin') return true;
@@ -827,14 +881,19 @@ function resumenUsuario_(yo) {
   return { email: yo.email, nombre: yo.nombre, rol: yo.rol, esPropietario: yo.esPropietario, puedeEscribir: yo.puedeEscribir };
 }
 
-/** Upsert del usuario en USUARIOS (máx. una escritura cada 30 min). Nunca rompe el catálogo. */
+/**
+ * Upsert del usuario en USUARIOS (máx. una escritura cada 30 min). Nunca rompe el catálogo.
+ * No escribe el rol: el de propietario y CONFIG.ADMINS_INICIALES se calcula en cada ejecución
+ * (rolDeEmail_), así quitar un correo de la configuración le retira el rol de inmediato y una
+ * ejecución como "usuario efectivo" (URL /dev) no deja un ADMIN permanente en la hoja.
+ * Espera corta del bloqueo: si otra escritura lo retiene, el registro se omite (se reintenta en la próxima carga).
+ */
 function registrarAcceso_(ctx) {
   const yo = usuarioActual_(ctx);
   if (yo.rol === 'invitado') return;
-  const rolFijo = yo.email === ctx.owner || esAdminInicial_(yo.email);
   const reciente = function (reg) {
     const ult = reg && reg.ultimoAcceso ? Date.parse(reg.ultimoAcceso) : 0;
-    return !!ult && (ctx.ahora.getTime() - ult) < VENTANA_ACCESO_MS && !(rolFijo && reg.rol !== 'ADMIN');
+    return !!ult && (ctx.ahora.getTime() - ult) < VENTANA_ACCESO_MS;
   };
   if (reciente(yo.registro)) return;
   try {
@@ -845,11 +904,11 @@ function registrarAcceso_(ctx) {
       if (actual) {
         if (reciente(actual)) return;
         escribirFilas_(tabla, actual._fila, [{
-          ultimoAcceso: ahora, accesos: (actual.accesos || 0) + 1, rol: rolFijo ? 'ADMIN' : actual.rol
-        }], ['ultimoAcceso', 'accesos', 'rol']);
+          ultimoAcceso: ahora, accesos: (actual.accesos || 0) + 1
+        }], ['ultimoAcceso', 'accesos']);
       } else {
         agregarRegistros_(tabla, [{
-          email: yo.email, nombre: nombreDesdeEmail_(yo.email), rol: rolFijo ? 'ADMIN' : 'USUARIO',
+          email: yo.email, nombre: nombreDesdeEmail_(yo.email), rol: 'USUARIO',
           fechaAlta: ahora, ultimoAcceso: ahora, accesos: 1
         }]);
       }
@@ -862,7 +921,7 @@ function registrarAcceso_(ctx) {
 
 /** Número de administradores efectivos (propietario + iniciales + hoja). */
 function contarAdmins_(ctx) {
-  const admins = {};
+  const admins = nuevoMapa_();
   if (ctx.owner) admins[ctx.owner] = true;
   (CONFIG.ADMINS_INICIALES || []).map(normalizarEmail_).forEach(function (e) {
     if (e && dominioPermitido_(e)) admins[e] = true;
@@ -921,7 +980,7 @@ function libroDesdePropiedades_(ctx) {
 function tabla_(ctx, clave) {
   if (ctx.tablas[clave]) return ctx.tablas[clave];
   const t = asegurarHoja_(ctx, clave);
-  ctx.tablas[clave] = t;
+  if (!t.parcial) ctx.tablas[clave] = t; // una tabla parcial no se cachea: se reintenta la reparación
   return t;
 }
 
@@ -930,11 +989,12 @@ function asegurarHoja_(ctx, clave) {
   const ss = libro_(ctx);
   const nombre = CONFIG.HOJAS[clave];
   const esquema = ESQUEMAS[clave];
+  const conDatos = clave !== 'BITACORA'; // BITACORA puede tener miles de filas: solo se leen sus encabezados
   let hoja = ss.getSheetByName(nombre);
-  let info = hoja ? analizarEncabezados_(hoja, esquema) : null;
+  let info = hoja ? analizarEncabezados_(hoja, esquema, conDatos) : null;
   if (hoja && !info.faltantes.length) return construirTabla_(clave, hoja, esquema, info);
 
-  return conBloqueo_(ctx, function () {
+  const reparar = function () {
     hoja = ss.getSheetByName(nombre);
     if (!hoja) {
       try { hoja = ss.insertSheet(nombre); } catch (e) {
@@ -942,20 +1002,46 @@ function asegurarHoja_(ctx, clave) {
         if (!hoja) throw e;
       }
     }
-    info = analizarEncabezados_(hoja, esquema);
+    info = analizarEncabezados_(hoja, esquema, conDatos);
     if (info.faltantes.length) {
       agregarColumnas_(hoja, clave, info);
-      info = analizarEncabezados_(hoja, esquema);
+      info = analizarEncabezados_(hoja, esquema, conDatos);
     }
     return construirTabla_(clave, hoja, esquema, info);
-  }, ESPERA_BLOQUEO_MS);
+  };
+  // Hoja existente con columnas faltantes, fuera de un bloqueo (lectura): intento breve; si otra
+  // ejecución retiene el bloqueo, se lee con el mapa parcial (campos faltantes = '') y la reparación
+  // queda para la siguiente ejecución que lo obtenga. Si la hoja no existe hay que crearla: espera normal.
+  if (hoja && !ctx.bloqueado) {
+    try {
+      return conBloqueo_(ctx, reparar, ESPERA_SECUNDARIA_MS);
+    } catch (e) {
+      if (!e || !e.ocupado) throw e;
+      const parcial = construirTabla_(clave, hoja, esquema, info);
+      parcial.parcial = true;
+      return parcial;
+    }
+  }
+  return conBloqueo_(ctx, reparar, ESPERA_BLOQUEO_MS);
 }
 
-/** Lee la fila 1 y ubica cada campo por nombre de encabezado (insensible a mayúsculas/acentos/espacios). */
-function analizarEncabezados_(hoja, esquema) {
-  const ultimaCol = hoja.getLastColumn();
-  const encabezados = ultimaCol > 0 ? hoja.getRange(1, 1, 1, ultimaCol).getValues()[0] : [];
-  const indice = {};
+/**
+ * Lee la fila 1 y ubica cada campo por nombre de encabezado (insensible a mayúsculas/acentos/espacios).
+ * Con conDatos lee la hoja completa en una sola llamada (getDataRange) y conserva las filas de datos
+ * para la primera lectura de registros (leerRegistros_), en lugar de leer la hoja dos veces.
+ */
+function analizarEncabezados_(hoja, esquema, conDatos) {
+  let valores;
+  if (conDatos) {
+    valores = hoja.getDataRange().getValues();
+    if (valores.length === 1 && valores[0].length === 1 && valores[0][0] === '') valores = []; // hoja vacía (A1)
+  } else {
+    const ultimaColHoja = hoja.getLastColumn();
+    valores = ultimaColHoja > 0 ? hoja.getRange(1, 1, 1, ultimaColHoja).getValues() : [];
+  }
+  const encabezados = valores.length ? valores[0] : [];
+  const ultimaCol = encabezados.length;
+  const indice = nuevoMapa_();
   encabezados.forEach(function (h, i) {
     const k = claveEncabezado_(h);
     if (k && !(k in indice)) indice[k] = i + 1;
@@ -966,9 +1052,17 @@ function analizarEncabezados_(hoja, esquema) {
     const pos = indice[claveEncabezado_(col.h)];
     if (pos) mapa[col.c] = pos; else faltantes.push(col);
   });
-  return { mapa: mapa, faltantes: faltantes, ultimaCol: ultimaCol };
+  return {
+    mapa: mapa, faltantes: faltantes, ultimaCol: ultimaCol,
+    datos: conDatos ? valores.slice(1) : null,
+    ultimaFila: conDatos ? valores.length : null
+  };
 }
 
+/**
+ * Tabla: hoja + mapa de columnas. "datos" (filas leídas con los encabezados) se consume una sola vez;
+ * "ultimaFila" evita getLastRow al agregar. Ambos se invalidan al tomar el bloqueo y al escribir.
+ */
 function construirTabla_(clave, hoja, esquema, info) {
   const defs = {};
   let maxCol = info.ultimaCol;
@@ -976,7 +1070,10 @@ function construirTabla_(clave, hoja, esquema, info) {
     defs[col.c] = col;
     if (info.mapa[col.c] > maxCol) maxCol = info.mapa[col.c];
   });
-  return { clave: clave, hoja: hoja, esquema: esquema, defs: defs, mapa: info.mapa, ancho: Math.max(maxCol, 1) };
+  return {
+    clave: clave, hoja: hoja, esquema: esquema, defs: defs, mapa: info.mapa, ancho: Math.max(maxCol, 1),
+    datos: info.datos || null, ultimaFila: info.ultimaFila === undefined ? null : info.ultimaFila
+  };
 }
 
 /** Agrega encabezados faltantes al final (o todos, si la hoja está vacía) y les da formato. */
@@ -1016,10 +1113,21 @@ function formatearColumna_(hoja, col, def) {
 
 /** Lee todas las filas de datos como registros {campo: valor, _fila}. */
 function leerRegistros_(tabla) {
-  const hoja = tabla.hoja;
-  const ultimaFila = hoja.getLastRow();
-  if (ultimaFila < 2) return [];
-  return convertirFilas_(tabla, hoja.getRange(2, 1, ultimaFila - 1, tabla.ancho).getValues(), 2);
+  let datos = tabla.datos;
+  tabla.datos = null; // se consume una sola vez: las lecturas siguientes van a la hoja (datos frescos)
+  if (!datos) {
+    const ultimaFila = tabla.hoja.getLastRow();
+    tabla.ultimaFila = ultimaFila;
+    if (ultimaFila < 2) return [];
+    datos = tabla.hoja.getRange(2, 1, ultimaFila - 1, tabla.ancho).getValues();
+  }
+  return convertirFilas_(tabla, datos, 2);
+}
+
+/** Última fila con contenido: la conocida por la última lectura/escritura o la que informa la hoja. */
+function ultimaFila_(tabla) {
+  if (tabla.ultimaFila === null || tabla.ultimaFila === undefined) tabla.ultimaFila = tabla.hoja.getLastRow();
+  return tabla.ultimaFila;
 }
 
 function convertirFilas_(tabla, datos, filaInicial) {
@@ -1041,6 +1149,7 @@ function convertirFilas_(tabla, datos, filaInicial) {
 /** Escribe (solo columnas mapeadas, por segmentos contiguos) filas consecutivas desde filaInicio. */
 function escribirFilas_(tabla, filaInicio, registros, campos) {
   if (!registros.length) return;
+  tabla.datos = null; // las filas leídas con los encabezados dejan de estar vigentes
   const lista = (campos || tabla.esquema.map(function (c) { return c.c; }))
     .filter(function (c) { return tabla.defs[c] && tabla.mapa[c]; })
     .map(function (c) { return { def: tabla.defs[c], col: tabla.mapa[c] }; })
@@ -1064,25 +1173,32 @@ function escribirFilas_(tabla, filaInicio, registros, campos) {
   });
 }
 
-/** Agrega registros al final de la hoja (amplía filas si hace falta). */
-function agregarRegistros_(tabla, registros) {
+/**
+ * Agrega registros al final de la hoja (amplía filas si hace falta). "crecimiento" = mínimo de filas
+ * a insertar de una vez cuando la hoja se llena (BITACORA: evita insertar una fila en cada evento).
+ */
+function agregarRegistros_(tabla, registros, crecimiento) {
   if (!registros.length) return;
   const hoja = tabla.hoja;
-  const inicio = Math.max(hoja.getLastRow() + 1, 2);
+  const inicio = Math.max(ultimaFila_(tabla) + 1, 2);
   const fin = inicio + registros.length - 1;
   const maxFilas = hoja.getMaxRows();
-  if (fin > maxFilas) hoja.insertRowsAfter(maxFilas, fin - maxFilas);
+  if (fin > maxFilas) hoja.insertRowsAfter(maxFilas, Math.max(fin - maxFilas, crecimiento || 0));
   escribirFilas_(tabla, inicio, registros);
+  tabla.ultimaFila = fin;
   registros.forEach(function (r, i) { r._fila = inicio + i; });
 }
 
 /** Borra una fila; si es la única fila no inmovilizada, solo limpia su contenido. */
-function borrarFila_(hoja, fila) {
+function borrarFila_(tabla, fila) {
+  const hoja = tabla.hoja;
   if (hoja.getMaxRows() - Math.max(hoja.getFrozenRows(), 1) <= 1) {
     hoja.getRange(fila, 1, 1, Math.max(hoja.getLastColumn(), 1)).clearContent();
   } else {
     hoja.deleteRow(fila);
   }
+  tabla.datos = null;
+  tabla.ultimaFila = null;
 }
 
 function leerCelda_(v, tipo) {
@@ -1129,7 +1245,7 @@ function leerItems_(ctx, repararIds) {
       Logger.log('No se pudieron asignar IDs faltantes: ' + (e && e.message ? e.message : e));
     }
   }
-  const vistos = {};
+  const vistos = nuevoMapa_();
   const items = regs.filter(function (r) {
     if (!r.id || vistos[r.id]) return false; // sin id (pendiente) o duplicado: se omite
     vistos[r.id] = true;
@@ -1211,8 +1327,8 @@ function itemDesdeSemilla_(s, autor, fechaIso) {
 function asegurarDatosIniciales_(ctx) {
   const vacias = function () {
     return {
-      cats: tabla_(ctx, 'CATEGORIAS').hoja.getLastRow() < 2,
-      items: tabla_(ctx, 'LINKS').hoja.getLastRow() < 2
+      cats: ultimaFila_(tabla_(ctx, 'CATEGORIAS')) < 2, // conocida por la lectura inicial: sin llamadas extra
+      items: ultimaFila_(tabla_(ctx, 'LINKS')) < 2
     };
   };
   const previo = vacias();
@@ -1240,14 +1356,14 @@ function asegurarDatosIniciales_(ctx) {
 
 /** Inserta solo las semillas (categorías y enlaces) cuyo id falta. */
 function sembrarFaltantes_(ctx) {
-  const idsCat = {};
+  const idsCat = nuevoMapa_();
   leerCategorias_(ctx).forEach(function (c) { idsCat[c.id] = true; });
   const nuevasCats = CATEGORIAS_SEMILLA.filter(function (c) { return !idsCat[c.id]; })
     .map(function (c) { return Object.assign({ activa: true }, c); });
   agregarRegistros_(tabla_(ctx, 'CATEGORIAS'), nuevasCats);
   ctx.cache.categorias = null;
 
-  const idsItems = {};
+  const idsItems = nuevoMapa_();
   leerItems_(ctx, false).forEach(function (it) { idsItems[it.id] = true; });
   const ahora = aIso_(new Date());
   const autor = ctx.owner || ctx.email || '';
@@ -1261,7 +1377,7 @@ function sembrarFaltantes_(ctx) {
 /** Categorías normalizadas y ordenadas por "orden". */
 function leerCategorias_(ctx) {
   if (ctx.cache.categorias) return ctx.cache.categorias;
-  const vistos = {};
+  const vistos = nuevoMapa_();
   const res = [];
   leerRegistros_(tabla_(ctx, 'CATEGORIAS')).forEach(function (r) {
     const id = textoLinea_(r.id);
@@ -1290,7 +1406,7 @@ function publicarCategoria_(c) {
 /** Usuarios registrados: {lista, porEmail}. */
 function leerUsuarios_(ctx) {
   if (ctx.cache.usuarios) return ctx.cache.usuarios;
-  const porEmail = {};
+  const porEmail = nuevoMapa_();
   const lista = [];
   leerRegistros_(tabla_(ctx, 'USUARIOS')).forEach(function (r) {
     if (!r.email || porEmail[r.email]) return;
@@ -1310,7 +1426,7 @@ function nombreUsuario_(ctx, email) {
 }
 
 function contarPorAutor_(items) {
-  const conteo = {};
+  const conteo = nuevoMapa_();
   items.forEach(function (it) { if (it.creadoPor) conteo[it.creadoPor] = (conteo[it.creadoPor] || 0) + 1; });
   return conteo;
 }
@@ -1334,9 +1450,9 @@ function usuarioPanel_(ctx, u, conteo) {
  */
 function listarUsuariosPanel_(ctx, activos) {
   const conteo = contarPorAutor_(activos);
-  const snapshot = {};
+  const snapshot = nuevoMapa_();
   activos.forEach(function (it) { if (it.creadoPor && !snapshot[it.creadoPor]) snapshot[it.creadoPor] = it.creadoPorNombre; });
-  const vistos = {};
+  const vistos = nuevoMapa_();
   const lista = [];
   leerUsuarios_(ctx).lista.forEach(function (u) {
     vistos[u.email] = true;
@@ -1356,12 +1472,13 @@ function listarUsuariosPanel_(ctx, activos) {
 }
 
 function calcularEstadisticas_(ctx, activos, papelera, usuarios) {
-  const porCategoria = {};
+  // Diccionarios sin prototipo: valores editados a mano ("__proto__", "constructor") no alteran Object.prototype.
+  const porCategoria = nuevoMapa_();
   leerCategorias_(ctx).forEach(function (c) { porCategoria[c.id] = 0; });
-  const porEstado = {};
+  const porEstado = nuevoMapa_();
   ESTADOS_VALIDOS.forEach(function (e) { porEstado[e] = 0; });
   let totalVisitas = 0;
-  const autores = {};
+  const autores = nuevoMapa_();
   activos.forEach(function (it) {
     porCategoria[it.categoriaId] = (porCategoria[it.categoriaId] || 0) + 1;
     porEstado[it.estado] = (porEstado[it.estado] || 0) + 1;
@@ -1397,10 +1514,17 @@ function registrarBitacora_(ctx, accion, itemId, itemNombre, detalle) {
     agregarRegistros_(tabla, [{
       fecha: new Date(), usuario: ctx.email || 'sistema', accion: accion,
       itemId: itemId || '', itemNombre: recortar_(itemNombre || '', 200), detalle: recortar_(texto, LIMITES.DETALLE_MAX)
-    }]);
+    }], CRECIMIENTO_BITACORA);
+    // Al superar el máximo se borran de una vez las más antiguas hasta (máximo − holgura): así el
+    // borrado ocurre cada ~holgura eventos y no en cada escritura. Nunca se superan MAX_BITACORA filas.
     const maximo = Math.max(1, Math.floor(Number(CONFIG.MAX_BITACORA) || 5000));
-    const filas = tabla.hoja.getLastRow() - 1;
-    if (filas > maximo) tabla.hoja.deleteRows(2, filas - maximo); // borra las más antiguas en una sola llamada
+    const holgura = Math.min(CRECIMIENTO_BITACORA, Math.floor(maximo / 10));
+    const filas = ultimaFila_(tabla) - 1;
+    if (filas > maximo) {
+      const borrar = filas - (maximo - holgura);
+      tabla.hoja.deleteRows(2, borrar); // borra las más antiguas en una sola llamada
+      tabla.ultimaFila -= borrar;
+    }
   } catch (e) {
     Logger.log('No se pudo registrar en la bitácora (' + accion + '): ' + (e && e.message ? e.message : e));
   }
@@ -1466,7 +1590,7 @@ function validarItem_(ctx, entrada, existente) {
   if (frecuencia.length > LIMITES.FRECUENCIA_MAX) throw errorUsuario_('La frecuencia no puede exceder ' + LIMITES.FRECUENCIA_MAX + ' caracteres.');
 
   let estado = 'produccion';
-  if (src.estado !== undefined && src.estado !== null && String(src.estado).trim() !== '') {
+  if (texto_(src.estado).trim() !== '') {
     estado = normalizarEstado_(src.estado);
     if (!estado) throw errorUsuario_('Estado no válido. Usa: Producción (Activo), En Desarrollo (MVP) o Histórico / Consulta.');
   }
@@ -1519,7 +1643,7 @@ function verificarDuplicado_(items, url, excluirId, confirmado) {
 
 /** Tags: sin espacios internos, prefijo "#", sin duplicados (insensible a mayúsculas), máx. 12 × 40. */
 function normalizarTags_(entrada) {
-  const vistos = {};
+  const vistos = nuevoMapa_();
   const res = [];
   partirLista_(entrada).forEach(function (crudo) {
     if (res.length >= LIMITES.TAGS_MAX) return;
@@ -1536,7 +1660,7 @@ function normalizarTags_(entrada) {
 
 /** Tecnologías: recortadas, sin duplicados, máx. 8 × 40. */
 function normalizarTecnologias_(entrada) {
-  const vistos = {};
+  const vistos = nuevoMapa_(); // sin prototipo: "constructor" o "toString" son tecnologías válidas
   const res = [];
   partirLista_(entrada).forEach(function (crudo) {
     if (res.length >= LIMITES.TEC_MAX) return;
@@ -1589,11 +1713,13 @@ function validarCategoria_(cat, existente, cats) {
   const color = textoLinea_(tomar('color')) || COLOR_POR_DEFECTO;
   if (!/^#[0-9a-f]{6}$/i.test(color)) throw errorUsuario_('El color debe tener el formato #RRGGBB.');
   const ordenCrudo = tomar('orden');
+  if (ordenCrudo !== null && typeof ordenCrudo === 'object') throw errorUsuario_('El orden debe ser un número.');
+  const ordenTexto = texto_(ordenCrudo).trim();
   let orden;
-  if (ordenCrudo === undefined || ordenCrudo === null || String(ordenCrudo).trim() === '') {
+  if (ordenTexto === '') {
     orden = cats.reduce(function (m, c) { return Math.max(m, Number(c.orden) || 0); }, 0) + 10;
   } else {
-    orden = Number(String(ordenCrudo).trim().replace(',', '.'));
+    orden = Number(ordenTexto.replace(',', '.'));
     if (!isFinite(orden)) throw errorUsuario_('El orden debe ser un número.');
   }
   const descripcion = textoLargo_(tomar('descripcion'));
@@ -1605,6 +1731,32 @@ function validarCategoria_(cat, existente, cats) {
 
 function esSeccionValida_(id) {
   return SECCIONES.some(function (s) { return s.id === id; });
+}
+
+/**
+ * Evita la suplantación con el nombre visible: no puede contener el del equipo semilla ni repetir
+ * el de otra persona (comparación sin mayúsculas, acentos ni signos). "Otra persona" = filas de
+ * USUARIOS y autores de enlaces que aún no tienen fila (p. ej. importados), con el nombre que muestran.
+ */
+function validarNombrePerfil_(nombre, email, usuarios, items) {
+  const clave = claveNombre_(nombre);
+  if (!clave) throw errorUsuario_('El nombre debe incluir letras o números.');
+  if (clave.indexOf(claveNombre_(NOMBRE_EQUIPO_SEMILLA)) >= 0) {
+    throw errorUsuario_('El nombre "' + NOMBRE_EQUIPO_SEMILLA + '" está reservado para los enlaces semilla del directorio.');
+  }
+  const coincide = function (correo, visible) { return correo !== email && claveNombre_(visible) === clave; };
+  const otro = usuarios.lista.some(function (u) { return coincide(u.email, u.nombre || nombreDesdeEmail_(u.email)); }) ||
+    (items || []).some(function (it) {
+      if (!it.creadoPor || usuarios.porEmail[it.creadoPor]) return false;
+      const visible = it.creadoPorNombre && it.creadoPorNombre !== NOMBRE_EQUIPO_SEMILLA ? it.creadoPorNombre : nombreDesdeEmail_(it.creadoPor);
+      return coincide(it.creadoPor, visible);
+    });
+  if (otro) throw errorUsuario_('Ese nombre ya lo usa otra persona del directorio. Agrega tu segundo apellido o tu área para distinguirte.');
+}
+
+/** "Équipo  Space-1.0" → "equipospace10" (letras y números de cualquier alfabeto, en minúsculas). */
+function claveNombre_(s) {
+  return sinAcentos_(texto_(s).toLowerCase()).replace(/[^\p{L}\p{N}]/gu, '');
 }
 
 /** Autor y fecha de creación para importación: se conservan si vienen y son válidos. */
@@ -1655,7 +1807,11 @@ function zona_() {
   try { return Session.getScriptTimeZone() || 'America/Mexico_City'; } catch (e) { return 'America/Mexico_City'; }
 }
 
-/** Texto leído de una celda (tolerante); quita el apóstrofo de protección contra fórmulas. */
+/**
+ * Texto leído de una celda o recibido del cliente (tolerante); quita el apóstrofo de protección
+ * contra fórmulas. Objetos y arreglos (salvo Date) → '': nunca se llama String() sobre ellos
+ * ({toString:1} lanzaría y {a:1} se guardaría como "[object Object]").
+ */
 function texto_(v) {
   if (v === null || v === undefined) return '';
   let s;
@@ -1663,7 +1819,8 @@ function texto_(v) {
   else if (esFecha_(v)) {
     if (isNaN(v.getTime())) return '';
     try { s = Utilities.formatDate(v, zona_(), 'yyyy-MM-dd HH:mm'); } catch (e) { s = v.toISOString(); }
-  } else s = String(v);
+  } else if (typeof v === 'object' || typeof v === 'function') return '';
+  else s = String(v);
   return /^'[=+\-@]/.test(s) ? s.slice(1) : s;
 }
 
@@ -1687,7 +1844,7 @@ function protegerTexto_(s) {
 }
 
 function normalizarEmail_(v) {
-  return String(v === null || v === undefined ? '' : v).trim().toLowerCase();
+  return (typeof v === 'string' ? v : texto_(v)).trim().toLowerCase();
 }
 
 function esEmailValido_(s) {
@@ -1716,12 +1873,24 @@ function slug_(s) {
 }
 
 function slugUnico_(base, cats) {
-  const usados = {};
+  const usados = nuevoMapa_();
   cats.forEach(function (c) { usados[c.id] = true; });
-  if (!usados[base]) return base;
+  // Nombres de Object.prototype ("constructor") se tratan como usados: el cliente indexa por id.
+  const ocupado = function (s) { return !!usados[s] || s in Object.prototype; };
+  if (!ocupado(base)) return base;
   let n = 2;
-  while (usados[base + '-' + n]) n++;
+  while (ocupado(base + '-' + n)) n++;
   return base + '-' + n;
+}
+
+/** Diccionario sin prototipo: las claves externas (ids, correos) no chocan con miembros heredados. */
+function nuevoMapa_() {
+  return Object.create(null);
+}
+
+/** Id externo aceptable: caracteres seguros y que no sea un miembro de Object.prototype. */
+function esIdSeguro_(id) {
+  return /^[A-Za-z0-9_.:\-]{1,80}$/.test(id) && !(id in Object.prototype);
 }
 
 function nuevoId_() {
@@ -1729,7 +1898,7 @@ function nuevoId_() {
 }
 
 function recortar_(s, n) {
-  s = String(s === null || s === undefined ? '' : s);
+  s = typeof s === 'string' ? s : texto_(s);
   return s.length > n ? s.slice(0, n - 1) + '…' : s;
 }
 
@@ -1741,13 +1910,14 @@ function aBooleano_(v) {
   if (v === true) return true;
   if (v === false || v === null || v === undefined) return false;
   if (typeof v === 'number') return v === 1;
+  if (typeof v === 'object' || typeof v === 'function') return false; // nunca String() sobre objetos
   const s = sinAcentos_(String(v).trim().toLowerCase());
   return ['true', 'verdadero', 'si', '1', 'x', 'yes', 'y', 'on'].indexOf(s) >= 0;
 }
 
 function aNumero_(v, porDefecto) {
   if (typeof v === 'number') return isFinite(v) ? v : porDefecto;
-  if (v === null || v === undefined || v === '' || typeof v === 'boolean') return porDefecto;
+  if (v === null || v === undefined || v === '' || typeof v === 'boolean' || typeof v === 'object') return porDefecto;
   const n = parseFloat(String(v).trim().replace(',', '.'));
   return isFinite(n) ? n : porDefecto;
 }
@@ -1810,4 +1980,31 @@ function aPlano_(v) {
 
 function urlApp_() {
   try { return ScriptApp.getService().getUrl() || ''; } catch (e) { return ''; }
+}
+
+/**
+ * Clave de caché "visita ya contada" del visitante actual para un enlace. El visitante se identifica
+ * por correo, o por la clave temporal anónima de Session si no hay correo; sin ninguna, todos los
+ * anónimos comparten una marca (máx. una visita anónima por enlace y ventana). null = sin caché.
+ */
+function marcaVisita_(ctx, id) {
+  let quien = ctx.email;
+  if (!quien) {
+    try { quien = Session.getTemporaryActiveUserKey() ? 'k:' + Session.getTemporaryActiveUserKey() : ''; } catch (e) { quien = ''; }
+  }
+  try {
+    const bytes = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, (quien || 'anonimo') + '|' + id, Utilities.Charset.UTF_8);
+    return 'vis:' + Utilities.base64EncodeWebSafe(bytes);
+  } catch (e) {
+    return null;
+  }
+}
+
+/** CacheService es de mejor esfuerzo: cualquier falla equivale a "sin marca" y nunca rompe la operación. */
+function cacheLeer_(clave) {
+  try { return CacheService.getScriptCache().get(clave); } catch (e) { return null; }
+}
+
+function cacheGuardar_(clave, segundos) {
+  try { CacheService.getScriptCache().put(clave, '1', segundos); } catch (e) { /* sin efecto */ }
 }
