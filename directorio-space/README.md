@@ -17,29 +17,51 @@ COBOL / JCL, DB2, Apps Script, normativa, cursos…) que el equipo va alimentand
 
 ## 1. Funcionalidades
 
+La interfaz es minimalista: se escanea, no se lee. Lo secundario aparece solo cuando se necesita
+(menú ⋯, popover *Filtros*, ficha, tooltips).
+
 - **Buscador instantáneo** (`Ctrl + K` o `/`): busca por nombre, descripción, `#etiqueta`,
   tecnología, iniciativa, categoría o autor. No distingue acentos ni mayúsculas, admite varios
-  términos y resalta las coincidencias.
-- **Dos secciones**: *Herramientas del Equipo* (tableros, scripts GAS, modelos ML, visores de
-  arquitectura, hojas maestras, documentación) y *Biblioteca de Conocimiento* (guías APX,
-  COBOL / JCL / Mainframe, Apps Script, DB2 / SQL, desarrollo web, Python, normativa Banxico / SPEI,
-  cursos). Los administradores pueden crear más categorías desde la interfaz.
-- **Filtros** por categoría (pills), estado (`Producción (Activo)`, `En Desarrollo (MVP)`,
-  `Histórico / Consulta`), etiqueta, "Solo mis enlaces" y "Solo favoritos"; varios órdenes.
-- **Fijados / Acceso Rápido (Warroom Quincena)**: carrusel con lo fijado por el equipo y tus
-  favoritos (★, guardados en tu navegador).
-- **Tarjetas y tabla**: cada enlace muestra categoría, estado (punto verde parpadeante si es un
-  monitor en tiempo real), descripción, tecnologías, etiquetas clicables, **quién lo subió y
-  cuándo**, visitas, y botones *Abrir Herramienta ↗*, *Copiar Enlace*, *Código / Script*,
-  *Editar* y *Eliminar*.
-- **Ficha de detalle** con todos los datos, historial de alta / modificación y enlace directo a la
-  ficha (`?id=`).
-- **Alta y edición sin tocar código** (modal con validación y aviso de enlaces duplicados).
-- **Exportar** el catálogo a **Markdown** (`Directorio_Space_1_0.md`, tablas por categoría),
-  **CSV** y **JSON**; **Imprimir / PDF** con un reporte limpio.
-- **Panel de administración**: resumen con estadísticas, usuarios y roles, categorías, papelera
-  (restaurar / eliminar definitivamente), bitácora de actividad e importación / respaldo JSON.
-- **Tema claro / oscuro**, diseño adaptable a móvil y atajos de teclado (`?` para verlos).
+  términos y resalta las coincidencias. Si no hay coincidencias exactas, tolera errores pequeños
+  ("cobl" → COBOL, "tablro" → Tablero) y lo indica con *Resultados aproximados*. **Enter** abre el
+  primer resultado, **↑ / ↓** recorren los resultados y **Esc** limpia. Con el campo vacío muestra
+  etiquetas y categorías sugeridas. Sin resultados: *Limpiar búsqueda* o *Agregar enlace* (con el
+  nombre buscado).
+- **Dos secciones** en un segmentado *Todo · Equipo · Biblioteca*, más una línea de cifras clicable
+  (`15 enlaces · 7 herramientas · 8 guías`) que sigue la búsqueda: *Herramientas del Equipo*
+  (tableros, scripts GAS, modelos ML, visores, hojas maestras, documentación) y *Biblioteca de
+  Conocimiento* (guías APX, COBOL / JCL, Apps Script, DB2 / SQL, web, Python, normativa, cursos).
+  Al elegir una sección aparecen las píldoras de categoría. Los administradores pueden crear más
+  categorías desde la interfaz.
+- **Filtros** (botón *Filtros*, con contador): estado (`Producción`, `Desarrollo`, `Histórico`),
+  "Solo mis enlaces", "Solo favoritos", agrupar por categoría y ordenar. Los filtros activos se
+  muestran como chips con *Limpiar*.
+- **Fijados (acceso rápido)**: fila de mosaicos mini con tus favoritos (★, guardados en tu
+  navegador) primero y luego lo fijado por el equipo. Clic = abrir la herramienta.
+- **Mosaicos y lista**: cada enlace muestra ícono de categoría, nombre, **descripción en una
+  línea**, punto de estado (verde parpadeante si es un monitor en tiempo real), ★ si es favorito y
+  **quién lo subió y cuándo**. **Clic en el mosaico = abrir la herramienta** en otra pestaña (↗);
+  si aún no tiene URL, abre la ficha. El menú **⋯** reúne *Detalles*, *Copiar enlace*,
+  *Código / Script*, *Favorito*, *Fijar*, *Completar URL*, *Editar* y *Eliminar* (según permisos).
+  La vista *Lista* es una tabla compacta (en móvil, dos líneas por fila).
+- **Ficha de detalle** (menú ⋯ → *Detalles*): botón *Abrir*, acciones como íconos, descripción
+  completa y datos (subido por, actualizado, iniciativa, frecuencia, tecnologías, etiquetas
+  clicables, visitas), ocultando los vacíos; enlace directo a la ficha (`?id=`).
+- **Alta y edición sin tocar código**: visibles solo Nombre, URL, Categoría, Descripción breve y
+  Etiquetas; lo demás en *Más opciones*. Al pegar una URL sugiere la categoría y la tecnología
+  según el dominio (`script.google.com` → Scripts GAS, `docs.google.com/spreadsheets` → Hojas,
+  Looker Studio → Tableros, `ibm.com` → COBOL / JCL) y recuerda la última categoría.
+  Mensajes cortos ("Falta la URL") y aviso de enlaces duplicados.
+- **Exportar** (ícono de descarga) el catálogo a **JSON**, **Markdown** (`Directorio_Space_1_0.md`,
+  tablas por categoría) o **CSV**, con vista previa plegable; **Imprimir / PDF** con un reporte
+  limpio.
+- **Menú del avatar**: *Mi perfil*, *Contribuidores*, *Panel de administración* (admins), tema
+  claro / oscuro y atajos; en móvil también *Exportar* e *Imprimir*.
+- **Panel de administración**: resumen con estadísticas y contribuidores, usuarios y roles,
+  categorías, papelera (restaurar / eliminar definitivamente), bitácora de actividad e
+  importación / respaldo JSON.
+- **Tema claro / oscuro**, diseño adaptable a móvil (objetivos táctiles amplios) y atajos de
+  teclado (`?` para verlos).
 
 ## 2. Perfiles y permisos
 
@@ -55,7 +77,8 @@ COBOL / JCL, DB2, Apps Script, normativa, cursos…) que el equipo va alimentand
 - Los permisos se validan **en el servidor** (`Codigo.gs`); la interfaz solo oculta los botones.
 - El **propietario** del script (quien lo implementa) siempre es administrador y no se puede
   degradar. Puedes agregar más administradores desde *Panel de administración → Usuarios y roles*
-  o en `CONFIG.ADMINS_INICIALES`.
+  o en `CONFIG.ADMINS_INICIALES` (si quitas un correo de esa lista, pierde el rol al instante).
+- `instalarDirectorio` solo lo puede ejecutar un administrador (el propietario, desde el editor).
 - Al eliminar, el enlace pasa a la **papelera** (borrado lógico); un administrador puede
   restaurarlo o eliminarlo definitivamente.
 - **Invitado** = Google no reveló el correo del visitante (ver *Solución de problemas*). Solo puede
@@ -92,9 +115,9 @@ COBOL / JCL, DB2, Apps Script, normativa, cursos…) que el equipo va alimentand
 ## 4. Modo local (sin servidor)
 
 Abre `Index.html` con doble clic. Funciona igual que la versión publicada, pero los datos se guardan
-**solo en tu navegador** (`localStorage`). Incluye un selector de identidad de demostración
-(Admin Local, Usuario A, Usuario B, Invitado) para probar los permisos. Útil para revisar el diseño
-o hacer una demo antes de publicar.
+**solo en tu navegador** (`localStorage`); una pastilla **Demo** junto al título lo recuerda. Para
+probar los permisos, cambia de identidad en *menú del avatar → Identidad demo* (Admin Local,
+Usuario A, Usuario B, Invitado). Útil para revisar el diseño o hacer una demo antes de publicar.
 
 ## 5. Estructura de datos (Google Sheets)
 
@@ -107,6 +130,7 @@ FechaEliminacion`
 
 - `Estado`: `produccion`, `desarrollo` o `historico`.
 - `Tags` y `Tecnologias`: separados por coma.
+- `Visitas`: se cuenta una visita por persona y enlace cada 30 minutos.
 - Las columnas se localizan **por nombre de encabezado**: puedes reordenarlas; si falta alguna, el
   script la vuelve a crear.
 
@@ -127,8 +151,9 @@ Funciones expuestas a la interfaz (`google.script.run`): `obtenerCatalogoHerrami
 
 Se precargan los 7 proyectos del equipo (SPEI Control Tower, SPEI por Dentro, Visor Técnico MP2C,
 Arquitectura CVV Dinámico, Generador de Reportes de Auditoría Mainframe, Motor de Pronóstico ML
-SPEI y Base Maestra de Telemetría SPEI) **con la URL vacía**: aparecen como *"URL pendiente"* hasta
-que un administrador las edite y pegue la URL real. También se incluyen algunas referencias
+SPEI y Base Maestra de Telemetría SPEI) **con la URL vacía**: al hacer clic abren su ficha, y quien
+puede editarlas ve *Completar URL* (en el mosaico al pasar el cursor, en el menú ⋯ y en la ficha)
+hasta que un administrador pegue la URL real. También se incluyen algunas referencias
 públicas para la Biblioteca (documentación de Apps Script, IBM COBOL / z/OS / Db2, MDN, Python y
 Banxico). Las categorías *Guías APX* y *Cursos & Capacitación* empiezan vacías para que el equipo
 agregue sus fuentes.

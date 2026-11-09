@@ -225,6 +225,8 @@ svg.i { display: inline-block; vertical-align: -.15em; width: 1em; height: 1em; 
 .cat-ico.xs { width: 24px; height: 24px; border-radius: 7px; }
 .cat-ico.xs .i { font-size: 13px; }
 .nuevo-dot { position: absolute; top: -2px; right: -2px; width: 9px; height: 9px; border-radius: 50%; background: var(--aqua); box-shadow: 0 0 0 2px var(--surface); }
+.cat-ico .nuevo-dot { position: absolute; z-index: 2; cursor: default; }
+.cat-ico .nuevo-dot::before { content: ''; position: absolute; inset: -7px; border-radius: 50%; }
 .estado-dot { position: relative; display: inline-block; width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--ok); }
 .estado-dot.e-desarrollo { background: var(--warn); }
 .estado-dot.e-historico { background: var(--hist); }
@@ -245,6 +247,8 @@ button.tag:hover { box-shadow: inset 0 0 0 1px currentColor; }
 }
 [data-tip-pos="izq"]:hover::after, [data-tip-pos="izq"]:focus-visible::after { left: auto; right: 0; transform: none; }
 [data-tip-pos="arriba"]:hover::after, [data-tip-pos="arriba"]:focus-visible::after { top: auto; bottom: calc(100% + 8px); }
+/* En pantallas táctiles el "hover" queda pegado tras tocar: el tooltip solo aparece con foco de teclado */
+@media (hover: none) { [data-tip]:hover:not(:focus-visible)::after { content: none; } }
 
 /* =====================================================================
    4. BARRA SUPERIOR (una fila)
@@ -285,8 +289,10 @@ button.tag:hover { box-shadow: inset 0 0 0 1px currentColor; }
   background: var(--aqua); color: var(--navy-900); transition: background-color .15s; margin: 0 4px;
 }
 .btn-nuevo .i { font-size: 16px; stroke-width: 2.4; }
-.btn-nuevo:hover:not([aria-disabled="true"]) { background: #55D9DA; }
-.btn-nuevo[aria-disabled="true"] { background: rgba(255, 255, 255, .12); color: rgba(255, 255, 255, .5); }
+.btn-nuevo:hover:not(.solo-consulta) { background: #55D9DA; }
+/* Invitado: visible y pulsable (muestra un aviso corto), con aspecto secundario */
+.btn-nuevo.solo-consulta { background: rgba(255, 255, 255, .12); color: rgba(255, 255, 255, .62); }
+.btn-nuevo.solo-consulta:hover { background: rgba(255, 255, 255, .18); color: #fff; }
 .vista-seg { display: inline-flex; padding: 2px; border-radius: 10px; background: rgba(255, 255, 255, .08); }
 .vista-seg button { display: inline-grid; place-items: center; width: 32px; height: 30px; border-radius: 8px; color: rgba(255, 255, 255, .72); transition: background-color .15s, color .15s; }
 .vista-seg button .i { font-size: 16px; }
@@ -335,7 +341,7 @@ button.tag:hover { box-shadow: inset 0 0 0 1px currentColor; }
 /* =====================================================================
    5. BUSCADOR (protagonista) Y CIFRAS
    ===================================================================== */
-.main { flex: 1; padding-top: 20px; padding-bottom: 64px; }
+.main { flex: 1; padding-top: 16px; padding-bottom: 64px; }
 #stickySentinel { height: 1px; margin-bottom: -1px; }
 .search-dock { position: sticky; top: 0; z-index: 40; padding: 6px 0; }
 .search-dock::before {
@@ -370,10 +376,12 @@ button.tag:hover { box-shadow: inset 0 0 0 1px currentColor; }
 .sug-chip:hover, .sug-chip:focus-visible { border-color: var(--sky); color: var(--sky); }
 [data-theme="dark"] .sug-chip:hover, [data-theme="dark"] .sug-chip:focus-visible { border-color: var(--aqua); color: var(--aqua); }
 .sug-chip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--c); }
-.cifras { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 2px 2px; margin-top: 10px; min-height: 26px; font-size: 13px; color: var(--text-3); }
+.cifras { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 2px 2px; margin-top: 6px; min-height: 26px; font-size: 13px; color: var(--text-3); }
 .cifra { padding: 2px 7px; border-radius: 6px; color: var(--text-3); white-space: nowrap; transition: background-color .15s, color .15s; }
 .cifra b { color: var(--text-2); font-weight: 700; font-variant-numeric: tabular-nums; }
 .cifra:hover { background: var(--surface-3); color: var(--text); }
+.cifra:hover .lbl, .cifra:focus-visible .lbl { text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--border-2); }
+.cifra.cero b { color: inherit; font-weight: 600; }
 .cifra[aria-pressed="true"] { background: var(--info-bg); color: var(--info-text); }
 .cifra[aria-pressed="true"] b { color: inherit; }
 .cifra-sep { color: var(--border-2); }
@@ -381,7 +389,7 @@ button.tag:hover { box-shadow: inset 0 0 0 1px currentColor; }
 /* =====================================================================
    6. NAVEGACIÓN Y FILTROS (una fila)
    ===================================================================== */
-.nav-row { display: flex; align-items: center; gap: 10px; margin-top: 22px; }
+.nav-row { display: flex; align-items: center; gap: 10px; margin-top: 16px; }
 .seg-nav .tab { height: 30px; padding: 0 16px; }
 .filtros-wrap { position: relative; }
 .btn-filtros {
@@ -401,9 +409,16 @@ button.tag:hover { box-shadow: inset 0 0 0 1px currentColor; }
 .fp-grupo .seg button { flex: 1 1 auto; padding: 0 8px; font-size: 12.5px; }
 .fp-switches { margin-left: -8px; margin-right: -8px; }
 .fp-grupo .select-wrap, .fp-grupo .select-wrap select { width: 100%; }
-.pills { display: flex; gap: 6px; margin-top: 14px; overflow-x: auto; scrollbar-width: none; padding: 2px 0; }
+.pills-row { display: flex; align-items: center; gap: 8px; }
+.pills-row:has(> .pills:not([hidden])) { margin-top: 14px; }
+.pills { display: flex; gap: 6px; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; padding: 2px 0; scroll-snap-type: x mandatory; scroll-behavior: smooth; }
 .pills::-webkit-scrollbar { display: none; }
-.pills.desborda { -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 48px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 48px), transparent); }
+.pills .pill { scroll-snap-align: start; }
+.pills-nav { display: flex; gap: 4px; flex: none; }
+/* Máscara de desvanecido en el lado que desborda (filas desplazables) */
+.fade-r { -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 48px), transparent); mask-image: linear-gradient(90deg, #000 calc(100% - 48px), transparent); }
+.fade-l { -webkit-mask-image: linear-gradient(90deg, transparent, #000 48px); mask-image: linear-gradient(90deg, transparent, #000 48px); }
+.fade-l.fade-r { -webkit-mask-image: linear-gradient(90deg, transparent, #000 48px, #000 calc(100% - 48px), transparent); mask-image: linear-gradient(90deg, transparent, #000 48px, #000 calc(100% - 48px), transparent); }
 .pill {
   display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 0 11px; border-radius: 999px; white-space: nowrap; flex: none;
   border: 1px solid var(--border); background: var(--surface); color: var(--text-2); font-size: 12.5px; font-weight: 500;
@@ -432,10 +447,10 @@ button.tag:hover { box-shadow: inset 0 0 0 1px currentColor; }
 /* =====================================================================
    7. FIJADOS (acceso rápido)
    ===================================================================== */
-.fijados { margin-top: 24px; }
+.fijados { margin-top: 18px; }
 .fj-cab { display: flex; align-items: center; gap: 8px; height: 22px; margin-bottom: 8px; }
 .fj-cab h2 { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: var(--text-3); }
-.fj-cab h2 .i { color: var(--star); fill: currentColor; font-size: 13px; }
+.fj-cab h2 .i { color: var(--text-3); font-size: 13px; }
 .fj-nav { margin-left: auto; display: flex; gap: 4px; }
 .nav-btn { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 6px; color: var(--text-3); transition: background-color .15s, color .15s, opacity .15s; }
 .nav-btn:hover:not(:disabled) { background: var(--surface-3); color: var(--text); }
@@ -444,7 +459,7 @@ button.tag:hover { box-shadow: inset 0 0 0 1px currentColor; }
 .fj-track { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; scrollbar-width: none; padding: 2px; margin: -2px; }
 .fj-track::-webkit-scrollbar { display: none; }
 .wr-tile {
-  position: relative; flex: 0 0 244px; display: flex; align-items: center; height: 48px; scroll-snap-align: start; min-width: 0;
+  position: relative; flex: 0 0 244px; display: flex; align-items: center; height: 46px; scroll-snap-align: start; min-width: 0;
   background: var(--surface); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow-xs);
   transition: border-color .15s, box-shadow .15s, transform .15s;
 }
@@ -462,11 +477,11 @@ button.tag:hover { box-shadow: inset 0 0 0 1px currentColor; }
 /* =====================================================================
    8. RESULTADOS: MOSAICOS
    ===================================================================== */
-.resultados { margin-top: 26px; outline: none; }
-.sec-label { display: flex; align-items: center; gap: 12px; margin: 30px 0 14px; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--text-3); }
+.resultados { margin-top: 22px; outline: none; }
+.sec-label { display: flex; align-items: center; gap: 12px; margin: 24px 0 12px; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--text-3); }
 .sec-label:first-child { margin-top: 0; }
 .sec-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-.grupos { display: grid; grid-template-columns: repeat(var(--cols, 1), minmax(0, 1fr)); gap: 22px 16px; align-items: start; }
+.grupos { display: grid; grid-template-columns: repeat(var(--cols, 1), minmax(0, 1fr)); gap: 20px 16px; align-items: start; }
 .grupo { grid-column: span var(--span, 1); min-width: 0; }
 .grupo-cab { display: flex; align-items: center; gap: 8px; height: 24px; margin-bottom: 8px; min-width: 0; }
 .grupo-cab .gi { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 6px; background: var(--c-soft); color: var(--c-fg, var(--c)); flex: none; }
@@ -477,32 +492,42 @@ button.tag:hover { box-shadow: inset 0 0 0 1px currentColor; }
 .grupo:hover .grupo-cab .add, .grupo-cab .add:focus-visible { opacity: 1; }
 .tiles { display: grid; grid-template-columns: repeat(var(--span, 1), minmax(0, 1fr)); gap: 16px; }
 .tiles-flat { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(264px, 100%), 1fr)); gap: 16px; }
+.aprox { display: flex; align-items: center; gap: 6px; margin: 0 0 12px; font-size: 12.5px; color: var(--text-3); }
+.aprox .i { font-size: 13px; }
+/* Mosaico: [ícono] nombre (2 líneas) [↗] / descripción (1 línea) / meta [⋯]; el texto en una sola columna alineada */
 .tile {
   position: relative; display: grid; grid-template-columns: 36px minmax(0, 1fr) 28px; grid-template-rows: auto auto 1fr; column-gap: 12px;
-  height: 100px; padding: 14px 10px 12px 14px; min-width: 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  height: 114px; padding: 13px 10px 12px 14px; min-width: 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
   box-shadow: var(--shadow-xs); transition: transform .16s ease, box-shadow .16s ease, border-color .16s; animation: aparecer .2s ease both;
 }
-.tile.con-desc { height: 122px; }
 .tile:hover { transform: translateY(-2px); box-shadow: var(--shadow); border-color: var(--border-2); }
 .tile.destello { animation: destello 1.6s ease; }
-.tile > .cat-ico { grid-row: 1 / span 3; }
+.tile > .cat-ico { grid-column: 1; grid-row: 1 / span 3; }
 .t-nombre { grid-column: 2; grid-row: 1; font-size: 15px; font-weight: 600; line-height: 1.3; letter-spacing: -.01em; min-width: 0; }
-.t-nombre button { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; text-align: left; color: var(--text); }
-.t-nombre button::after { content: ''; position: absolute; inset: 0; border-radius: var(--radius); }
-.t-nombre button:focus-visible { outline: none; }
-.t-nombre button:focus-visible::after { outline: 2px solid var(--focus); outline-offset: 2px; }
-.tile:hover .t-nombre button { color: var(--link); }
+.t-link { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; text-align: left; color: var(--text); }
+a.t-link:hover { text-decoration: none; }
+.t-link::after { content: ''; position: absolute; inset: 0; border-radius: var(--radius); }
+.t-link:focus-visible { outline: none; }
+.t-link:focus-visible::after { outline: 2px solid var(--focus); outline-offset: 2px; }
+.tile:hover .t-link { color: var(--link); }
 .t-desc { grid-column: 2; grid-row: 2; margin-top: 3px; font-size: 13px; line-height: 1.45; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .t-meta { grid-column: 2; grid-row: 3; align-self: end; display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-3); min-width: 0; white-space: nowrap; }
 .t-meta .t-autor { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .t-meta time { flex: none; }
-.t-side { grid-column: 3; grid-row: 1 / span 3; position: relative; z-index: 1; display: flex; flex-direction: column; justify-content: space-between; align-items: center; margin: -5px 0 -4px; }
+.t-fav { display: inline-grid; place-items: center; color: var(--star); flex: none; margin: 0 -1px; }
+.t-fav .i { font-size: 12px; fill: currentColor; }
+.t-open, .tile > .t-sinurl { grid-column: 3; grid-row: 1; align-self: start; margin-top: -5px; }
+.tile > .t-mas { grid-column: 3; grid-row: 3; align-self: end; margin-bottom: -4px; }
+.t-open, .t-sinurl, .t-mas { position: relative; z-index: 1; }
 .t-open, .t-sinurl { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; flex: none; }
 .t-open { color: var(--primary-bg); background: var(--info-bg); transition: background-color .15s, color .15s; }
 [data-theme="dark"] .t-open { color: var(--aqua); background: rgba(45, 204, 205, .12); }
 .t-open:hover { background: var(--primary-bg); color: var(--primary-text); text-decoration: none; }
 .t-open .i, .t-sinurl .i { font-size: 15px; }
-.t-sinurl { color: var(--text-3); opacity: .45; cursor: default; }
+/* Sin URL: nada visible para quien consulta; los editores ven "Completar URL" al pasar el cursor */
+button.t-sinurl { color: var(--text-3); opacity: 0; transition: opacity .15s, background-color .15s, color .15s; }
+.tile:hover button.t-sinurl, .tile:focus-within button.t-sinurl, .tabla tr:hover button.t-sinurl, .tabla tr:focus-within button.t-sinurl, button.t-sinurl:focus-visible { opacity: 1; }
+button.t-sinurl:hover { background: var(--surface-3); color: var(--text); }
 
 /* Vacíos, error y esqueletos (una línea + un botón) */
 .vacio { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; padding: 28px 20px; border: 1px dashed var(--border-2); border-radius: 12px; background: var(--surface); text-align: center; }
@@ -510,7 +535,7 @@ button.tag:hover { box-shadow: inset 0 0 0 1px currentColor; }
 .vac-ico .i { font-size: 18px; }
 .vac-txt { font-size: 14px; font-weight: 600; color: var(--text-2); overflow-wrap: anywhere; min-width: 0; }
 .sk { background: linear-gradient(90deg, var(--surface-3) 25%, var(--surface-2) 37%, var(--surface-3) 63%); background-size: 400% 100%; animation: brillo 1.4s ease infinite; border-radius: 6px; }
-.sk-tile { display: grid; grid-template-columns: 36px 1fr; gap: 10px 12px; height: 100px; padding: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+.sk-tile { display: grid; grid-template-columns: 36px 1fr; gap: 10px 12px; height: 114px; padding: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
 
 /* =====================================================================
    9. RESULTADOS: LISTA (tabla)
@@ -535,7 +560,9 @@ button.tag:hover { box-shadow: inset 0 0 0 1px currentColor; }
 .tabla tr.destello td { animation: destello 1.6s ease; }
 .t-nom { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .t-nom .nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; font-weight: 600; font-size: 13.5px; color: var(--text); }
-.t-nom .nm:hover { color: var(--link); }
+.t-nom .nm:hover { color: var(--link); text-decoration: none; }
+.t-nom .t-fav { margin: 0 0 0 -4px; }
+.t-sub { display: none; }
 .t-est { margin-left: 7px; }
 .c-acc .t-acc2 { display: flex; align-items: center; justify-content: flex-end; gap: 2px; }
 
@@ -555,7 +582,7 @@ button.tag:hover { box-shadow: inset 0 0 0 1px currentColor; }
   animation: emerger .2s cubic-bezier(.2, .8, .2, 1);
 }
 .modal.sm { --w: 440px; } .modal.md { --w: 620px; } .modal.lg { --w: 800px; } .modal.xl { --w: 1080px; }
-.modal.admin { height: min(86vh, 820px); }
+.modal.admin { align-self: start; margin-top: 6vh; min-height: min(440px, 80vh); max-height: 86vh; }
 .modal-cab { display: flex; align-items: center; gap: 14px; padding: 18px 16px 14px 22px; }
 .modal-cab .m-ico { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 11px; background: var(--c-soft, var(--info-bg)); color: var(--c-fg, var(--c, var(--info-text))); flex: none; }
 .modal-cab .m-ico .i { font-size: 20px; }
@@ -741,8 +768,20 @@ fieldset.campo legend { padding: 0; margin-bottom: 6px; }
 .alcance label { display: inline-flex; align-items: center; gap: 8px; padding: 6px 11px; border: 1px solid var(--border-2); border-radius: 9px; font-size: 13px; cursor: pointer; }
 .alcance label:has(input:checked) { border-color: var(--primary-bg); background: var(--info-bg); color: var(--info-text); font-weight: 600; }
 .alcance input { accent-color: var(--primary-bg); }
+.exp-prev { margin-top: 12px; }
+.exp-prev summary { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; margin-left: -8px; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--text-2); cursor: pointer; list-style: none; }
+.exp-prev summary::-webkit-details-marker { display: none; }
+.exp-prev summary:hover { background: var(--surface-3); color: var(--text); }
+.exp-prev summary .i { font-size: 15px; transition: transform .15s; }
+.exp-prev[open] summary .i { transform: rotate(180deg); }
+.exp-prev .preview { margin-top: 8px; }
 .preview { width: 100%; height: 300px; resize: vertical; font-family: var(--mono); font-size: 12px; line-height: 1.5; padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2); color: var(--text); white-space: pre; }
-.exp-meta { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: 8px; font-size: 12px; color: var(--text-3); }
+.exp-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 12.5px; color: var(--text-3); }
+.exp-meta .i { font-size: 14px; }
+.f-nuevo { display: inline-flex; align-items: center; height: 18px; padding: 0 7px; border-radius: 999px; font-size: 11px; font-weight: 700; color: var(--aqua-700); background: rgba(45, 204, 205, .16); }
+[data-theme="dark"] .f-nuevo { color: var(--aqua); }
+@keyframes sugerido { 0%, 60% { border-color: var(--aqua); box-shadow: 0 0 0 3px rgba(45, 204, 205, .35); } 100% { box-shadow: none; } }
+.campo select.sugerido { animation: sugerido 1.6s ease; }
 
 /* Atajos, identidad, contribuidores, perfil */
 .atajos { display: grid; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
@@ -817,10 +856,12 @@ fieldset.campo legend { padding: 0; margin-bottom: 6px; }
   .sync.err #btnRefrescar, #btnRefrescar:focus-visible { opacity: 1; width: 26px; }
   #btnExportar, #btnImprimir { display: none; }
   .solo-movil { display: flex !important; }
-  .btn-nuevo { width: 34px; padding: 0; justify-content: center; margin: 0; }
+  .btn-nuevo { width: 40px; height: 40px; padding: 0; justify-content: center; margin: 0; }
   .btn-nuevo .lbl { display: none; }
   .vista-seg { background: transparent; padding: 0; }
-  .vista-seg button { width: 34px; height: 34px; color: rgba(255, 255, 255, .82); }
+  .vista-seg button { width: 40px; height: 40px; color: rgba(255, 255, 255, .82); }
+  .avatar-btn { width: 40px; height: 40px; }
+  .avatar-btn .avatar { width: 34px; height: 34px; }
   .vista-seg button[aria-pressed="true"] { display: none; }
   .pill-consulta .lbl { display: none; }
   .pill-consulta { padding: 0 6px; }
@@ -837,12 +878,11 @@ fieldset.campo legend { padding: 0; margin-bottom: 6px; }
   .filtros-pop { left: auto; right: 0; width: min(360px, calc(100vw - 32px)); }
   .fp-grupo .seg { display: grid; grid-template-columns: 1fr 1fr; }
   .pills { margin-right: -16px; padding-right: 16px; }
+  .pills-nav { display: none !important; }
   .fijados { margin-top: 20px; }
   .fj-track { margin-right: -16px; padding-right: 16px; }
   .wr-tile { flex-basis: 200px; }
   .resultados { margin-top: 22px; }
-  .tile { height: 96px; }
-  .tile.con-desc { height: 116px; }
   .tabla .c-cat, .tabla .c-fecha { display: none; }
   .tabla .t-est { display: none; }
   .tabla td:first-child, .tabla th:first-child { padding-left: 12px; }
@@ -864,11 +904,25 @@ fieldset.campo legend { padding: 0; margin-bottom: 6px; }
   .toasts { left: 16px; right: 16px; bottom: 16px; align-items: stretch; }
   .toast { min-width: 0; max-width: none; }
 }
+/* Lista en móvil: dos líneas por fila (nombre / estado · autor · fecha) */
+@media (max-width: 600px) {
+  .tabla thead { display: none; }
+  .tabla col.c-cat, .tabla col.c-est, .tabla col.c-autor, .tabla col.c-fecha { width: 0 !important; }
+  .tabla .c-est, .tabla .c-autor { display: none; }
+  .tabla td { height: auto; padding-top: 10px; padding-bottom: 10px; }
+  .tabla td.c-nombre { white-space: normal; }
+  .tabla td.c-acc { vertical-align: top; }
+  .t-nom { align-items: flex-start; }
+  .t-nom .nm { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.35; overflow-wrap: anywhere; }
+  .t-sub { display: flex; align-items: center; gap: 6px; margin: 3px 0 0 34px; font-size: 12px; color: var(--text-3); white-space: nowrap; overflow: hidden; }
+  .t-sub .t-autor { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .t-sub time { flex: none; }
+}
 @media (max-width: 400px) {
   .brand h1 { font-size: 14px; }
   .pill-demo { padding: 0 7px; font-size: 11px; }
   .sync:not(.err):not(.cargando) { display: none; }
-  .btn-nuevo[aria-disabled="true"] { display: none; }
+  .btn-nuevo.solo-consulta { display: none; }
   .cifras { font-size: 12px; }
   .cifra { padding: 2px 3px; }
   .seg-nav .tab { font-size: 12.5px; padding: 0 6px; }
@@ -877,6 +931,14 @@ fieldset.campo legend { padding: 0; margin-bottom: 6px; }
 }
 @media (hover: none) {
   .grupo-cab .add, .wr-star { opacity: 1; }
+  button.t-sinurl { opacity: .75; }
+}
+/* Pantallas táctiles: área de toque ≥ 44 px sin agrandar el ícono */
+@media (pointer: coarse) {
+  .t-open::before, button.t-sinurl::before, .t-mas::before, .wr-star::before, .q-clear::before, .chip-f button::before, .nav-btn::before, .grupo-cab .add::before {
+    content: ''; position: absolute; inset: -8px; border-radius: inherit;
+  }
+  .q-clear, .chip-f button, .nav-btn, .grupo-cab .add, .icon-btn.sm { position: relative; }
 }
 
 /* Movimiento reducido */
@@ -970,7 +1032,10 @@ fieldset.campo legend { padding: 0; margin-bottom: 6px; }
         <div id="filtrosPop" class="filtros-pop" role="dialog" aria-label="Filtros" hidden><div id="filtros"></div></div>
       </div>
     </div>
-    <div id="pills" class="pills" role="group" aria-label="Categorías" hidden></div>
+    <div class="pills-row">
+      <div id="pills" class="pills" role="group" aria-label="Categorías" hidden></div>
+      <div id="pillsNav" class="pills-nav" hidden><button type="button" class="nav-btn" data-accion="pills-prev" aria-label="Categorías anteriores"></button><button type="button" class="nav-btn" data-accion="pills-next" aria-label="Más categorías"></button></div>
+    </div>
     <div id="chips" class="chips-activos" aria-label="Filtros activos"></div>
 
     <section id="warroom" class="fijados" aria-labelledby="wrTitulo" hidden></section>
@@ -1111,7 +1176,8 @@ const CLAVES = {
   CACHE: 'space10.cache.v1',
   FAV: 'space10.favoritos.',
   TEMA: 'space10.tema',
-  VISTA: 'space10.vista'
+  VISTA: 'space10.vista',
+  ULTIMA_CAT: 'space10.ultimaCategoria'
 };
 
 /* Identidades de demostración (solo modo local) */
@@ -1417,6 +1483,7 @@ const ICONOS = {
   filter: '<polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>',
   swap: '<path d="M16 3h5v5"/><path d="M4 20 21 3"/><path d="M21 16v5h-5"/><path d="m15 15 6 6"/><path d="M4 4l5 5"/>',
   logout: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/>',
+  share: '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/>',
   hash: '<line x1="4" x2="20" y1="9" y2="9"/><line x1="4" x2="20" y1="15" y2="15"/><line x1="10" x2="8" y1="3" y2="21"/><line x1="16" x2="14" y1="3" y2="21"/>',
   layout: '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/>',
   zap: '<path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/>',
@@ -1985,6 +2052,8 @@ const S = {
   indice: new Map(),
   filtros: { q: '', seccion: 'todo', cat: 'todos', estado: 'todos', soloMios: false, soloFavs: false, tag: '' },
   terms: [],
+  marcas: [],                           // términos a resaltar (en búsqueda aproximada: las palabras encontradas)
+  aprox: false,                         // true si los resultados vienen de la búsqueda tolerante a errores
   orden: 'recientes',
   ordenManual: false,
   agrupar: true,
@@ -2110,6 +2179,7 @@ function indexar() {
       f.categoria, normalizar(sec ? sec.nombre : ''), normalizar((ESTADO_MAP[it.estado] || {}).etiqueta),
       normalizar(it.frecuencia), f.autor, hostDe(it.url)
     ].join('\u0001');
+    f.palabras = Array.from(new Set(f.hay.split(/[^a-z0-9]+/).filter(w => w.length >= 3)));
     S.indice.set(it.id, f);
   }
 }
@@ -2133,6 +2203,43 @@ function puntuar(it, terms) {
     total += s || 1;
   }
   return total;
+}
+
+/** true si a y b difieren como máximo en una edición (inserción, borrado o sustitución). */
+function unaEdicion(a, b) {
+  if (a === b) return true;
+  const la = a.length, lb = b.length;
+  if (Math.abs(la - lb) > 1) return false;
+  let i = 0, j = 0, dif = 0;
+  while (i < la && j < lb) {
+    if (a[i] === b[j]) { i++; j++; continue; }
+    if (++dif > 1) return false;
+    if (la > lb) i++; else if (lb > la) j++; else { i++; j++; }
+  }
+  return dif + (la - i) + (lb - j) <= 1;
+}
+/** Palabra del índice parecida al término: misma palabra o su prefijo con un error ("cobl" → cobol, "tablro" → tablero). */
+function palabraCercana(t, palabras) {
+  for (const w of palabras) {
+    if (unaEdicion(t, w)) return w;
+    for (let L = t.length; L <= t.length + 1; L++) if (L < w.length && unaEdicion(t, w.slice(0, L))) return w;
+  }
+  return null;
+}
+/** Términos efectivos de un enlace en modo aproximado; null si algún término no coincide. */
+function terminosAproximados(it, terms) {
+  const f = S.indice.get(it.id);
+  if (!f) return null;
+  const out = [];
+  for (const t of terms) {
+    if (f.hay.includes(t)) { out.push(t); continue; }
+    const base = t.replace(/^#/, '');
+    if (base.length < 4) return null;
+    const w = palabraCercana(base, f.palabras);
+    if (!w) return null;
+    out.push(w);
+  }
+  return out;
 }
 
 function hayFiltrosContenido() {
@@ -2183,15 +2290,29 @@ const CMP_TABLA = {
 /** Calcula resultados + conteos facetados para pestañas y categorías. */
 function calcular() {
   S.terms = terminos(S.filtros.q);
+  S.marcas = S.terms;
+  S.aprox = false;
   const f = S.filtros;
-  const puntajes = new Map();
-  const base = [];
+  let puntajes = new Map();
+  let base = [];
   for (const it of S.items) {
     let p = 0;
     if (S.terms.length) { p = puntuar(it, S.terms); if (p === null) continue; }
     if (!pasaFiltrosContenido(it)) continue;
     puntajes.set(it.id, p);
     base.push(it);
+  }
+  /* Búsqueda indulgente: sin coincidencias exactas → prefijos y errores de una letra en términos de ≥ 4 letras */
+  if (S.terms.length && !base.length && S.terms.some(t => t.replace(/^#/, '').length >= 4)) {
+    const marcas = new Set();
+    for (const it of S.items) {
+      const ts = terminosAproximados(it, S.terms);
+      if (!ts || !pasaFiltrosContenido(it)) continue;
+      ts.forEach(t => marcas.add(t));
+      puntajes.set(it.id, puntuar(it, ts) || 1);
+      base.push(it);
+    }
+    if (base.length) { S.aprox = true; S.marcas = Array.from(marcas); }
   }
   const conteoSec = { todo: base.length };
   base.forEach(it => { const s = catDe(it).seccion; conteoSec[s] = (conteoSec[s] || 0) + 1; });
@@ -2217,7 +2338,7 @@ function ordenCanonico(items) {
 
 /** Resalta términos con <mark>. Se escapa PRIMERO y luego se resalta sobre el texto escapado,
     tratando cada entidad HTML como un único carácter (nunca se parte una entidad). */
-function resaltar(texto, terms = S.terms) {
+function resaltar(texto, terms = S.marcas) {
   const seguro = esc(texto);
   if (!terms || !terms.length || !seguro) return seguro;
   const unidades = seguro.match(/&(?:amp|lt|gt|quot|#39|#96);|[\s\S]/g) || [];
@@ -2256,6 +2377,19 @@ function rolBadge(rol) { return `<span class="rol rol-${esc(rol)}">${rolEtiqueta
 const NOMBRE_CORTO_SECCION = { equipo: 'Equipo', biblioteca: 'Biblioteca' };
 function nombreCortoSeccion(s) { return (s && NOMBRE_CORTO_SECCION[s.id]) || (s ? s.nombre : ''); }
 const ESTADO_CORTO = { produccion: 'Producción', desarrollo: 'Desarrollo', historico: 'Histórico' };
+/* Etiquetas cortas de las categorías semilla (encabezados, píldoras, sugerencias, lista); el nombre completo va en title / aria-label */
+const NOMBRE_CORTO_CAT = {
+  tableros: 'Tableros', gas: 'Scripts GAS', ml: 'Modelos ML', arquitectura: 'Visores', hojas: 'Hojas', docs: 'Documentación',
+  'guias-apx': 'Guías APX', 'guias-cobol': 'COBOL / JCL', 'guias-gas': 'Apps Script', 'bd-sql': 'DB2 / SQL', web: 'Web',
+  'python-datos': 'Python', normativa: 'Normativa', cursos: 'Cursos'
+};
+const NOMBRE_SEMILLA_CAT = Object.fromEntries(CATEGORIAS_SEMILLA.map(c => [c.id, c.nombre]));
+/** Nombre corto de una categoría: el de la semilla si no se renombró; si no, el nombre sin el paréntesis final. */
+function nombreCortoCat(cat) {
+  if (!cat) return '';
+  if (NOMBRE_CORTO_CAT[cat.id] && NOMBRE_SEMILLA_CAT[cat.id] === cat.nombre) return NOMBRE_CORTO_CAT[cat.id];
+  return String(cat.nombre).replace(/\s*\([^)]*\)\s*$/, '').trim() || cat.nombre;
+}
 /** Fecha breve: "3 nov" (año solo si no es el actual); la completa va en title. */
 let FMT_MINI, FMT_MINI_ANIO;
 try {
@@ -2283,13 +2417,14 @@ function renderTopbar() {
   chip.title = u.nombre;
   const btn = $('#btnNuevo');
   btn.innerHTML = `${icon('plus')}<span class="lbl">Nuevo</span>`;
+  btn.removeAttribute('aria-disabled');
+  btn.classList.toggle('solo-consulta', !puedeEscribir());
   if (puedeEscribir()) {
-    btn.removeAttribute('aria-disabled'); btn.removeAttribute('data-tip');
+    btn.removeAttribute('data-tip');
     btn.setAttribute('aria-label', 'Nuevo enlace (N)');
   } else {
-    btn.setAttribute('aria-disabled', 'true');
-    btn.setAttribute('aria-label', 'Nuevo enlace (solo consulta)');
-    btn.setAttribute('data-tip', 'Solo consulta: identifícate para agregar');
+    btn.setAttribute('aria-label', 'Nuevo enlace: ' + AVISO_INVITADO.toLowerCase());
+    btn.setAttribute('data-tip', AVISO_INVITADO);
   }
   $$('.vista-seg [data-vista]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.vista === S.vista)));
   $('#pillDemo').hidden = S.modo !== 'local';
@@ -2323,33 +2458,28 @@ function renderBanners() {
   if (cont.innerHTML !== html) cont.innerHTML = html;
 }
 
-/* Línea de cifras (clicables como filtro) */
+/* Línea de cifras (clicables): total + una por sección. Siguen la búsqueda y los filtros de contenido, y suman el total. */
 const KPIS = [
   { id: 'total', uno: 'enlace', varios: 'enlaces' },
-  { id: 'tableros', uno: 'tablero', varios: 'tableros', cat: 'tableros' },
-  { id: 'gas', uno: 'script', varios: 'scripts', cat: 'gas' },
-  { id: 'ml', uno: 'modelo', varios: 'modelos', cat: 'ml' },
+  { id: 'equipo', uno: 'herramienta', varios: 'herramientas', seccion: 'equipo' },
   { id: 'biblioteca', uno: 'guía', varios: 'guías', seccion: 'biblioteca' }
 ];
 function valorKpi(k) {
-  if (k.id === 'total') return S.items.length;
-  if (k.cat) return S.items.filter(i => i.categoriaId === k.cat).length;
-  return S.items.filter(i => catDe(i).seccion === k.seccion).length;
+  const c = S.calc || calcular();
+  if (k.id === 'total') return c.base.length;
+  return c.conteoSec[k.seccion] || 0;
 }
-function kpiActivo(k) {
-  const f = S.filtros;
-  if (k.id === 'total') return false;
-  if (k.cat) return f.cat === k.cat;
-  if (k.seccion) return f.seccion === k.seccion && f.cat === 'todos';
-  return false;
-}
+function kpiActivo(k) { return !!k.seccion && S.filtros.seccion === k.seccion && S.filtros.cat === 'todos'; }
 function renderKpis() {
   const cont = $('#kpis');
   if (!S.cargado) { cont.innerHTML = ''; return; }
-  cont.innerHTML = KPIS.filter(k => !k.cat || S.catMap.has(k.cat)).map(k => {
+  /* Con búsqueda, el total ya está en el buscador ("N resultados"): solo se muestran las secciones; sin resultados, nada */
+  const buscando = S.terms.length > 0;
+  if (buscando && !(S.calc || calcular()).base.length) { cont.innerHTML = ''; return; }
+  cont.innerHTML = KPIS.filter(k => (!k.seccion || S.secMap.has(k.seccion)) && !(buscando && k.id === 'total')).map(k => {
     const v = valorKpi(k);
-    const tip = k.id === 'total' ? 'Ver todo' : k.cat ? `Filtrar: ${(S.catMap.get(k.cat) || {}).nombre || k.cat}` : `Ver ${(S.secMap.get(k.seccion) || {}).nombre || k.seccion}`;
-    return `<button type="button" class="cifra" data-accion="kpi" data-valor="${k.id}" data-n="${v}" aria-pressed="${kpiActivo(k)}" title="${esc(tip)}"><b>${fmtNum(v)}</b> ${esc(v === 1 ? k.uno : k.varios)}</button>`;
+    const tip = k.id === 'total' ? 'Ver todo' : `Ver ${(S.secMap.get(k.seccion) || {}).nombre || k.seccion}`;
+    return `<button type="button" class="cifra ${v ? '' : 'cero'}" data-accion="kpi" data-valor="${k.id}" data-n="${v}" aria-pressed="${kpiActivo(k)}" title="${esc(tip)}"><b>${fmtNum(v)}</b> <span class="lbl">${esc(v === 1 ? k.uno : k.varios)}</span></button>`;
   }).join('<span class="cifra-sep" aria-hidden="true">·</span>');
 }
 
@@ -2382,7 +2512,7 @@ function renderSugerencias() {
   const cats = S.categorias.filter(c => c.activa && conteo[c.id]).sort((a, b) => conteo[b.id] - conteo[a.id] || a.orden - b.orden).slice(0, 6);
   if (!tags.length && !cats.length) { cont.hidden = true; return; }
   cont.innerHTML = (tags.length ? `<p class="sug-lbl">Etiquetas</p><div class="chips">${tags.map(t => `<button type="button" class="sug-chip" data-sug="tag" data-valor="${esc(t.tag)}">${esc(t.tag)}</button>`).join('')}</div>` : '')
-    + (cats.length ? `<p class="sug-lbl">Categorías</p><div class="chips">${cats.map(c => `<button type="button" class="sug-chip" style="${varsColor(c.color)}" data-sug="cat" data-valor="${esc(c.id)}"><span class="dot" aria-hidden="true"></span>${esc(c.nombre)}</button>`).join('')}</div>` : '');
+    + (cats.length ? `<p class="sug-lbl">Categorías</p><div class="chips">${cats.map(c => `<button type="button" class="sug-chip" style="${varsColor(c.color)}" data-sug="cat" data-valor="${esc(c.id)}" title="${esc(c.nombre)}"><span class="dot" aria-hidden="true"></span>${esc(nombreCortoCat(c))}</button>`).join('')}</div>` : '');
   cont.hidden = false;
 }
 function abrirSugerencias() { S.sugAbiertas = true; renderSugerencias(); }
@@ -2398,21 +2528,38 @@ function renderTabs() {
 
 function pillHtml(cat, n) {
   const sel = S.filtros.cat === cat.id;
-  return `<button type="button" class="pill ${n ? '' : 'cero'}" style="${varsColor(cat.color)}" data-accion="cat" data-valor="${esc(cat.id)}" aria-pressed="${sel}" title="${esc(cat.descripcion || cat.nombre)}"><span class="dot" aria-hidden="true"></span>${esc(cat.nombre)}<span class="n">${fmtNum(n)}</span></button>`;
+  return `<button type="button" class="pill ${n ? '' : 'cero'}" style="${varsColor(cat.color)}" data-accion="cat" data-valor="${esc(cat.id)}" aria-pressed="${sel}" title="${esc(cat.nombre)}"><span class="dot" aria-hidden="true"></span>${esc(nombreCortoCat(cat))}<span class="n">${fmtNum(n)}</span></button>`;
 }
 /** Píldoras de categoría: solo cuando hay una sección elegida (en "Todo" ordenan los encabezados de grupo). */
 function renderPills() {
   const cont = $('#pills');
   const f = S.filtros;
-  if (!S.cargado || f.seccion === 'todo') { cont.hidden = true; cont.innerHTML = ''; return; }
+  if (!S.cargado || f.seccion === 'todo') { cont.hidden = true; cont.innerHTML = ''; $('#pillsNav').hidden = true; return; }
   const c = S.calc || calcular();
   const cats = S.categorias.filter(cat => cat.seccion === f.seccion && (cat.activa || cat.id === f.cat));
   cont.innerHTML = `<button type="button" class="pill todos" data-accion="cat" data-valor="todos" aria-pressed="${f.cat === 'todos'}">Todos<span class="n">${fmtNum(c.conteoSec[f.seccion] || 0)}</span></button>`
     + cats.map(cat => pillHtml(cat, c.conteoCat[cat.id] || 0)).join('');
   cont.hidden = false;
-  const marcar = () => cont.classList.toggle('desborda', cont.scrollWidth > cont.clientWidth + 2 && cont.scrollLeft + cont.clientWidth < cont.scrollWidth - 2);
-  marcar();
-  if (!cont.dataset.escucha) { cont.dataset.escucha = '1'; cont.addEventListener('scroll', debounce(marcar, 50), { passive: true }); }
+  actualizarDesborde(cont, $('#pillsNav'), 'pills');
+  if (!cont.dataset.escucha) { cont.dataset.escucha = '1'; cont.addEventListener('scroll', debounce(() => actualizarDesborde(cont, $('#pillsNav'), 'pills'), 50), { passive: true }); }
+}
+/** Fila desplazable: máscara en el lado que desborda y flechas solo si hace falta. */
+function actualizarDesborde(track, nav, pref) {
+  if (!track || track.hidden) { if (nav) nav.hidden = true; return; }
+  const desborda = track.scrollWidth > track.clientWidth + 2;
+  const izq = desborda && track.scrollLeft > 2;
+  const der = desborda && track.scrollLeft + track.clientWidth < track.scrollWidth - 2;
+  track.classList.toggle('fade-l', izq);
+  track.classList.toggle('fade-r', der);
+  if (!nav) return;
+  nav.hidden = !desborda;
+  if (!desborda) return;
+  nav.querySelector(`[data-accion="${pref}-prev"]`).disabled = !izq;
+  nav.querySelector(`[data-accion="${pref}-next"]`).disabled = !der;
+}
+function desplazarFila(track, dir) {
+  if (!track) return;
+  track.scrollBy({ left: dir * Math.max(200, track.clientWidth * 0.8), behavior: reducirMovimiento() ? 'auto' : 'smooth' });
 }
 
 const OPCIONES_ORDEN = [
@@ -2474,10 +2621,11 @@ function renderChips() {
 }
 
 /* ============ 12. Render: Fijados (acceso rápido) ============ */
+/** Acceso rápido: primero tus favoritos (★) y luego lo fijado por el equipo. */
 function itemsWarroom() {
-  const fijados = S.items.filter(i => i.fijado).sort((a, b) => cmpTexto(a.nombre, b.nombre));
-  const favs = S.items.filter(i => !i.fijado && S.favoritos.has(i.id)).sort((a, b) => cmpTexto(a.nombre, b.nombre));
-  return fijados.concat(favs);
+  const favs = S.items.filter(i => S.favoritos.has(i.id)).sort((a, b) => cmpTexto(a.nombre, b.nombre));
+  const fijados = S.items.filter(i => i.fijado && !S.favoritos.has(i.id)).sort((a, b) => cmpTexto(a.nombre, b.nombre));
+  return favs.concat(fijados);
 }
 function tileMini(it) {
   const cat = catDe(it);
@@ -2495,7 +2643,7 @@ function renderWarroom() {
   const lista = S.cargado && !hayFiltros() ? itemsWarroom() : [];
   if (!lista.length) { el.hidden = true; el.innerHTML = ''; return; }
   el.hidden = false;
-  el.innerHTML = `<div class="fj-cab"><h2 id="wrTitulo">${icon('star')}Fijados</h2>
+  el.innerHTML = `<div class="fj-cab"><h2 id="wrTitulo">${icon('pin')}Fijados</h2>
       <div class="fj-nav" hidden><button type="button" class="nav-btn" data-accion="wr-prev" aria-label="Anteriores">${icon('chevron-left')}</button><button type="button" class="nav-btn" data-accion="wr-next" aria-label="Siguientes">${icon('chevron-right')}</button></div></div>
     <div class="fj-track" id="wrTrack">${lista.map(tileMini).join('')}</div>`;
   $('#wrTrack').addEventListener('scroll', debounce(actualizarFlechasWr, 60), { passive: true });
@@ -2503,46 +2651,67 @@ function renderWarroom() {
 }
 function actualizarFlechasWr() {
   const t = $('#wrTrack');
-  const nav = $('#warroom .fj-nav');
-  if (!t || !nav) return;
-  const desborda = t.scrollWidth > t.clientWidth + 2;
-  nav.hidden = !desborda;
-  if (!desborda) return;
-  nav.querySelector('[data-accion="wr-prev"]').disabled = t.scrollLeft <= 2;
-  nav.querySelector('[data-accion="wr-next"]').disabled = t.scrollLeft + t.clientWidth >= t.scrollWidth - 2;
+  if (t) actualizarDesborde(t, $('#warroom .fj-nav'), 'wr');
 }
-function moverWarroom(dir) {
-  const t = $('#wrTrack');
-  if (!t) return;
-  t.scrollBy({ left: dir * Math.max(240, t.clientWidth * 0.8), behavior: reducirMovimiento() ? 'auto' : 'smooth' });
-}
+function moverWarroom(dir) { desplazarFila($('#wrTrack'), dir); }
 
 /* ============ 13. Render: resultados (mosaicos, lista, vacíos, esqueletos) ============ */
-/** Acción principal del mosaico: Abrir ↗ (pestaña nueva) o indicador discreto "Sin URL". */
+/** Pista ↗ del mosaico y la fila: abre la herramienta (fuera del orden de tabulación: el nombre ya es ese enlace).
+    Sin URL: nada visible para quien consulta; quien puede editar ve "Completar URL" al pasar el cursor. */
 function botonAbrirMini(it) {
   const url = urlSegura(it.url);
   const nom = esc(it.nombre);
-  if (url) return `<a class="t-open" href="${esc(url)}" target="_blank" rel="noopener noreferrer" data-accion="visita" data-id="${esc(it.id)}" aria-label="Abrir ${nom} (pestaña nueva)" data-tip="Abrir" data-tip-pos="izq">${icon('external')}</a>`;
+  if (url) return `<a class="t-open" href="${esc(url)}" target="_blank" rel="noopener noreferrer" data-accion="visita" data-id="${esc(it.id)}" tabindex="-1" aria-hidden="true" data-tip="Abrir" data-tip-pos="izq">${icon('external')}</a>`;
   const txt = it.url ? 'URL no válida' : 'Sin URL';
-  return `<span class="t-sinurl" data-tip="${txt}" data-tip-pos="izq">${icon('link-off')}<span class="sr-only">${txt}</span></span>`;
+  if (puedeEditar(it)) {
+    const tip = it.url ? 'Corregir URL' : 'Completar URL';
+    return `<button type="button" class="t-sinurl" data-accion="editar" data-enfocar="url" data-id="${esc(it.id)}" data-tip="${tip}" data-tip-pos="izq">${icon('link')}<span class="sr-only">${txt} · ${tip}: ${nom}</span></button>`;
+  }
+  return `<span class="t-sinurl sr-only">${txt}</span>`;
 }
 function botonMenu(it) {
   return `<button type="button" class="icon-btn sm t-mas" data-accion="menu" data-id="${esc(it.id)}" aria-haspopup="menu" aria-expanded="false" aria-label="Más acciones: ${esc(it.nombre)}">${icon('more')}</button>`;
 }
-/** Mosaico: ícono · nombre · Abrir ↗ · ⋯ y una línea meta (estado · quién · cuándo).
-    La descripción (1 línea, resaltada) se muestra en resultados de búsqueda; siempre está en el tooltip y en la ficha. */
+/** Enlace principal (nombre): abre la herramienta si tiene URL; si no, la ficha. */
+function enlacePrincipal(it, clase, tip) {
+  const url = urlSegura(it.url);
+  const id = esc(it.id);
+  return url
+    ? `<a class="${clase}" href="${esc(url)}" target="_blank" rel="noopener noreferrer" data-accion="visita" data-id="${id}" title="${esc(tip)}">${resaltar(it.nombre)}</a>`
+    : `<button type="button" class="${clase}" data-accion="ficha" data-id="${id}" title="${esc(tip)}">${resaltar(it.nombre)}</button>`;
+}
+const estrellaFav = (it) => (S.favoritos.has(it.id) ? `<span class="t-fav" role="img" aria-label="Favorito" title="Favorito">${icon('star')}</span>` : '');
+/** En resultados de búsqueda, la descripción empieza cerca de la primera coincidencia (para que se vea en una línea). */
+function fragmentoDesc(texto) {
+  const t = String(texto || '');
+  const marcas = (S.marcas || []).map(m => m.replace(/^#/, '')).filter(Boolean);
+  if (!S.terms.length || !marcas.length) return t;
+  const partes = t.split(/(\s+)/);
+  let pos = 0;
+  for (let i = 0; i < partes.length; i += 2) {
+    const n = normalizar(partes[i]);
+    if (marcas.some(m => n.includes(m))) {
+      if (pos < 28) return t;
+      return '…' + partes.slice(Math.max(0, i - 4)).join('');
+    }
+    pos += partes[i].length + (partes[i + 1] || '').length;
+  }
+  return t;
+}
+/** Mosaico: ícono · nombre (clic = abrir herramienta, o ficha si no hay URL) · ↗ / descripción en 1 línea /
+    meta (estado · ★ · quién · cuándo) · ⋯ (Detalles y demás acciones). */
 function tile(it) {
   const cat = catDe(it);
   const id = esc(it.id);
   const nuevo = esReciente(it.fechaCreacion);
-  const conDesc = S.terms.length > 0;
   const tip = `${it.nombre}\n${it.descripcion}\nSubido por ${it.creadoPorNombre} · ${fechaLarga(it.fechaCreacion)}`;
-  return `<article class="tile ${conDesc ? 'con-desc' : ''}" style="${varsColor(cat.color)}" data-id="${id}">
-    <span class="cat-ico">${icon(cat.icono)}${nuevo ? '<span class="nuevo-dot" aria-hidden="true"></span>' : ''}</span>
-    <h3 class="t-nombre"><button type="button" data-accion="ficha" data-id="${id}" title="${esc(tip)}">${resaltar(it.nombre)}</button>${nuevo ? '<span class="sr-only"> · Nuevo</span>' : ''}</h3>
-    ${conDesc ? `<p class="t-desc">${resaltar(it.descripcion)}</p>` : ''}
-    <div class="t-meta">${dotEstado(it)}<span class="t-autor">${resaltar(it.creadoPorNombre)}</span> <span aria-hidden="true">·</span> <time datetime="${esc(it.fechaCreacion)}" title="${esc(fechaLarga(it.fechaCreacion))}">${esc(fechaMini(it.fechaCreacion))}</time></div>
-    <div class="t-side">${botonAbrirMini(it)}${botonMenu(it)}</div>
+  return `<article class="tile" style="${varsColor(cat.color)}" data-id="${id}">
+    <span class="cat-ico">${icon(cat.icono)}${nuevo ? '<span class="nuevo-dot" data-tip="Nuevo · últimos 7 días" aria-hidden="true"></span>' : ''}</span>
+    <h3 class="t-nombre">${enlacePrincipal(it, 't-link', tip)}${nuevo ? '<span class="sr-only"> · Nuevo</span>' : ''}</h3>
+    ${botonAbrirMini(it)}
+    <p class="t-desc">${resaltar(fragmentoDesc(it.descripcion))}</p>
+    <div class="t-meta">${dotEstado(it)}${estrellaFav(it)}<span class="t-autor">${resaltar(it.creadoPorNombre)}</span> <span aria-hidden="true">·</span> <time datetime="${esc(it.fechaCreacion)}" title="${esc(fechaLarga(it.fechaCreacion))}">${esc(fechaMini(it.fechaCreacion))}</time></div>
+    ${botonMenu(it)}
   </article>`;
 }
 
@@ -2561,7 +2730,7 @@ function abrirMenuItem(btn) {
   const comoAdmin = puede && S.usuario.rol === 'admin' && it.creadoPor !== S.usuario.email;
   const id = esc(it.id);
   const op = (accion, ic, txt, extra = '', clase = '') => `<button type="button" class="um-item ${clase}" role="menuitem" data-accion="${accion}" data-id="${id}" ${extra}>${icon(ic)}<span>${esc(txt)}</span></button>`;
-  let html = '';
+  let html = op('ficha', 'info', 'Detalles');
   if (url) html += op('copiar', 'copy', 'Copiar enlace');
   if (urlS) html += `<a class="um-item" role="menuitem" href="${esc(urlS)}" target="_blank" rel="noopener noreferrer" data-cerrar-menu>${icon('code')}<span>Código / Script</span></a>`;
   html += op('fav', 'star', fav ? 'Quitar de favoritos' : 'Favorito', '', fav ? 'on' : '');
@@ -2630,9 +2799,9 @@ function grupoHtml(cat, items, cols) {
   const span = Math.max(1, Math.min(items.length || 1, cols));
   const sinCat = cat.id === '__sin__';
   const agregar = !sinCat && cat.activa && puedeEscribir()
-    ? `<button type="button" class="icon-btn xs add" data-accion="nuevo-en-cat" data-valor="${esc(cat.id)}" aria-label="Agregar en ${esc(cat.nombre)}" data-tip="Agregar en ${esc(cat.nombre)}" data-tip-pos="izq">${icon('plus')}</button>` : '';
+    ? `<button type="button" class="icon-btn xs add" data-accion="nuevo-en-cat" data-valor="${esc(cat.id)}" aria-label="Agregar en ${esc(cat.nombre)}" data-tip="Agregar en ${esc(nombreCortoCat(cat))}" data-tip-pos="izq">${icon('plus')}</button>` : '';
   return `<section class="grupo" style="${varsColor(cat.color)};--span:${span}" aria-label="${esc(cat.nombre)}">
-    <div class="grupo-cab"><span class="gi" aria-hidden="true">${icon(cat.icono)}</span><h4 title="${esc(cat.nombre)}">${esc(cat.nombre)}</h4><span class="n">${fmtNum(items.length)}</span>${!cat.activa && !sinCat ? '<span class="inactiva">Inactiva</span>' : ''}${agregar}</div>
+    <div class="grupo-cab"><span class="gi" aria-hidden="true">${icon(cat.icono)}</span><h4 title="${esc(cat.nombre)}">${esc(nombreCortoCat(cat))}</h4><span class="n">${fmtNum(items.length)}</span>${!cat.activa && !sinCat ? '<span class="inactiva">Inactiva</span>' : ''}${agregar}</div>
     <div class="tiles">${items.map(tile).join('')}</div>
   </section>`;
 }
@@ -2679,8 +2848,9 @@ function filaTabla(it) {
   const e = ESTADO_MAP[it.estado] || ESTADOS[0];
   const id = esc(it.id);
   return `<tr data-id="${id}" style="${varsColor(cat.color)}">
-    <td class="c-nombre"><div class="t-nom"><span class="cat-ico xs" aria-hidden="true">${icon(cat.icono)}</span><button type="button" class="nm" data-accion="ficha" data-id="${id}" title="${esc(it.descripcion)}">${resaltar(it.nombre)}</button></div></td>
-    <td class="c-cat" title="${esc(cat.nombre)}">${esc(cat.nombre)}</td>
+    <td class="c-nombre"><div class="t-nom"><span class="cat-ico xs" aria-hidden="true">${icon(cat.icono)}</span>${enlacePrincipal(it, 'nm', it.descripcion)}${estrellaFav(it)}</div>
+      <div class="t-sub">${dotEstado(it)}<span class="t-autor">${esc(it.creadoPorNombre)}</span><span aria-hidden="true">·</span><time datetime="${esc(it.fechaCreacion)}">${esc(fechaMini(it.fechaCreacion))}</time></div></td>
+    <td class="c-cat" title="${esc(cat.nombre)}">${esc(nombreCortoCat(cat))}</td>
     <td class="c-est">${dotEstado(it)}<span class="t-est">${esc(ESTADO_CORTO[e.id])}</span></td>
     <td class="c-autor">${resaltar(it.creadoPorNombre)}</td>
     <td class="c-fecha"><time datetime="${esc(it.fechaCreacion)}" title="${esc(fechaLarga(it.fechaCreacion))}">${esc(fechaMini(it.fechaCreacion))}</time></td>
@@ -2714,7 +2884,10 @@ function estadoVacio() {
   }
   if (!S.items.length) return vacio('inbox', 'Directorio vacío', botonCta(null, 'Agregar enlace'));
   const q = f.q.trim();
-  return vacio('search', q ? `Sin resultados para «${q}»` : 'Sin resultados', `<button type="button" class="btn btn-secondary btn-sm" data-accion="limpiar-filtros">Limpiar filtros</button>`);
+  const soloBusqueda = !!q && f.estado === 'todos' && !f.soloMios && !f.soloFavs && !f.tag && f.seccion === 'todo' && f.cat === 'todos';
+  const limpiar = `<button type="button" class="btn btn-secondary btn-sm" data-accion="limpiar-filtros">${soloBusqueda ? 'Limpiar búsqueda' : 'Limpiar filtros'}</button>`;
+  const agregar = q && puedeEscribir() ? `<button type="button" class="btn btn-primary btn-sm" data-accion="nuevo-con-nombre">${icon('plus')}Agregar enlace</button>` : '';
+  return vacio('search', q ? `Sin resultados para «${q}»` : 'Sin resultados', limpiar + agregar);
 }
 function esqueleto() {
   const sk = `<div class="sk-tile" aria-hidden="true"><div class="sk" style="width:36px;height:36px;border-radius:10px"></div><div style="display:grid;gap:8px;align-content:start"><div class="sk" style="height:14px;width:85%"></div><div class="sk" style="height:14px;width:60%"></div><div class="sk" style="height:10px;width:50%;margin-top:12px"></div></div></div>`;
@@ -2736,9 +2909,10 @@ function renderResultados() {
   const lista = resultadosFiltrados();
   meta.textContent = plural(lista.length, 'resultado', 'resultados');
   if (!lista.length) { cuerpo.innerHTML = estadoVacio(); return; }
-  if (S.vista === 'tabla') cuerpo.innerHTML = vistaTabla(lista);
+  const aviso = S.aprox ? `<p class="aprox">${icon('search')}Resultados aproximados</p>` : '';
+  if (S.vista === 'tabla') cuerpo.innerHTML = aviso + vistaTabla(lista);
   else if (esAgrupado()) cuerpo.innerHTML = vistaAgrupada(lista);
-  else cuerpo.innerHTML = `<div class="tiles-flat">${lista.map(tile).join('')}</div>`;
+  else cuerpo.innerHTML = aviso + `<div class="tiles-flat">${lista.map(tile).join('')}</div>`;
 }
 
 /** Re-render completo conservando el foco del elemento activo. */
@@ -3066,7 +3240,7 @@ function abrirFicha(id) {
     urlS ? `<a class="icon-btn" href="${esc(urlS)}" target="_blank" rel="noopener noreferrer" aria-label="Código / Script" data-tip="Código / Script">${icon('code')}</a>` : '',
     `<button type="button" class="icon-btn fav" data-m="fav" data-fav-ficha="${esc(it.id)}"></button>`,
     puede ? ib('fijar', 'pin', it.fijado ? 'Quitar de fijados' : 'Fijar', `aria-pressed="${it.fijado}"`) : '',
-    ib('copiar-ficha', 'link', 'Copiar enlace a la ficha'),
+    ib('copiar-ficha', 'share', 'Copiar enlace a la ficha'),
     puede ? `<span class="f-div" aria-hidden="true"></span>${ib('editar', 'edit', 'Editar')}${ib('eliminar', 'trash', 'Eliminar')}` : ''
   ].join('');
   const datos = [];
@@ -3080,7 +3254,7 @@ function abrirFicha(id) {
     <p class="ficha-desc">${esc(it.descripcion)}</p>
     <dl class="f-datos">${datos.map(([k, v, c]) => `<div class="${c || ''}"><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>
     <div class="f-visitas" title="Visitas">${icon('eye')}<span data-visitas="${esc(it.id)}">${fmtNum(it.visitas)}</span><span class="sr-only"> visitas</span></div>`;
-  const sub = `<div class="f-sub">${dotEstado(it)}<span>${esc(est.etiqueta)}${vivo ? ' · Tiempo real' : ''}</span><span class="sep" aria-hidden="true">·</span><span class="f-cat">${esc(cat.nombre)}</span></div>`;
+  const sub = `<div class="f-sub">${dotEstado(it)}<span>${esc(est.etiqueta)}${vivo ? ' · Tiempo real' : ''}</span><span class="sep" aria-hidden="true">·</span><span class="f-cat">${esc(cat.nombre)}</span>${esReciente(it.fechaCreacion) ? '<span class="f-nuevo" title="Agregado en los últimos 7 días">Nuevo</span>' : ''}</div>`;
   const m = Modales.abrir({ titulo: it.nombre, icono: cat.icono, color: cat.color, tamano: 'md', clase: 'ficha', foco: '[data-cerrar]', subtituloHtml: sub, cuerpo });
   m.el.dataset.fichaId = it.id;
   pintarBotonFavFicha(m.el.querySelector('[data-m="fav"]'), fav);
@@ -3117,22 +3291,50 @@ function opcionesCategoria(seleccion) {
 }
 /* Mensajes de error concisos (las reglas siguen siendo las del servidor) */
 const ERR_CORTO = {
-  nombre: () => 'Entre 3 y 120 caracteres',
+  nombre: (m, it) => (!it.nombre ? 'Falta el nombre' : it.nombre.length < 3 ? 'Mín. 3 caracteres' : 'Máx. 120 caracteres'),
   categoriaId: (m) => (/inactiva|no existe/i.test(m) ? 'Categoría no disponible' : 'Elige una categoría'),
-  url: (m) => (/obligatoria|vac[ií]a/i.test(m) ? 'Obligatoria' : /larga/i.test(m) ? 'Máx. 2000 caracteres' : 'Usa una URL http(s) válida'),
-  urlScript: () => 'Usa una URL http(s) válida',
-  descripcion: () => 'Entre 10 y 1000 caracteres',
+  url: (m) => (/obligatoria|vac[ií]a/i.test(m) ? 'Falta la URL' : /larga/i.test(m) ? 'Máx. 2000 caracteres' : 'URL no válida'),
+  urlScript: () => 'URL no válida',
+  descripcion: (m, it) => (!it.descripcion ? 'Falta la descripción' : it.descripcion.length < 10 ? 'Mín. 10 caracteres' : 'Máx. 1000 caracteres'),
   iniciativa: () => 'Máx. 80 caracteres',
   frecuencia: () => 'Máx. 60 caracteres'
 };
+/* Valores inteligentes al pegar una URL: categoría (+ tecnología) según el dominio */
+const REGLAS_URL = [
+  { host: /(^|\.)script\.google\.com$/, cat: 'gas', tec: 'Apps Script', nombre: 'Script de Google' },
+  { host: /(^|\.)docs\.google\.com$/, ruta: /^\/spreadsheets/, cat: 'hojas', tec: 'Sheets', nombre: 'Hoja de Google' },
+  { host: /(^|\.)sheets\.google\.com$/, cat: 'hojas', tec: 'Sheets', nombre: 'Hoja de Google' },
+  { host: /(^|\.)drive\.google\.com$/, cat: 'hojas', tec: 'Sheets', nombre: 'Carpeta de Drive' },
+  { host: /(^|\.)(lookerstudio|datastudio)\.google\.com$/, cat: 'tableros', tec: 'Looker Studio', nombre: 'Tablero de Looker Studio' },
+  { host: /(^|\.)developers\.google\.com$/, ruta: /^\/apps-script/, cat: 'guias-gas', tec: 'Apps Script', nombre: 'Guía de Apps Script' },
+  { host: /(^|\.)ibm\.com$/, cat: 'guias-cobol', nombre: 'Documentación de IBM' }
+];
+function sugerenciaUrl(u) {
+  const url = urlSegura(u);
+  if (!url) return null;
+  let x;
+  try { x = new URL(url); } catch (e) { return null; }
+  const host = x.hostname.toLowerCase().replace(/\.$/, '');
+  const regla = REGLAS_URL.find(r => r.host.test(host) && (!r.ruta || r.ruta.test(x.pathname)));
+  const nombre = regla ? regla.nombre : host.replace(/^www\./, '');
+  return regla ? Object.assign({ nombre }, regla) : { nombre };
+}
 const CAMPOS_MAS_OPCIONES = ['urlScript', 'tecnologias', 'iniciativa', 'frecuencia', 'estado'];
-function abrirFormulario(item = null, { categoriaId = '', enfocar = '' } = {}) {
-  if (!puedeEscribir()) { toast('Solo consulta', 'info'); return; }
+const AVISO_INVITADO = 'Entra con tu cuenta para agregar';
+function abrirFormulario(item = null, { categoriaId = '', enfocar = '', nombre = '' } = {}) {
+  if (!puedeEscribir()) { toast(AVISO_INVITADO, 'info'); return; }
   if (item && !puedeEditar(item)) { toast('Solo el autor o un admin', 'error'); return; }
   const edicion = !!item;
-  const catInicial = item ? item.categoriaId : ((categoriaId && S.catMap.get(categoriaId) && S.catMap.get(categoriaId).activa) ? categoriaId
-    : (S.filtros.cat !== 'todos' && S.catMap.get(S.filtros.cat) && S.catMap.get(S.filtros.cat).activa ? S.filtros.cat : ''));
-  const base = item ? clonar(item) : { nombre: '', categoriaId: catInicial, url: '', urlScript: '', descripcion: '', tags: [], tecnologias: [], iniciativa: '', estado: 'produccion', fijado: false, tiempoReal: false, frecuencia: '' };
+  /* Categoría inicial: la del "+" de categoría → la del filtro activo → la última usada (esta última sí se puede sugerir por URL) */
+  const activa = (id) => !!id && !!S.catMap.get(id) && S.catMap.get(id).activa;
+  const ultima = Almacen.get(CLAVES.ULTIMA_CAT) || '';
+  let catFuente = '';
+  let catInicial = '';
+  if (item) { catInicial = item.categoriaId; catFuente = 'usuario'; }
+  else if (activa(categoriaId)) { catInicial = categoriaId; catFuente = 'usuario'; }
+  else if (S.filtros.cat !== 'todos' && activa(S.filtros.cat)) { catInicial = S.filtros.cat; catFuente = 'usuario'; }
+  else if (activa(ultima)) { catInicial = ultima; catFuente = 'ultima'; }
+  const base = item ? clonar(item) : { nombre: Reglas.linea(nombre).slice(0, 120), categoriaId: catInicial, url: '', urlScript: '', descripcion: '', tags: [], tecnologias: [], iniciativa: '', estado: 'produccion', fijado: false, tiempoReal: false, frecuencia: '' };
   const tecSel = base.tecnologias.slice();
   const ajeno = edicion && item.creadoPor !== S.usuario.email;
   const urlSemillaVacia = edicion && !item.url;
@@ -3254,16 +3456,16 @@ function abrirFormulario(item = null, { categoriaId = '', enfocar = '' } = {}) {
 
   const MAPA_ERR = { nombre: ['fNombre', 'eNombre'], categoriaId: ['fCategoria', 'eCategoria'], url: ['fUrl', 'eUrl'], urlScript: ['fUrlScript', 'eUrlScript'],
     descripcion: ['fDescripcion', 'eDescripcion'], tags: ['fTags', 'eTags'], tecnologias: ['fTecLibre', 'eTecnologias'], iniciativa: ['fIniciativa', 'eIniciativa'], frecuencia: ['fFrecuencia', 'eFrecuencia'] };
-  function mostrarErrores(errores, soloCampo) {
+  function mostrarErrores(errores, soloCampo, datosVal) {
     Object.keys(MAPA_ERR).forEach(k => {
       if (soloCampo && k !== soloCampo) return;
       const [inp, err] = MAPA_ERR[k];
-      const msg = errores[k] ? (ERR_CORTO[k] ? ERR_CORTO[k](errores[k]) : errores[k]) : '';
+      const msg = errores[k] ? (ERR_CORTO[k] ? ERR_CORTO[k](errores[k], datosVal || {}) : errores[k]) : '';
       f(err).innerHTML = msg ? `${icon('alert')}<span>${esc(msg)}</span>` : '';
       if (msg) f(inp).setAttribute('aria-invalid', 'true'); else f(inp).removeAttribute('aria-invalid');
     });
   }
-  function validarCampo(k) { const v = Reglas.validar(leer(), { previo: item, categorias: S.categorias }); mostrarErrores(v.errores, k); return v; }
+  function validarCampo(k) { const v = Reglas.validar(leer(), { previo: item, categorias: S.categorias }); mostrarErrores(v.errores, k, v.item); return v; }
 
   /* Tecnologías: chips sugeridos + texto libre */
   function pintarTec() {
@@ -3347,6 +3549,39 @@ function abrirFormulario(item = null, { categoriaId = '', enfocar = '' } = {}) {
     } else { box.hidden = true; box.innerHTML = ''; }
   }, 150);
   f('fUrl').addEventListener('input', revisarDuplicado);
+  let tecTocada = edicion, tecAuto = '', catAntesDeUrl = null;
+  const placeholderNombre = f('fNombre').getAttribute('placeholder');
+  const aplicarSugerenciaUrl = debounce(() => {
+    if (edicion) return;
+    const sug = sugerenciaUrl(f('fUrl').value);
+    const sel = f('fCategoria');
+    /* Categoría: solo si el usuario no la eligió (la "última usada" sí se puede reemplazar) */
+    if (catFuente === '' || catFuente === 'ultima' || catFuente === 'url') {
+      const cat = sug && sug.cat && S.catMap.get(sug.cat);
+      if (cat && cat.activa) {
+        if (sel.value !== cat.id) {
+          if (catFuente !== 'url') catAntesDeUrl = sel.value;
+          sel.value = cat.id; catFuente = 'url';
+          sel.classList.remove('sugerido'); void sel.offsetWidth; sel.classList.add('sugerido');
+          if (sel.getAttribute('aria-invalid')) validarCampo('categoriaId');
+        }
+      } else if (catFuente === 'url') {
+        sel.value = catAntesDeUrl || ''; catFuente = catAntesDeUrl ? 'ultima' : '';
+      }
+    }
+    /* Tecnología sugerida (en "Más opciones"), mientras el usuario no toque las tecnologías */
+    if (!tecTocada) {
+      if (tecAuto && (!sug || sug.tec !== tecAuto)) { const i = tecSel.indexOf(tecAuto); if (i >= 0) tecSel.splice(i, 1); tecAuto = ''; }
+      if (sug && sug.tec && !tecSel.some(x => x.toLowerCase() === sug.tec.toLowerCase())) { tecSel.push(sug.tec); tecAuto = sug.tec; }
+      pintarTec();
+    }
+    /* Nombre vacío: propuesta como placeholder */
+    f('fNombre').setAttribute('placeholder', sug ? `Ej. ${sug.nombre}` : placeholderNombre);
+  }, 120);
+  f('fUrl').addEventListener('input', aplicarSugerenciaUrl);
+  f('fTecChips').addEventListener('click', () => { tecTocada = true; }, true);
+  f('fTecAgregar').addEventListener('click', () => { tecTocada = true; }, true);
+  f('fTecLibre').addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ',') tecTocada = true; }, true);
   f('fDup').addEventListener('click', (e) => { const b = e.target.closest('[data-ver-dup]'); if (b) abrirFicha(b.dataset.verDup); });
 
   ['fNombre', 'fCategoria', 'fUrl', 'fUrlScript', 'fDescripcion', 'fIniciativa', 'fFrecuencia'].forEach(id => {
@@ -3354,13 +3589,13 @@ function abrirFormulario(item = null, { categoriaId = '', enfocar = '' } = {}) {
     f(id).addEventListener('blur', () => { if (f(id).value.trim() || f(id).getAttribute('aria-invalid')) validarCampo(k); });
     f(id).addEventListener('input', () => { if (f(id).getAttribute('aria-invalid')) validarCampo(k); });
   });
-  f('fCategoria').addEventListener('change', () => validarCampo('categoriaId'));
+  f('fCategoria').addEventListener('change', () => { catFuente = 'usuario'; f('fCategoria').classList.remove('sugerido'); validarCampo('categoriaId'); });
   m.el.querySelector('[data-cancelar]').addEventListener('click', () => m.cerrar());
 
   async function guardar(confirmarDuplicado = false) {
     const datos = leer();
     const v = Reglas.validar(datos, { previo: item, categorias: S.categorias });
-    mostrarErrores(v.errores);
+    mostrarErrores(v.errores, '', v.item);
     const gen = f('fErrGeneral');
     gen.hidden = true;
     if (!v.valido) {
@@ -3374,6 +3609,7 @@ function abrirFormulario(item = null, { categoriaId = '', enfocar = '' } = {}) {
     try {
       const r = await Api.guardarHerramienta(confirmarDuplicado ? Object.assign({}, datos, { confirmarDuplicado: true }) : datos);
       guardado = true;
+      if (!edicion) Almacen.set(CLAVES.ULTIMA_CAT, datos.categoriaId);
       upsertItem(r.item);
       m.cerrar(true);
       render();
@@ -3400,7 +3636,7 @@ function abrirFormulario(item = null, { categoriaId = '', enfocar = '' } = {}) {
   pintarTec(); pintarTags(); pintarContador();
   inicial = JSON.stringify(leer());
   requestAnimationFrame(() => {
-    const destino = enfocar === 'url' ? f('fUrl') : f('fNombre');
+    const destino = enfocar === 'url' || (!edicion && base.nombre) ? f('fUrl') : f('fNombre');
     destino.focus();
     if (enfocar === 'url') destino.scrollIntoView({ block: 'center' });
   });
@@ -3507,11 +3743,12 @@ function abrirExportar() {
         <label><input type="radio" name="alcance" value="completo" ${alcance === 'completo' ? 'checked' : ''}>Todo (${S.items.length})</label>
       </fieldset>
     </div>
-    <label for="expPreview" class="sr-only">Vista previa</label>
-    <textarea id="expPreview" class="preview" readonly spellcheck="false"></textarea>
-    <div class="exp-meta"><span id="expArchivo"></span><span id="expTam"></span></div>`;
+    <div class="exp-meta">${icon('file-text')}<span id="expArchivo"></span><span aria-hidden="true">·</span><span id="expTam"></span></div>
+    <details class="exp-prev"><summary>${icon('chevron-down')}Vista previa</summary>
+      <label for="expPreview" class="sr-only">Vista previa</label>
+      <textarea id="expPreview" class="preview" readonly spellcheck="false"></textarea></details>`;
   const m = Modales.abrir({
-    titulo: 'Exportar catálogo', icono: 'download', tamano: 'lg', cuerpo,
+    titulo: 'Exportar catálogo', icono: 'download', tamano: 'md', cuerpo,
     pie: `<button type="button" class="btn btn-secondary" data-m="copiar">${icon('copy')}Copiar</button><button type="button" class="btn btn-primary" data-m="descargar">${icon('download')}Descargar</button>`
   });
   let contenido = '';
@@ -3519,7 +3756,7 @@ function abrirExportar() {
     const lista = alcance === 'filtrados' ? filtrados : S.items;
     contenido = Exportar[formato](lista);
     m.el.querySelector('#expPreview').value = contenido;
-    m.el.querySelector('#expArchivo').innerHTML = `${icon('file-text')} ${esc(ARCHIVOS_EXPORT[formato])} · ${plural(lista.length, 'enlace', 'enlaces')}${formato === 'csv' ? ' · UTF-8 con BOM' : ''}`;
+    m.el.querySelector('#expArchivo').textContent = `${ARCHIVOS_EXPORT[formato]} · ${plural(lista.length, 'enlace', 'enlaces')}`;
     m.el.querySelector('#expTam').textContent = `${(new Blob([contenido]).size / 1024).toFixed(1)} KB`;
     $$('[data-fmt]', m.el).forEach(b => { const on = b.dataset.fmt === formato; b.setAttribute('aria-selected', String(on)); b.setAttribute('aria-pressed', String(on)); });
   };
@@ -3996,8 +4233,7 @@ async function cambiarIdentidad(id) {
   S.filtros.soloMios = false;
   S.tablaOrden = null;
   await sincronizar({ silencioso: true });
-  const p = PERFILES_DEMO.find(x => x.id === id);
-  toast(`Ahora: ${S.usuario.nombre}${p ? ` · ${rolEtiqueta(S.usuario.rol)}` : ''}`, 'info');
+  toast(`Ahora: ${S.usuario.nombre}`, 'info');
 }
 
 function abrirContribuidores() {
@@ -4030,6 +4266,7 @@ function abrirMenuUsuario() {
   const item = (accion, ic, texto, extra = '', clase = '') => `<button type="button" class="um-item ${clase}" role="menuitem" data-menu="${accion}">${icon(ic)}<span>${esc(texto)}</span>${extra}</button>`;
   menu.innerHTML = `<div class="um-cab">${avatarHtml(u.nombre, u.email)}<div style="min-width:0"><div class="nombre">${esc(u.nombre)}</div><div class="email">${esc(u.email || 'Sin identificar')}</div><div style="margin-top:4px">${rolBadge(u.rol)}</div></div></div>
     ${item('perfil', 'user', 'Mi perfil')}
+    ${item('contrib', 'users', 'Contribuidores')}
     ${u.rol === 'admin' ? item('admin', 'settings', 'Panel de administración') : ''}
     ${item('tema', oscuro ? 'sun' : 'moon', oscuro ? 'Tema claro' : 'Tema oscuro')}
     ${item('atajos', 'keyboard', 'Atajos', '<span class="derecha"><kbd>?</kbd></span>')}
@@ -4051,6 +4288,7 @@ function accionMenu(accion) {
   cerrarMenuUsuario(true);
   if (accion === 'perfil') abrirPerfil();
   else if (accion === 'admin') abrirPanelAdmin();
+  else if (accion === 'contrib') abrirContribuidores();
   else if (accion === 'atajos') abrirAtajos();
   else if (accion === 'tema') alternarTema();
   else if (accion === 'identidad') abrirIdentidad();
@@ -4105,11 +4343,19 @@ function desplazarAResultados() {
     window.scrollTo({ top: Math.max(0, window.scrollY + top - alto - 120), behavior: reducirMovimiento() ? 'auto' : 'smooth' });
   }
 }
-function nuevoEnlace(categoriaId = '') {
-  if (!puedeEscribir()) { toast('Solo consulta', 'info'); return; }
-  abrirFormulario(null, { categoriaId });
+function nuevoEnlace(categoriaId = '', nombre = '') {
+  if (!puedeEscribir()) { toast(AVISO_INVITADO, 'info'); return; }
+  abrirFormulario(null, { categoriaId, nombre });
 }
 function enfocarBusqueda() { const q = $('#q'); q.focus(); q.select(); }
+/* Resultados navegables con teclado: el enlace principal (nombre) de cada mosaico o fila, en orden visual */
+function resultadosEnfocables() { return $$('#resCuerpo .t-link, #resCuerpo .tabla .nm'); }
+function primerResultado() { return resultadosEnfocables()[0] || null; }
+function enfocarResultado(el) {
+  el.focus({ preventScroll: true });
+  const caja = el.closest('.tile, tr') || el;
+  caja.scrollIntoView({ block: 'nearest', behavior: reducirMovimiento() ? 'auto' : 'smooth' });
+}
 
 /* ============ 25. Eventos globales y atajos de teclado ============ */
 const ACCIONES = {
@@ -4123,6 +4369,7 @@ const ACCIONES = {
   visita: (el) => registrarVisita(el.dataset.id),
   tag: (el) => { const t = el.dataset.valor; aplicarFiltro({ tag: S.filtros.tag.toLowerCase() === t.toLowerCase() ? '' : t }); },
   'nuevo-en-cat': (el) => nuevoEnlace(el.dataset.valor),
+  'nuevo-con-nombre': () => nuevoEnlace(S.filtros.cat !== 'todos' ? S.filtros.cat : '', S.filtros.q.trim()),
   seccion: (el) => {
     const s = el.dataset.valor;
     const cat = S.catMap.get(S.filtros.cat);
@@ -4144,18 +4391,14 @@ const ACCIONES = {
   kpi: (el) => {
     const k = KPIS.find(x => x.id === el.dataset.valor);
     if (!k || !S.cargado) return;
-    if (k.id === 'total') { limpiarFiltros(); return; }
-    if (k.cat) {
-      if (S.filtros.cat === k.cat) { limpiarFiltros(); return; }
-      const c = S.catMap.get(k.cat); aplicarFiltro({ seccion: c ? c.seccion : 'todo', cat: k.cat }, { limpiar: true, desplazar: false }); return;
-    }
-    if (k.seccion) {
-      if (kpiActivo(k)) { limpiarFiltros(); return; }
-      aplicarFiltro({ seccion: k.seccion, cat: 'todos' }, { limpiar: true, desplazar: false });
-    }
+    /* Conserva la búsqueda y los filtros: solo cambia de sección */
+    const seccion = k.seccion && !kpiActivo(k) ? k.seccion : 'todo';
+    aplicarFiltro({ seccion, cat: 'todos' }, { desplazar: false });
   },
   'wr-prev': () => moverWarroom(-1),
   'wr-next': () => moverWarroom(1),
+  'pills-prev': () => desplazarFila($('#pills'), -1),
+  'pills-next': () => desplazarFila($('#pills'), 1),
   'tabla-orden': (el) => {
     const col = el.dataset.valor;
     const actual = ordenTablaActual();
@@ -4194,6 +4437,8 @@ function enlazarEventos() {
   $('[data-vista="tabla"]').innerHTML = icon('rows');
   $('#btnExportar').innerHTML = icon('download');
   $('#btnImprimir').innerHTML = icon('printer');
+  $('#pillsNav [data-accion="pills-prev"]').innerHTML = icon('chevron-left');
+  $('#pillsNav [data-accion="pills-next"]').innerHTML = icon('chevron-right');
 
   document.addEventListener('click', (e) => {
     const t = e.target;
@@ -4233,7 +4478,7 @@ function enlazarEventos() {
   $('#userMenu').addEventListener('keydown', (e) => teclasMenu(e, $('#userMenu'), () => cerrarMenuUsuario()));
   $('#itemMenu').addEventListener('keydown', (e) => teclasMenu(e, $('#itemMenu'), () => cerrarMenuItem()));
   window.addEventListener('scroll', () => { if (S.menuItem) posicionarMenuItem(); }, { passive: true });
-  window.addEventListener('resize', debounce(() => { posicionarMenuItem(); actualizarFlechasWr(); }, 60));
+  window.addEventListener('resize', debounce(() => { posicionarMenuItem(); actualizarFlechasWr(); actualizarDesborde($('#pills'), $('#pillsNav'), 'pills'); }, 60));
 
   /* Buscador (debounce ≤ 80 ms) + sugerencias al enfocar con el campo vacío */
   const q = $('#q');
@@ -4252,9 +4497,38 @@ function enlazarEventos() {
   }, 70);
   q.addEventListener('input', () => { $('#qClear').hidden = !q.value; renderSugerencias(); buscar(); });
   q.addEventListener('focus', () => abrirSugerencias());
+  /* Enter abre el primer resultado; flecha abajo baja a los resultados (o a las sugerencias si el campo está vacío) */
+  const aplicarBusquedaPendiente = () => {
+    if (S.filtros.q === q.value) return;
+    const antes = S.filtros.q;
+    S.filtros.q = q.value;
+    ajustarOrdenPorBusqueda(antes);
+    renderDirectorio();
+  };
   q.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') { e.preventDefault(); cerrarSugerencias(); desplazarAResultados(); }
-    else if (e.key === 'ArrowDown' && S.sugAbiertas) { const p = $('#sugerencias [data-sug]'); if (p) { e.preventDefault(); p.focus(); } }
+    if (e.key === 'Enter') {
+      e.preventDefault(); cerrarSugerencias();
+      aplicarBusquedaPendiente();
+      const primero = S.terms.length ? primerResultado() : null;
+      if (primero) primero.click(); else desplazarAResultados();
+    } else if (e.key === 'ArrowDown') {
+      const sug = S.sugAbiertas && !$('#sugerencias').hidden ? $('#sugerencias [data-sug]') : null;
+      if (sug) { e.preventDefault(); sug.focus(); return; }
+      aplicarBusquedaPendiente();
+      const p = primerResultado();
+      if (p) { e.preventDefault(); enfocarResultado(p); }
+    }
+  });
+  /* Flechas arriba / abajo recorren los resultados (nombre de cada mosaico o fila); arriba en el primero vuelve al buscador */
+  $('#resCuerpo').addEventListener('keydown', (e) => {
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+    const lista = resultadosEnfocables();
+    const i = lista.indexOf(document.activeElement);
+    if (i < 0) return;
+    e.preventDefault();
+    if (e.key === 'ArrowUp' && i === 0) { q.focus(); return; }
+    const sig = lista[e.key === 'ArrowDown' ? Math.min(lista.length - 1, i + 1) : i - 1];
+    if (sig) enfocarResultado(sig);
   });
   $('#qClear').addEventListener('click', () => { aplicarFiltro({ q: '' }, { desplazar: false }); q.focus(); });
   const sug = $('#sugerencias');
