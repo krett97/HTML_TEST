@@ -1008,3 +1008,17 @@ Técnicas (todas en `tools/arte/`):
 Cambios de escena que salieron de esto: los personajes ya no "respiran" (se veía raro en los aliados); el pedazo de un objeto que cae de un solo golpe cae en su lugar y no fuera de la pantalla; el gato ya no se sube al carro ni a la aspiradora; los jefes se encogen lo necesario para caber bajo el marcador (`BOSS_HEADROOM`); el jardín usa sprites (árbol parado en el pasto con el cuervo en la copa, casita de pájaros sobre un poste y sol) en vez de rectángulos. Las medidas de `FURNITURE` en `places.ts` salen del PNG final (ancho y alto entre 4; `sobresale` es lo que el dibujo sube por encima de la cubierta, como la cabecera de la cama).
 
 Pendiente: un segundo cuadro de reposo dibujado por personaje (en vez de estirar el sprite) y la tanda de eventos aleatorios.
+
+## 53. Piloto vectorial: arte dibujado en código, sin herramientas de pago
+
+Tras la pasada HD, el pixel art de PixelLab seguía sin convencer y la herramienta es de pago. Prueba de otra vía: **caricatura plana dibujada en SVG desde código** (`tools/vector/dibujar.mjs`), que se renderiza a PNG con `@resvg/resvg-js` (gratis, en el repo). El estilo queda garantizado por construcción: una paleta, un grosor de contorno (café oscuro), dos tonos por color y formas redondas, las mismas para personajes, objetos, cuartos e íconos.
+
+El piloto cubre la **cocina completa** (gato con sus 6 cuadros: reposo, manotazo, garras, saco y sus golpes; gatito y su golpe; barra, azulejo, piso, ventana, reloj; vaso, taza, plato y tostadora), el **sombrero**, 24 **íconos** de la interfaz y un **tema de interfaz** redondo (`src/ui/vector.css`: tarjetas blancas con borde grueso y sombra dura, botones amarillos con relieve, pestañas redondas, letra Fredoka).
+
+Se activa con `?estilo=vector` (o el botón del panel de pruebas; queda guardado) y convive con el pixel art en el mismo build (`src/app/estilo.ts`):
+
+- `ART` pasa a 8 px por unidad y Phaser deja de ampliar sin suavizar (`pixelArt: false`), así el vectorial se ve nítido a la resolución del celular.
+- El arte vectorial (`src/assets/vector/`) se carga encima del de PixelLab con la misma clave; lo que aún no tiene versión vectorial se amplía ×2 sin suavizar al cargar (`upscalePixelArt`), para que todo mida lo mismo en el mundo.
+- La interfaz se cambia solo con CSS bajo `html[data-estilo="vector"]`, sin tocar los componentes.
+
+Si el piloto convence, el camino es dibujar el resto (63 objetos, 14 cuartos, 8 personajes, 4 jefes, íconos que falten) con las mismas funciones del script, y luego quitar el pixel art y la bandera.

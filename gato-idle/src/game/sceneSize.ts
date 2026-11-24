@@ -6,7 +6,10 @@
 //
 // El arte (PixelLab) tiene más detalle que el mundo: cada unidad del mundo mide ART píxeles de arte
 // (4: alta definición). Las posiciones y reglas siguen en unidades del mundo; la cámara amplía ×ART.
-export const ART = 4;
+import { ES_VECTOR } from '../app/estilo';
+
+/** 4 (pixel art de PixelLab) u 8 (piloto vectorial: el SVG se renderiza con el doble de detalle). */
+export const ART = ES_VECTOR ? 8 : 4;
 /** Ancho del mundo (el área de juego: la barra, la mesa…). */
 export const SCENE_WIDTH = 180;
 /** Lo menos que se ve a lo ancho: decide qué tan cerca está la cámara. */

@@ -71,6 +71,7 @@
   function formatTime(ms: number): string {
     return new Date(ms).toLocaleString([], { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
   }
+  import { ESTILO, cambiarEstilo } from '../app/estilo';
 </script>
 
 <button
@@ -96,6 +97,13 @@
     <p class="message" aria-live="polite" data-testid="mensaje-pruebas">{message}</p>
 
     <div class="body">
+      <section>
+        <h3>🎨 {$t('pruebas.estilo')}</h3>
+        <div class="buttons">
+          <button type="button" class="btn" disabled={ESTILO === 'pixel'} onclick={() => cambiarEstilo('pixel')} data-testid="estilo-pixel">{$t('pruebas.estiloPixel')}</button>
+          <button type="button" class="btn" disabled={ESTILO === 'vector'} onclick={() => cambiarEstilo('vector')} data-testid="estilo-vector">{$t('pruebas.estiloVector')}</button>
+        </div>
+      </section>
       <section>
         <h3>💰 {$t('pruebas.dinero')}</h3>
         <label class="row">

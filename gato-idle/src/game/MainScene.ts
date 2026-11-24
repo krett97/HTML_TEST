@@ -7,8 +7,9 @@ import { allyLevel } from '../core/allies';
 import type { AllyDef, ObjectDef } from '../core/data';
 import type { Game, LookChange } from '../app/game';
 import { t } from '../i18n';
-import { loadArt } from './art';
+import { loadArt, upscalePixelArt } from './art';
 import { createPlaceholders } from './placeholders';
+import { ES_VECTOR } from '../app/estilo';
 import { ART, cameraScroll, FLOOR_H, MAX_WIDTH, SCENE_WIDTH } from './sceneSize';
 import { drawRoom, drawShading, drawSurface, furnitureArt, GARDEN_STRIP_H, perchTops, placeOf, SHADOW, WINDOW_X, type Place, type RoomArt } from './places';
 import { catPortrait } from './catPortrait';
@@ -25,8 +26,9 @@ const CAT_W = 16;
 /** Escala de las imágenes: el arte trae ART píxeles por unidad y la cámara amplía ×ART. */
 const S = 1 / ART;
 /** Dónde va el sombrero de copa respecto al gato (origen abajo a la izquierda): apoyado en la frente, tapando la uva. */
-const HAT_X = 10.5;
-const HAT_Y = -16.5;
+// (El gato vectorial tiene la cabeza más arriba y centrada.)
+const HAT_X = ES_VECTOR ? 8 : 10.5;
+const HAT_Y = ES_VECTOR ? -18.5 : -16.5;
 /**
  * Tamaño de cada aliado respecto a su dibujo (todos se generan a ~96 px para que tengan detalle;
  * el gatito bebé, el ratón y los pájaros deben verse chicos junto al gato).
@@ -172,6 +174,7 @@ export class MainScene extends Phaser.Scene {
   }
 
   create(): void {
+    upscalePixelArt(this);
     createPlaceholders(this, this.controller.data.objects);
     this.cameras.main.setOrigin(0, 0).setZoom(ART);
 

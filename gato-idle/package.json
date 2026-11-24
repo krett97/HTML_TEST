@@ -26,6 +26,7 @@
     "@capacitor/core": "^8.6.0",
     "@capacitor/haptics": "^8.0.2",
     "@capacitor/preferences": "^8.0.1",
+    "@fontsource-variable/fredoka": "^5.3.0",
     "@fontsource/jersey-10": "^5.3.0",
     "@fontsource/pixelify-sans": "^5.3.0",
     "break_infinity.js": "^2.2.0",
@@ -33,6 +34,7 @@
   },
   "devDependencies": {
     "@capacitor/cli": "^8.6.0",
+    "@resvg/resvg-js": "^2.6.2",
     "@sveltejs/vite-plugin-svelte": "^7.3.1",
     "@tsconfig/svelte": "^5.0.8",
     "svelte": "^5.57.3",

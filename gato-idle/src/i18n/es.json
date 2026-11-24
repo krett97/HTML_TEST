@@ -353,7 +353,10 @@
     "mudanza": "[[mudanza]] Desbloquear mudanza",
     "mudanzaLista": "Mudanza desbloqueada: mejora el Valor en el último objeto.",
     "sinMudanza": "Ya no quedan casas a dónde mudarse.",
-    "jefe": "[[pepino]] Pelear con el jefe"
+    "jefe": "[[pepino]] Pelear con el jefe",
+    "estilo": "Estilo visual",
+    "estiloPixel": "Pixel art",
+    "estiloVector": "Vectorial (piloto)"
   },
   "canal": {
     "titulo": "Canal del dueño",

@@ -1,6 +1,11 @@
 import '@fontsource/pixelify-sans/400.css';
 import '@fontsource/pixelify-sans/700.css';
 import './ui/global.css';
+import '@fontsource-variable/fredoka';
+import './ui/vector.css';
+import { ESTILO } from './app/estilo';
+
+document.documentElement.dataset.estilo = ESTILO;
 import { mount } from 'svelte';
 import { Game } from './app/game';
 import { gameData } from './data';

@@ -208,6 +208,23 @@ const money = async (page) => page.getByTestId('dinero').textContent();
     }, { viewport: { width: w, height: h } });
   }
 
+  await flow('piloto vectorial: arte y interfaz redonda sin errores', browser, async (page) => {
+    // ?estilo=vector se guarda y recarga el arte a 8 px por unidad con la hoja vector.css.
+    await page.goto(URL + '?estilo=vector');
+    await page.waitForTimeout(1500);
+    check((await page.evaluate(() => document.documentElement.dataset.estilo)) === 'vector', 'no se activó el estilo vectorial');
+    await page.getByTestId('saltar-tutorial').click();
+    await page.tapScene(8);
+    await page.waitForTimeout(400);
+    check((await page.getByTestId('dps-escena').count()) === 1, 'no hay medidor de daño');
+    const ancho = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1);
+    check(ancho, 'la interfaz vectorial se desborda a lo ancho');
+    // El botón del panel de pruebas regresa al pixel art.
+    await page.pruebas(async () => page.getByTestId('estilo-pixel').click());
+    await page.waitForTimeout(1500);
+    check((await page.evaluate(() => document.documentElement.dataset.estilo)) === 'pixel', 'no regresó al pixel art');
+  });
+
   await flow('versión de tienda: sin modo pruebas', browser, async (page) => {
     const file = path.resolve(__dirname, '../../dist-archivo/swat-to-the-moon.html');
     if (!require('fs').existsSync(file)) throw new Error('falta dist-archivo (npm run build:compartir)');

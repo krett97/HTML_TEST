@@ -1,10 +1,13 @@
 // Íconos de PixelLab (src/assets/iconos/<nombre>.png) en lugar de emojis. En los textos se escriben
 // como [[nombre]] ("Súbelo en [[canal]] Canal") y se cambian por el dibujo al mostrarlos.
-const URLS = import.meta.glob<string>('../assets/iconos/*.png', { eager: true, query: '?url', import: 'default' });
+import { ES_VECTOR } from '../app/estilo';
 
-const ICONS: Record<string, string> = Object.fromEntries(
-  Object.entries(URLS).map(([path, url]) => [path.slice(path.lastIndexOf('/') + 1, -'.png'.length), url]),
-);
+const URLS = import.meta.glob<string>('../assets/iconos/*.png', { eager: true, query: '?url', import: 'default' });
+const VECTOR = import.meta.glob<string>('../assets/vector/iconos/*.png', { eager: true, query: '?url', import: 'default' });
+
+const byName = (files: Record<string, string>) =>
+  Object.fromEntries(Object.entries(files).map(([path, url]) => [path.slice(path.lastIndexOf('/') + 1, -'.png'.length), url]));
+const ICONS: Record<string, string> = { ...byName(URLS), ...(ES_VECTOR ? byName(VECTOR) : {}) };
 
 export function iconUrl(name: string): string | undefined {
   return ICONS[name];

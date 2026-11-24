@@ -3,6 +3,7 @@ import Phaser from 'phaser';
 import type { Game } from '../app/game';
 import { MainScene } from './MainScene';
 import { ART, computeSceneSize, FLOOR_H } from './sceneSize';
+import { ES_VECTOR } from '../app/estilo';
 
 export function mountScene(parent: HTMLElement, controller: Game): () => void {
   const measure = () => computeSceneSize(parent.clientWidth, parent.clientHeight, window.devicePixelRatio || 1);
@@ -13,7 +14,9 @@ export function mountScene(parent: HTMLElement, controller: Game): () => void {
     parent,
     width: initial.width * ART,
     height: initial.height * ART,
-    pixelArt: true,
+    // El pixel art se amplía sin suavizar; el vectorial, suavizado (va al doble de detalle).
+    pixelArt: !ES_VECTOR,
+    antialias: ES_VECTOR,
     backgroundColor: '#3b2a4d',
     banner: false,
     input: { activePointers: 3 },

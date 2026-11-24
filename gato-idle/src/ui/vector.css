@@ -1,0 +1,329 @@
+/*
+ * Tema del piloto vectorial (html[data-estilo="vector"], ver app/estilo.ts): interfaz de caricatura plana,
+ * clara y "gorda": tarjetas blancas con borde café grueso y sombra dura, botones amarillos con relieve,
+ * números grandes, pestañas redondas. Encima de los estilos de cada componente (misma clase, más peso).
+ */
+html[data-estilo='vector'] {
+  --bg: #f1dfc0;
+  --panel: #fff8ea;
+  --panel-2: #ffe9c2;
+  --line: #3a2518;
+  --text: #3a2518;
+  --muted: #8a6f5a;
+  --accent: #ff9b2f;
+  --gold: #e08a12;
+  --good: #3fb46c;
+  --danger: #ef5a4c;
+  --font: 'Fredoka Variable', 'Fredoka', system-ui, sans-serif;
+  --font-num: 'Fredoka Variable', 'Fredoka', system-ui, sans-serif;
+  --borde: 3px solid var(--line);
+  --sombra: 0 4px 0 var(--line);
+  color-scheme: light;
+}
+html[data-estilo='vector'] body {
+  background: #c9ab80;
+  background-image: radial-gradient(rgba(58, 37, 24, 0.12) 2px, transparent 2px);
+  background-size: 18px 18px;
+  font-weight: 600;
+  font-size: 17px;
+  font-synthesis: none;
+}
+html[data-estilo='vector'] .cifra {
+  font-weight: 700;
+}
+html[data-estilo='vector'] img.icono {
+  image-rendering: auto;
+}
+
+/* ---- Botones y tarjetas (global.css) ---- */
+html[data-estilo='vector'] .btn,
+html[data-estilo='vector'] .boss-call {
+  border: var(--borde);
+  border-image: none;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: var(--sombra);
+  color: var(--text);
+  font-weight: 700;
+  image-rendering: auto;
+  transition: transform 80ms, box-shadow 80ms;
+}
+html[data-estilo='vector'] .btn:active,
+html[data-estilo='vector'] .boss-call:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--line);
+}
+html[data-estilo='vector'] .btn--accent,
+html[data-estilo='vector'] .boss-call {
+  background: linear-gradient(#ffe27a, #ffc93c 55%, #f5b122);
+}
+html[data-estilo='vector'] .btn--gold {
+  background: linear-gradient(#ffd27a, #ffa826 55%, #f0921a);
+}
+html[data-estilo='vector'] .btn--accent:disabled,
+html[data-estilo='vector'] .btn--gold:disabled {
+  opacity: 1;
+  background: #ded5c6;
+  color: #8a7a68;
+  border-color: #8a7a68;
+  box-shadow: 0 4px 0 #8a7a68;
+}
+html[data-estilo='vector'] .btn--danger {
+  border: var(--borde);
+  border-radius: 14px;
+  background: var(--danger);
+  color: #fff;
+  box-shadow: var(--sombra);
+}
+html[data-estilo='vector'] .card {
+  border: var(--borde);
+  border-image: none;
+  border-radius: 18px;
+  background: var(--panel);
+  box-shadow: var(--sombra);
+  padding: 10px 12px;
+  image-rendering: auto;
+}
+html[data-estilo='vector'] .card.ready,
+html[data-estilo='vector'] .card.fresh,
+html[data-estilo='vector'] .card.detail {
+  border-image: none;
+  border-color: var(--line);
+  box-shadow: var(--sombra), 0 0 0 4px #ffd54a;
+}
+
+/* ---- Barra de arriba (TopBar) ---- */
+html[data-estilo='vector'] .top {
+  padding: 8px 12px;
+  background: var(--panel);
+  border-bottom: var(--borde);
+  box-shadow: 0 3px 0 rgba(58, 37, 24, 0.15);
+}
+html[data-estilo='vector'] .top .title {
+  color: var(--text);
+  font-weight: 700;
+  font-size: 17px;
+}
+html[data-estilo='vector'] .top .money {
+  gap: 6px;
+  padding: 2px 14px 2px 4px;
+  border: var(--borde);
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 3px 0 var(--line);
+  color: var(--text);
+  font-size: 22px;
+}
+html[data-estilo='vector'] .coin {
+  image-rendering: auto;
+}
+
+/* ---- Escena: medidor de daño, turbo, jefe, aviso ---- */
+html[data-estilo='vector'] .dps,
+html[data-estilo='vector'] .boss,
+html[data-estilo='vector'] .boss-wait {
+  border: var(--borde);
+  border-image: none;
+  border-radius: 14px;
+  background: rgba(255, 248, 234, 0.96);
+  box-shadow: 0 3px 0 var(--line);
+  color: var(--text);
+  image-rendering: auto;
+}
+html[data-estilo='vector'] .dps {
+  padding: 4px 8px;
+}
+html[data-estilo='vector'] .dps-num {
+  font-size: 22px;
+  color: var(--accent);
+  -webkit-text-stroke: 1px var(--line);
+  paint-order: stroke fill;
+  text-shadow: none;
+}
+html[data-estilo='vector'] .dps-unit,
+html[data-estilo='vector'] .dps-legend {
+  color: var(--muted);
+}
+html[data-estilo='vector'] .dps-bar,
+html[data-estilo='vector'] .marca-bar {
+  height: 8px;
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  background: #e6d7bd;
+  overflow: hidden;
+}
+html[data-estilo='vector'] .dps-cat {
+  background: var(--accent);
+}
+html[data-estilo='vector'] .turbo {
+  border: var(--borde);
+  border-image: none;
+  border-radius: 12px;
+  background: linear-gradient(#d6b6ff, #a97cf0);
+  box-shadow: 0 3px 0 var(--line);
+  color: #fff;
+  -webkit-text-stroke: 0.6px var(--line);
+  paint-order: stroke fill;
+  padding: 2px 8px;
+  font-size: 12px;
+  image-rendering: auto;
+}
+html[data-estilo='vector'] .turbo:disabled:not(.activo) {
+  opacity: 1;
+  background: #ded5c6;
+  color: #8a7a68;
+  -webkit-text-stroke: 0;
+}
+html[data-estilo='vector'] .scene .hint {
+  border: var(--borde);
+  border-radius: 14px;
+  background: var(--panel);
+  color: var(--text);
+  text-shadow: none;
+  box-shadow: 0 3px 0 var(--line);
+}
+html[data-estilo='vector'] .scene {
+  border-bottom: var(--borde);
+}
+
+/* ---- Panel de abajo y pestañas ---- */
+html[data-estilo='vector'] .panel .content {
+  padding: 12px 12px 10px;
+  background: var(--bg);
+}
+html[data-estilo='vector'] .tabs {
+  gap: 5px;
+  padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
+  border-top: var(--borde);
+  background: var(--panel);
+}
+html[data-estilo='vector'] .tab {
+  min-height: 58px;
+  padding: 4px 2px;
+  border: var(--borde);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 3px 0 var(--line);
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 11px;
+}
+html[data-estilo='vector'] .tab:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--line);
+}
+html[data-estilo='vector'] .tab.active {
+  background: linear-gradient(#ffb95c, #ff9b2f);
+  color: #fff;
+  box-shadow: 0 3px 0 var(--line);
+  -webkit-text-stroke: 0.5px var(--line);
+  paint-order: stroke fill;
+}
+html[data-estilo='vector'] .tab .dot {
+  background: var(--danger);
+}
+
+/* ---- Mejoras ---- */
+html[data-estilo='vector'] .amount button {
+  min-width: 52px;
+  min-height: 34px;
+  border: var(--borde);
+  border-image: none;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 3px 0 var(--line);
+  color: var(--text);
+  image-rendering: auto;
+}
+html[data-estilo='vector'] .amount button.active {
+  background: linear-gradient(#ffe27a, #ffc93c);
+}
+html[data-estilo='vector'] .amount .label,
+html[data-estilo='vector'] .muted {
+  color: var(--muted);
+}
+html[data-estilo='vector'] .upgrade {
+  gap: 10px;
+}
+html[data-estilo='vector'] .upgrade .icon {
+  display: grid;
+  place-items: center;
+  width: 50px;
+  height: 50px;
+  border: var(--borde);
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 3px 0 var(--line);
+}
+html[data-estilo='vector'] .upgrade .name {
+  font-size: 18px;
+  font-weight: 700;
+}
+html[data-estilo='vector'] .upgrade .level {
+  padding: 0 8px;
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel-2);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 700;
+}
+html[data-estilo='vector'] .upgrade .effect {
+  color: var(--muted);
+  font-size: 13px;
+}
+html[data-estilo='vector'] .upgrade .buy {
+  min-width: 96px;
+  min-height: 46px;
+  font-size: 20px;
+}
+html[data-estilo='vector'] .bar {
+  height: 12px;
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  background: #e6d7bd;
+  overflow: hidden;
+}
+html[data-estilo='vector'] .fill {
+  background: linear-gradient(#ffd16a, var(--accent));
+  border-radius: 999px;
+}
+html[data-estilo='vector'] .gold {
+  color: var(--gold);
+}
+html[data-estilo='vector'] .pip {
+  border: 2px solid var(--line);
+  border-radius: 50%;
+  background: #e6d7bd;
+}
+html[data-estilo='vector'] .pip.on {
+  background: var(--accent);
+}
+html[data-estilo='vector'] .badge {
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  background: var(--danger);
+  color: #fff;
+  box-shadow: 0 2px 0 var(--line);
+}
+html[data-estilo='vector'] .card[data-testid='proximo'] {
+  border-style: dashed;
+  background: #fff4dc;
+}
+
+/* Pestañas: la etiqueta de nuevo, más chica para no tapar el ícono. */
+html[data-estilo='vector'] .tab .badge {
+  font-size: 9px;
+  padding: 0 4px;
+}
+/* Botón del modo pruebas (solo en la versión de pruebas). */
+html[data-estilo='vector'] .open {
+  border: var(--borde);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 3px 0 var(--line);
+}
+/* Números de daño y avisos que la escena arma a mano (MainScene): misma letra redonda. */
+html[data-estilo='vector'] .scene * {
+  font-family: var(--font);
+}

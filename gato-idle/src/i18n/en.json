@@ -353,7 +353,10 @@
     "mudanza": "[[mudanza]] Unlock moving",
     "mudanzaLista": "Moving unlocked: upgrade Value on the last object.",
     "sinMudanza": "There are no more houses to move to.",
-    "jefe": "[[pepino]] Fight the boss"
+    "jefe": "[[pepino]] Fight the boss",
+    "estilo": "Visual style",
+    "estiloPixel": "Pixel art",
+    "estiloVector": "Vector (pilot)"
   },
   "canal": {
     "titulo": "Owner's channel",
