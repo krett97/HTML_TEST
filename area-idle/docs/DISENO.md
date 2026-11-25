@@ -1,6 +1,6 @@
 # Campo de Slimes: diseño del prototipo
 
-> Versión 0.5.1. Nombre provisional. Nació de pausar el juego del gato
+> Versión 0.5.2. Nombre provisional. Nació de pausar el juego del gato
 > ([`../../gato-idle/docs/DECISIONES.md`](../../gato-idle/docs/DECISIONES.md)), tomando su base técnica y su
 > arte en código ([`../../REUSO.md`](../../REUSO.md)). Referencia de sensación: *Don't Stop The Pop!*
 > (cientos de cosas reventando en un área) y el idle del castor (rocas que caen, mundo que cambia por fase).
@@ -63,7 +63,7 @@ el golpe a una debilidad sale con número grande y rojizo, y el que choca con un
 |---|---|---|---|---|---|---|
 | Slime verde | 3 | Normal | No | Fuego | — | 1 |
 | Slime azul (desde el nivel 4) | 14 | Lenta | No | Hielo, Energía | Fuego | 6 |
-| Slime rojo (desde el nivel 5) | 8 | Normal | 3 a la muralla cada 3 s | Físico, Luz | Muerte | 4 |
+| Slime rojo (desde el nivel 7) | 8 | Normal | 3 a la muralla cada 3 s | Físico, Luz | Muerte | 4 |
 
 **Glosario** (botón del libro en el árbol): los tipos de daño, quién hace cuál y cada enemigo con su vida,
 velocidad, si ataca y sus debilidades y fortalezas. Los que aún no salen se ven como silueta con "???"
@@ -74,7 +74,7 @@ velocidad, si ataca y sus debilidades y fortalezas. Los que aún no salen se ven
 Abajo del campo hay una muralla de piedra con almenas y una torre con estandarte a la izquierda. Los
 **arqueros** están en los huecos entre almenas y el **mago** arriba de la torre. Los slimes no bajan hasta ella.
 
-Desde el **nivel 5** salen **slimes rojos con resortera** (6 % de los del nivel, sube 1 % por nivel hasta
+Desde el **nivel 7** salen **slimes rojos con resortera** (6 % de los del nivel, sube 1 % por nivel hasta
 12 %). Cada 3 s le tiran una piedra a la muralla (3 de daño, +5 % por nivel); la piedra vuela en arco.
 La muralla tiene **100 de vida** (Muralla reforzada: +50 % por nivel) y una barra en su cara que aparece
 cuando hay rojos. **Si cae, el mago y los arqueros dejan de atacar el resto del nivel**: la muralla se pone

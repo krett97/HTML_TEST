@@ -207,7 +207,7 @@ async function flow(name, browser, fn, opts) {
     check(azul.includes('Slime azul') && azul.includes('×0.5'), `el azul no se reveló: ${azul}`);
   });
 
-  await flow('slime rojo: desde el nivel 5 le tira piedras a la muralla; si cae, los aliados no atacan', browser, async (page) => {
+  await flow('slime rojo: desde el nivel 7 le tira piedras a la muralla; si cae, los aliados no atacan', browser, async (page) => {
     await page.getByTestId('terminar').click();
     await page.getByTestId('mejorar').click();
     await page.oro(1000000);

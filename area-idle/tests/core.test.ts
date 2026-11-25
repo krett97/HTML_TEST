@@ -365,7 +365,7 @@ describe('segunda zona: campo de batalla', () => {
 describe('slime rojo y muralla', () => {
   const rojo = (run: Run, x: number, y: number, tiro = 0.01) =>
     run.enemies.push({ id: 500, kind: 'rojo', x, y, vx: 0, vy: 0, vida: 100, vidaMax: 100, giro: 99, tiro });
-  it('los rojos salen desde el nivel 5', () => {
+  it('los rojos salen desde el nivel 7', () => {
     expect(levelConfig(ROJO_DESDE - 1).rojos).toBe(0);
     expect(levelConfig(ROJO_DESDE).rojos).toBeGreaterThan(0);
     expect(levelConfig(ROJO_DESDE + 10).ataque).toBeGreaterThan(levelConfig(ROJO_DESDE).ataque);

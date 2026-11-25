@@ -175,7 +175,7 @@ export function bossFor(nivel: number): EnemyKind {
 export const isBossLevel = (nivel: number): boolean => nivel % JEFE.cada === 0;
 /** Desde qué nivel sale cada enemigo (los de la segunda zona, desde que empieza). */
 export const AZUL_DESDE = 4;
-export const ROJO_DESDE = 5;
+export const ROJO_DESDE = 7;
 export const DESDE: Record<EnemyKind, number> = { verde: 1, azul: AZUL_DESDE, rojo: ROJO_DESDE, rey: 10, goblin: 11, lobo: 11, orco: 13, orcoArquero: 15, loboBlanco: 20 };
 export const PRIMERA_OLA = 0.3;
 export const LLEGADA = 8;
