@@ -2,6 +2,9 @@
 
 Idle de un gato que tira las cosas de su dueño, de un vaso a la Luna. Celular primero (Android), y también en navegador de PC.
 
+> **En pausa desde la versión 0.36.1.** Nada se borró. Las decisiones del juego, por qué se pausó y qué quedó pendiente están en [`docs/DECISIONES.md`](docs/DECISIONES.md). Lo que se reusa para el próximo juego está en [`../REUSO.md`](../REUSO.md).
+
+- Decisiones del juego (resumen): [`docs/DECISIONES.md`](docs/DECISIONES.md)
 - Diseño completo: [`docs/DISENO.md`](docs/DISENO.md)
 - Prompt original: [`docs/prompt-original.md`](docs/prompt-original.md)
 

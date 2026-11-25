@@ -1,0 +1,408 @@
+diff --git a/gato-idle/src/app/game.ts b/gato-idle/src/app/game.ts
+index 2156843..f7a41cb 100644
+--- a/gato-idle/src/app/game.ts
++++ b/gato-idle/src/app/game.ts
+@@ -69,7 +69,7 @@ import {
+   valorHere,
+   viewsPerBreak,
+ } from '../core/economy';
+-import { atFrontier, frontierIndex, gateAt, goToLevel, levelMeta, roomOf, frontierObject } from '../core/niveles';
++import { atFrontier, frontierIndex, gateAt, goToLevel, isLastOfHome, levelMeta, roomOf, roomRange, frontierObject } from '../core/niveles';
+ import { normalizeState } from '../core/normalize';
+ import { formatNum } from '../core/format';
+ import { RateLimiter } from '../core/limiter';
+@@ -228,6 +228,11 @@ export interface ViewModel {
+     terminado: boolean;
+     /** El jefe que falta vencer para mudarse (null: no falta ninguno). */
+     esperaJefe: string | null;
++    /**
++     * El cuarto del objeto en la mesa, para los puntos de etapa de la escena: su nombre, cuántos niveles
++     * tiene, cuántos van pasados, cuál se juega (desde 0) y quién espera al final (guardián o jefe) y si ya cayó.
++     */
++    tramo: { cuarto: string; total: number; pasados: number; actual: number; fin: 'miniJefe' | 'jefe'; vencido: boolean };
+   };
+   /** Garras afiladas: probabilidad de crítico, en %. */
+   critico: { nivel: number; cantidad: number; costo: string; alcanza: boolean; prob: number; probSiguiente: number; maximo: boolean };
+@@ -1168,6 +1173,16 @@ export class Game {
+     return objectProgress(this.state, this.data);
+   }
+ 
++  /**
++   * Cuántos objetos del nivel faltan además del que está en la mesa: la fila que la escena dibuja bajando
++   * hacia el gato. Infinity si no hay meta que cumplir (nivel ya terminado, o juntando dinero en uno anterior).
++   */
++  queueAhead(): number {
++    if (!atFrontier(this.state, this.data)) return Infinity;
++    const faltan = levelMeta(this.state, this.data) - this.state.progreso.roturas;
++    return faltan > 0 ? faltan - 1 : Infinity;
++  }
++
+   /** Texto corto de dinero para los números flotantes. */
+   formatMoney(value: Decimal): string {
+     return formatNum(value, this.state.ajustes.notacion);
+@@ -1562,6 +1577,19 @@ export class Game {
+           const jefe = nextHome(s, d)?.requisito?.jefe;
+           return jefe && !s.jefes.derrotados.includes(jefe) ? jefe : null;
+         })(),
++        tramo: (() => {
++          const jugando = objectIndex(s);
++          const { inicio, fin } = roomRange(d, jugando);
++          const frente = frontierIndex(s, d);
++          return {
++            cuarto: roomOf(d.objects[jugando]!),
++            total: fin - inicio + 1,
++            pasados: Math.min(Math.max(0, frente - inicio), fin - inicio + 1),
++            actual: jugando - inicio,
++            fin: isLastOfHome(d, fin) ? ('jefe' as const) : ('miniJefe' as const),
++            vencido: frente > fin,
++          };
++        })(),
+       },
+       critico: {
+         nivel: s.nivelCritico,
+diff --git a/gato-idle/src/core/niveles.ts b/gato-idle/src/core/niveles.ts
+index 3b9a887..3376a16 100644
+--- a/gato-idle/src/core/niveles.ts
++++ b/gato-idle/src/core/niveles.ts
+@@ -55,6 +55,17 @@ export function isLastOfHome(data: GameData, index: number): boolean {
+   return !!obj && (!next || next.casa !== obj.casa);
+ }
+ 
++/** Primer y último nivel (índices) del cuarto al que pertenece un objeto. */
++export function roomRange(data: GameData, index: number): { inicio: number; fin: number } {
++  const last = data.objects.length - 1;
++  const at = Math.min(Math.max(0, index), last);
++  let inicio = at;
++  while (inicio > 0 && !isLastOfRoom(data, inicio - 1)) inicio--;
++  let fin = at;
++  while (fin < last && !isLastOfRoom(data, fin)) fin++;
++  return { inicio, fin };
++}
++
+ /** Qué detiene el avance al terminar el nivel: el guardián del cuarto, el jefe de la casa o la mudanza. */
+ export type Gate = 'miniJefe' | 'jefe' | 'mudanza';
+ 
+diff --git a/gato-idle/src/game/MainScene.ts b/gato-idle/src/game/MainScene.ts
+index 6ad78aa..18521ac 100644
+--- a/gato-idle/src/game/MainScene.ts
++++ b/gato-idle/src/game/MainScene.ts
+@@ -40,6 +40,21 @@ const SWAT_MS = 75;
+ const SWAT_HAT = { dx: -1.5, dy: 2 };
+ /** Inclinación máxima de los objetos que se "vuelcan", justo antes de caer. */
+ const MAX_TILT = 22;
++/**
++ * La avalancha: los objetos que faltan del nivel esperan en fila sobre una tabla inclinada y van bajando
++ * hacia el gato; al romperse el de la mesa cae el siguiente y la fila avanza. Cuántos se dibujan como
++ * máximo, lado mayor de cada uno en la fila, separación, pendiente de la tabla, lo más arriba que puede
++ * quedar su punta baja y el aire que deja sobre el objeto de la mesa (unidades del mundo).
++ */
++const QUEUE_MAX = 8;
++const QUEUE_SIZE = 11;
++const QUEUE_GAP = 12.5;
++const RAMP_SLOPE = 0.42;
++const RAMP_ANGLE = (-Math.atan(RAMP_SLOPE) * 180) / Math.PI;
++const RAMP_TOP_MIN = 31;
++const RAMP_AIR = 9;
++const RAMP_THICK = 2.4;
++const RAMP_COLORS = { borde: 0x3a2518, tabla: 0xd9a066, canto: 0xb9783f };
+ /** Frases de la viñeta de objeto nuevo (vineta.objeto.frases.0 … N-1). */
+ const OBJECT_QUIPS = 6;
+ /** Números flotantes a la vez, como máximo (con 15 toques por segundo y 7 aliados se juntan muchos). */
+@@ -114,6 +129,10 @@ export class MainScene extends Phaser.Scene {
+   private owner!: Phaser.GameObjects.Image;
+   private object!: Phaser.GameObjects.Image;
+   private objectDef!: ObjectDef;
++  /** La tabla de la avalancha y los objetos que esperan en ella (ver QUEUE_MAX). */
++  private ramp!: Phaser.GameObjects.Graphics;
++  private readonly queue: Phaser.GameObjects.Image[] = [];
++  private rampKey = '';
+   private readonly allies = new Map<string, AllyVisual>();
+   /** El gato está soltando un manotazo (cuadro de golpe) y cuánto se inclina hacia el objeto. */
+   private swatting = false;
+@@ -193,6 +212,8 @@ export class MainScene extends Phaser.Scene {
+     this.hat = this.add.image(0, 0, 'sombrero').setOrigin(0.5, 1).setScale(S).setDepth(2.8).setVisible(false);
+     this.owner = this.add.image(0, 0, 'duenio').setOrigin(0.5, 1).setScale(S).setDepth(4.5).setVisible(false);
+     this.object = this.add.image(0, 0, '__DEFAULT').setOrigin(0.5, 1).setScale(S).setDepth(3);
++    this.ramp = this.add.graphics().setDepth(1.6);
++    for (let i = 0; i < QUEUE_MAX; i++) this.queue.push(this.add.image(0, 0, '__DEFAULT').setOrigin(0.5, 1).setDepth(1.7).setVisible(false));
+     this.scratches = this.add.graphics().setDepth(3.5);
+     this.markScratches = this.add.graphics().setDepth(3.6);
+     for (const ally of this.controller.data.allies) {
+@@ -299,7 +320,7 @@ export class MainScene extends Phaser.Scene {
+     g.fillStyle(SHADOW, 0.22);
+     const blob = (cx: number, y: number, w: number) => g.fillEllipse(cx, y, Math.max(8, w), 4);
+     if (this.cat.visible) blob(this.cat.x + CAT_W / 2, this.cat.y, CAT_W * 1.2);
+-    if (this.object.visible && this.object.scale > 0) blob(this.object.x, this.object.y, this.widthOf(this.object) * 1.05);
++    if (this.object.visible && this.object.scale > 0) blob(this.object.x, Math.max(this.object.y, this.surfaceTop), this.object.displayWidth * 1.05);
+     if (this.owner.visible) blob(this.owner.x, this.owner.y, this.widthOf(this.owner));
+     for (const visual of this.allies.values()) {
+       if (!visual.sprite.visible) continue;
+@@ -429,6 +450,7 @@ export class MainScene extends Phaser.Scene {
+     const boss = this.controller.bossFightId();
+     if (boss) {
+       this.placeBoss(boss);
++      this.syncQueue('fija');
+       return;
+     }
+     const progress = this.controller.progress();
+@@ -438,6 +460,117 @@ export class MainScene extends Phaser.Scene {
+     this.applyLook();
+     this.moveCat(this.catXFor(this.object.x), false);
+     this.drawScratches(progress);
++    this.syncQueue('fija');
++  }
++
++  // ---- La avalancha ----
++
++  /** Punta baja de la tabla: un poco a la derecha de donde aparece el objeto y por encima de él. */
++  private rampBase(): { x: number; y: number } {
++    const height = this.textures.get(this.objectDef.sprite).getSourceImage().height * S;
++    return { x: this.startX() + 4, y: Math.max(RAMP_TOP_MIN, this.surfaceTop - height - RAMP_AIR) };
++  }
++
++  /** Punto sobre la tabla a `dx` unidades de su punta baja. */
++  private rampPoint(dx: number): { x: number; y: number } {
++    const base = this.rampBase();
++    return { x: base.x + dx, y: base.y - dx * RAMP_SLOPE };
++  }
++
++  /** Lugar del objeto número `i` de la fila (0: el que sigue). */
++  private queueSlot(i: number): { x: number; y: number } {
++    return this.rampPoint(5 + i * QUEUE_GAP);
++  }
++
++  /** Por dónde entra un objeto a la tabla: arriba, ya fuera de la pantalla. */
++  private rampEntrance(extra = 0): { x: number; y: number } {
++    return this.rampPoint((this.rampBase().y + QUEUE_SIZE + 6) / RAMP_SLOPE + extra);
++  }
++
++  /** En la fila los objetos van a su tamaño si son chicos; los grandes, encogidos para que quepan. */
++  private queueScale(): number {
++    const img = this.textures.get(this.objectDef.sprite).getSourceImage();
++    return Math.min(S, QUEUE_SIZE / Math.max(img.width, img.height));
++  }
++
++  /** La tabla: un tablón de madera con su contorno y dos ménsulas, de la punta baja hasta salir por arriba. */
++  private drawRamp(on: boolean): void {
++    const base = on ? this.rampBase() : { x: 0, y: 0 };
++    const key = on ? `${base.x}|${base.y}` : '';
++    if (key === this.rampKey) return;
++    this.rampKey = key;
++    const g = this.ramp.clear();
++    if (!on) return;
++    const low = this.rampPoint(-4);
++    const high = this.rampEntrance(QUEUE_SIZE);
++    const { borde, tabla, canto } = RAMP_COLORS;
++    // Ménsulas (triángulos pegados a la pared) debajo del tablón.
++    for (const dx of [9, 9 + QUEUE_GAP * 4]) {
++      const top = this.rampPoint(dx);
++      const tip = this.rampPoint(dx + 7);
++      g.fillStyle(canto).lineStyle(0.7, borde);
++      g.fillTriangle(top.x, top.y + RAMP_THICK, tip.x, tip.y + RAMP_THICK, top.x, top.y + RAMP_THICK + 7);
++      g.strokeTriangle(top.x, top.y + RAMP_THICK, tip.x, tip.y + RAMP_THICK, top.x, top.y + RAMP_THICK + 7);
++    }
++    const plank = [
++      new Phaser.Math.Vector2(low.x, low.y),
++      new Phaser.Math.Vector2(high.x, high.y),
++      new Phaser.Math.Vector2(high.x, high.y + RAMP_THICK),
++      new Phaser.Math.Vector2(low.x, low.y + RAMP_THICK),
++    ];
++    g.fillStyle(tabla).fillPoints(plank, true);
++    g.lineStyle(0.7, borde).strokePoints(plank, true, true);
++    // Brillo arriba y canto abajo.
++    g.lineStyle(0.45, 0xffffff, 0.5).lineBetween(low.x + 1.2, low.y + 0.7, high.x, high.y + 0.7);
++    g.lineStyle(0.45, canto, 1).lineBetween(low.x + 1.2, low.y + RAMP_THICK - 0.65, high.x, high.y + RAMP_THICK - 0.65);
++  }
++
++  /**
++   * Pone en la tabla los objetos que faltan del nivel. `fija`: en su lugar; `avanza`: cada uno baja un
++   * lugar (se acaba de romper el de la mesa); `cascada`: entran todos rodando desde arriba (nivel nuevo).
++   * En una pelea con jefe no hay tabla.
++   */
++  private syncQueue(mode: 'fija' | 'avanza' | 'cascada', delay = 0): void {
++    const fight = !!this.controller.bossFightId();
++    const count = fight ? 0 : Math.min(QUEUE_MAX, this.controller.queueAhead());
++    this.drawRamp(!fight);
++    const scale = this.queueScale();
++    this.queue.forEach((item, i) => {
++      this.tweens.killTweensOf(item);
++      if (i >= count) {
++        item.setVisible(false);
++        return;
++      }
++      const to = this.queueSlot(i);
++      // Cada uno queda un poco chueco, siempre igual en su lugar (que no bailen al redibujar).
++      const tilt = RAMP_ANGLE + ((i * 37) % 9) - 4;
++      item.setTexture(this.objectDef.sprite).setScale(scale).setVisible(true);
++      if (mode === 'fija') {
++        item.setPosition(to.x, to.y).setAngle(tilt);
++        return;
++      }
++      const cascada = mode === 'cascada';
++      const from = cascada ? this.rampEntrance(i * 3) : i === count - 1 && count === QUEUE_MAX ? this.rampEntrance() : this.queueSlot(i + 1);
++      item.setPosition(from.x, from.y).setAngle(tilt + (cascada ? 50 : 9));
++      this.tweens.add({
++        targets: item,
++        x: to.x,
++        y: to.y,
++        angle: tilt,
++        delay: delay + (cascada ? i * 75 : i * 16),
++        duration: cascada ? 420 : 180,
++        ease: cascada ? 'Quad.out' : 'Back.out',
++      });
++    });
++  }
++
++  /** El objeto de la mesa llega cayendo de la punta de la tabla (y rebota) en vez de aparecer. */
++  private dropIn(delay = 0): void {
++    const from = this.queueSlot(0);
++    const to = { x: this.object.x, y: this.object.y, angle: this.object.angle };
++    this.object.setPosition(from.x, from.y).setScale(this.queueScale()).setAngle(RAMP_ANGLE);
++    this.tweens.add({ targets: this.object, x: to.x, angle: to.angle, scale: this.objectScale, delay, duration: 230, ease: 'Quad.out' });
++    this.tweens.add({ targets: this.object, y: to.y, delay, duration: 330, ease: 'Bounce.out' });
+   }
+ 
+   // ---- Jefes ----
+@@ -544,7 +677,8 @@ export class MainScene extends Phaser.Scene {
+       if (this.controller.bossFightId()) return;
+       this.object.clearTint();
+       this.placeObject();
+-      this.popIn();
++      this.syncQueue('cascada');
++      this.dropIn(120);
+     });
+   }
+ 
+@@ -771,7 +905,9 @@ export class MainScene extends Phaser.Scene {
+ 
+   private onNewObject(objectId: string, primeraVez: boolean): void {
+     this.placeObject();
+-    this.popIn();
++    // Nivel nuevo: la fila entera entra rodando por la tabla.
++    this.syncQueue('cascada');
++    this.dropIn(160);
+     const tr = get(t);
+     const objeto = tr(`objetos.${objectId}`);
+     if (primeraVez) {
+@@ -1025,7 +1161,8 @@ export class MainScene extends Phaser.Scene {
+     const x = this.objectX(progress);
+     this.tweens.killTweensOf([this.object, this.cat]);
+     this.object.setScale(this.objectScale).setVisible(true);
+-    this.tweens.add({ targets: this.object, x, angle: this.objectAngle(progress), duration: 90, ease: 'Quad.out' });
++    // (`y`: si lo golpean mientras viene cayendo de la tabla, termina de bajar.)
++    this.tweens.add({ targets: this.object, x, y: this.surfaceTop, angle: this.objectAngle(progress), duration: 90, ease: 'Quad.out' });
+     // Pequeño apachurrón para que el golpe se sienta.
+     this.tweens.add({ targets: this.object, scaleY: 0.88 * this.objectScale, scaleX: 1.08 * this.objectScale, duration: 50, yoyo: true });
+     this.moveCat(this.catXFor(x), true);
+@@ -1089,11 +1226,13 @@ export class MainScene extends Phaser.Scene {
+       });
+     }
+ 
+-    // El dueño ya puso otro igual en la mesa.
++    // El siguiente de la fila cae a la mesa y los demás bajan un lugar.
+     this.placeObject();
+-    this.popIn(260);
++    this.syncQueue('avanza', 100);
++    this.dropIn(100);
+   }
+ 
++  /** El jefe aparece de golpe (no baja por la tabla). */
+   private popIn(delay = 0): void {
+     this.object.setScale(0);
+     this.tweens.add({ targets: this.object, scale: this.objectScale, delay, duration: 220, ease: 'Back.out' });
+diff --git a/gato-idle/src/ui/SceneHost.svelte b/gato-idle/src/ui/SceneHost.svelte
+index 7e25633..8e909a9 100644
+--- a/gato-idle/src/ui/SceneHost.svelte
++++ b/gato-idle/src/ui/SceneHost.svelte
+@@ -28,8 +28,17 @@
+   {#if $view.roturas > 0 && !$view.jefe.pelea}
+     <!-- Nivel en curso: cuántos van rotos de los que pide (arriba al centro, debajo del REC). -->
+     <div class="nivel-chip" class:atras={!$view.nivel.enEtapa} data-testid="nivel-chip">
+-      <strong>{$t('hud.nivel', { n: $view.nivel.jugando + 1 })}</strong>
+-      {#if $view.nivel.enEtapa}<span class="cifra">{$view.nivel.roturas}/{$view.nivel.meta}</span>{/if}
++      <div class="nivel-titulo">
++        <strong>{$t(`cuartos.${$view.nivel.tramo.cuarto}`)} · {$t('hud.nivel', { n: $view.nivel.jugando + 1 })}</strong>
++        {#if $view.nivel.enEtapa}<span class="cifra">{$view.nivel.roturas}/{$view.nivel.meta}</span>{/if}
++      </div>
++      <!-- Un punto por nivel del cuarto y, al final, quien lo cuida: el guardián o el jefe de la casa. -->
++      <div class="etapas" data-testid="etapas" aria-hidden="true">
++        {#each { length: $view.nivel.tramo.total } as _, i (i)}
++          <span class="etapa" class:hecha={i < $view.nivel.tramo.pasados} class:actual={i === $view.nivel.tramo.actual}></span>
++        {/each}
++        <span class="etapa-fin" class:vencido={$view.nivel.tramo.vencido}><Icon name={$view.nivel.tramo.fin === 'jefe' ? 'calavera' : 'corona'} size={16} /></span>
++      </div>
+     </div>
+   {/if}
+   <!-- Columna de arriba a la izquierda: el medidor y el turbo, uno abajo del otro, sin tapar el cuarto. -->
+@@ -375,13 +384,14 @@
+     top: 30px;
+     left: 50%;
+     translate: -50% 0;
+-    display: flex;
+-    align-items: center;
+-    gap: 6px;
+-    padding: 1px 8px;
++    display: grid;
++    justify-items: center;
++    gap: 1px;
++    padding: 2px 10px 3px;
+     border: 2px solid var(--line);
+-    border-radius: 999px;
++    border-radius: 12px;
+     background: rgba(18, 11, 22, 0.75);
++    white-space: nowrap;
+     color: var(--text);
+     font-size: 12px;
+     pointer-events: none;
+@@ -389,6 +399,51 @@
+   .nivel-chip.atras {
+     opacity: 0.75;
+   }
++  .nivel-titulo {
++    display: flex;
++    align-items: center;
++    gap: 6px;
++  }
++  /* Los puntos de etapa, unidos por una línea, como un caminito hasta el guardián. */
++  .etapas {
++    display: flex;
++    align-items: center;
++  }
++  .etapa {
++    position: relative;
++    width: 9px;
++    height: 9px;
++    margin-right: 7px;
++    border: 2px solid var(--line);
++    border-radius: 50%;
++    background: var(--bg);
++  }
++  .etapa::after {
++    content: '';
++    position: absolute;
++    top: 50%;
++    left: 100%;
++    width: 9px;
++    height: 2px;
++    margin-top: -1px;
++    margin-left: 1px;
++    background: var(--line);
++  }
++  .etapa.hecha {
++    background: var(--gold);
++  }
++  .etapa.actual {
++    scale: 1.35;
++    background: var(--accent);
++  }
++  .etapa-fin {
++    display: grid;
++    place-items: center;
++    margin-left: 1px;
++  }
++  .etapa-fin.vencido {
++    opacity: 0.45;
++  }
+   .rec {
+     position: absolute;
+     z-index: 2;
