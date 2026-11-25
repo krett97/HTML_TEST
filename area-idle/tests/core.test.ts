@@ -1224,7 +1224,7 @@ describe('quinta zona: Montaña de piedra, y el Dragón de acero', () => {
   it('la armadura quita la mitad del daño hasta perder media vida; luego se cae y marcha más rápido', () => {
     const run = createRun(computeStats({}), 560, 41, 21);
     quieta(run);
-    const g = { id: 820, kind: 'guerreroHierro' as const, x: 150, y: 150, vx: 0, vy: 0, vida: 10, vidaMax: 10, giro: 99 };
+    const g: Run['enemies'][number] = { id: 820, kind: 'guerreroHierro', x: 150, y: 150, vx: 0, vy: 0, vida: 10, vidaMax: 10, giro: 99 };
     run.enemies.push(g);
     moveCursor(run, 150, 150);
     const ev: RunEvent[] = [];
