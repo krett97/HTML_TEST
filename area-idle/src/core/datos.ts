@@ -8,7 +8,10 @@ export const DAMAGE_TYPES_EN_JUEGO: DamageType[] = ['fisico', 'fuego'];
 /** Cuánto reciben los enemigos del tipo al que son débiles y del que son fuertes. */
 export const EFFECTIVENESS = { debil: 1.5, fuerte: 0.5 } as const;
 
-export type EnemyKind = 'verde' | 'azul' | 'rojo' | 'rey';
+export type EnemyKind = 'verde' | 'azul' | 'rojo' | 'rey' | 'goblin' | 'lobo' | 'orco' | 'orcoArquero' | 'loboBlanco';
+
+/** Lo que vuela hacia la muralla: piedra de resortera, lanza de goblin, flecha de orco, baba del Rey, hoz del Lobo. */
+export type ProjectileKind = 'piedra' | 'lanza' | 'flecha' | 'baba' | 'hoz';
 
 export interface EnemyDef {
   id: EnemyKind;
@@ -18,9 +21,15 @@ export interface EnemyDef {
   radio: number;
   /** Unidades por segundo al pasear. */
   velocidad: number;
-  /** Daño de cada piedra que le tira a la muralla (0: no ataca) y cada cuántos segundos tira. */
+  /** Daño de cada ataque a la muralla (0: no ataca) y cada cuántos segundos ataca. */
   ataque: number;
   tiro?: number;
+  /** Qué le tira a la muralla (si ataca de lejos). */
+  proyectil?: ProjectileKind;
+  /** Camina hasta la muralla y la golpea de cerca (los orcos). */
+  marcha?: boolean;
+  /** Cada cuántos segundos cambia de rumbo (los lobos, muy seguido). */
+  giro?: [number, number];
   /** Tipos de daño que le hacen más (×1.5) y menos (×0.5). */
   debil: DamageType[];
   fuerte: DamageType[];
@@ -29,14 +38,26 @@ export interface EnemyDef {
 }
 
 export const ENEMIES: Record<EnemyKind, EnemyDef> = {
+  // ---- Campo verde (niveles 1–10) ----
   // Pegajoso y feliz: el fuego lo derrite.
   verde: { id: 'verde', vida: 3, oro: 1, radio: 9, velocidad: 9, ataque: 0, debil: ['fuego'], fuerte: [] },
   // De agua y con casco: el fuego casi no le hace; el hielo y la energía, mucho.
   azul: { id: 'azul', vida: 14, oro: 6, radio: 11, velocidad: 6, ataque: 0, debil: ['hielo', 'energia'], fuerte: ['fuego'] },
   // Con resortera: le tira piedras a la muralla. Sin casco y nervioso: las flechas le duelen.
+  rojo: { id: 'rojo', vida: 8, oro: 4, radio: 10, velocidad: 8, ataque: 3, tiro: 3, proyectil: 'piedra', debil: ['fisico', 'luz'], fuerte: ['muerte'] },
   // El primer jefe (nivel 10): naranja, gigante, con corona. Invoca slimes, brinca, esquiva y le tira baba a la muralla.
   rey: { id: 'rey', vida: 0, oro: 0, radio: 30, velocidad: 4, ataque: 0, debil: ['fuego'], fuerte: [], jefe: true },
-  rojo: { id: 'rojo', vida: 8, oro: 4, radio: 10, velocidad: 8, ataque: 3, tiro: 3, debil: ['fisico', 'luz'], fuerte: ['muerte'] },
+  // ---- Campo de batalla (niveles 11–20) ----
+  // Goblin verde con lanzas: se las arroja a la muralla.
+  goblin: { id: 'goblin', vida: 4, oro: 1.5, radio: 9, velocidad: 9, ataque: 2, tiro: 4, proyectil: 'lanza', debil: ['fuego'], fuerte: [] },
+  // Lobo: rapidísimo y cambia de rumbo a cada rato; sin armadura, las flechas le duelen.
+  lobo: { id: 'lobo', vida: 3, oro: 1, radio: 9, velocidad: 26, ataque: 0, giro: [0.4, 1], debil: ['fisico'], fuerte: [] },
+  // Orco: lento y con armadura; camina hasta la muralla y la golpea con su garrote.
+  orco: { id: 'orco', vida: 12, oro: 6, radio: 12, velocidad: 8, ataque: 4, tiro: 2.5, marcha: true, debil: ['fuego'], fuerte: ['fisico'] },
+  // Orco arquero: el más fuerte (sin contar al jefe). Flechas a la muralla desde lejos, con armadura.
+  orcoArquero: { id: 'orcoArquero', vida: 9, oro: 8, radio: 11, velocidad: 5, ataque: 4, tiro: 3, proyectil: 'flecha', debil: ['fuego'], fuerte: ['fisico'] },
+  // El jefe del nivel 20: un lobo blanco enorme con una hoz en la boca. Embiste, aúlla (llama lobos) y avienta la hoz.
+  loboBlanco: { id: 'loboBlanco', vida: 0, oro: 0, radio: 30, velocidad: 6, ataque: 0, debil: ['fuego'], fuerte: ['hielo'], jefe: true },
 };
 export const ENEMY_KINDS = Object.keys(ENEMIES) as EnemyKind[];
 
@@ -71,20 +92,40 @@ export const BASE = {
 } as const;
 
 /**
- * Los niveles: cada uno trae una cantidad fija de slimes y hay que reventarlos todos antes de que se
+ * Zonas: el mismo campo verde, pero cada 10 niveles cambia lo que hay tirado y quién sale. La primera
+ * (Campo verde) tiene flores, piedras y arbustos y slimes; la segunda (Campo de batalla), espadas y
+ * tablas tiradas, y goblins, lobos y orcos. Después del nivel 20 sigue la segunda hasta que haya más.
+ */
+export type ZoneId = 'campo' | 'batalla';
+export const ZONAS: { id: ZoneId; desde: number }[] = [
+  { id: 'campo', desde: 1 },
+  { id: 'batalla', desde: 11 },
+];
+export function zoneOf(nivel: number): ZoneId {
+  let z: ZoneId = 'campo';
+  for (const zona of ZONAS) if (nivel >= zona.desde) z = zona.id;
+  return z;
+}
+
+/**
+ * Los niveles: cada uno trae una cantidad fija de enemigos y hay que reventarlos todos antes de que se
  * acabe el tiempo. Una parte sale al empezar y el resto llega en los siguientes `llegada` segundos.
  * Si se acaba el tiempo, el nivel se pierde (el oro juntado se queda) y se puede reintentar o jugar
  * el anterior para juntar oro.
  */
 export interface LevelConfig {
   nivel: number;
+  zona: ZoneId;
   total: number;
-  /** Multiplican la vida y el oro de cada slime. */
+  /** Multiplican la vida y el oro de cada enemigo. */
   vida: number;
   oro: number;
-  /** Fracción de los slimes que son azules y rojos, y cuánto pegan las piedras de los rojos. */
+  /** Quiénes salen y en qué proporción (la suma es 1). */
+  mezcla: [EnemyKind, number][];
+  /** Fracción de azules y rojos (primera zona; para el glosario y las pruebas). */
   azules: number;
   rojos: number;
+  /** Multiplica el daño de los ataques a la muralla. */
   ataque: number;
   /** Oro extra por superar el nivel. */
   premio: number;
@@ -93,52 +134,83 @@ export interface LevelConfig {
 }
 
 /**
- * Jefes: cada 10 niveles (el primero, el Rey Slime, en el nivel 10). Su vida es la de todos los slimes
- * de un nivel normal ×`vida`. Cada `invoca` s llama a `escolta` slimes a su alrededor; cada `brinco` s
- * salta a otro lado y, al caer, queda **aturdido** `aturdido` s recibiendo ×`aturdidoMult`; cada `lanza` s
- * le tira una bola de baba a la muralla (`golpe` de daño). Mientras tu círculo esté cerca, **camina para
- * esquivarlo** (`esquiva`), salvo aturdido. A media vida se **enfurece**: todo más seguido
- * (los tiempos ×`furia`) y una escolta más. El nivel dura `extra` s más y el premio es ×`premio`.
+ * Jefes: cada 10 niveles (el Rey Slime en el 10, el Lobo Blanco en el 20; después se alternan). Su vida
+ * es la de todos los enemigos de un nivel normal ×`vida`; el nivel dura `extra` s más, el premio es
+ * ×`premio`, a media vida se **enfurecen** (sus tiempos ×`furia`, una escolta más) y, después de moverse
+ * (brinco o embestida), quedan **aturdidos** recibiendo ×`aturdidoMult`. Lo propio de cada uno, en JEFES.
  */
-export const JEFE = {
-  cada: 10,
-  vida: 6,
-  invoca: 3,
-  escolta: 3,
-  brinco: 5,
-  aturdido: 1.5,
-  aturdidoMult: 2,
-  lanza: 4,
-  golpe: 10,
-  /** Camina para salirse de tu círculo (unidades por segundo) cuando lo tiene a menos de `alerta` de su orilla. */
-  esquiva: 22,
-  alerta: 25,
-  furia: 0.65,
-  extra: 10,
-  premio: 5,
-  inicial: 6,
-} as const;
+export const JEFE = { cada: 10, vida: 6, aturdidoMult: 2, furia: 0.65, extra: 10, premio: 5 } as const;
+
+export interface BossDef {
+  /** Quién llega a ayudarlo, cuántos al empezar y cuántos cada `invoca` s. */
+  escolta: EnemyKind;
+  inicial: number;
+  invoca: number;
+  escoltaN: number;
+  /** Cómo se mueve a otro lado cada `cada` s: brincando en arco o embistiendo por el piso (dura `dura` s). */
+  mueve: 'brinco' | 'embestida';
+  cada: number;
+  dura: number;
+  /** Segundos aturdido después de moverse. */
+  aturdido: number;
+  /** Qué le avienta a la muralla, cada cuánto y cuánto daño hace. */
+  proyectil: ProjectileKind;
+  lanza: number;
+  golpe: number;
+  /** Camina para salirse de tu círculo (u/s) cuando lo tiene a menos de `alerta` de su orilla. */
+  esquiva: number;
+  alerta: number;
+}
+
+export const JEFES: Partial<Record<EnemyKind, BossDef>> = {
+  // Brinca en arco, invoca slimes y lanza bolas de baba.
+  rey: { escolta: 'verde', inicial: 6, invoca: 3, escoltaN: 3, mueve: 'brinco', cada: 5, dura: 0.5, aturdido: 1.5, proyectil: 'baba', lanza: 4, golpe: 10, esquiva: 22, alerta: 25 },
+  // Embiste rapidísimo por el piso (y queda jadeando), aúlla para llamar lobos y avienta su hoz girando.
+  loboBlanco: { escolta: 'lobo', inicial: 6, invoca: 3.5, escoltaN: 3, mueve: 'embestida', cada: 3.5, dura: 0.35, aturdido: 1.2, proyectil: 'hoz', lanza: 4.5, golpe: 14, esquiva: 32, alerta: 30 },
+};
+/** El jefe de cada nivel de jefe: se alternan el Rey Slime (10, 30…) y el Lobo Blanco (20, 40…). */
+export function bossFor(nivel: number): EnemyKind {
+  return (nivel / JEFE.cada) % 2 === 0 ? 'loboBlanco' : 'rey';
+}
 export const isBossLevel = (nivel: number): boolean => nivel % JEFE.cada === 0;
-/** Desde qué nivel salen los slimes azules y los rojos (con resortera). */
+/** Desde qué nivel sale cada enemigo (los de la segunda zona, desde que empieza). */
 export const AZUL_DESDE = 4;
 export const ROJO_DESDE = 5;
+export const DESDE: Record<EnemyKind, number> = { verde: 1, azul: AZUL_DESDE, rojo: ROJO_DESDE, rey: 10, goblin: 11, lobo: 11, orco: 13, orcoArquero: 15, loboBlanco: 20 };
 export const PRIMERA_OLA = 0.3;
 export const LLEGADA = 8;
 /** Lo más que puede haber vivos a la vez (por rendimiento; el resto espera su turno). */
 export const MAX_VIVOS = 450;
 
+/** Quiénes salen en un nivel: los de su zona, cada uno con su parte (el más común se queda con el resto). */
+function mixFor(n: number): [EnemyKind, number][] {
+  if (zoneOf(n) === 'campo') {
+    const azul = n < AZUL_DESDE ? 0 : Math.min(0.5, 0.1 + 0.05 * (n - AZUL_DESDE));
+    const rojo = n < ROJO_DESDE ? 0 : Math.min(0.12, 0.06 + 0.01 * (n - ROJO_DESDE));
+    return [['azul', azul], ['rojo', rojo], ['verde', 1 - azul - rojo]];
+  }
+  const lobo = 0.22;
+  const orco = n < DESDE.orco ? 0 : Math.min(0.2, 0.08 + 0.03 * (n - DESDE.orco));
+  const arquero = n < DESDE.orcoArquero ? 0 : Math.min(0.12, 0.05 + 0.02 * (n - DESDE.orcoArquero));
+  return [['lobo', lobo], ['orco', orco], ['orcoArquero', arquero], ['goblin', 1 - lobo - orco - arquero]];
+}
+
 export function levelConfig(nivel: number): LevelConfig {
   const n = Math.max(1, Math.floor(nivel));
+  const mezcla = mixFor(n).filter(([, p]) => p > 0);
+  const parte = (k: EnemyKind) => mezcla.find(([kind]) => kind === k)?.[1] ?? 0;
   return {
     nivel: n,
+    zona: zoneOf(n),
     total: 15 + 8 * (n - 1),
     vida: Math.pow(1.3, n - 1),
     oro: Math.pow(1.05, n - 1),
-    azules: n < AZUL_DESDE ? 0 : Math.min(0.5, 0.1 + 0.05 * (n - AZUL_DESDE)),
-    rojos: n < ROJO_DESDE ? 0 : Math.min(0.12, 0.06 + 0.01 * (n - ROJO_DESDE)),
+    mezcla,
+    azules: parte('azul'),
+    rojos: parte('rojo'),
     ataque: Math.pow(1.05, Math.max(0, n - ROJO_DESDE)),
     premio: Math.round(8 * Math.pow(1.12, n - 1) * (isBossLevel(n) ? JEFE.premio : 1)),
-    jefe: isBossLevel(n) ? { kind: 'rey', vida: Math.round(3 * (15 + 8 * (n - 1)) * Math.pow(1.3, n - 1) * JEFE.vida) } : null,
+    jefe: isBossLevel(n) ? { kind: bossFor(n), vida: Math.round(3 * (15 + 8 * (n - 1)) * Math.pow(1.3, n - 1) * JEFE.vida) } : null,
   };
 }
 

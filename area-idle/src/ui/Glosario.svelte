@@ -1,7 +1,7 @@
 <script lang="ts">
   // El glosario: los tipos de daño (y quién hace cuál) y cada enemigo con su vida, su velocidad, si
   // ataca y a qué es débil o fuerte. Los enemigos que aún no salen se ven como silueta.
-  import { JEFE, levelConfig, AZUL_DESDE, ROJO_DESDE, DAMAGE_TYPES, DAMAGE_TYPES_EN_JUEGO, EFFECTIVENESS, ENEMIES, ENEMY_KINDS, type EnemyKind } from '../core/datos';
+  import { JEFES, DESDE, zoneOf, levelConfig, DAMAGE_TYPES, DAMAGE_TYPES_EN_JUEGO, EFFECTIVENESS, ENEMIES, ENEMY_KINDS, type EnemyKind } from '../core/datos';
   import { DAMAGE_TYPE_OF } from '../core/run';
   import { t } from '../i18n';
   import { useJuego } from './context';
@@ -17,11 +17,12 @@
     { id: 'arqueros', icono: 'arquero', tipo: DAMAGE_TYPE_OF.arquero },
     { id: 'mago', icono: 'mago', tipo: DAMAGE_TYPE_OF.mago },
   ] as const;
-  /** Desde qué nivel sale cada enemigo (el verde, desde el primero). */
-  const DESDE: Record<EnemyKind, number> = { verde: 1, azul: AZUL_DESDE, rojo: ROJO_DESDE, rey: JEFE.cada };
-  const COMUNES = ENEMY_KINDS.filter((k) => !ENEMIES[k].jefe);
-  const JEFES = ENEMY_KINDS.filter((k) => ENEMIES[k].jefe);
-  const IMAGEN: Record<EnemyKind, string> = { verde: 'slime_verde', azul: 'slime_azul', rojo: 'slime_rojo', rey: 'jefe_rey' };
+  /** Los comunes, agrupados por la zona donde salen; los jefes aparte. Cada uno con su dibujo. */
+  const COMUNES = ENEMY_KINDS.filter((k) => !ENEMIES[k].jefe).sort((a, b) => DESDE[a] - DESDE[b]);
+  const POR_ZONA = (['campo', 'batalla'] as const).map((z) => ({ zona: z, kinds: COMUNES.filter((k) => zoneOf(DESDE[k]) === z) }));
+  const JEFES_KINDS = ENEMY_KINDS.filter((k) => ENEMIES[k].jefe).sort((a, b) => DESDE[a] - DESDE[b]);
+  const IMAGEN: Record<EnemyKind, string> = { verde: 'slime_verde', azul: 'slime_azul', rojo: 'slime_rojo', rey: 'jefe_rey', goblin: 'goblin', lobo: 'lobo', orco: 'orco', orcoArquero: 'orcoArquero', loboBlanco: 'loboBlanco' };
+  const MECANICAS: Partial<Record<EnemyKind, string[]>> = { rey: ['invoca', 'esquiva', 'aturdido', 'furia'], loboBlanco: ['aulla', 'embiste', 'hoz', 'furia'] };
 
   const visto = (kind: EnemyKind) => $view.meta.nivel >= DESDE[kind];
   const rapidez = (v: number) => (v < 7 ? 'lenta' : v < 12 ? 'normal' : 'rapida');
@@ -52,11 +53,13 @@
   </div>
 
   <h3>{$t('glosario.enemigos')}</h3>
-  {#each COMUNES as kind (kind)}
+  {#each POR_ZONA as grupo (grupo.zona)}
+  <h4>{$t(`zonas.${grupo.zona}`)}</h4>
+  {#each grupo.kinds as kind (kind)}
     {@const def = ENEMIES[kind]}
     {@const ok = visto(kind)}
     <article class="enemigo" class:oculto={!ok} data-testid="enemigo-{kind}">
-      <img src={artUrl(IMAGEN[kind])} alt="" width="72" height="63" />
+      <img src={artUrl(IMAGEN[kind])} alt="" width="72" height="68" style="object-fit: contain" />
       <div class="datos">
         {#if ok}
           <strong>{$t(`enemigos.${kind}.nombre`)}</strong>
@@ -64,7 +67,7 @@
           <div class="stats">
             <span><Icon name="vida" size={20} /> <span class="cifra">{def.vida}</span></span>
             <span><Icon name="velocidad" size={20} /> {$t(`glosario.${rapidez(def.velocidad)}`)}</span>
-            <span><Icon name="ataque" size={20} /> {def.ataque > 0 ? $t('glosario.ataca', { n: def.ataque }) : $t('glosario.noAtaca')}</span>
+            <span><Icon name="ataque" size={20} /> {def.ataque > 0 ? $t(def.marcha ? 'glosario.golpea' : 'glosario.ataca', { n: def.ataque }) : $t('glosario.noAtaca')}</span>
           </div>
           <div class="efectos">
             <span class="etiqueta">{$t('glosario.debil')}</span>
@@ -81,28 +84,33 @@
       </div>
     </article>
   {/each}
+  {/each}
 
   <h3>{$t('glosario.jefes')}</h3>
-  {#each JEFES as kind (kind)}
+  {#each JEFES_KINDS as kind (kind)}
     {@const def = ENEMIES[kind]}
     {@const ok = visto(kind)}
     <article class="enemigo jefe" class:oculto={!ok} data-testid="enemigo-{kind}">
-      <img src={artUrl(IMAGEN[kind])} alt="" width="80" height="86" />
+      <img src={artUrl(IMAGEN[kind])} alt="" width="80" height="80" style="object-fit: contain" />
       <div class="datos">
         {#if ok}
           <strong>{$t(`enemigos.${kind}.nombre`)} <small class="muted">{$t('hud.nivel', { n: DESDE[kind] })}</small></strong>
           <span class="texto">{$t(`enemigos.${kind}.texto`)}</span>
           <div class="stats">
             <span><Icon name="vida" size={20} /> <span class="cifra">{levelConfig(DESDE[kind]).jefe?.vida ?? 0}</span></span>
-            <span><Icon name="velocidad" size={20} /> {$t('glosario.brinca')}</span>
-            <span><Icon name="ataque" size={20} /> {$t('glosario.ataca', { n: JEFE.golpe })}</span>
+            <span><Icon name="velocidad" size={20} /> {$t(JEFES[kind]?.mueve === 'embestida' ? 'glosario.embiste' : 'glosario.brinca')}</span>
+            <span><Icon name="ataque" size={20} /> {$t('glosario.ataca', { n: JEFES[kind]?.golpe ?? 0 })}</span>
           </div>
           <ul class="mecanicas">
-            {#each ['invoca', 'esquiva', 'aturdido', 'furia'] as m (m)}<li>{$t(`glosario.mecanicas.${m}`)}</li>{/each}
+            {#each MECANICAS[kind] ?? [] as m (m)}<li>{$t(`glosario.mecanicas.${m}`)}</li>{/each}
           </ul>
           <div class="efectos">
             <span class="etiqueta">{$t('glosario.debil')}</span>
             {#each def.debil as tipo (tipo)}<span class="chip debil"><Icon name="tipo_{tipo}" size={20} />×{EFFECTIVENESS.debil}</span>{:else}<span class="nada">—</span>{/each}
+          </div>
+          <div class="efectos">
+            <span class="etiqueta">{$t('glosario.fuerte')}</span>
+            {#each def.fuerte as tipo (tipo)}<span class="chip fuerte"><Icon name="tipo_{tipo}" size={20} />×{EFFECTIVENESS.fuerte}</span>{:else}<span class="nada">—</span>{/each}
           </div>
         {:else}
           <strong>???</strong>
@@ -147,6 +155,11 @@
     align-items: center;
     gap: 8px;
     margin: 0;
+  }
+  h4 {
+    margin: 2px 0 0;
+    color: #3a8f53;
+    font-size: 14px;
   }
   h3 {
     margin: 4px 0 0;

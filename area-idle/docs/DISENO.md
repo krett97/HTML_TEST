@@ -1,6 +1,6 @@
 # Campo de Slimes: diseño del prototipo
 
-> Versión 0.4.0. Nombre provisional. Nació de pausar el juego del gato
+> Versión 0.5.0. Nombre provisional. Nació de pausar el juego del gato
 > ([`../../gato-idle/docs/DECISIONES.md`](../../gato-idle/docs/DECISIONES.md)), tomando su base técnica y su
 > arte en código ([`../../REUSO.md`](../../REUSO.md)). Referencia de sensación: *Don't Stop The Pop!*
 > (cientos de cosas reventando en un área) y el idle del castor (rocas que caen, mundo que cambia por fase).
@@ -93,7 +93,7 @@ estabas" dice cuánto tiempo pasó y cuánto oro se juntó, con un botón para c
   el de los slimes, el premio por nivel y lo que se junta sin jugar.
 - En el árbol, junto al oro, una píldora dice cuánto se gana por minuto sin jugar.
 - El juego guarda la hora en cada guardado (también cada 20 s y al pasar a segundo plano). El modo
-  pruebas tiene "Simular 1 h fuera".
+  pruebas tiene "Simular 1 h fuera", "+1 nivel" y "+1 min por partida" (y en la partida, "+1m" junto a ⏭).
 
 ## 5c. Jefes (desde 0.4.0)
 
@@ -122,6 +122,32 @@ nivel 10) con sus mecánicas. Es débil al fuego: el mago le hace ×1.5.
 El bot pierde el primer intento contra el Rey (le deja ~40 %), junta oro en el nivel 9 y lo vence al
 segundo con un segundo de margen.
 
+## 5d. Segunda zona: Campo de batalla (desde 0.5.0)
+
+Después del Rey Slime (niveles 11–20, y los siguientes hasta que haya una tercera zona) sigue siendo un
+campo verde, pero en lugar de arbustos y flores hay **espadas, tablas y escudos tirados**, y en lugar de
+slimes salen:
+
+| Enemigo | Desde | Vida | Velocidad | Ataca | Débil a | Fuerte contra | Oro |
+|---|---|---|---|---|---|---|---|
+| Goblin (verde, con lanzas) | 11 | 4 | Normal | Lanzas a la muralla (2 cada 4 s) | Fuego | — | 1.5 |
+| Lobo | 11 | 3 | Rapidísima, cambia de rumbo a cada rato | No | Físico | — | 1 |
+| Orco (casco y garrote) | 13 | 12 | Lenta | Camina hasta la muralla y la golpea (4 cada 2.5 s) | Fuego | Físico | 6 |
+| Orco arquero (el más fuerte) | 15 | 9 | Lenta | Flechas a la muralla (4 cada 3 s) | Fuego | Físico | 8 |
+
+Los lobos son el 22 % de cada nivel; los orcos, del 8 % al 20 %; los arqueros orcos, del 5 % al 12 %; el
+resto, goblins. Aquí el **mago** (fuego) y **Muralla reforzada** importan de verdad: los orcos resisten
+las flechas y casi todos le pegan a la muralla.
+
+**El Lobo Blanco** (jefe del nivel 20): enorme, blanco, con ojos rojos y una **hoz en el hocico**. En vez
+de brincar **embiste** por el piso rapidísimo (deja una estela de polvo) y se queda **jadeando** 1.2 s
+(recibe ×2); **aúlla** para llamar lobos; **avienta su hoz** girando contra la muralla (14 de daño); esquiva
+tu círculo más rápido que el Rey (32 u/s) y a media vida se enfurece. Débil al fuego, fuerte contra el
+hielo. Cada jefe tiene sus números en `JEFES` (`datos.ts`); en los niveles 30, 40… se alternan.
+
+El simulador llega al nivel 20 hacia el minuto 27 (la primera zona se pasa hacia el 9): la segunda
+zona es un salto claro de dificultad, sobre todo por la muralla.
+
 ## 6. Ritmo (`npm run simular`)
 
 Un bot que toca donde hay más slimes cada segundo (los rojos cuentan por cuatro: los busca primero),
@@ -141,7 +167,7 @@ unas 30 partidas de 45 minutos y ahí sirve Muralla reforzada. (El bot no cobra 
 
 ## 7. Técnica
 
-- `src/core/` es lógica pura y probada (45 pruebas): `run.ts` (la partida paso a paso; devuelve eventos),
+- `src/core/` es lógica pura y probada (50 pruebas): `run.ts` (la partida paso a paso; devuelve eventos),
   `stats.ts` (estadísticas desde los talentos), `meta.ts` (oro, árbol, guardado), `datos.ts`, `bot.ts`.
 - `src/game/Campo.ts` (Phaser 4) solo dibuja los eventos: sprites reciclados para cientos de slimes,
   números de daño con una **fuente de mapa de bits** hecha al arrancar (`numeros.ts`), partículas, flechas

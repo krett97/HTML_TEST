@@ -134,7 +134,9 @@
     "oro": "+{n} oro",
     "terminar": "Terminar partida",
     "masNivel": "+1 nivel",
-    "simular": "Simular 1 h fuera"
+    "simular": "Simular 1 h fuera",
+    "masMinuto": "+1 min por partida",
+    "minutosExtra": "Tiempo extra en cada partida: {n} min"
   },
   "secciones": {
     "jugador": "Jugador",
@@ -165,8 +167,13 @@
       "invoca": "Invoca slimes a su alrededor.",
       "esquiva": "Camina para salirse de tu círculo y brinca a otro lado.",
       "aturdido": "Al caer de un brinco queda aturdido: recibe doble daño.",
-      "furia": "A media vida se enfurece: todo más seguido."
-    }
+      "furia": "A media vida se enfurece: todo más seguido.",
+      "aulla": "Aúlla para llamar lobos.",
+      "embiste": "Embiste rapidísimo a otro lado y se queda jadeando: recibe doble daño.",
+      "hoz": "Avienta su hoz girando contra la muralla."
+    },
+    "golpea": "{n} a la muralla, de cerca",
+    "embiste": "Embiste y esquiva"
   },
   "tipos": {
     "fisico": "Físico",
@@ -192,10 +199,31 @@
     "rey": {
       "nombre": "Rey Slime",
       "texto": "El primer jefe, en el nivel 10. Gigante, naranja y con corona."
+    },
+    "goblin": {
+      "nombre": "Goblin",
+      "texto": "Verde y con lanzas: se las arroja a la muralla."
+    },
+    "lobo": {
+      "nombre": "Lobo",
+      "texto": "Rapidísimo; cambia de rumbo a cada rato. No ataca, pero cuesta atinarle."
+    },
+    "orco": {
+      "nombre": "Orco",
+      "texto": "Lento y con armadura: camina hasta la muralla y la golpea con su garrote."
+    },
+    "orcoArquero": {
+      "nombre": "Orco arquero",
+      "texto": "El más fuerte del campo de batalla: flechas a la muralla desde lejos."
+    },
+    "loboBlanco": {
+      "nombre": "Lobo Blanco",
+      "texto": "El jefe del nivel 20: enorme, blanco y con una hoz en el hocico."
     }
   },
   "zonas": {
-    "campo": "Campo verde"
+    "campo": "Campo verde",
+    "batalla": "Campo de batalla"
   },
   "inactivo": {
     "titulo": "Mientras no estabas",

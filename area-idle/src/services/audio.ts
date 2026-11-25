@@ -1,9 +1,9 @@
 // Sonidos sintetizados con Web Audio (sin archivos), como en el juego del gato: cada sonido es una
 // receta de osciladores y ruido. Con cientos de slimes reventando, cada sonido tiene un tope de
 // veces por segundo para no saturar.
-export type SoundId = 'pop' | 'popGrande' | 'disparo' | 'magia' | 'fuego' | 'arco' | 'resortera' | 'brinco' | 'aturde' | 'invoca' | 'lanza' | 'furia' | 'jefeCae' | 'golpeMuro' | 'derrumbe' | 'compra' | 'fin' | 'pierde' | 'aparece' | 'error';
+export type SoundId = 'pop' | 'popGrande' | 'disparo' | 'magia' | 'fuego' | 'arco' | 'resortera' | 'brinco' | 'embiste' | 'aullido' | 'aturde' | 'invoca' | 'lanza' | 'furia' | 'jefeCae' | 'golpeMuro' | 'derrumbe' | 'compra' | 'fin' | 'pierde' | 'aparece' | 'error';
 
-const MIN_GAP: Record<SoundId, number> = { pop: 0.035, popGrande: 0.06, disparo: 0.05, magia: 0.08, fuego: 0.25, arco: 0.07, resortera: 0.12, brinco: 0, aturde: 0, invoca: 0, lanza: 0, furia: 0, jefeCae: 0, golpeMuro: 0.08, derrumbe: 0, pierde: 0, aparece: 0.09, compra: 0, fin: 0, error: 0 };
+const MIN_GAP: Record<SoundId, number> = { pop: 0.035, popGrande: 0.06, disparo: 0.05, magia: 0.08, fuego: 0.25, arco: 0.07, resortera: 0.12, brinco: 0, embiste: 0, aullido: 0, aturde: 0, invoca: 0, lanza: 0, furia: 0, jefeCae: 0, golpeMuro: 0.08, derrumbe: 0, pierde: 0, aparece: 0.09, compra: 0, fin: 0, error: 0 };
 
 export class AudioEngine {
   private ctx: AudioContext | null = null;
@@ -115,6 +115,15 @@ export class AudioEngine {
       case 'brinco':
         // "Boing" grave del jefe al saltar.
         this.tone('sine', 120, 320, 0, 0.25, 0.25);
+        break;
+      case 'embiste':
+        this.noise('bandpass', 500, 0, 0.35, 0.2);
+        this.tone('sawtooth', 90, 60, 0, 0.3, 0.08);
+        break;
+      case 'aullido':
+        // "Auuu": sube y baja.
+        this.tone('sine', 380, 620, 0, 0.35, 0.12);
+        this.tone('sine', 620, 420, 0.35, 0.5, 0.12);
         break;
       case 'aturde':
         this.tone('sine', 90, 40, 0, 0.3, 0.35);

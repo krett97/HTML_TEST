@@ -1,7 +1,7 @@
 // Una partida: el campo, los enemigos que aparecen y pasean, tu círculo donde caen flechas, el mago
 // con sus explosiones de fuego cuadradas y los arqueros que tiran a un objetivo a la vez. Lógica pura: la escena
 // llama a stepRun cada cuadro (a través del controlador) y dibuja los eventos.
-import { damageMultiplier, effectiveness, ENEMIES, JEFE, levelConfig, LLEGADA, MAX_VIVOS, PRIMERA_OLA, type DamageType, type EnemyKind, type LevelConfig } from './datos';
+import { damageMultiplier, effectiveness, ENEMIES, JEFE, JEFES, levelConfig, LLEGADA, MAX_VIVOS, PRIMERA_OLA, type BossDef, type DamageType, type EnemyKind, type LevelConfig, type ProjectileKind } from './datos';
 import { between, createRng, type Rng } from './rng';
 import type { Stats } from './stats';
 
@@ -39,8 +39,8 @@ export interface Enemy {
 /** Una piedra de resortera en el aire, de un slime rojo a la muralla. */
 export interface Pebble {
   id: number;
-  /** La bola de baba del jefe (más grande). */
-  grande?: boolean;
+  /** Qué es: piedra, lanza, flecha, baba del Rey u hoz del Lobo (cambia cómo se ve y qué tan rápido vuela). */
+  tipo: ProjectileKind;
   sx: number;
   sy: number;
   x: number;
@@ -50,8 +50,8 @@ export interface Pebble {
   danio: number;
 }
 
-/** Velocidad de las piedras (unidades por segundo). */
-const PEBBLE_SPEED = 170;
+/** Velocidad de lo que vuela hacia la muralla (unidades por segundo). */
+const PROJECTILE_SPEED: Record<ProjectileKind, number> = { piedra: 170, lanza: 200, flecha: 260, baba: 170, hoz: 150 };
 
 export type Forma = { tipo: 'circulo'; r: number } | { tipo: 'rect'; w: number; h: number };
 
@@ -99,7 +99,8 @@ export type RunEvent =
   | { type: 'kill'; id: number; kind: EnemyKind; x: number; y: number; oro: number; danio: number; fuente: Source }
   | { type: 'fire'; x: number; y: number; w: number; h: number; duracion: number }
   | { type: 'volley'; arquero: number }
-  | { type: 'sling'; id: number; x: number; y: number }
+  /** Un enemigo ataca la muralla: tira algo (`tipo`) o, de cerca (los orcos), la golpea. */
+  | { type: 'sling'; id: number; x: number; y: number; tipo: ProjectileKind | 'golpe' }
   | { type: 'wallHit'; x: number; y: number; danio: number; vida: number; max: number }
   | { type: 'wallDown' }
   /** El jefe brinca a otro lado (llega en `dura` s), cae aturdido, invoca slimes, lanza baba o se enfurece. */
@@ -119,7 +120,7 @@ export interface Run {
   /** Cuántos slimes del nivel ya salieron. */
   salieron: number;
   /** El jefe del nivel (si es nivel de jefe): cuándo invoca, brinca y lanza otra vez, si va en el aire, si está aturdido y si ya se enfureció. */
-  jefe: { id: number; invoca: number; brinco: number; lanza: number; salto: { tx: number; ty: number; falta: number } | null; aturdido: number; furia: boolean } | null;
+  jefe: { id: number; def: BossDef; invoca: number; brinco: number; lanza: number; salto: { tx: number; ty: number; falta: number } | null; aturdido: number; furia: boolean } | null;
   gano: boolean;
   w: number;
   h: number;
@@ -202,9 +203,10 @@ export function startRun(run: Run): RunEvent[] {
     const { kind, vida } = run.nivel.jefe;
     const boss: Enemy = { id: run.nextId++, kind, x: run.w / 2, y: run.arriba + (bottom(run) - run.arriba) * 0.3, vx: 0, vy: 0, vida, vidaMax: vida, giro: Infinity };
     run.enemies.push(boss);
-    run.jefe = { id: boss.id, invoca: JEFE.invoca, brinco: JEFE.brinco, lanza: JEFE.lanza * 0.6, salto: null, aturdido: 0, furia: false };
+    const def = JEFES[kind]!;
+    run.jefe = { id: boss.id, def, invoca: def.invoca, brinco: def.cada, lanza: def.lanza * 0.6, salto: null, aturdido: 0, furia: false };
     events.push({ type: 'spawn', id: boss.id, kind, x: boss.x, y: boss.y });
-    for (let i = 0; i < JEFE.inicial; i++) spawnNear(run, boss, events);
+    for (let i = 0; i < def.inicial; i++) spawnNear(run, boss, events);
     return events;
   }
   const primeros = Math.ceil(run.nivel.total * PRIMERA_OLA);
@@ -212,25 +214,26 @@ export function startRun(run: Run): RunEvent[] {
   return events;
 }
 
-/** Un slime verde de escolta junto al jefe. */
+/** Uno de la escolta del jefe (slime verde del Rey, lobo del Lobo Blanco), junto a él. */
 function spawnNear(run: Run, boss: Enemy, events: RunEvent[]): void {
-  const def = ENEMIES.verde;
+  const kind = run.jefe?.def.escolta ?? 'verde';
+  const def = ENEMIES[kind];
   const a = run.rng() * Math.PI * 2;
   const d = ENEMIES[boss.kind].radio + between(run.rng, 10, 30);
   const vida = def.vida * run.nivel.vida;
   const e: Enemy = {
     id: run.nextId++,
-    kind: 'verde',
+    kind,
     x: Math.min(run.w - MARGIN, Math.max(MARGIN, boss.x + Math.cos(a) * d)),
     y: Math.min(bottom(run), Math.max(run.arriba, boss.y + Math.sin(a) * d)),
     vx: Math.cos(a) * def.velocidad,
     vy: Math.sin(a) * def.velocidad,
     vida,
     vidaMax: vida,
-    giro: between(run.rng, 1, 3),
+    giro: between(run.rng, ...(def.giro ?? [1, 3])),
   };
   run.enemies.push(e);
-  events.push({ type: 'spawn', id: e.id, kind: 'verde', x: e.x, y: e.y });
+  events.push({ type: 'spawn', id: e.id, kind, x: e.x, y: e.y });
 }
 
 /** El jefe del nivel (vivo), o undefined. */
@@ -247,8 +250,16 @@ export function moveCursor(run: Run, x: number, y: number): void {
 const bottom = (run: Run) => run.h - ALLY_ROW - MARGIN;
 
 function spawn(run: Run, events: RunEvent[]): void {
-  const r = run.rng();
-  const kind: EnemyKind = r < run.nivel.azules ? 'azul' : r < run.nivel.azules + run.nivel.rojos ? 'rojo' : 'verde';
+  // Se sortea quién sale según la mezcla del nivel.
+  let r = run.rng();
+  let kind: EnemyKind = run.nivel.mezcla.at(-1)?.[0] ?? 'verde';
+  for (const [k, p] of run.nivel.mezcla) {
+    if (r < p) {
+      kind = k;
+      break;
+    }
+    r -= p;
+  }
   const def = ENEMIES[kind];
   const vida = def.vida * run.nivel.vida;
   run.salieron++;
@@ -258,11 +269,12 @@ function spawn(run: Run, events: RunEvent[]): void {
     kind,
     x: between(run.rng, MARGIN, run.w - MARGIN),
     y: between(run.rng, run.arriba, bottom(run)),
-    vx: Math.cos(angle) * def.velocidad,
-    vy: Math.sin(angle) * def.velocidad,
+    // Los que marchan (orcos) van directo hacia la muralla.
+    vx: def.marcha ? 0 : Math.cos(angle) * def.velocidad,
+    vy: def.marcha ? def.velocidad : Math.sin(angle) * def.velocidad,
     vida,
     vidaMax: vida,
-    giro: between(run.rng, 1, 3),
+    giro: between(run.rng, ...(def.giro ?? [1, 3])),
     ...(def.tiro ? { tiro: def.tiro * between(run.rng, 0.6, 1.1) } : {}),
   };
   run.enemies.push(enemy);
@@ -310,6 +322,17 @@ function pickTargets(run: Run, n: number): Enemy[] {
   return out;
 }
 
+/** Le pega a la muralla; si se queda sin vida, cae (y el mago y los arqueros dejan de atacar). */
+function hitWall(run: Run, x: number, y: number, danio: number, events: RunEvent[]): void {
+  if (run.muro.caido) return;
+  run.muro.vida = Math.max(0, run.muro.vida - danio);
+  events.push({ type: 'wallHit', x, y, danio, vida: run.muro.vida, max: run.muro.max });
+  if (run.muro.vida <= 0) {
+    run.muro.caido = true;
+    events.push({ type: 'wallDown' });
+  }
+}
+
 /** Avanza la partida `dt` segundos. */
 export function stepRun(run: Run, dt: number): RunEvent[] {
   const events: RunEvent[] = [];
@@ -321,13 +344,27 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
   // Pasean: cambian de rumbo de vez en cuando y rebotan en las orillas.
   for (const e of run.enemies) {
     if (run.jefe && e.id === run.jefe.id) continue;
+    const def = ENEMIES[e.kind];
+    if (def.marcha) {
+      // Marchan hacia la muralla (bamboleándose un poco) y al llegar se quedan golpeándola.
+      if (e.y >= bottom(run)) {
+        e.vx = 0;
+        e.vy = 0;
+      } else {
+        e.vy = def.velocidad;
+        e.vx = Math.sin(run.t * 2 + e.id) * def.velocidad * 0.4;
+      }
+      e.x = Math.min(run.w - MARGIN, Math.max(MARGIN, e.x + e.vx * step));
+      e.y = Math.min(bottom(run), e.y + e.vy * step);
+      continue;
+    }
     e.giro -= step;
     if (e.giro <= 0) {
-      const speed = ENEMIES[e.kind].velocidad * between(run.rng, 0.5, 1.4);
+      const speed = def.velocidad * between(run.rng, 0.5, 1.4);
       const angle = run.rng() * Math.PI * 2;
       e.vx = Math.cos(angle) * speed;
       e.vy = Math.sin(angle) * speed;
-      e.giro = between(run.rng, 1, 3);
+      e.giro = between(run.rng, ...(def.giro ?? [1, 3]));
     }
     e.x += e.vx * step;
     e.y += e.vy * step;
@@ -346,31 +383,33 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
       events.push({ type: 'bossRage', id: boss.id });
     }
     const ritmo = j.furia ? JEFE.furia : 1;
+    const jd = j.def;
     j.aturdido = Math.max(0, j.aturdido - step);
     j.invoca -= step;
     if (j.invoca <= 0) {
-      j.invoca += JEFE.invoca * ritmo;
+      j.invoca += jd.invoca * ritmo;
       events.push({ type: 'bossSummon', id: boss.id, x: boss.x, y: boss.y });
-      const cuantos = JEFE.escolta + (j.furia ? 1 : 0);
+      const cuantos = jd.escoltaN + (j.furia ? 1 : 0);
       for (let i = 0; i < cuantos && run.enemies.length < MAX_VIVOS; i++) spawnNear(run, boss, events);
     }
     j.lanza -= step;
     if (j.lanza <= 0 && !j.salto) {
-      j.lanza += JEFE.lanza * ritmo;
+      j.lanza += jd.lanza * ritmo;
       if (!run.muro.caido) {
         const tx = between(run.rng, 12, run.w - 12);
-        run.piedras.push({ id: run.nextId++, grande: true, sx: boss.x, sy: boss.y - 20, x: boss.x, y: boss.y - 20, tx, ty: run.h - ALLY_ROW + 14, danio: JEFE.golpe * run.nivel.ataque });
+        run.piedras.push({ id: run.nextId++, tipo: jd.proyectil, sx: boss.x, sy: boss.y - 20, x: boss.x, y: boss.y - 20, tx, ty: run.h - ALLY_ROW + 14, danio: jd.golpe * run.nivel.ataque });
         events.push({ type: 'bossThrow', id: boss.id, x: boss.x, y: boss.y });
       }
     }
     j.brinco -= step;
     if (j.brinco <= 0 && !j.salto) {
-      j.brinco += JEFE.brinco * ritmo;
+      j.brinco += jd.cada * ritmo;
       const r = ENEMIES[boss.kind].radio;
       const tx = between(run.rng, r + MARGIN, run.w - r - MARGIN);
       const ty = between(run.rng, run.arriba + r * 0.5, bottom(run) - r * 0.5);
-      j.salto = { tx, ty, falta: 0.5 };
-      events.push({ type: 'bossJump', id: boss.id, x: boss.x, y: boss.y, tx, ty, dura: 0.5 });
+      // El Rey brinca en arco; el Lobo embiste por el piso (la escena lo dibuja distinto).
+      j.salto = { tx, ty, falta: jd.dura };
+      events.push({ type: 'bossJump', id: boss.id, x: boss.x, y: boss.y, tx, ty, dura: jd.dura });
     }
     // Esquiva tu círculo: si lo tiene cerca, camina alejándose (en furia, más rápido). Aturdido no se mueve.
     if (!j.salto && j.aturdido <= 0) {
@@ -378,11 +417,11 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
       const dx = boss.x - run.cursor.x;
       const dy = boss.y - run.cursor.y;
       const d = Math.hypot(dx, dy);
-      if (d < s.radio + r + JEFE.alerta) {
-        const v = JEFE.esquiva * (j.furia ? 1.4 : 1) * step;
+      if (d < s.radio + r + jd.alerta) {
+        const v = jd.esquiva * (j.furia ? 1.4 : 1) * step;
         const ang = d > 0.01 ? Math.atan2(dy, dx) : run.rng() * Math.PI * 2;
-        boss.vx = Math.cos(ang) * JEFE.esquiva;
-        boss.vy = Math.sin(ang) * JEFE.esquiva;
+        boss.vx = Math.cos(ang) * jd.esquiva;
+        boss.vy = Math.sin(ang) * jd.esquiva;
         // Contra la orilla se desliza por ella (se recorta cada eje por separado).
         boss.x = Math.min(run.w - r, Math.max(r, boss.x + Math.cos(ang) * v));
         boss.y = Math.min(bottom(run) - r * 0.3, Math.max(run.arriba + r * 0.5, boss.y + Math.sin(ang) * v));
@@ -397,10 +436,10 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
       boss.y += (j.salto.ty - boss.y) * k;
       j.salto.falta -= step;
       if (j.salto.falta <= 0) {
-        // Cae de golpe y queda aturdido un momento: es cuando más le duele.
+        // Cae de golpe (o se frena jadeando) y queda aturdido un momento: es cuando más le duele.
         j.salto = null;
-        j.aturdido = JEFE.aturdido;
-        events.push({ type: 'bossStun', id: boss.id, x: boss.x, y: boss.y, dura: JEFE.aturdido });
+        j.aturdido = jd.aturdido;
+        events.push({ type: 'bossStun', id: boss.id, x: boss.x, y: boss.y, dura: jd.aturdido });
       }
     }
   } else if (!run.jefe) {
@@ -424,23 +463,31 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
   }
 
   // El mago lanza una bola de fuego a donde haya alguien: revienta en un cuadrado.
-  // Los rojos le tiran piedras a la muralla.
+  // Los que atacan la muralla: los de lejos le tiran algo (piedras, lanzas, flechas); los orcos, ya
+  // pegados a ella, la golpean.
   for (const e of run.enemies) {
     if (e.tiro === undefined || e.vida <= 0 || run.muro.caido) continue;
+    const def = ENEMIES[e.kind];
+    if (def.marcha && e.y < bottom(run)) continue;
     e.tiro -= step;
     if (e.tiro > 0) continue;
-    const def = ENEMIES[e.kind];
     e.tiro += (def.tiro ?? 3) * between(run.rng, 0.8, 1.2);
-    const tx = between(run.rng, 12, run.w - 12);
+    const danio = def.ataque * run.nivel.ataque;
     const ty = run.h - ALLY_ROW + 14;
-    run.piedras.push({ id: run.nextId++, sx: e.x, sy: e.y - 8, x: e.x, y: e.y - 8, tx, ty, danio: def.ataque * run.nivel.ataque });
-    events.push({ type: 'sling', id: e.id, x: e.x, y: e.y });
+    if (def.marcha) {
+      events.push({ type: 'sling', id: e.id, x: e.x, y: e.y, tipo: 'golpe' });
+      hitWall(run, e.x, ty, danio, events);
+      continue;
+    }
+    const tipo = def.proyectil ?? 'piedra';
+    run.piedras.push({ id: run.nextId++, tipo, sx: e.x, sy: e.y - 8, x: e.x, y: e.y - 8, tx: between(run.rng, 12, run.w - 12), ty, danio });
+    events.push({ type: 'sling', id: e.id, x: e.x, y: e.y, tipo });
   }
   for (const p of run.piedras) {
     const dx = p.tx - p.x;
     const dy = p.ty - p.y;
     const d = Math.hypot(dx, dy);
-    const paso = PEBBLE_SPEED * step;
+    const paso = PROJECTILE_SPEED[p.tipo] * step;
     if (d > paso) {
       p.x += (dx / d) * paso;
       p.y += (dy / d) * paso;
@@ -449,13 +496,7 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
     p.x = p.tx;
     p.y = p.ty;
     p.id = -1;
-    if (run.muro.caido) continue;
-    run.muro.vida = Math.max(0, run.muro.vida - p.danio);
-    events.push({ type: 'wallHit', x: p.tx, y: p.ty, danio: p.danio, vida: run.muro.vida, max: run.muro.max });
-    if (run.muro.vida <= 0) {
-      run.muro.caido = true;
-      events.push({ type: 'wallDown' });
-    }
+    hitWall(run, p.tx, p.ty, p.danio, events);
   }
   run.piedras = run.piedras.filter((p) => p.id !== -1);
 

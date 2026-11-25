@@ -134,7 +134,9 @@
     "oro": "+{n} gold",
     "terminar": "End round",
     "masNivel": "+1 level",
-    "simular": "Simulate 1 h away"
+    "simular": "Simulate 1 h away",
+    "masMinuto": "+1 min per round",
+    "minutosExtra": "Extra time each round: {n} min"
   },
   "secciones": {
     "jugador": "Player",
@@ -165,8 +167,13 @@
       "invoca": "Summons slimes around it.",
       "esquiva": "Walks out of your circle and jumps elsewhere.",
       "aturdido": "Stunned after landing: takes double damage.",
-      "furia": "At half health it rages: everything faster."
-    }
+      "furia": "At half health it rages: everything faster.",
+      "aulla": "Howls to call wolves.",
+      "embiste": "Charges across the field and pants afterwards: takes double damage.",
+      "hoz": "Hurls its spinning scythe at your wall."
+    },
+    "golpea": "{n} to the wall, up close",
+    "embiste": "Charges and dodges"
   },
   "tipos": {
     "fisico": "Physical",
@@ -192,10 +199,31 @@
     "rey": {
       "nombre": "King Slime",
       "texto": "The first boss, at level 10. Huge, orange and crowned."
+    },
+    "goblin": {
+      "nombre": "Goblin",
+      "texto": "Green and armed with spears: throws them at your wall."
+    },
+    "lobo": {
+      "nombre": "Wolf",
+      "texto": "Super fast and keeps changing direction. Harmless, but hard to hit."
+    },
+    "orco": {
+      "nombre": "Orc",
+      "texto": "Slow and armored: walks up to the wall and clubs it."
+    },
+    "orcoArquero": {
+      "nombre": "Orc archer",
+      "texto": "The toughest on the battlefield: shoots your wall from afar."
+    },
+    "loboBlanco": {
+      "nombre": "White Wolf",
+      "texto": "The level 20 boss: huge, white, with a scythe in its jaws."
     }
   },
   "zonas": {
-    "campo": "Green field"
+    "campo": "Green field",
+    "batalla": "Battlefield"
   },
   "inactivo": {
     "titulo": "While you were away",

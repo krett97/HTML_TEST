@@ -51,6 +51,70 @@ scene('slime_azul', slime(P.agua, P.aguaS, P.aguaC, { enojado: true, casco: true
   scene('jefe_rey', svg(200, 214, s));
 }
 
+// ---- Segunda zona: el campo de batalla ----
+const GOB = { piel: '#7cc35a', pielS: '#5a9b3e', ropa: '#9b6a3c', ropaS: '#7a4f2a' };
+const ORC = { piel: '#8aa070', pielS: '#677d52', metal: '#b9bfcc', metalS: '#8d93a6', cuero: '#8a5a34' };
+const LOBO = { pelo: '#9aa0ad', peloS: '#6d7383', peloC: '#d5d9e2' };
+const BLANCO = { pelo: '#f4f6fb', peloS: '#c5cbd8', peloC: '#ffffff' };
+const lanzaVertical = (x, y0, y1) => line(`M${x} ${y0} V${y1}`, K, 7) + line(`M${x} ${y0} V${y1}`, P.maderaS, 3.5) + o(`M${x - 6} ${y0 + 2} L${x} ${y0 - 14} L${x + 6} ${y0 + 2} Z`, '#dfe5ee', 4);
+const cejas = (cx, cy, sep) => line(`M${cx - sep - 8} ${cy - 9} l10 5 M${cx + sep + 8} ${cy - 9} l-10 5`, K, 4);
+
+// Goblin verde con lanza (96 × 104): orejas puntiagudas, ojos amarillos y sonrisa con dientes.
+{
+  let s = lanzaVertical(80, 18, 100);
+  s += o('M28 70 C26 82 24 94 24 100 H70 C70 94 68 82 66 70 Z', GOB.ropa, 5) + f('M47 72 V100 H56 C55 90 54 80 53 72 Z', GOB.ropaS);
+  s += o('M64 74 C72 72 76 70 80 66 l4 6 C80 78 72 82 66 84 Z', GOB.piel, 4);
+  s += o('M10 34 L28 40 L24 50 Z', GOB.piel, 4) + o('M86 34 L68 40 L72 50 Z', GOB.piel, 4);
+  s += circ(48, 46, 24, GOB.piel, 6) + f('M30 58 C36 68 60 68 66 58 C60 64 36 64 30 58 Z', GOB.pielS);
+  for (const x of [38, 58]) s += ell(x, 44, 6.5, 6, P.amarillo, 3.5) + circ(x + 1, 45, 2.6, K, 0);
+  s += cejas(48, 44, 10);
+  s += o('M36 56 Q48 64 60 56 Q48 60 36 56 Z', '#4a2a2a', 3) + f('M42 57 l2 3 l2 -3 Z M50 57 l2 3 l2 -3 Z', P.blanco);
+  s += brillo(38, 30, 7, 4, 0.5);
+  scene('goblin', svg(96, 104, s));
+}
+// Lobo gris (112 × 84), de lado mirando a la derecha.
+function lobo(c, { hoz = false, enojado = false } = {}) {
+  let s = '';
+  s += o('M16 42 C4 34 2 20 8 12 C14 24 20 30 30 34 Z', c.pelo, 5);
+  for (const [x, y] of [[30, 58], [42, 60], [62, 60], [74, 58]]) s += rect(x, y, 9, 20, 4, c.peloS, 4);
+  s += ell(52, 48, 31, 18, c.pelo, 6) + f('M30 54 C40 64 66 64 78 52 C70 60 42 62 30 54 Z', c.peloS) + ell(70, 50, 10, 9, c.peloC, 0);
+  s += o('M74 22 L78 6 L86 20 Z M86 20 L94 6 L96 24 Z', c.pelo, 4);
+  s += circ(84, 34, 16, c.pelo, 6);
+  s += o('M92 30 C100 32 108 36 110 42 C106 48 98 48 90 46 Z', c.peloC, 5) + circ(108, 40, 3.4, K, 0);
+  s += line('M96 46 Q102 48 108 45', K, 3);
+  s += circ(86, 30, 3.4, enojado ? '#d8443a' : K, 0) + circ(87, 29, 1.2, P.blanco, 0);
+  if (enojado) s += line('M80 24 l10 3', K, 4);
+  if (hoz) {
+    // La hoz atravesada en el hocico: mango de madera y hoja curva plateada.
+    s += line('M70 46 L116 40', K, 8) + line('M70 46 L116 40', P.maderaS, 4);
+    s += o('M112 41 C128 46 136 62 128 80 C124 66 118 56 106 50 Z', '#dfe5ee', 4) + line('M127 74 C124 62 118 54 110 50', P.blanco, 2);
+  }
+  return s;
+}
+scene('lobo', svg(112, 84, lobo(LOBO)));
+scene('loboBlanco', svg(140, 96, g('translate(0 6)', lobo(BLANCO, { hoz: true, enojado: true }))));
+// Orco (112 × 112): verde grisáceo, colmillos, casco con cuernitos, peto de metal y garrote.
+function orco({ arco = false } = {}) {
+  let s = '';
+  if (arco) s += line('M90 22 C110 44 110 82 90 104', K, 9) + line('M90 22 C110 44 110 82 90 104', P.madera, 5) + line('M90 22 L90 104', P.blanco, 2);
+  else s += o('M84 40 C96 34 104 40 100 52 L84 92 L76 88 Z', P.maderaS, 5) + circ(96, 44, 3, K, 0) + circ(90, 54, 2.5, K, 0);
+  s += o('M24 66 C20 84 18 100 18 110 H92 C92 100 90 84 86 66 Z', arco ? ORC.cuero : ORC.metal, 6);
+  if (!arco) s += line('M24 80 H88 M28 94 H86', ORC.metalS, 3);
+  s += o('M78 70 C84 70 88 74 88 80 l-4 4 C84 78 82 76 76 76 Z', ORC.piel, 4);
+  s += circ(55, 44, 26, ORC.piel, 6) + f('M32 54 C40 70 70 70 78 54 C70 64 40 64 32 54 Z', ORC.pielS);
+  s += circ(45, 42, 3.4, '#d8443a', 0) + circ(65, 42, 3.4, '#d8443a', 0) + cejas(55, 42, 9);
+  s += o('M42 58 Q55 54 68 58', 'none', 4) + o('M44 58 l3 -9 l3 9 Z M62 58 l3 -9 l3 9 Z', P.blanco, 3);
+  if (arco) s += o('M28 36 C30 14 48 6 56 6 C66 6 82 14 82 36 C74 24 66 20 55 20 C44 20 36 24 28 36 Z', ORC.cuero, 5);
+  else s += o('M28 32 C30 16 42 10 55 10 C68 10 80 16 82 32 Z', ORC.metal, 5) + o('M30 24 L18 12 L30 18 Z M80 24 L92 12 L80 18 Z', P.crema, 4);
+  return s;
+}
+scene('orco', svg(112, 112, orco()));
+scene('orcoArquero', svg(112, 112, orco({ arco: true })));
+// Lo que hay tirado en el campo de batalla.
+scene('espada', svg(90, 30, g('rotate(-12 45 15)', o('M18 12 H74 L82 15 L74 18 H18 Z', '#dfe5ee', 4) + line('M22 15 H72', '#a9b3c4', 2) + rect(12, 6, 6, 18, 2, P.oroS, 3) + rect(2, 11, 12, 8, 3, P.maderaS, 3))));
+scene('tabla', svg(90, 34, g('rotate(8 45 17)', rect(4, 8, 82, 18, 4, P.madera, 4) + line('M10 14 H60 M24 20 H80', P.maderaS, 2) + circ(12, 17, 2, K, 0) + circ(78, 17, 2, K, 0))));
+scene('escudo', svg(54, 40, ell(27, 22, 24, 15, P.maderaS, 5) + ell(27, 22, 16, 9, P.madera, 0) + ell(27, 22, 5, 3, P.grisS, 3) + line('M8 22 H46', '#8a7f70', 3)));
+
 // ---- El mago (120 × 150): túnica y sombrero morados con estrellas, barba blanca, bastón con cristal ----
 {
   let s = '';

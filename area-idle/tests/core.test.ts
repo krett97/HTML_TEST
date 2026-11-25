@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { playAndShop } from '../src/core/bot';
 import { activeGoldPerMinute, idleGoldPerMinute, idleReward, idleUnlocked } from '../src/core/inactivo';
-import { isBossLevel, JEFE, INACTIVO, ROJO_DESDE, AZUL_DESDE, DAMAGE_TYPES, damageMultiplier, ENEMIES, levelConfig, PRIMERA_OLA, SECCIONES, TALENT_BY_ID, TALENTS } from '../src/core/datos';
+import { isBossLevel, JEFE, JEFES, bossFor, zoneOf, DESDE, INACTIVO, ROJO_DESDE, AZUL_DESDE, DAMAGE_TYPES, damageMultiplier, ENEMIES, levelConfig, PRIMERA_OLA, SECCIONES, TALENT_BY_ID, TALENTS } from '../src/core/datos';
 import { formatClock, formatNum } from '../src/core/format';
 import { buyTalent, chooseLevel, costOf, createMeta, finishRun, levelOf, loadMeta, talentState, talentVisible } from '../src/core/meta';
 import { ALLY_ROW, archerSpots, bossOf, createRun, DAMAGE_TYPE_OF, FIELD_W, moveCursor, startRun, stepRun, type Run, type RunEvent } from '../src/core/run';
@@ -222,7 +222,7 @@ describe('jefes', () => {
     const run = createRun(computeStats({}), 560, 10, 1);
     run.cursor = { x: -999, y: -999 };
     const inicio = startRun(run);
-    expect(inicio.filter((e) => e.type === 'spawn')).toHaveLength(1 + JEFE.inicial);
+    expect(inicio.filter((e) => e.type === 'spawn')).toHaveLength(1 + JEFES.rey!.inicial);
     const boss = bossOf(run)!;
     expect(boss.kind).toBe('rey');
     expect(boss.vida).toBe(levelConfig(10).jefe!.vida);
@@ -240,7 +240,7 @@ describe('jefes', () => {
     const events: RunEvent[] = [];
     for (let i = 0; i < 160; i++) events.push(...stepRun(run, 0.05));
     expect(events.some((e) => e.type === 'bossThrow')).toBe(true);
-    const golpe = events.find((e) => e.type === 'wallHit' && Math.abs(e.danio - JEFE.golpe * levelConfig(10).ataque) < 1e-9);
+    const golpe = events.find((e) => e.type === 'wallHit' && Math.abs(e.danio - JEFES.rey!.golpe * levelConfig(10).ataque) < 1e-9);
     expect(golpe).toBeDefined();
     const caida = events.find((e) => e.type === 'bossStun');
     expect(caida).toBeDefined();
@@ -265,6 +265,7 @@ describe('jefes', () => {
     startRun(run);
     run.enemies = run.enemies.filter((e) => e.kind === 'rey');
     run.jefe!.brinco = 99;
+    run.jefe!.def = { ...run.jefe!.def };
     run.jefe!.invoca = 99;
     run.jefe!.lanza = 99;
     const boss = bossOf(run)!;
@@ -300,6 +301,64 @@ describe('jefes', () => {
     expect(events.find((e) => e.type === 'end')).toEqual({ type: 'end', gano: true });
     expect(events.some((e) => e.type === 'kill' && e.kind === 'rey')).toBe(true);
     expect(run.enemies).toHaveLength(0);
+  });
+});
+
+describe('segunda zona: campo de batalla', () => {
+  it('del 11 al 20 cambia la zona y salen goblins, lobos, orcos y orcos arqueros', () => {
+    expect(zoneOf(10)).toBe('campo');
+    expect(zoneOf(11)).toBe('batalla');
+    const once = levelConfig(11).mezcla.map(([k]) => k);
+    expect(once).toEqual(expect.arrayContaining(['goblin', 'lobo']));
+    expect(once).not.toContain('verde');
+    expect(levelConfig(12).mezcla.map(([k]) => k)).not.toContain('orco');
+    expect(levelConfig(DESDE.orco).mezcla.map(([k]) => k)).toContain('orco');
+    expect(levelConfig(DESDE.orcoArquero).mezcla.map(([k]) => k)).toContain('orcoArquero');
+    for (const n of [1, 5, 11, 15, 19]) expect(levelConfig(n).mezcla.reduce((t, [, p]) => t + p, 0)).toBeCloseTo(1);
+  });
+  it('el jefe del 20 es el Lobo Blanco y llama lobos; los jefes se alternan', () => {
+    expect(bossFor(10)).toBe('rey');
+    expect(bossFor(20)).toBe('loboBlanco');
+    expect(bossFor(30)).toBe('rey');
+    const run = createRun(computeStats({}), 560, 20, 1);
+    const inicio = startRun(run);
+    expect(bossOf(run)!.kind).toBe('loboBlanco');
+    expect(inicio.filter((e) => e.type === 'spawn' && e.kind === 'lobo')).toHaveLength(JEFES.loboBlanco!.inicial);
+    run.cursor = { x: -999, y: -999 };
+    const events: RunEvent[] = [];
+    for (let i = 0; i < 120; i++) events.push(...stepRun(run, 0.05));
+    expect(events.some((e) => e.type === 'bossThrow')).toBe(true);
+    expect(events.some((e) => e.type === 'bossJump' && e.dura === JEFES.loboBlanco!.dura)).toBe(true);
+  });
+  it('los goblins lanzan lanzas y los orcos arqueros flechas a la muralla', () => {
+    const run = createRun(computeStats({}), 560, 15, 1);
+    run.stats = { ...run.stats, ritmo: 0 };
+    run.cursor = { x: -999, y: -999 };
+    run.enemies.push({ id: 700, kind: 'goblin', x: 100, y: 200, vx: 0, vy: 0, vida: 999, vidaMax: 999, giro: 99, tiro: 0.01 });
+    run.enemies.push({ id: 701, kind: 'orcoArquero', x: 250, y: 200, vx: 0, vy: 0, vida: 999, vidaMax: 999, giro: 99, tiro: 0.01 });
+    const events: RunEvent[] = [];
+    for (let i = 0; i < 5; i++) events.push(...stepRun(run, 0.05));
+    const tipos = events.filter((e) => e.type === 'sling').map((e) => (e.type === 'sling' ? e.tipo : ''));
+    expect(tipos).toEqual(expect.arrayContaining(['lanza', 'flecha']));
+    expect(run.piedras.map((p) => p.tipo).sort()).toEqual(['flecha', 'lanza']);
+  });
+  it('los orcos marchan hasta la muralla y la golpean de cerca', () => {
+    const run = createRun(computeStats({}), 560, 13, 1);
+    run.stats = { ...run.stats, ritmo: 0 };
+    run.cursor = { x: -999, y: -999 };
+    run.enemies.push({ id: 800, kind: 'orco', x: 180, y: 420, vx: 0, vy: ENEMIES.orco.velocidad, vida: 999, vidaMax: 999, giro: 99, tiro: 0.01 });
+    const events: RunEvent[] = [];
+    for (let i = 0; i < 400; i++) events.push(...stepRun(run, 0.1));
+    const orco = run.enemies.find((e) => e.id === 800)!;
+    expect(orco.y).toBeGreaterThan(560 - ALLY_ROW - 20);
+    expect(events.some((e) => e.type === 'sling' && e.tipo === 'golpe')).toBe(true);
+    expect(run.muro.vida).toBeLessThan(run.muro.max);
+  });
+  it('orcos y orcos arqueros resisten las flechas; el fuego les duele; los lobos son débiles a lo físico', () => {
+    expect(damageMultiplier('orco', 'fisico')).toBe(0.5);
+    expect(damageMultiplier('orcoArquero', 'fuego')).toBe(1.5);
+    expect(damageMultiplier('lobo', 'fisico')).toBe(1.5);
+    expect(damageMultiplier('loboBlanco', 'hielo')).toBe(0.5);
   });
 });
 

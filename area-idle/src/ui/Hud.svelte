@@ -35,7 +35,7 @@
       <span class="barra"><span class="lleno" style:width="{(100 * $view.restante) / $view.duracion}%"></span></span>
     </div>
     <div class="zona" data-testid="nivel-partida">
-      <small>{$t('zonas.campo')}{#if $view.jefe}<span class="es-jefe">&nbsp;· {$t('hud.jefe')}</span>{/if}</small>
+      <small>{$t(`zonas.${$view.zona}`)}{#if $view.jefe}<span class="es-jefe">&nbsp;· {$t('hud.jefe')}</span>{/if}</small>
       <strong>{$t('hud.nivel', { n: $view.nivel })}</strong>
     </div>
     <div class="pill oro" data-testid="oro-partida">
@@ -66,6 +66,7 @@
 {/if}
 {#if __PRUEBAS__}
   <button type="button" class="terminar" onclick={() => juego.endNow()} data-testid="terminar">⏭</button>
+  <button type="button" class="terminar mas-tiempo" onclick={() => juego.addMinute()} data-testid="mas-minuto">+1m</button>
 {/if}
 
 <style>
@@ -311,5 +312,9 @@
     background: var(--panel);
     font-size: 14px;
     opacity: 0.7;
+  }
+  .terminar.mas-tiempo {
+    top: calc(136px + env(safe-area-inset-top));
+    font-size: 12px;
   }
 </style>

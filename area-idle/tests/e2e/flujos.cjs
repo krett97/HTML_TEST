@@ -96,6 +96,10 @@ async function flow(name, browser, fn, opts) {
     const danio = await page.evaluate(() => window.juego.run.stats.danio);
     check(danio === 3, `la partida no usa el daño comprado (${danio})`);
     check((await page.getByTestId('reloj').textContent()).includes('00:2'), 'el reloj no arrancó en 20 s');
+    // Modo pruebas: +1 minuto a la partida en curso.
+    await page.getByTestId('mas-minuto').click();
+    await page.waitForTimeout(200);
+    check((await page.getByTestId('reloj').textContent()).includes('01:'), 'el +1 min no sumó un minuto al reloj');
   });
 
   await flow('tres secciones: mago con explosiones cuadradas y arqueros con flechas', browser, async (page) => {
@@ -213,9 +217,10 @@ async function flow(name, browser, fn, opts) {
     await page.comprar('danio', 3);
     await page.comprar('arqueros', 1);
     await page.getByTestId('abrir-ajustes').click();
-    for (let i = 0; i < 4; i++) await page.getByTestId('mas-nivel').click();
+    // Nivel 9: los rojos son el 10 % de 79 (en el 5 son el 6 % de 47 y a veces, por azar, no sale ninguno).
+    for (let i = 0; i < 8; i++) await page.getByTestId('mas-nivel').click();
     await page.mouse.click(4, 4);
-    check((await page.getByTestId('nivel-actual').textContent()).includes('Nivel 5'), 'no está en el nivel 5');
+    check((await page.getByTestId('nivel-actual').textContent()).includes('Nivel 9'), 'no está en el nivel 9');
     await page.getByTestId('jugar').click();
     // Lejos de todo: nadie revienta a los rojos y la muralla recibe piedras.
     await page.evaluate(() => { window.juego.run.cursor = { x: -999, y: -999 }; window.juego.run.muro.vida = 4; });
@@ -224,7 +229,7 @@ async function flow(name, browser, fn, opts) {
       rojos = Math.max(rojos, await page.evaluate(() => window.juego.run.enemies.filter((e) => e.kind === 'rojo').length));
       await page.waitForTimeout(250);
     }
-    check(rojos > 0, 'no salieron slimes rojos en el nivel 5');
+    check(rojos > 0, 'no salieron slimes rojos en el nivel 9');
     check(await page.getByTestId('muralla-caida').count(), 'la muralla no cayó o no se avisa');
     const flechas = await page.evaluate(() => window.juego.run.arrows.length);
     await page.waitForTimeout(1600);
@@ -263,6 +268,32 @@ async function flow(name, browser, fn, opts) {
     await page.getByTestId('abrir-glosario').click();
     const ficha = await page.getByTestId('enemigo-rey').textContent();
     check(ficha.includes('Rey Slime') && ficha.includes('aturdido'), `el glosario no muestra al jefe: ${ficha}`);
+  });
+
+  await flow('segunda zona: campo de batalla con goblins y lobos; el Lobo Blanco en el nivel 20', browser, async (page) => {
+    await page.getByTestId('terminar').click();
+    await page.getByTestId('mejorar').click();
+    await page.getByTestId('abrir-ajustes').click();
+    for (let i = 0; i < 10; i++) await page.getByTestId('mas-nivel').click();
+    await page.mouse.click(4, 4);
+    check((await page.getByTestId('nivel-actual').textContent()).includes('Campo de batalla'), 'el nivel 11 no dice Campo de batalla');
+    await page.getByTestId('jugar').click();
+    await page.waitForTimeout(500);
+    check((await page.getByTestId('nivel-partida').textContent()).includes('Campo de batalla'), 'la partida no dice Campo de batalla');
+    const tipos = await page.evaluate(() => [...new Set(window.juego.run.enemies.map((e) => e.kind))]);
+    check(tipos.every((k) => ['goblin', 'lobo'].includes(k)), `en el nivel 11 salieron: ${tipos.join(', ')}`);
+    await page.getByTestId('terminar').click();
+    await page.getByTestId('mejorar').click();
+    await page.getByTestId('abrir-ajustes').click();
+    for (let i = 0; i < 9; i++) await page.getByTestId('mas-nivel').click();
+    await page.mouse.click(4, 4);
+    await page.getByTestId('jugar').click();
+    await page.waitForTimeout(500);
+    check((await page.getByTestId('vida-jefe').textContent()).includes('Lobo Blanco'), 'el jefe del 20 no es el Lobo Blanco');
+    await page.getByTestId('terminar').click();
+    await page.getByTestId('mejorar').click();
+    await page.getByTestId('abrir-glosario').click();
+    for (const k of ['goblin', 'lobo', 'orco', 'orcoArquero', 'loboBlanco']) check(!(await page.getByTestId(`enemigo-${k}`).textContent()).includes('???'), `el glosario esconde a ${k}`);
   });
 
   await flow('guardado: al recargar se queda el oro y el árbol, y se llega al árbol', browser, async (page) => {

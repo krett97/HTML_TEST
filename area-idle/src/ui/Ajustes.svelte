@@ -51,7 +51,9 @@
       {/each}
       <button type="button" class="btn" onclick={() => juego.unlockNext()} data-testid="mas-nivel">{$t('ajustes.masNivel')}</button>
       <button type="button" class="btn" onclick={() => (juego.simulateAway(3600), cerrar())} data-testid="simular-hora">{$t('ajustes.simular')}</button>
+      <button type="button" class="btn" onclick={() => juego.addMinute()} data-testid="mas-minuto-ajustes">{$t('ajustes.masMinuto')}</button>
     </div>
+    <p class="version" data-testid="minutos-extra">{$t('ajustes.minutosExtra', { n: $view.minutosExtra })}</p>
   {/if}
   <p class="version">{$t('ajustes.version', { v: __APP_VERSION__ })}</p>
 </div>

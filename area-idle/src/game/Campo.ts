@@ -3,7 +3,7 @@
 // controlador (app/juego.ts) en cada cuadro.
 import Phaser from 'phaser';
 import type { Juego } from '../app/juego';
-import { ENEMIES, type EnemyKind } from '../core/datos';
+import { ENEMIES, levelConfig, type EnemyKind, type ZoneId } from '../core/datos';
 import { formatNum } from '../core/format';
 import { crearFuenteNumeros, NUMEROS } from './numeros';
 import { ALLY_ROW, archerSpots, FIELD_W, wizardSpot, type Forma, type Run, type RunEvent } from '../core/run';
@@ -19,13 +19,23 @@ const FLECHA_PX = 72;
 /** Cuántas cosas a la vez, como máximo (con cientos de slimes no caben todas). */
 const MAX_NUMEROS = 70;
 const MAX_MANCHAS = 60;
-const COLOR: Record<EnemyKind, number> = { verde: 0x8be06a, azul: 0x5cc1f2, rojo: 0xff6b5e, rey: 0xffa53a };
+const COLOR: Record<EnemyKind, number> = { verde: 0x8be06a, azul: 0x5cc1f2, rojo: 0xff6b5e, rey: 0xffa53a, goblin: 0x7cc35a, lobo: 0x9aa0ad, orco: 0x8aa070, orcoArquero: 0x8aa070, loboBlanco: 0xf4f6fb };
 /** Textura de cada enemigo y su ancho (el jefe va en un lienzo más grande, con corona). */
 const TEXTURA: Record<EnemyKind, { key: string; base: (radio: number) => number; origenY: number }> = {
   verde: { key: 'slime_verde', base: (r) => (r * 2.3) / 96, origenY: 0.92 },
   azul: { key: 'slime_azul', base: (r) => (r * 2.3) / 96, origenY: 0.92 },
   rojo: { key: 'slime_rojo', base: (r) => (r * 2.3) / 96, origenY: 0.92 },
   rey: { key: 'jefe_rey', base: (r) => (r * 3.2) / 200, origenY: 0.91 },
+  goblin: { key: 'goblin', base: (r) => (r * 2.5) / 96, origenY: 0.96 },
+  lobo: { key: 'lobo', base: (r) => (r * 3) / 112, origenY: 0.93 },
+  orco: { key: 'orco', base: (r) => (r * 2.5) / 112, origenY: 0.97 },
+  orcoArquero: { key: 'orcoArquero', base: (r) => (r * 2.5) / 112, origenY: 0.97 },
+  loboBlanco: { key: 'loboBlanco', base: (r) => (r * 4) / 140, origenY: 0.9 },
+};
+/** Lo que hay tirado en el pasto según la zona (clave del dibujo y su escala). */
+const ADORNOS: Record<ZoneId, [string, number][]> = {
+  campo: [['flor_blanca', 0.2], ['flor_roja', 0.2], ['piedra', 0.24], ['arbusto', 0.3]],
+  batalla: [['espada', 0.22], ['tabla', 0.22], ['escudo', 0.26], ['piedra', 0.22], ['espada', 0.2], ['flor_blanca', 0.16]],
 };
 const AMARILLO = 0xffd23f;
 const FUEGO = 0xff8a2a;
@@ -141,6 +151,11 @@ export class Campo extends Phaser.Scene {
       azul: particulas(COLOR.azul),
       rojo: particulas(COLOR.rojo),
       rey: particulas(COLOR.rey, { speed: { min: 60, max: 200 }, scale: { start: 0.16, end: 0 }, lifespan: { min: 400, max: 800 } }),
+      goblin: particulas(COLOR.goblin),
+      lobo: particulas(COLOR.lobo),
+      orco: particulas(COLOR.orco, { scale: { start: 0.11, end: 0 } }),
+      orcoArquero: particulas(COLOR.orcoArquero, { scale: { start: 0.11, end: 0 } }),
+      loboBlanco: particulas(COLOR.loboBlanco, { speed: { min: 60, max: 200 }, scale: { start: 0.16, end: 0 }, lifespan: { min: 400, max: 800 } }),
       piedra: particulas(0xc9c0b2, { speed: { min: 40, max: 110 }, angle: { min: 200, max: 340 }, gravityY: 300, scale: { start: 0.07, end: 0.03 }, lifespan: 500, tint: [0xc9c0b2, 0xa89e8f, 0x8a7f70] }),
       fuego: particulas(FUEGO, { speed: { min: 50, max: 140 }, scale: { start: 0.1, end: 0 }, gravityY: -30, tint: [FUEGO, AMARILLO, 0xef5a4c] }),
       llama: particulas(FUEGO, { gravityY: -90, speed: { min: 5, max: 25 }, angle: { min: 250, max: 290 }, scale: { start: 0.07, end: 0 }, lifespan: 420, tint: [FUEGO, AMARILLO] }),
@@ -174,7 +189,7 @@ export class Campo extends Phaser.Scene {
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.unsub.forEach((off) => off()));
 
     if (this.juego.fase === 'jugando') this.nuevaPartida();
-    else this.decorar();
+    else this.decorar(levelConfig(this.juego.meta.jugando).zona);
   }
 
   /** Texturas hechas en código: la gota de las partículas, disco, anillo, rectángulo, bola de fuego y sombra. */
@@ -214,16 +229,17 @@ export class Campo extends Phaser.Scene {
   }
 
   /** Flores, piedras y arbustos al azar sobre el pasto. */
-  private decorar(): void {
+  private decorar(zona: ZoneId): void {
     this.decoraciones.forEach((d) => d.destroy());
     this.decoraciones = [];
-    const tipos: [string, number][] = [['flor_blanca', 0.2], ['flor_roja', 0.2], ['piedra', 0.24], ['arbusto', 0.3]];
+    const tipos = ADORNOS[zona];
     for (let i = 0; i < 16; i++) {
       const [key, scale] = tipos[i % tipos.length]!;
       const img = this.add
         .image(Phaser.Math.Between(10, FIELD_W - 10), Phaser.Math.Between(Math.ceil(this.libreArriba()), Math.max(Math.ceil(this.libreArriba()) + 20, Math.floor(this.alto - ALLY_ROW) - 6)), key)
         .setOrigin(0.5, 1)
         .setScale(scale * Phaser.Math.FloatBetween(0.8, 1.2))
+        .setFlipX(Math.random() < 0.5)
         .setDepth(D.deco)
         .setAlpha(0.95);
       this.decoraciones.push(img);
@@ -239,9 +255,9 @@ export class Campo extends Phaser.Scene {
     this.manchas.length = 0;
     this.fuegos.forEach((f) => (f.img.destroy(), f.borde.destroy()));
     this.fuegos.length = 0;
-    this.decorar();
     const events = this.juego.start(this.alto, this.libreArriba());
     const run = this.juego.run!;
+    this.decorar(run.nivel.zona);
     this.cursorPos.x = run.cursor.x;
     this.cursorPos.y = run.cursor.y;
     const m = wizardSpot(run);
@@ -399,10 +415,11 @@ export class Campo extends Phaser.Scene {
           break;
         }
         case 'sling': {
-          // El rojo jala la resortera: se encoge y suelta un poco de polvo.
+          // Tira algo (se encoge al soltarlo) o, si es un orco pegado a la muralla, la golpea.
           const v = this.slimes.get(e.id);
-          if (v) v.golpe = 0.7;
-          this.emisores.polvo.explode(3, e.x, e.y - 4);
+          if (v) v.golpe = e.tipo === 'golpe' ? 1 : 0.7;
+          if (e.tipo === 'golpe') this.emisores.piedra.explode(5, e.x, this.alto - ALLY_ROW + 8);
+          else this.emisores.polvo.explode(3, e.x, e.y - 4);
           break;
         }
         case 'wallHit': {
@@ -416,12 +433,20 @@ export class Campo extends Phaser.Scene {
         }
         case 'bossJump': {
           const v = this.slimes.get(e.id);
+          const embiste = run.jefe?.def.mueve === 'embestida';
           if (v) {
+            // El Rey brinca en arco; el Lobo embiste por el piso (se estira y deja una estela de polvo).
             v.salto = 0;
-            v.saltoDura = e.dura;
-            v.golpe = 0.8;
+            v.saltoDura = embiste ? 0 : e.dura;
+            v.golpe = embiste ? -0.6 : 0.8;
           }
-          this.emisores.polvo.explode(10, e.x, e.y);
+          if (embiste) {
+            const pasos = 8;
+            for (let i = 0; i <= pasos; i++) {
+              const t = i / pasos;
+              this.time.delayedCall(t * e.dura * 1000, () => this.emisores.polvo.explode(4, e.x + (e.tx - e.x) * t, e.y + (e.ty - e.y) * t));
+            }
+          } else this.emisores.polvo.explode(10, e.x, e.y);
           break;
         }
         case 'bossStun':
@@ -486,12 +511,36 @@ export class Campo extends Phaser.Scene {
     for (const p of run.piedras) {
       const total = Math.hypot(p.tx - p.sx, p.ty - p.sy) || 1;
       const avance = 1 - Math.hypot(p.tx - p.x, p.ty - p.y) / total;
-      if (p.grande) {
-        // La bola de baba del jefe: grande, naranja, con brillo, en un arco alto.
+      if (p.tipo === 'baba') {
+        // La bola de baba del Rey: grande, naranja, con brillo, en un arco alto.
         const y = p.y - Math.sin(Math.PI * avance) * 70;
         g.fillStyle(CAFE).fillCircle(p.x, y, 6.5);
         g.fillStyle(COLOR.rey).fillCircle(p.x, y, 5.2);
         g.fillStyle(0xffd59a).fillCircle(p.x - 1.6, y - 1.6, 1.8);
+        continue;
+      }
+      if (p.tipo === 'hoz') {
+        // La hoz del Lobo: gira en el aire (media luna plateada con mango).
+        const y = p.y - Math.sin(Math.PI * avance) * 40;
+        const a = this.tiempo * 14;
+        g.lineStyle(4.6, CAFE).beginPath().arc(p.x, y, 7, a, a + 2.4).strokePath();
+        g.lineStyle(2.6, 0xdfe5ee).beginPath().arc(p.x, y, 7, a, a + 2.4).strokePath();
+        g.lineStyle(2.4, 0xb2733a).lineBetween(p.x, y, p.x + Math.cos(a + 3.6) * 8, y + Math.sin(a + 3.6) * 8);
+        continue;
+      }
+      if (p.tipo === 'lanza' || p.tipo === 'flecha') {
+        // Lanza (larga, de madera) o flecha de orco (oscura): apuntan hacia donde van, en un arco bajo.
+        const alto = p.tipo === 'lanza' ? 30 : 16;
+        const y = p.y - Math.sin(Math.PI * avance) * alto;
+        // Dirección: la del camino recto, inclinada por el arco (sube al principio, baja al final).
+        const ang = Math.atan2((p.ty - p.sy) / total - (Math.cos(Math.PI * avance) * alto * Math.PI) / total, (p.tx - p.sx) / total);
+        const largo = p.tipo === 'lanza' ? 14 : 10;
+        const cx = Math.cos(ang);
+        const cy = Math.sin(ang);
+        const color = p.tipo === 'lanza' ? 0xb2733a : 0x4a3b30;
+        g.lineStyle(p.tipo === 'lanza' ? 2.6 : 2, CAFE).lineBetween(p.x - cx * largo, y - cy * largo, p.x, y);
+        g.lineStyle(p.tipo === 'lanza' ? 1.4 : 1, color).lineBetween(p.x - cx * largo, y - cy * largo, p.x, y);
+        g.fillStyle(0xdfe5ee).fillTriangle(p.x + cx * 3.5, y + cy * 3.5, p.x - cy * 2, y + cx * 2, p.x + cy * 2, y - cx * 2);
         continue;
       }
       const y = p.y - Math.sin(Math.PI * avance) * 34;
