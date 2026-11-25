@@ -1,6 +1,6 @@
 # Campo de Slimes: diseño del prototipo
 
-> Versión 0.5.2. Nombre provisional. Nació de pausar el juego del gato
+> Versión 0.6.0. Nombre provisional. Nació de pausar el juego del gato
 > ([`../../gato-idle/docs/DECISIONES.md`](../../gato-idle/docs/DECISIONES.md)), tomando su base técnica y su
 > arte en código ([`../../REUSO.md`](../../REUSO.md)). Referencia de sensación: *Don't Stop The Pop!*
 > (cientos de cosas reventando en un área) y el idle del castor (rocas que caen, mundo que cambia por fase).
@@ -36,13 +36,14 @@ nuevo, directo al nivel 1 con una pista.
 que queda (con su barrita, que se pone roja en los últimos 5 s), la zona y el nivel ("Campo verde ·
 Nivel 5") y el oro. Ahí arriba no aparecen ni pasean slimes, para que nada quede tapado.
 
-## 3. Los tres árboles (`src/core/datos.ts`)
+## 3. Los árboles (`src/core/datos.ts`)
 
 | Sección | Ataque | Tipo de daño | Talentos |
 |---|---|---|---|
 | **Jugador** | Tu círculo: lluvia de flechas en el área | Físico | Daño (raíz), Área, Atraer slimes (llegan más rápido), Cadencia, Tiempo, Botín (premio por nivel), Ganancia de oro (todo el oro), Oro inactivo, Bolsa grande |
 | **Mago** | Bola de fuego que revienta en un **cuadrado** (40 × 40) donde hay alguien | Fuego | Mago (raíz), Mago veloz, Fuego mágico, Explosión grande, Suelo en llamas (tierra quemada con borde de brasas), Fuego intenso |
 | **Arqueros** | Flechas a **un objetivo a la vez**; con Flechas múltiples, a 2, 3… 5 | Físico | Arquero (raíz), Más arqueros (hasta 6), Flechas múltiples, Arco veloz, Puntas de acero, Muralla reforzada |
+| **Reliquias** (desde el nivel 11, con **gemas**) | — | — | Poder ancestral (raíz), Golpes críticos, Carcaj encantado, Albañil (ver 5e) |
 
 - Al principio solo se ve **Daño**; cada compra muestra lo que sale de ahí. Las raíces del Mago y los
   Arqueros se ven desde el principio con candado ("Sube Cadencia a 3", "Sube Daño a 3").
@@ -150,6 +151,39 @@ hielo. Cada jefe tiene sus números en `JEFES` (`datos.ts`); en los niveles 30, 
 El simulador llega al nivel 20 hacia el minuto 27 (la primera zona se pasa hacia el 9): la segunda
 zona es un salto claro de dificultad, sobre todo por la muralla.
 
+## 5e. Misiones, gemas moradas y Reliquias (desde 0.6.0)
+
+Al pasar el nivel 10 (al vencer al Rey Slime) se abren las **misiones**, que dan **gemas moradas**, la
+segunda moneda. Sale un aviso en el fin de partida y, en el árbol, la cuenta de gemas, el botón de
+misiones (con un punto rojo y cuántas hay por cobrar) y una cuarta pestaña: **Reliquias**.
+
+- **Diarias** (`src/core/misiones.ts`): 3 al día, elegidas con la fecha (todos los que juegan ese día
+  tienen las mismas; cambian a medianoche, hora local). Cuentan desde que empieza el día. Completar las 3
+  da un **bono de 5**. Ejemplos: revienta 600 enemigos (3), gana 5 niveles (3), juega 10 partidas (3),
+  vence a un jefe (5), compra 8 mejoras (3), gana 3 niveles sin que caiga la muralla (4), cobra el oro de
+  mientras no estabas (2), revienta 150 goblins / 60 lobos (3), 40 orcos (4, desde el 13), 25 orcos
+  arqueros (4, desde el 15). Nunca piden enemigos que todavía no salen.
+- **Permanentes** (logros, una sola vez): llegar al nivel 15/20/25/30 (5/10/15/20), vencer al Rey Slime
+  (8) y al Lobo Blanco (12), reventar 1 000/10 000/100 000 (3/8/15), comprar 50/150 mejoras (5/10),
+  reventar 100 orcos (5), ganar 20 niveles sin perder la muralla (8).
+- Las gemas **no caen de los enemigos** por ahora: salen solo de misiones (una fuente predecible). Un
+  drop muy raro o de jefes queda como idea.
+
+**Reliquias** (se pagan con gemas; propuesta, fácil de cambiar):
+
+| Reliquia | Qué hace | Máx. | Precio |
+|---|---|---|---|
+| Poder ancestral (raíz) | +10 % a **todo** el daño (tuyo, del mago, del fuego y de los arqueros) por nivel | 10 | 5, ×1.35 |
+| Golpes críticos | Tus flechas: 5 % por nivel de pegar **triple** (número rosa) | 6 | 6, ×1.5 |
+| Carcaj encantado | +1 objetivo por arquero (se suma a Flechas múltiples) | 3 | 10, ×2 |
+| Albañil | Una vez por nivel, cuando la muralla queda a 30 % o menos, recupera 40/55/70 % (aunque el golpe la fuera a tumbar) | 3 | 8, ×1.8 |
+
+Con el simulador, en la primera sesión (todo un mismo día) salen unas 100 gemas, casi todas de logros:
+alcanzan para Poder 4, Críticos 3, Carcaj 1 y Albañil 2. Después, ~14 al día con las diarias y el bono.
+
+Modo pruebas: **+10 gemas** y **Nuevo día** (otras 3 diarias, desde cero). "+1/+10 min de juego" juega
+pero deja las misiones sin cobrar, para que las cobres tú.
+
 ## 6. Ritmo (`npm run simular`)
 
 Un bot que toca donde hay más slimes cada segundo (los rojos cuentan por cuatro: los busca primero),
@@ -158,10 +192,13 @@ compra lo más barato y, si pierde un nivel, juega una vez el anterior para junt
 | Minuto | Nivel superado |
 |---|---|
 | 5 | 4 |
-| 10 | 15 |
-| 15 | 20 |
-| 20 | 24 |
-| 30 | 27 (pared: falta la segunda zona) |
+| 10 | 12 |
+| 15 | 17 |
+| 20 | 19 |
+| 30 | 25 |
+| 45 | 27 |
+
+(0.6.0: el bot también cobra misiones y compra la Reliquia más barata.)
 
 Al principio pierde los niveles 3, 4 y 7 alguna vez, junta oro en el anterior y pasa. Del 11 al 20 casi
 no pierde (llegan el mago y los arqueros). Del 21 en adelante los rojos son el reto: la muralla cae en
@@ -169,8 +206,9 @@ unas 30 partidas de 45 minutos y ahí sirve Muralla reforzada. (El bot no cobra 
 
 ## 7. Técnica
 
-- `src/core/` es lógica pura y probada (51 pruebas): `run.ts` (la partida paso a paso; devuelve eventos),
-  `stats.ts` (estadísticas desde los talentos), `meta.ts` (oro, árbol, guardado), `datos.ts`, `bot.ts`.
+- `src/core/` es lógica pura y probada (60 pruebas): `run.ts` (la partida paso a paso; devuelve eventos),
+  `stats.ts` (estadísticas desde los talentos), `meta.ts` (oro, gemas, árbol, guardado), `misiones.ts`
+  (contadores, diarias y permanentes), `datos.ts`, `bot.ts`.
 - `src/game/Campo.ts` (Phaser 4) solo dibuja los eventos: sprites reciclados para cientos de slimes,
   números de daño con una **fuente de mapa de bits** hecha al arrancar (`numeros.ts`), partículas, flechas
   de los arqueros dibujadas en una sola capa. El canvas va hasta densidad 2.
@@ -183,8 +221,9 @@ unas 30 partidas de 45 minutos y ahí sirve Muralla reforzada. (El bot no cobra 
 ## 8. Pendiente (ideas, sin construir)
 
 - **Segunda zona** (bosque, desierto, nieve…): al vencer al jefe del nivel 10, 20… cambia el mundo y llega un jefe nuevo.
-- Recompensa permanente por cada jefe vencido la primera vez (un trofeo con bono).
+- Gemas que caen muy rara vez de los enemigos o de los jefes (además de las misiones).
+- Más Reliquias (y más permanentes conforme haya zonas nuevas).
 - Fuentes de hielo, energía, muerte y luz (nuevos aliados o ramas) y enemigos que las pidan.
-- Reparar la muralla durante el nivel (un talento o un botón con espera).
+- Reparar la muralla a mano durante el nivel (un botón con espera); el Albañil ya la repara una vez solo.
 - Anuncios recompensados: "+10 s a esta partida" y "×2 oro de esta partida".
 - ×2 al oro de "Mientras no estabas" viendo un anuncio.

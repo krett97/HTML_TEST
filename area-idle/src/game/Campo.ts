@@ -365,12 +365,14 @@ export class Campo extends Phaser.Scene {
           const v = this.slimes.get(e.id);
           if (v) v.golpe = 1;
           // Contra una debilidad, número grande y rojizo; contra una fortaleza, chico y gris.
-          const color = e.efecto === 'debil' ? 0xff7043 : e.efecto === 'fuerte' ? 0xa0a8b8 : e.fuente === 'fuego' ? 0xffb15c : 0xffffff;
+          // Un crítico de tus flechas: número rosa y grande.
+          const color = e.efecto === 'critico' ? 0xff5ad2 : e.efecto === 'debil' ? 0xff7043 : e.efecto === 'fuerte' ? 0xa0a8b8 : e.fuente === 'fuego' ? 0xffb15c : 0xffffff;
+          const tamano = e.efecto === 'critico' ? 11.5 : e.efecto === 'debil' ? 10.5 : e.efecto === 'fuerte' ? 6.5 : 8;
           // Al jefe aturdido: números dorados y grandes (le duele doble).
           const aturdido = run.jefe?.id === e.id && run.jefe.aturdido > 0;
           const alto = run.jefe?.id === e.id ? 30 : 10;
           if (aturdido) this.numero(e.x, e.y - alto, e.danio, 0xffd23f, 12);
-          else if (numeros++ < 30 || run.jefe?.id === e.id) this.numero(e.x, e.y - alto, e.danio, color, e.efecto === 'debil' ? 10.5 : e.efecto === 'fuerte' ? 6.5 : 8);
+          else if (numeros++ < 30 || run.jefe?.id === e.id || e.efecto === 'critico') this.numero(e.x, e.y - alto, e.danio, color, tamano);
           break;
         }
         case 'kill': {
@@ -473,6 +475,17 @@ export class Campo extends Phaser.Scene {
         case 'wallDown':
           this.derrumbe(run);
           break;
+        case 'wallRepair': {
+          // El albañil la parcha: destello verde y polvito a lo largo de la muralla.
+          for (const img of [this.muralla, this.torre]) img.setTint(0xa8f0a0);
+          this.time.delayedCall(260, () => {
+            if (!this.juego.run?.muro.caido) for (const img of [this.muralla, this.torre]) img.clearTint();
+          });
+          const y = this.alto - ALLY_ROW;
+          for (let i = 0; i < 6; i++) this.time.delayedCall(i * 50, () => this.emisores.polvo.explode(4, 30 + i * 60, y));
+          this.emisores.aparece.explode(14, FIELD_W / 2, y - 10);
+          break;
+        }
         case 'end':
           if (e.gano) {
             // ¡Nivel superado! Destello y confeti desde abajo.

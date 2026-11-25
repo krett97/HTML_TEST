@@ -5,6 +5,7 @@ import type { TalentId } from '../core/datos';
 import { buyTalent, chooseLevel, createMeta, finishRun, loadMeta, stats, type Meta } from '../core/meta';
 import { idleGoldPerMinute, idleReward, idleUnlocked } from '../core/inactivo';
 import { simulatePlay, type SimulatedPlay } from '../core/bot';
+import { claimableCount, claimBonus, claimMission, missionsUnlocked, rollDaily } from '../core/misiones';
 import { bossOf, createRun, moveCursor, startRun, stepRun, type Run, type RunEvent } from '../core/run';
 import { ENEMIES, levelConfig, type EnemyKind, type ZoneId } from '../core/datos';
 import { locale, detectLocale } from '../i18n';
@@ -35,6 +36,10 @@ export interface Vista {
   ritmoInactivo: { porMinuto: number; horas: number } | null;
   /** Esta partida abrió el oro por inactividad (aviso en el fin). */
   abrioInactivo: boolean;
+  /** Esta partida abrió las misiones y las gemas (nivel 11). */
+  abrioMisiones: boolean;
+  /** Misiones abiertas y cuántas cosas hay para cobrar. */
+  misiones: { abiertas: boolean; listas: number };
   /** El jefe del nivel (si es de jefe): quién, su vida y si está aturdido o furioso. */
   jefe: { kind: EnemyKind; vida: number; max: number; aturdido: boolean; furia: boolean } | null;
   /** El nivel elegido en el árbol es de jefe (corona en el selector). */
@@ -63,6 +68,7 @@ export class Juego {
 
   private pendiente: { segundos: number; oro: number; tope: boolean } | null = null;
   private abrioInactivo = false;
+  private abrioMisiones = false;
   /** Al abrir: quien ya jugó llega al árbol; quien es nuevo, directo a jugar. */
   fase: Fase = 'jugando';
   private ultimaVista = 0;
@@ -89,6 +95,7 @@ export class Juego {
   collectIdle(): number {
     const oro = this.pendiente?.oro ?? 0;
     this.meta.oro += oro;
+    if (oro > 0) this.meta.cuenta.cobros++;
     this.pendiente = null;
     if (oro > 0) this.audio.play('compra');
     this.save();
@@ -149,6 +156,8 @@ export class Juego {
       else if (e.type === 'bossRage') this.audio.play('furia');
       else if (e.type === 'wallHit') this.audio.play('golpeMuro');
       else if (e.type === 'wallDown') this.audio.play('derrumbe');
+      else if (e.type === 'wallRepair') this.audio.play('repara');
+      else if (e.type === 'hit' && e.efecto === 'critico') this.audio.play('critico');
       else if (e.type === 'fire') this.audio.play('fuego');
       else if (e.type === 'end') this.end(e.gano);
     }
@@ -174,8 +183,10 @@ export class Juego {
   private end(gano: boolean): void {
     const run = this.run!;
     const antes = idleUnlocked(this.meta);
-    this.premio = finishRun(this.meta, { oro: run.oro, reventados: run.reventados, gano, nivel: run.nivel.nivel });
+    const misionesAntes = missionsUnlocked(this.meta);
+    this.premio = finishRun(this.meta, { oro: run.oro, reventados: run.reventados, gano, nivel: run.nivel.nivel, porTipo: run.porTipo, muroCaido: run.muro.caido, jefe: run.nivel.jefe?.kind ?? null });
     this.abrioInactivo = !antes && idleUnlocked(this.meta);
+    this.abrioMisiones = !misionesAntes && missionsUnlocked(this.meta);
     if (!this.meta.vistos.includes('primera')) this.meta.vistos.push('primera');
     this.fase = 'fin';
     this.audio.play(gano ? 'fin' : 'pierde');
@@ -237,6 +248,28 @@ export class Juego {
     this.publish();
   }
 
+  /** Cobra una misión (diaria o permanente) o el bono diario. Devuelve las gemas. */
+  claim(id: string | 'bono'): number {
+    const gemas = id === 'bono' ? claimBonus(this.meta) : claimMission(this.meta, id);
+    this.audio.play(gemas > 0 ? 'gema' : 'error');
+    if (gemas > 0) this.save();
+    this.publish();
+    return gemas;
+  }
+
+  /** Modo pruebas: gemas de regalo y un día nuevo (otras diarias). */
+  addGems(n: number): void {
+    this.meta.gemas += n;
+    this.save();
+    this.publish();
+  }
+
+  newDay(): void {
+    rollDaily(this.meta, Date.now(), 1 + Math.floor(Math.random() * 1e6));
+    this.save();
+    this.publish();
+  }
+
   /** Modo pruebas: oro de regalo. */
   addGold(oro: number): void {
     this.meta.oro += oro;
@@ -270,6 +303,8 @@ export class Juego {
 
   private publish(): void {
     const run = this.run;
+    // Las diarias cambian a medianoche (y se eligen la primera vez que se abren).
+    rollDaily(this.meta, Date.now());
     this.vista.set({
       fase: this.fase,
       restante: run ? Math.max(0, run.stats.duracion - run.t) : 0,
@@ -293,10 +328,12 @@ export class Juego {
 
       ritmoInactivo: idleUnlocked(this.meta) ? { porMinuto: idleGoldPerMinute(this.meta), horas: stats(this.meta).inactivo.horas } : null,
       abrioInactivo: this.abrioInactivo && this.fase === 'fin',
+      abrioMisiones: this.abrioMisiones && this.fase === 'fin',
+      misiones: { abiertas: missionsUnlocked(this.meta), listas: claimableCount(this.meta) },
       vivos: run?.enemies.length ?? 0,
       toco: this.toco,
       // Una copia: la interfaz solo se entera de un cambio si recibe un objeto nuevo.
-      meta: { ...this.meta, talentos: { ...this.meta.talentos }, ajustes: { ...this.meta.ajustes } },
+      meta: { ...this.meta, talentos: { ...this.meta.talentos }, ajustes: { ...this.meta.ajustes }, cuenta: { ...this.meta.cuenta }, misiones: { ...this.meta.misiones } },
       partida: this.partida,
     });
   }

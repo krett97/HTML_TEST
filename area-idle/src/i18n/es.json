@@ -121,6 +121,22 @@
     "muralla": {
       "nombre": "Muralla reforzada",
       "efecto": "Vida de la muralla {a} → {b}"
+    },
+    "poder": {
+      "nombre": "Poder ancestral",
+      "efecto": "Todo el daño {a} → {b}"
+    },
+    "critico": {
+      "nombre": "Golpes críticos",
+      "efecto": "Tus flechas: {a} → {b} de pegar triple"
+    },
+    "carcaj": {
+      "nombre": "Carcaj encantado",
+      "efecto": "Objetivos por arquero {a} → {b}"
+    },
+    "albanil": {
+      "nombre": "Albañil",
+      "efecto": "Una vez por nivel, si la muralla queda baja, recupera {a} → {b}"
     }
   },
   "ajustes": {
@@ -136,12 +152,15 @@
     "masNivel": "+1 nivel",
     "simular": "Simular 1 h fuera",
     "jugarMin": "+{n} min de juego",
-    "resumen": "En {min} min de juego: {partidas} partidas ({ganadas} ganadas), nivel {desde} → {hasta}, {compras} mejoras compradas, +{oro} de oro."
+    "resumen": "En {min} min de juego: {partidas} partidas ({ganadas} ganadas), nivel {desde} → {hasta}, {compras} mejoras compradas, +{oro} de oro.",
+    "masGemas": "+10 gemas",
+    "nuevoDia": "Nuevo día (otras diarias)"
   },
   "secciones": {
     "jugador": "Jugador",
     "mago": "Mago",
-    "arqueros": "Arqueros"
+    "arqueros": "Arqueros",
+    "reliquias": "Reliquias"
   },
   "glosario": {
     "titulo": "Glosario",
@@ -233,5 +252,40 @@
     "nuevo": "¡Nuevo! Ahora ganas oro aunque no juegues.",
     "ritmo": "+{n}/min",
     "explica": "Oro por minuto mientras no juegas (hasta {h} h)"
+  },
+  "misiones": {
+    "titulo": "Misiones",
+    "diarias": "Diarias",
+    "permanentes": "Permanentes",
+    "renueva": "Se renuevan en {t}",
+    "bono": "Completa las 3 de hoy",
+    "gastar": "Las gemas moradas compran Reliquias en el árbol.",
+    "nuevo": "¡Nuevo! Misiones y gemas moradas (Reliquias en el árbol).",
+    "textos": {
+      "reventar": "Revienta {n} enemigos",
+      "ganar": "Gana {n} niveles",
+      "partidas": "Juega {n} partidas",
+      "jefe": "Vence a un jefe",
+      "compras": "Compra {n} mejoras",
+      "intacta": "Gana {n} niveles sin que caiga la muralla",
+      "cobrar": "Cobra el oro de mientras no estabas",
+      "goblins": "Revienta {n} goblins",
+      "lobos": "Revienta {n} lobos",
+      "orcos": "Revienta {n} orcos",
+      "arqueros": "Revienta {n} orcos arqueros",
+      "nivel15": "Llega al nivel {n}",
+      "nivel20": "Llega al nivel {n}",
+      "nivel25": "Llega al nivel {n}",
+      "nivel30": "Llega al nivel {n}",
+      "rey": "Vence al Rey Slime",
+      "loboBlanco": "Vence al Lobo Blanco",
+      "reventar1k": "Revienta {n} enemigos",
+      "reventar10k": "Revienta {n} enemigos",
+      "reventar100k": "Revienta {n} enemigos",
+      "compras50": "Compra {n} mejoras",
+      "compras150": "Compra {n} mejoras",
+      "orcos100": "Revienta {n} orcos",
+      "intacta20": "Gana {n} niveles sin que caiga la muralla"
+    }
   }
 }

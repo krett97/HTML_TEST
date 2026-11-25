@@ -5,13 +5,17 @@ import { formatNum } from '../core/format';
 import { computeStats, type Levels, type Stats } from '../core/stats';
 
 const uno = (n: number) => (Math.round(n * 10) / 10).toString();
-const VALOR: Partial<Record<TalentId, (s: Stats) => string>> = {
+const VALOR: Partial<Record<TalentId, (s: Stats, l: Levels) => string>> = {
   danio: (s) => formatNum(s.danio),
   slimes: (s) => `×${uno(s.ritmo)}`,
   botin: (s) => `×${uno(s.premioMult)}`,
   inactivo: (s) => `${Math.round(s.inactivo.eficiencia * 100)}%`,
   bolsa: (s) => String(s.inactivo.horas),
   muralla: (s) => formatNum(s.muro.vida),
+  poder: (_, l) => `+${10 * (l.poder ?? 0)}%`,
+  critico: (s) => `${Math.round(s.critico.prob * 100)}%`,
+  carcaj: (s) => String(s.arqueros.objetivos),
+  albanil: (s) => `${Math.round(s.muro.reparar * 100)}%`,
   radio: (s) => uno(s.radio),
   cadencia: (s) => uno(1 / s.intervalo),
   tiempo: (s) => String(s.duracion),
@@ -30,7 +34,6 @@ const VALOR: Partial<Record<TalentId, (s: Stats) => string>> = {
 export function effectValues(id: TalentId, levels: Levels): { a: string; b: string } {
   const f = VALOR[id];
   if (!f) return { a: '', b: '' };
-  const ahora = computeStats(levels);
-  const despues = computeStats({ ...levels, [id]: (levels[id] ?? 0) + 1 });
-  return { a: f(ahora), b: f(despues) };
+  const sig = { ...levels, [id]: (levels[id] ?? 0) + 1 };
+  return { a: f(computeStats(levels), levels), b: f(computeStats(sig), sig) };
 }

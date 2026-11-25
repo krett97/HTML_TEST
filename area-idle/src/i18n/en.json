@@ -121,6 +121,22 @@
     "muralla": {
       "nombre": "Reinforced wall",
       "efecto": "Wall health {a} → {b}"
+    },
+    "poder": {
+      "nombre": "Ancient power",
+      "efecto": "All damage {a} → {b}"
+    },
+    "critico": {
+      "nombre": "Critical hits",
+      "efecto": "Your arrows: {a} → {b} chance to hit triple"
+    },
+    "carcaj": {
+      "nombre": "Enchanted quiver",
+      "efecto": "Targets per archer {a} → {b}"
+    },
+    "albanil": {
+      "nombre": "Mason",
+      "efecto": "Once per level, a battered wall recovers {a} → {b}"
     }
   },
   "ajustes": {
@@ -136,12 +152,15 @@
     "masNivel": "+1 level",
     "simular": "Simulate 1 h away",
     "jugarMin": "+{n} min of play",
-    "resumen": "In {min} min of play: {partidas} rounds ({ganadas} won), level {desde} → {hasta}, {compras} upgrades bought, +{oro} gold."
+    "resumen": "In {min} min of play: {partidas} rounds ({ganadas} won), level {desde} → {hasta}, {compras} upgrades bought, +{oro} gold.",
+    "masGemas": "+10 gems",
+    "nuevoDia": "New day (new dailies)"
   },
   "secciones": {
     "jugador": "Player",
     "mago": "Wizard",
-    "arqueros": "Archers"
+    "arqueros": "Archers",
+    "reliquias": "Relics"
   },
   "glosario": {
     "titulo": "Glossary",
@@ -233,5 +252,40 @@
     "nuevo": "New! You now earn gold even when not playing.",
     "ritmo": "+{n}/min",
     "explica": "Gold per minute while away (up to {h} h)"
+  },
+  "misiones": {
+    "titulo": "Missions",
+    "diarias": "Daily",
+    "permanentes": "Permanent",
+    "renueva": "Refresh in {t}",
+    "bono": "Complete all 3 today",
+    "gastar": "Purple gems buy Relics in the tree.",
+    "nuevo": "New! Missions and purple gems (Relics in the tree).",
+    "textos": {
+      "reventar": "Pop {n} enemies",
+      "ganar": "Win {n} levels",
+      "partidas": "Play {n} rounds",
+      "jefe": "Beat a boss",
+      "compras": "Buy {n} upgrades",
+      "intacta": "Win {n} levels without losing the wall",
+      "cobrar": "Collect your away gold",
+      "goblins": "Pop {n} goblins",
+      "lobos": "Pop {n} wolves",
+      "orcos": "Pop {n} orcs",
+      "arqueros": "Pop {n} orc archers",
+      "nivel15": "Reach level {n}",
+      "nivel20": "Reach level {n}",
+      "nivel25": "Reach level {n}",
+      "nivel30": "Reach level {n}",
+      "rey": "Beat the King Slime",
+      "loboBlanco": "Beat the White Wolf",
+      "reventar1k": "Pop {n} enemies",
+      "reventar10k": "Pop {n} enemies",
+      "reventar100k": "Pop {n} enemies",
+      "compras50": "Buy {n} upgrades",
+      "compras150": "Buy {n} upgrades",
+      "orcos100": "Pop {n} orcs",
+      "intacta20": "Win {n} levels without losing the wall"
+    }
   }
 }

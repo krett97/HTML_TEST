@@ -1,7 +1,8 @@
 // Un jugador simulado: juega el nivel elegido tocando donde hay más slimes y entre partidas compra en
 // el árbol. Si pierde, juega una vez el nivel anterior para juntar oro y vuelve a intentarlo. Lo usan
 // el simulador de balance (tools/simular.ts) y las pruebas.
-import { TALENTS } from './datos';
+import { TALENTS, type EnemyKind } from './datos';
+import { claimBonus, claimMission, dailyProgress, permanentProgress, rollDaily } from './misiones';
 import { buyTalent, chooseLevel, costOf, finishRun, levelOf, stats, talentState, type Meta } from './meta';
 import { bestSpot, createRun, moveCursor, startRun, stepRun } from './run';
 
@@ -24,7 +25,7 @@ export interface BotRun {
 }
 
 /** Juega una partida completa del nivel elegido; el bot mueve el círculo cada `cadaCuanto` segundos. */
-export function playRun(meta: Meta, seed: number, cadaCuanto = 1): { oro: number; reventados: number; gano: boolean; total: number; segundos: number; muroCaido: boolean } {
+export function playRun(meta: Meta, seed: number, cadaCuanto = 1): { oro: number; reventados: number; gano: boolean; total: number; segundos: number; muroCaido: boolean; porTipo: Partial<Record<EnemyKind, number>>; jefe: EnemyKind | null } {
   const run = createRun(stats(meta), BOT_FIELD_H, meta.jugando, seed);
   startRun(run);
   const dt = 1 / 30;
@@ -37,28 +38,43 @@ export function playRun(meta: Meta, seed: number, cadaCuanto = 1): { oro: number
     }
     stepRun(run, dt);
   }
-  return { oro: run.oro, reventados: run.reventados, gano: run.gano, total: run.nivel.total, segundos: run.t, muroCaido: run.muro.caido };
+  return { oro: run.oro, reventados: run.reventados, gano: run.gano, total: run.nivel.total, segundos: run.t, muroCaido: run.muro.caido, porTipo: run.porTipo, jefe: run.nivel.jefe?.kind ?? null };
 }
 
 /** Compra mientras alcance: siempre lo más barato que esté disponible. Devuelve qué compró. */
-export function shop(meta: Meta): string[] {
+export function shop(meta: Meta, reliquias = false): string[] {
   const bought: string[] = [];
-  for (;;) {
-    const options = TALENTS.filter((t) => talentState(meta, t) === 'disponible').map((t) => ({ t, cost: costOf(t, levelOf(meta, t.id)) }));
-    options.sort((a, b) => a.cost - b.cost);
-    const pick = options[0];
-    if (!pick || pick.cost > meta.oro) return bought;
-    buyTalent(meta, pick.t.id);
-    bought.push(pick.t.id);
+  // Con oro, lo más barato del árbol; con gemas (si se le pide), la Reliquia más barata.
+  for (const gemas of reliquias ? [false, true] : [false]) {
+    for (;;) {
+      const options = TALENTS.filter((t) => (t.moneda === 'gemas') === gemas && talentState(meta, t) === 'disponible').map((t) => ({ t, cost: costOf(t, levelOf(meta, t.id)) }));
+      options.sort((a, b) => a.cost - b.cost);
+      const pick = options[0];
+      if (!pick || pick.cost > (gemas ? meta.gemas : meta.oro)) break;
+      buyTalent(meta, pick.t.id);
+      bought.push(pick.t.id);
+    }
   }
+  return bought;
+}
+
+/** Cobra todas las misiones completas (y el bono del día). Devuelve las gemas. */
+export function claimAll(meta: Meta): number {
+  let gemas = 0;
+  for (const p of [...dailyProgress(meta), ...permanentProgress(meta)]) if (p.completa && !p.cobrada) gemas += claimMission(meta, p.def.id);
+  return gemas + claimBonus(meta);
 }
 
 /** Una vuelta: juega, cobra, compra y elige el siguiente nivel (el más alto, o el anterior si perdió ahí). */
-export function playAndShop(meta: Meta, seed: number): BotRun {
+export function playAndShop(meta: Meta, seed: number, misiones = false): BotRun {
   const nivel = meta.jugando;
   const r = playRun(meta, seed);
   const premio = finishRun(meta, { ...r, nivel });
-  const compras = shop(meta);
+  rollDaily(meta, Date.now());
+  // El simulador de balance también cobra misiones y compra Reliquias; el botón de pruebas no,
+  // para que lo puedas hacer tú.
+  if (misiones) claimAll(meta);
+  const compras = shop(meta, misiones);
   if (r.gano || nivel < meta.nivel) chooseLevel(meta, meta.nivel);
   else chooseLevel(meta, nivel - 1);
   return { nivel, gano: r.gano, oro: r.oro, premio, reventados: r.reventados, total: r.total, segundos: r.segundos, muroCaido: r.muroCaido, compras };

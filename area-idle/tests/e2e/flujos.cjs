@@ -32,7 +32,7 @@ async function fresh(browser, opts = {}) {
   page.tap = async (x = 0.5, y = 0.45) => { const box = await page.getByTestId('campo').boundingBox(); await page.mouse.click(box.x + box.width * x, box.y + box.height * y); };
   page.oro = async (n) => { await page.getByTestId('abrir-ajustes').click(); await page.getByTestId(`oro-${n}`).click(); await page.mouse.click(4, 4); await page.waitForTimeout(150); };
   page.comprar = async (id, veces = 1) => {
-    const seccion = await page.evaluate((id) => ({ danio: 'jugador', radio: 'jugador', slimes: 'jugador', cadencia: 'jugador', botin: 'jugador', tiempo: 'jugador', oro: 'jugador', inactivo: 'jugador', mago: 'mago', arqueros: 'arqueros', multiflecha: 'arqueros' })[id], id);
+    const seccion = await page.evaluate((id) => ({ danio: 'jugador', radio: 'jugador', slimes: 'jugador', cadencia: 'jugador', botin: 'jugador', tiempo: 'jugador', oro: 'jugador', inactivo: 'jugador', mago: 'mago', arqueros: 'arqueros', multiflecha: 'arqueros', poder: 'reliquias', critico: 'reliquias', carcaj: 'reliquias', albanil: 'reliquias' })[id], id);
     await page.getByTestId(`seccion-${seccion}`).click();
     await page.getByTestId(`talento-${id}`).click();
     for (let i = 0; i < veces; i++) await page.getByTestId('comprar').click();
@@ -339,6 +339,50 @@ async function flow(name, browser, fn, opts) {
     check(await page.getByTestId('reloj').count(), 'tras reiniciar no empieza jugando como nuevo');
   });
 
+  await flow('misiones del nivel 11: diarias y permanentes dan gemas que compran Reliquias', browser, async (page) => {
+    await page.getByTestId('terminar').click();
+    await page.getByTestId('mejorar').click();
+    check(!(await page.getByTestId('abrir-misiones').count()), 'las misiones se ven antes del nivel 11');
+    check(!(await page.getByTestId('seccion-reliquias').count()), 'las Reliquias se ven antes del nivel 11');
+    await page.getByTestId('abrir-ajustes').click();
+    for (let i = 0; i < 14; i++) await page.getByTestId('mas-nivel').click();
+    await page.mouse.click(4, 4);
+    check(await page.getByTestId('abrir-misiones').count(), 'no sale el botón de misiones en el nivel 15');
+    check((await page.getByTestId('gemas').textContent()).trim() === '0', 'no empieza con 0 gemas');
+    await page.getByTestId('abrir-misiones').click();
+    check(await page.getByTestId('misiones').count(), 'no abre la ventana de misiones');
+    check((await page.locator('[data-testid^="mision-"]').count()) === 4, 'no hay 3 diarias más el bono');
+    check(await page.getByTestId('cobrar-bono').isDisabled(), 'el bono se puede cobrar sin completar');
+    await page.getByTestId('misiones-permanentes').click();
+    check(!(await page.getByTestId('cobrar-nivel15').isDisabled()), '"Llega al nivel 15" no está lista');
+    check(await page.getByTestId('cobrar-nivel20').isDisabled(), '"Llega al nivel 20" está lista sin llegar');
+    await page.getByTestId('cobrar-nivel15').click();
+    await page.waitForTimeout(150);
+    check(!(await page.getByTestId('cobrar-nivel15').count()), 'se puede cobrar dos veces');
+    check((await page.getByTestId('misiones').textContent()).includes('5'), 'no muestra las gemas');
+    await page.mouse.click(4, 4);
+    check((await page.getByTestId('gemas').textContent()).trim() === '5', 'no sumó 5 gemas');
+    await page.getByTestId('seccion-reliquias').click();
+    await page.getByTestId('talento-poder').click();
+    await page.getByTestId('comprar').click();
+    await page.waitForTimeout(150);
+    check((await page.getByTestId('gemas').textContent()).trim() === '0', 'Poder ancestral no costó 5 gemas');
+    check((await page.getByTestId('detalle').textContent()).includes('1/10'), 'Poder ancestral no subió');
+    check(await page.getByTestId('oro-total').count(), 'falta el oro');
+    // Modo pruebas: +10 gemas y otro día.
+    await page.getByTestId('abrir-ajustes').click();
+    await page.getByTestId('mas-gemas').click();
+    const antes = await page.evaluate(() => window.juego.meta.misiones.diarias.join());
+    let cambio = false;
+    for (let i = 0; i < 5 && !cambio; i++) {
+      await page.getByTestId('nuevo-dia').click();
+      cambio = (await page.evaluate(() => window.juego.meta.misiones.diarias.join())) !== antes;
+    }
+    check(cambio, '"Nuevo día" no cambia las diarias');
+    await page.mouse.click(4, 4);
+    check((await page.getByTestId('gemas').textContent()).trim() === '10', 'no sumó las 10 gemas de prueba');
+  });
+
   for (const [w, h] of [[320, 568], [390, 844], [768, 1024]]) {
     await flow(`pantalla ${w}×${h}: nada se sale`, browser, async (page) => {
       const desborda = () => page.evaluate(() => document.documentElement.scrollWidth > innerWidth || document.documentElement.scrollHeight > innerHeight);
@@ -349,7 +393,14 @@ async function flow(name, browser, fn, opts) {
       await page.getByTestId('mejorar').click();
       await page.oro(1000000);
       for (const id of ['danio', 'radio', 'slimes', 'cadencia']) await page.comprar(id, 3);
-      for (const sec of ['jugador', 'mago', 'arqueros']) {
+      await page.getByTestId('abrir-ajustes').click();
+      for (let i = 0; i < 10; i++) await page.getByTestId('mas-nivel').click();
+      await page.mouse.click(4, 4);
+      check(await page.getByTestId('seccion-reliquias').count(), 'no salen las Reliquias');
+      // Las 4 pestañas y todo el encabezado (oro, gemas, misiones, glosario, ajustes) dentro de la pantalla.
+      const arriba = await page.$$eval('[data-testid^="seccion-"], [data-testid^="abrir-"], [data-testid="oro-total"], [data-testid="gemas"], [data-testid="ritmo-inactivo"]', (els) => els.filter((e) => { const r = e.getBoundingClientRect(); return r.left < 0 || r.right > innerWidth || r.top < 0; }).map((e) => e.dataset.testid));
+      check(arriba.length === 0, `no caben arriba: ${arriba.join(', ')}`);
+      for (const sec of ['jugador', 'mago', 'arqueros', 'reliquias']) {
         await page.getByTestId(`seccion-${sec}`).click();
         const fuera = await page.$$eval('[data-testid^="talento-"], [data-testid="jugar"]', (els) => els.filter((e) => { const r = e.getBoundingClientRect(); return r.left < 0 || r.right > innerWidth || r.top < 0 || r.bottom > innerHeight; }).map((e) => e.dataset.testid));
         check(fuera.length === 0, `en ${sec} se salen: ${fuera.join(', ')}`);

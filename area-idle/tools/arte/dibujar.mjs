@@ -298,6 +298,14 @@ icon('bolsa', I(o('M22 18 C10 26 6 40 10 50 C14 58 50 58 54 50 C58 40 54 26 42 1
 // Muralla reforzada: un tramo de muralla con un escudo.
 icon('muralla', I(o('M6 26 V14 h10 v6 h8 v-6 h10 v6 h8 v-6 h10 v12 Z', '#c9c0b2', 4) + o('M6 26 H52 V58 H6 Z', '#c9c0b2', 5) + line('M6 38 H52 M6 48 H52 M20 26 V38 M36 38 V48 M22 48 V58', '#8a7f70', 3) + o('M40 30 h20 v12 c0 10 -10 16 -10 16 c0 0 -10 -6 -10 -16 z', P.azul, 4) + line('M50 34 v16 M43 41 h14', P.blanco, 3)));
 icon('corona', I(o('M8 50 L12 14 L24 30 L32 8 L40 30 L52 14 L56 50 Z', P.oro, 5) + f('M12 44 H52 V50 H12 Z', P.oroS) + circ(32, 34, 5, P.rojo, 3) + circ(20, 38, 3.5, P.azul, 3) + circ(44, 38, 3.5, P.azul, 3)));
+// Gemas moradas (misiones) y Reliquias (se compran con gemas).
+const gema = (x, y, k = 1) => g(`translate(${x} ${y}) scale(${k})`, o('M14 4 H50 L60 20 L32 60 L4 20 Z', '#a46cf0', 5) + f('M14 4 H50 L60 20 H4 Z', '#c9a9f5') + line('M4 20 H60 M24 4 L18 20 L32 60 L46 20 L40 4', '#6a3fb0', 2.5) + brillo(22, 12, 5, 3, 0.8));
+icon('gema', I(gema(0, 2)));
+icon('misiones', I(o('M14 8 H48 C54 8 56 12 56 16 V50 C56 56 52 58 48 58 H16 C10 58 8 54 8 50 V14 C8 10 10 8 14 8 Z', P.crema, 5) + o('M8 14 C8 8 16 8 16 14 V18 H8 Z', P.cremaS, 4) + line('M20 22 H46 M20 32 H46 M20 42 H38', P.grisS, 4) + g('translate(34 34) scale(0.42)', o('M14 4 H50 L60 20 L32 60 L4 20 Z', '#a46cf0', 6))));
+icon('poder', I(o('M32 4 l7 14 l15 2 l-11 10 l3 15 l-14 -7 l-14 7 l3 -15 l-11 -10 l15 -2 z', '#a46cf0', 5) + circ(32, 30, 7, '#e0c8ff', 3) + line('M10 54 l8 -6 M54 54 l-8 -6 M32 62 v-8', '#a46cf0', 4)));
+icon('critico', I(o('M32 4 l6 16 l18 -6 l-10 16 l16 8 l-18 4 l4 18 l-16 -10 l-16 10 l4 -18 l-18 -4 l16 -8 l-10 -16 l18 6 z', '#ff5a8a', 5) + line('M24 26 l16 16 M40 26 l-16 16', P.blanco, 5)));
+icon('carcaj', I(o('M18 18 l20 -6 l12 42 l-20 6 z', P.maderaS, 5) + line('M26 16 l-6 -12 M32 14 l-2 -12 M38 12 l2 -12', K, 3) + o('M16 4 l4 6 l4 -6 z M26 2 l4 6 l4 -6 z M38 0 l2 7 l5 -5 z', '#c9a9f5', 3) + circ(46, 46, 9, '#a46cf0', 4) + line('M46 41 v10 M41 46 h10', P.blanco, 3)));
+icon('albanil', I(rect(6, 34, 26, 14, 2, '#c9c0b2', 4) + rect(20, 46, 26, 14, 2, '#c9c0b2', 4) + g('rotate(35 40 24)', rect(36, 6, 8, 34, 3, P.maderaS, 4) + rect(26, 4, 28, 12, 3, P.grisS, 4)) + circ(52, 52, 8, P.pasto, 4) + line('M52 48 v8 M48 52 h8', P.blanco, 3)));
 icon('moneda', I(moneda(32, 32, 26)));
 icon('reloj', I(circ(32, 32, 26, P.blanco) + line('M32 32 v-16 M32 32 l12 8', K, 6) + circ(32, 32, 4, P.rojo, 0)));
 icon('candado', I(o('M18 28 v-8 a14 14 0 0 1 28 0 v8', 'none', 6) + rect(10, 28, 44, 30, 8, P.oro, 5) + circ(32, 41, 5, K, 0) + rect(29, 42, 6, 10, 2, K, 0)));

@@ -95,7 +95,7 @@ export type RunEvent =
   | { type: 'spawn'; id: number; kind: EnemyKind; x: number; y: number }
   | { type: 'shot'; x: number; y: number; forma: Forma; fuente: Source; demora: number }
   | { type: 'impact'; x: number; y: number; forma: Forma; fuente: Source }
-  | { type: 'hit'; id: number; x: number; y: number; danio: number; fuente: Source; efecto: 'debil' | 'fuerte' | null }
+  | { type: 'hit'; id: number; x: number; y: number; danio: number; fuente: Source; efecto: 'debil' | 'fuerte' | 'critico' | null }
   | { type: 'kill'; id: number; kind: EnemyKind; x: number; y: number; oro: number; danio: number; fuente: Source }
   | { type: 'fire'; x: number; y: number; w: number; h: number; duracion: number }
   | { type: 'volley'; arquero: number }
@@ -103,6 +103,8 @@ export type RunEvent =
   | { type: 'sling'; id: number; x: number; y: number; tipo: ProjectileKind | 'golpe' }
   | { type: 'wallHit'; x: number; y: number; danio: number; vida: number; max: number }
   | { type: 'wallDown' }
+  /** El Albañil reparó la muralla (una vez por nivel). */
+  | { type: 'wallRepair'; vida: number; max: number }
   /** El jefe brinca a otro lado (llega en `dura` s), cae aturdido, invoca slimes, lanza baba o se enfurece. */
   | { type: 'bossJump'; id: number; x: number; y: number; tx: number; ty: number; dura: number }
   | { type: 'bossStun'; id: number; x: number; y: number; dura: number }
@@ -131,7 +133,9 @@ export interface Run {
   arrows: Arrow[];
   piedras: Pebble[];
   /** La muralla: si cae, el mago y los arqueros dejan de atacar el resto del nivel. */
-  muro: { vida: number; max: number; caido: boolean };
+  muro: { vida: number; max: number; caido: boolean; reparado: boolean };
+  /** Cuántos de cada tipo se reventaron en la partida (para las misiones). */
+  porTipo: Partial<Record<EnemyKind, number>>;
   cursor: { x: number; y: number };
   disparo: number;
   mago: number;
@@ -164,7 +168,8 @@ export function createRun(base: Stats, h: number, nivel = 1, seed = Date.now(), 
     fires: [],
     arrows: [],
     piedras: [],
-    muro: { vida: stats.muro.vida, max: stats.muro.vida, caido: false },
+    muro: { vida: stats.muro.vida, max: stats.muro.vida, caido: false, reparado: false },
+    porTipo: {},
     cursor: { x: FIELD_W / 2, y: (alto - ALLY_ROW) / 2 },
     // El primer disparo sale enseguida.
     disparo: 0.15,
@@ -297,12 +302,15 @@ function damage(run: Run, e: Enemy, base: number, fuente: Source, events: RunEve
   const tipo = DAMAGE_TYPE_OF[fuente];
   // El jefe aturdido (recién caído de un brinco) recibe doble.
   const aturdido = run.jefe?.id === e.id && run.jefe.aturdido > 0 ? JEFE.aturdidoMult : 1;
-  const danio = base * damageMultiplier(e.kind, tipo) * aturdido;
+  // Tus flechas pueden dar golpe crítico (Reliquia).
+  const critico = fuente === 'jugador' && run.stats.critico.prob > 0 && run.rng() < run.stats.critico.prob;
+  const danio = base * damageMultiplier(e.kind, tipo) * aturdido * (critico ? run.stats.critico.mult : 1);
   e.vida -= danio;
   if (e.vida > 0) {
-    events.push({ type: 'hit', id: e.id, x: e.x, y: e.y, danio, fuente, efecto: effectiveness(e.kind, tipo) });
+    events.push({ type: 'hit', id: e.id, x: e.x, y: e.y, danio, fuente, efecto: critico ? 'critico' : effectiveness(e.kind, tipo) });
     return;
   }
+  run.porTipo[e.kind] = (run.porTipo[e.kind] ?? 0) + 1;
   const oro = ENEMIES[e.kind].oro * run.nivel.oro * run.stats.oroMult;
   run.oro += oro;
   run.reventados++;
@@ -327,6 +335,14 @@ function hitWall(run: Run, x: number, y: number, danio: number, events: RunEvent
   if (run.muro.caido) return;
   run.muro.vida = Math.max(0, run.muro.vida - danio);
   events.push({ type: 'wallHit', x, y, danio, vida: run.muro.vida, max: run.muro.max });
+  // El Albañil la repara una vez por nivel cuando le queda poco (aunque el golpe la fuera a tumbar).
+  const reparar = run.stats.muro.reparar;
+  if (reparar > 0 && !run.muro.reparado && run.muro.vida <= run.muro.max * 0.3) {
+    run.muro.reparado = true;
+    run.muro.vida = Math.min(run.muro.max, Math.max(run.muro.vida, 1) + run.muro.max * reparar);
+    events.push({ type: 'wallRepair', vida: run.muro.vida, max: run.muro.max });
+    return;
+  }
   if (run.muro.vida <= 0) {
     run.muro.caido = true;
     events.push({ type: 'wallDown' });
@@ -586,6 +602,7 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
       const oro = ENEMIES[e.kind].oro * run.nivel.oro * run.stats.oroMult;
       run.oro += oro;
       run.reventados++;
+      run.porTipo[e.kind] = (run.porTipo[e.kind] ?? 0) + 1;
       events.push({ type: 'kill', id: e.id, kind: e.kind, x: e.x, y: e.y, oro, danio: Math.max(1, Math.round(e.vida)), fuente: 'jugador' });
     }
     run.enemies = [];

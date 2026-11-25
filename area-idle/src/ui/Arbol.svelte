@@ -7,6 +7,7 @@
   import { t } from '../i18n';
   import Ajustes from './Ajustes.svelte';
   import Glosario from './Glosario.svelte';
+  import Misiones from './Misiones.svelte';
   import { DAMAGE_TYPE_OF } from '../core/run';
   import { effectValues } from './efectos';
   import Icon from './Icon.svelte';
@@ -15,19 +16,25 @@
 
   const juego = useJuego();
   const view = juego.view;
-  const ICONO: Record<Seccion, string> = { jugador: 'lluvia', mago: 'mago', arqueros: 'arquero' };
+  const ICONO: Record<Seccion, string> = { jugador: 'lluvia', mago: 'mago', arqueros: 'arquero', reliquias: 'gema' };
 
   let seccion = $state<Seccion>('jugador');
   let elegido = $state<TalentId | null>(null);
   let ajustes = $state(false);
   let glosario = $state(false);
+  let misiones = $state(false);
   /** El tipo de daño de cada sección (marca en la esquina de su pestaña). */
-  const TIPO: Record<Seccion, string> = { jugador: DAMAGE_TYPE_OF.jugador, mago: DAMAGE_TYPE_OF.mago, arqueros: DAMAGE_TYPE_OF.arquero };
+  const TIPO: Partial<Record<Seccion, string>> = { jugador: DAMAGE_TYPE_OF.jugador, mago: DAMAGE_TYPE_OF.mago, arqueros: DAMAGE_TYPE_OF.arquero };
+  /** Las Reliquias (con gemas) se ven desde que se abren las misiones. */
+  const secciones = $derived(SECCIONES.filter((s) => s !== 'reliquias' || $view.misiones.abiertas));
 
   const meta = $derived($view.meta);
   const nodos = $derived(TALENTS.filter((d) => d.seccion === seccion && talentVisible(meta, d)));
   const filas = $derived(Math.max(...TALENTS.filter((d) => d.seccion === seccion).map((d) => d.pos[1])) + 1);
-  const alcanza = (d: TalentDef) => talentState(meta, d) === 'disponible' && meta.oro >= costOf(d, levelOf(meta, d.id));
+  /** Lo que tienes para pagarlo: gemas (Reliquias) u oro. */
+  const tengo = (d: TalentDef) => (d.moneda === 'gemas' ? meta.gemas : meta.oro);
+  const monedaDe = (d: TalentDef) => (d.moneda === 'gemas' ? 'gema' : 'moneda');
+  const alcanza = (d: TalentDef) => talentState(meta, d) === 'disponible' && tengo(d) >= costOf(d, levelOf(meta, d.id));
   /** Hay algo que se puede comprar ya en la sección (punto rojo en su pestaña). */
   const puede = $derived(Object.fromEntries(SECCIONES.map((s) => [s, TALENTS.some((d) => d.seccion === s && talentVisible(meta, d) && alcanza(d))])) as Record<Seccion, boolean>);
   const detalle = $derived(elegido ? TALENT_BY_ID[elegido] : null);
@@ -53,25 +60,39 @@
 <div class="arbol" data-testid="arbol">
   <header>
     <div class="izq">
-      <div class="pill oro" data-testid="oro-total"><Icon name="moneda" size={28} /><span class="cifra">{formatGold(meta.oro)}</span></div>
-      {#if $view.ritmoInactivo}
-        <div class="pill inactivo" data-testid="ritmo-inactivo" title={$t('inactivo.explica', { h: $view.ritmoInactivo.horas })}>
-          <Icon name="inactivo" size={22} /><span class="cifra">{$t('inactivo.ritmo', { n: formatNum($view.ritmoInactivo.porMinuto) })}</span>
-        </div>
+      <!-- El oro, y debajo lo que se junta por minuto sin jugar (desde el nivel 3). -->
+      <div class="pill oro">
+        <Icon name="moneda" size={28} />
+        <span class="cifras">
+          <span class="cifra" data-testid="oro-total">{formatGold(meta.oro)}</span>
+          {#if $view.ritmoInactivo}
+            <span class="ritmo cifra" data-testid="ritmo-inactivo" title={$t('inactivo.explica', { h: $view.ritmoInactivo.horas })}>
+              <Icon name="inactivo" size={13} />{$t('inactivo.ritmo', { n: formatNum($view.ritmoInactivo.porMinuto) })}
+            </span>
+          {/if}
+        </span>
+      </div>
+      {#if $view.misiones.abiertas}
+        <div class="pill gemas"><Icon name="gema" size={24} /><span class="cifra" data-testid="gemas">{formatNum(meta.gemas)}</span></div>
       {/if}
     </div>
     <div class="acciones">
+      {#if $view.misiones.abiertas}
+        <button type="button" class="redondo con-punto" aria-label={$t('misiones.titulo')} onclick={() => (misiones = true)} data-testid="abrir-misiones">
+          <Icon name="misiones" size={28} />{#if $view.misiones.listas > 0}<span class="punto-rojo cifra">{$view.misiones.listas}</span>{/if}
+        </button>
+      {/if}
       <button type="button" class="redondo" aria-label={$t('glosario.titulo')} onclick={() => (glosario = true)} data-testid="abrir-glosario"><Icon name="glosario" size={28} /></button>
       <button type="button" class="redondo" aria-label={$t('ajustes.titulo')} onclick={() => (ajustes = true)} data-testid="abrir-ajustes"><Icon name="ajustes" size={26} /></button>
     </div>
   </header>
 
-  <div class="pestanas" role="tablist">
-    {#each SECCIONES as s (s)}
+  <div class="pestanas" role="tablist" style:--cols={secciones.length} class:cuatro={secciones.length > 3}>
+    {#each secciones as s (s)}
       <button type="button" role="tab" class="pestana" class:activa={seccion === s} aria-selected={seccion === s} onclick={() => cambiar(s)} data-testid="seccion-{s}">
         <Icon name={ICONO[s]} size={30} />
         <span>{$t(`secciones.${s}`)}</span>
-        <span class="tipo-sec" title={$t(`tipos.${TIPO[s]}`)}><Icon name="tipo_{TIPO[s]}" size={18} /></span>
+        {#if TIPO[s]}<span class="tipo-sec" title={$t(`tipos.${TIPO[s]}`)}><Icon name="tipo_{TIPO[s]}" size={18} /></span>{/if}
         {#if puede[s] && seccion !== s}<span class="punto"></span>{/if}
       </button>
     {/each}
@@ -101,7 +122,7 @@
       >
         <Icon name={estado === 'bloqueado' ? 'candado' : d.icono} size={34} />
         {#if estado !== 'bloqueado'}<span class="nivel cifra">{nivel}/{d.max}</span>{/if}
-        {#if estado === 'disponible'}<span class="precio cifra"><Icon name="moneda" size={13} />{formatNum(costOf(d, nivel))}</span>{/if}
+        {#if estado === 'disponible'}<span class="precio cifra" class:gemas={d.moneda === 'gemas'}><Icon name={monedaDe(d)} size={13} />{formatNum(costOf(d, nivel))}</span>{/if}
       </button>
     {/each}
   </div>
@@ -124,7 +145,7 @@
         <span class="max">{$t('arbol.max')}</span>
       {:else}
         <button type="button" class="btn btn--accent comprar" disabled={!alcanza(detalle)} onclick={() => juego.buy(detalle.id)} data-testid="comprar">
-          <Icon name="moneda" size={20} /><span class="cifra">{formatNum(costOf(detalle, nivel))}</span>
+          <Icon name={monedaDe(detalle)} size={20} /><span class="cifra">{formatNum(costOf(detalle, nivel))}</span>
         </button>
       {/if}
     </div>
@@ -142,6 +163,9 @@
 {#if ajustes}
   <Ajustes cerrar={() => (ajustes = false)} />
 {/if}
+{#if misiones}
+  <Misiones cerrar={() => (misiones = false)} />
+{/if}
 {#if glosario}
   <Glosario cerrar={() => (glosario = false)} />
 {/if}
@@ -152,6 +176,8 @@
     inset: 0;
     display: grid;
     grid-template-rows: auto auto 1fr auto auto auto;
+    /* Que nada (pestañas, encabezado) ensanche la columna más allá de la pantalla. */
+    grid-template-columns: minmax(0, 1fr);
     gap: 10px;
     padding: calc(10px + env(safe-area-inset-top)) 12px calc(12px + env(safe-area-inset-bottom));
     background: rgba(30, 70, 50, 0.88);
@@ -160,8 +186,10 @@
   }
   header {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
+    gap: 8px 6px;
   }
   .pill {
     display: flex;
@@ -190,14 +218,55 @@
     gap: 6px;
     min-width: 0;
   }
-  .pill.inactivo {
-    padding: 2px 10px 2px 4px;
-    background: #e8ddff;
-    font-size: 15px;
+  .cifras {
+    display: grid;
+    line-height: 1;
+  }
+  .ritmo {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin-top: 1px;
+    color: #6a4bb0;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  .pill.gemas {
+    padding: 3px 12px 3px 5px;
+    background: #efe4ff;
+    font-size: 20px;
+  }
+  .precio.gemas {
+    background: #efe4ff;
+  }
+  .con-punto {
+    position: relative;
+  }
+  .punto-rojo {
+    position: absolute;
+    top: -7px;
+    right: -7px;
+    min-width: 20px;
+    padding: 0 5px;
+    border: 2px solid var(--line);
+    border-radius: 999px;
+    background: var(--danger);
+    color: #fff;
+    font-size: 12px;
+  }
+  /* Con cuatro pestañas solo cabe el dibujo (el nombre, en pantallas anchas). */
+  .pestanas.cuatro .pestana span:not(.tipo-sec):not(.punto) {
+    display: none;
+  }
+  @media (min-width: 560px) {
+    .pestanas.cuatro .pestana span:not(.tipo-sec):not(.punto) {
+      display: inline;
+    }
   }
   .acciones {
     display: flex;
     gap: 8px;
+    margin-left: auto;
   }
   .tipo-sec {
     position: absolute;
@@ -207,7 +276,7 @@
   }
   .pestanas {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(var(--cols), 1fr);
     gap: 6px;
   }
   .pestana {

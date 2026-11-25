@@ -57,6 +57,8 @@
         <button type="button" class="btn" onclick={() => juego.addGold(n)} data-testid="oro-{n}">{$t('ajustes.oro', { n: n.toLocaleString('es') })}</button>
       {/each}
       <button type="button" class="btn" onclick={() => juego.unlockNext()} data-testid="mas-nivel">{$t('ajustes.masNivel')}</button>
+      <button type="button" class="btn" onclick={() => juego.addGems(10)} data-testid="mas-gemas">{$t('ajustes.masGemas')}</button>
+      <button type="button" class="btn" onclick={() => juego.newDay()} data-testid="nuevo-dia">{$t('ajustes.nuevoDia')}</button>
       <button type="button" class="btn" onclick={() => (juego.simulateAway(3600), cerrar())} data-testid="simular-hora">{$t('ajustes.simular')}</button>
     </div>
     <!-- Como si hubieras jugado ese tiempo: partidas, oro, compras en el árbol y niveles. -->

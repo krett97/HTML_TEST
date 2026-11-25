@@ -221,8 +221,11 @@ export function levelConfig(nivel: number): LevelConfig {
  */
 export const INACTIVO = { desde: 3, eficiencia: 0.15, porNivel: 0.1, horas: 2, horasPorNivel: 1, minSegundos: 60, segundosPorNivelJugado: 30 } as const;
 
-export type Seccion = 'jugador' | 'mago' | 'arqueros';
-export const SECCIONES: Seccion[] = ['jugador', 'mago', 'arqueros'];
+/** Desde qué nivel se abren las misiones (diarias y permanentes), las gemas moradas y las Reliquias. */
+export const MISIONES_DESDE = 11;
+
+export type Seccion = 'jugador' | 'mago' | 'arqueros' | 'reliquias';
+export const SECCIONES: Seccion[] = ['jugador', 'mago', 'arqueros', 'reliquias'];
 
 export type TalentId =
   // Jugador
@@ -248,7 +251,12 @@ export type TalentId =
   | 'multiflecha'
   | 'arcoRapido'
   | 'arcoDanio'
-  | 'muralla';
+  | 'muralla'
+  // Reliquias (se pagan con gemas moradas)
+  | 'poder'
+  | 'critico'
+  | 'carcaj'
+  | 'albanil';
 
 export interface TalentDef {
   id: TalentId;
@@ -263,6 +271,8 @@ export interface TalentDef {
   raiz?: boolean;
   /** Nivel del juego que hay que haber alcanzado para comprarlo (además del requisito). */
   nivelMin?: number;
+  /** Se paga con gemas moradas en vez de oro (las Reliquias). */
+  moneda?: 'gemas';
   /** Lugar en su árbol: columna (−2…2) y fila (0 arriba). */
   pos: [number, number];
 }
@@ -295,6 +305,12 @@ export const TALENTS: TalentDef[] = [
   { id: 'arcoRapido', seccion: 'arqueros', icono: 'arcoRapido', max: 10, costo: { base: 30, crece: 1.9 }, requiere: { id: 'arqueros', nivel: 1 }, pos: [1, 1] },
   { id: 'muralla', seccion: 'arqueros', icono: 'muralla', max: 10, costo: { base: 50, crece: 1.9 }, requiere: { id: 'masArqueros', nivel: 1 }, pos: [-1, 2] },
   { id: 'arcoDanio', seccion: 'arqueros', icono: 'arcoDanio', max: 15, costo: { base: 40, crece: 1.8 }, requiere: { id: 'multiflecha', nivel: 1 }, pos: [0, 2] },
+
+  // ---- Reliquias: mejoras que el oro no da; se pagan con gemas moradas (misiones) ----
+  { id: 'poder', seccion: 'reliquias', icono: 'poder', max: 10, costo: { base: 5, crece: 1.35 }, moneda: 'gemas', requiere: null, raiz: true, nivelMin: MISIONES_DESDE, pos: [0, 0] },
+  { id: 'critico', seccion: 'reliquias', icono: 'critico', max: 6, costo: { base: 6, crece: 1.5 }, moneda: 'gemas', requiere: { id: 'poder', nivel: 1 }, pos: [-1, 1] },
+  { id: 'carcaj', seccion: 'reliquias', icono: 'carcaj', max: 3, costo: { base: 10, crece: 2 }, moneda: 'gemas', requiere: { id: 'poder', nivel: 1 }, pos: [0, 1] },
+  { id: 'albanil', seccion: 'reliquias', icono: 'albanil', max: 3, costo: { base: 8, crece: 1.8 }, moneda: 'gemas', requiere: { id: 'poder', nivel: 1 }, pos: [1, 1] },
 ];
 
 export const TALENT_BY_ID = Object.fromEntries(TALENTS.map((t) => [t.id, t])) as Record<TalentId, TalentDef>;

@@ -6,6 +6,8 @@ import { formatClock, formatNum } from '../src/core/format';
 import { buyTalent, chooseLevel, costOf, createMeta, finishRun, levelOf, loadMeta, talentState, talentVisible } from '../src/core/meta';
 import { ALLY_ROW, archerSpots, bossOf, createRun, DAMAGE_TYPE_OF, FIELD_W, moveCursor, startRun, stepRun, type Run, type RunEvent } from '../src/core/run';
 import { computeStats } from '../src/core/stats';
+import { BONO_DIARIO, claimableCount, claimBonus, claimMission, dailyProgress, dayKey, DIARIAS, DIARIAS_POR_DIA, MISSION_BY_ID, msUntilReset, permanentProgress, rollDaily } from '../src/core/misiones';
+import { MISIONES_DESDE } from '../src/core/datos';
 
 /** Una partida vacía con un enemigo puesto a mano. */
 function withEnemy(run: Run, x: number, y: number, vida = 3): void {
@@ -530,7 +532,7 @@ describe('árbol', () => {
     meta.talentos.radio = 1;
     expect(talentVisible(meta, TALENT_BY_ID.tiempo)).toBe(true);
   });
-  it('tres secciones, cada una con una raíz; requisitos que existen y sin dos nodos en el mismo lugar', () => {
+  it('cuatro secciones, cada una con una raíz; requisitos que existen y sin dos nodos en el mismo lugar', () => {
     for (const sec of SECCIONES) expect(TALENTS.filter((t) => t.seccion === sec && t.raiz)).toHaveLength(1);
     const lugares = new Set(TALENTS.map((t) => `${t.seccion}:${t.pos.join(',')}`));
     expect(lugares.size).toBe(TALENTS.length);
@@ -588,5 +590,143 @@ describe('ritmo (bot)', () => {
     expect(meta.nivel).toBeGreaterThan(8);
     expect(levelOf(meta, 'mago')).toBe(1);
     expect(levelOf(meta, 'arqueros')).toBe(1);
+  });
+});
+
+describe('misiones y gemas', () => {
+  const HOY = new Date(2026, 10, 25, 15, 0).getTime();
+  const MANANA = new Date(2026, 10, 26, 0, 5).getTime();
+  const abierta = () => {
+    const meta = createMeta();
+    meta.nivel = MISIONES_DESDE;
+    return meta;
+  };
+  it('se abren en el nivel 11', () => {
+    const meta = createMeta();
+    meta.nivel = MISIONES_DESDE - 1;
+    expect(rollDaily(meta, HOY)).toBe(false);
+    expect(meta.misiones.diarias).toHaveLength(0);
+    expect(claimableCount(meta)).toBe(0);
+    meta.nivel = MISIONES_DESDE;
+    expect(rollDaily(meta, HOY)).toBe(true);
+    expect(meta.misiones.diarias).toHaveLength(DIARIAS_POR_DIA);
+    expect(new Set(meta.misiones.diarias).size).toBe(DIARIAS_POR_DIA);
+  });
+  it('las diarias son las mismas todo el día, cambian a medianoche y no piden enemigos que aún no salen', () => {
+    const a = abierta();
+    const b = abierta();
+    rollDaily(a, HOY);
+    rollDaily(b, HOY + 3600_000);
+    expect(b.misiones.diarias).toEqual(a.misiones.diarias);
+    expect(rollDaily(a, HOY + 60_000)).toBe(false);
+    expect(dayKey(MANANA)).not.toBe(dayKey(HOY));
+    expect(msUntilReset(HOY)).toBe(9 * 3600_000);
+    for (let d = 0; d < 40; d++) {
+      const m = abierta();
+      rollDaily(m, HOY + d * 86_400_000);
+      for (const id of m.misiones.diarias) expect(MISSION_BY_ID[id]!.desde ?? 0).toBeLessThanOrEqual(MISIONES_DESDE);
+    }
+    expect(DIARIAS.some((d) => (d.desde ?? 0) > MISIONES_DESDE)).toBe(true);
+  });
+  it('las diarias cuentan desde que empieza el día; se cobran una vez y las 3 dan bono', () => {
+    const meta = abierta();
+    meta.cuenta.reventados = 5000;
+    meta.cuenta.partidas = 300;
+    meta.cuenta.ganados = 200;
+    rollDaily(meta, HOY);
+    meta.misiones.diarias = ['reventar', 'partidas', 'ganar'];
+    expect(dailyProgress(meta).every((p) => p.actual === 0 && !p.completa)).toBe(true);
+    expect(claimMission(meta, 'reventar')).toBe(0);
+    finishRun(meta, { oro: 0, reventados: 700, gano: true, nivel: 1 });
+    const [reventar] = dailyProgress(meta);
+    expect(reventar).toMatchObject({ actual: MISSION_BY_ID.reventar!.meta, completa: true, cobrada: false });
+    expect(claimMission(meta, 'reventar')).toBe(MISSION_BY_ID.reventar!.gemas);
+    expect(claimMission(meta, 'reventar')).toBe(0);
+    expect(meta.gemas).toBe(MISSION_BY_ID.reventar!.gemas);
+    for (let i = 0; i < 9; i++) finishRun(meta, { oro: 0, reventados: 1, gano: true, nivel: 1 });
+    expect(claimBonus(meta)).toBe(0);
+    claimMission(meta, 'partidas');
+    claimMission(meta, 'ganar');
+    expect(claimBonus(meta)).toBe(BONO_DIARIO);
+    expect(claimBonus(meta)).toBe(0);
+    // Al día siguiente, otras diarias que vuelven a empezar de cero.
+    rollDaily(meta, MANANA);
+    expect(meta.misiones.cobradas).toHaveLength(0);
+    expect(dailyProgress(meta).every((p) => p.actual === 0)).toBe(true);
+  });
+  it('las permanentes se cobran una sola vez (nivel, jefes, orcos…)', () => {
+    const meta = abierta();
+    meta.nivel = 15;
+    expect(claimMission(meta, 'nivel15')).toBe(MISSION_BY_ID.nivel15!.gemas);
+    expect(claimMission(meta, 'nivel15')).toBe(0);
+    expect(claimMission(meta, 'nivel20')).toBe(0);
+    expect(claimMission(meta, 'rey')).toBe(0);
+    finishRun(meta, { oro: 0, reventados: 50, gano: true, nivel: 10, jefe: 'rey', porTipo: { orco: 100 } });
+    expect(claimMission(meta, 'rey')).toBe(MISSION_BY_ID.rey!.gemas);
+    expect(claimMission(meta, 'orcos100')).toBe(MISSION_BY_ID.orcos100!.gemas);
+    expect(permanentProgress(meta).filter((p) => p.cobrada).map((p) => p.def.id).sort()).toEqual(['nivel15', 'orcos100', 'rey']);
+  });
+  it('terminar una partida lleva la cuenta (ganadas, sin perder la muralla, por tipo, jefes)', () => {
+    const meta = createMeta();
+    finishRun(meta, { oro: 0, reventados: 20, gano: true, nivel: 1, muroCaido: false, porTipo: { verde: 20 } });
+    finishRun(meta, { oro: 0, reventados: 5, gano: true, nivel: 2, muroCaido: true });
+    finishRun(meta, { oro: 0, reventados: 3, gano: false, nivel: 3 });
+    expect(meta.cuenta).toMatchObject({ partidas: 3, reventados: 28, ganados: 2, intacta: 1, porTipo: { verde: 20 } });
+  });
+  it('las Reliquias se pagan con gemas, no con oro, y se abren con las misiones', () => {
+    const meta = createMeta();
+    meta.oro = 1e9;
+    const poder = TALENT_BY_ID.poder;
+    expect(poder.moneda).toBe('gemas');
+    expect(talentState(meta, poder)).toBe('bloqueado');
+    meta.nivel = MISIONES_DESDE;
+    expect(talentState(meta, poder)).toBe('disponible');
+    expect(buyTalent(meta, 'poder')).toBe(false);
+    meta.gemas = costOf(poder, 0);
+    expect(buyTalent(meta, 'poder')).toBe(true);
+    expect(meta.gemas).toBe(0);
+    expect(meta.oro).toBe(1e9);
+    expect(computeStats({ poder: 2, danio: 4 }).danio).toBeCloseTo(computeStats({ danio: 4 }).danio * 1.2);
+    expect(computeStats({ carcaj: 2, multiflecha: 1 }).arqueros.objetivos).toBe(4);
+  });
+  it('golpe crítico: tus flechas a veces pegan triple', () => {
+    const run = createRun(computeStats({}), 560, 1, 1);
+    run.stats = { ...run.stats, ritmo: 0, critico: { prob: 1, mult: 3 } };
+    moveCursor(run, 100, 100);
+    withEnemy(run, 100, 100, 100);
+    const events = [...stepRun(run, 0.1), ...stepRun(run, 0.25)];
+    expect(events.find((e) => e.type === 'hit')).toMatchObject({ efecto: 'critico', danio: 3 });
+  });
+  it('el Albañil repara la muralla una vez por nivel, aunque el golpe la fuera a tumbar', () => {
+    const run = createRun(computeStats({ albanil: 1 }), 560, 7, 1);
+    run.stats = { ...run.stats, ritmo: 0 };
+    run.cursor = { x: -999, y: -999 };
+    run.muro.vida = 2;
+    run.enemies.push({ id: 500, kind: 'rojo', x: 180, y: 200, vx: 0, vy: 0, vida: 1e9, vidaMax: 1e9, giro: 99, tiro: 0.01 });
+    const events: RunEvent[] = [];
+    for (let i = 0; i < 60; i++) events.push(...stepRun(run, 0.05));
+    expect(events.filter((e) => e.type === 'wallRepair')).toHaveLength(1);
+    expect(run.muro.caido).toBe(false);
+    expect(run.muro.vida).toBeGreaterThan(run.muro.max * 0.3);
+    run.muro.vida = 1;
+    for (let i = 0; i < 80; i++) events.push(...stepRun(run, 0.05));
+    expect(events.filter((e) => e.type === 'wallRepair')).toHaveLength(1);
+    expect(run.muro.caido).toBe(true);
+  });
+  it('gemas, cuenta y misiones se guardan y toleran basura', () => {
+    const meta = abierta();
+    rollDaily(meta, HOY);
+    meta.gemas = 17;
+    meta.cuenta.compras = 9;
+    meta.misiones.logros = ['nivel15'];
+    const de = loadMeta(JSON.parse(JSON.stringify(meta)));
+    expect(de.gemas).toBe(17);
+    expect(de.cuenta.compras).toBe(9);
+    expect(de.misiones).toEqual(meta.misiones);
+    const roto = loadMeta({ ...JSON.parse(JSON.stringify(meta)), gemas: -4, cuenta: 'x', misiones: { diarias: ['inventada', 3], logros: 5 } });
+    expect(roto.gemas).toBe(0);
+    expect(roto.cuenta.partidas).toBe(0);
+    expect(roto.misiones.diarias.every((id) => MISSION_BY_ID[id])).toBe(true);
+    expect(Array.isArray(roto.misiones.logros)).toBe(true);
   });
 });

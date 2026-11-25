@@ -23,8 +23,10 @@ export interface Stats {
   mago: { activo: boolean; intervalo: number; lado: number; danio: number };
   /** El suelo en llamas que dejan las explosiones del mago. */
   fuego: { activo: boolean; duracion: number; dps: number };
-  /** Vida de la muralla. */
-  muro: { vida: number };
+  /** Vida de la muralla y cuánto se repara sola una vez por nivel (Albañil; 0: no se repara). */
+  muro: { vida: number; reparar: number };
+  /** Golpes críticos de tus flechas: probabilidad y cuánto multiplican. */
+  critico: { prob: number; mult: number };
   /** Arqueros: cuántos, cada cuánto tiran, a cuántos objetivos a la vez y cuánto pega cada flecha. */
   arqueros: { cantidad: number; intervalo: number; objetivos: number; danio: number };
 }
@@ -35,7 +37,8 @@ export function computeStats(levels: Levels): Stats {
   const danio = lv(levels, 'danio');
   const slimes = lv(levels, 'slimes');
   // Daño: +1 por nivel y se duplica cada 10 niveles. El mago, el fuego y los arqueros pegan en proporción.
-  const golpe = (BASE.danio + danio) * Math.pow(2, Math.floor(danio / 10));
+  // Poder ancestral (Reliquia): +10 % a todo el daño por nivel.
+  const golpe = (BASE.danio + danio) * Math.pow(2, Math.floor(danio / 10)) * (1 + 0.1 * lv(levels, 'poder'));
   const area = 1 + 0.1 * lv(levels, 'magoArea');
   return {
     danio: golpe,
@@ -60,11 +63,12 @@ export function computeStats(levels: Levels): Stats {
       duracion: BASE.fuego.duracion + 0.3 * lv(levels, 'fuegoFuerte'),
       dps: golpe * BASE.fuego.dps * (1 + 0.4 * lv(levels, 'fuegoFuerte')),
     },
-    muro: { vida: BASE.muro.vida * (1 + 0.5 * lv(levels, 'muralla')) },
+    muro: { vida: BASE.muro.vida * (1 + 0.5 * lv(levels, 'muralla')), reparar: lv(levels, 'albanil') > 0 ? 0.25 + 0.15 * lv(levels, 'albanil') : 0 },
+    critico: { prob: 0.05 * lv(levels, 'critico'), mult: 3 },
     arqueros: {
       cantidad: lv(levels, 'arqueros') > 0 ? 1 + lv(levels, 'masArqueros') : 0,
       intervalo: BASE.arqueros.intervalo * Math.pow(0.88, lv(levels, 'arcoRapido')),
-      objetivos: BASE.arqueros.objetivos + lv(levels, 'multiflecha'),
+      objetivos: BASE.arqueros.objetivos + lv(levels, 'multiflecha') + lv(levels, 'carcaj'),
       danio: golpe * BASE.arqueros.danio * (1 + 0.5 * lv(levels, 'arcoDanio')),
     },
   };
