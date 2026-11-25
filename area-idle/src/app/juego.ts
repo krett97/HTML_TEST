@@ -4,6 +4,7 @@ import { writable, type Readable } from 'svelte/store';
 import type { TalentId } from '../core/datos';
 import { buyTalent, chooseLevel, createMeta, finishRun, loadMeta, stats, type Meta } from '../core/meta';
 import { idleGoldPerMinute, idleReward, idleUnlocked } from '../core/inactivo';
+import { simulatePlay, type SimulatedPlay } from '../core/bot';
 import { bossOf, createRun, moveCursor, startRun, stepRun, type Run, type RunEvent } from '../core/run';
 import { ENEMIES, levelConfig, type EnemyKind, type ZoneId } from '../core/datos';
 import { locale, detectLocale } from '../i18n';
@@ -40,8 +41,7 @@ export interface Vista {
   nivelDeJefe: boolean;
   /** La zona del nivel que se juega (o del elegido, fuera de la partida). */
   zona: ZoneId;
-  /** Modo pruebas: minutos de más en cada partida. */
-  minutosExtra: number;
+
   /** La muralla en la partida: vida, y si ya cayó (sus aliados no atacan el resto del nivel). */
   muro: { vida: number; max: number; caido: boolean } | null;
   /** Sube en cada partida nueva (la escena se reinicia al verlo cambiar). */
@@ -60,8 +60,7 @@ export class Juego {
   private toco = false;
   private partida = 0;
   private premio = 0;
-  /** Modo pruebas: segundos de más en cada partida (no se guarda). */
-  tiempoExtra = 0;
+
   private pendiente: { segundos: number; oro: number; tope: boolean } | null = null;
   private abrioInactivo = false;
   /** Al abrir: quien ya jugó llega al árbol; quien es nuevo, directo a jugar. */
@@ -121,7 +120,7 @@ export class Juego {
   /** Empieza una partida en un campo de `alto` unidades (lo decide la escena según la pantalla). */
   start(alto: number, arriba?: number): RunEvent[] {
     this.run = createRun(stats(this.meta), alto, this.meta.jugando, Date.now(), arriba);
-    if (this.tiempoExtra) this.run.stats = { ...this.run.stats, duracion: this.run.stats.duracion + this.tiempoExtra };
+
     this.premio = 0;
     this.toco = false;
     this.partida++;
@@ -245,11 +244,15 @@ export class Juego {
     this.publish();
   }
 
-  /** Modo pruebas: un minuto más en el reloj de la partida en curso (o, fuera de ella, en todas las que siguen). */
-  addMinute(): void {
-    if (this.run && this.fase === 'jugando') this.run.stats = { ...this.run.stats, duracion: this.run.stats.duracion + 60 };
-    else this.tiempoExtra += 60;
+  /**
+   * Modo pruebas: avanza la partida como si hubieras jugado `segundos` (partidas, oro, compras en el
+   * árbol, niveles). Devuelve un resumen.
+   */
+  simulatePlay(segundos: number): SimulatedPlay {
+    const r = simulatePlay(this.meta, segundos);
+    this.save();
     this.publish();
+    return r;
   }
 
   /** Modo pruebas: termina la partida ya. */
@@ -287,7 +290,7 @@ export class Juego {
         : null,
       nivelDeJefe: !!levelConfig(this.meta.jugando).jefe,
       zona: run && this.fase !== 'arbol' ? run.nivel.zona : levelConfig(this.meta.jugando).zona,
-      minutosExtra: this.tiempoExtra / 60,
+
       ritmoInactivo: idleUnlocked(this.meta) ? { porMinuto: idleGoldPerMinute(this.meta), horas: stats(this.meta).inactivo.horas } : null,
       abrioInactivo: this.abrioInactivo && this.fase === 'fin',
       vivos: run?.enemies.length ?? 0,

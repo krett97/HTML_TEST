@@ -3,14 +3,14 @@
 // Imprime cada partida, el nivel alcanzado por minuto y cuándo compra cada talento.
 // Uso: npm run simular
 import { TALENTS } from '../src/core/datos';
-import { playAndShop } from '../src/core/bot';
+import { PAUSA_ENTRE_PARTIDAS, playAndShop } from '../src/core/bot';
 import { createMeta } from '../src/core/meta';
 
 const meta = createMeta();
 let segundos = 0;
 const hitos = new Map<string, string>();
 const porMinuto = new Map<number, number>();
-const PAUSA = 6; // segundos entre partidas (fin y árbol)
+const PAUSA = PAUSA_ENTRE_PARTIDAS;
 let perdidas = 0;
 let muros = 0;
 const perdidasPorTramo = [0, 0, 0, 0, 0];

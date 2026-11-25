@@ -135,8 +135,8 @@
     "terminar": "End round",
     "masNivel": "+1 level",
     "simular": "Simulate 1 h away",
-    "masMinuto": "+1 min per round",
-    "minutosExtra": "Extra time each round: {n} min"
+    "jugarMin": "+{n} min of play",
+    "resumen": "In {min} min of play: {partidas} rounds ({ganadas} won), level {desde} → {hasta}, {compras} upgrades bought, +{oro} gold."
   },
   "secciones": {
     "jugador": "Player",

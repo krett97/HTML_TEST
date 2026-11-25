@@ -5,6 +5,9 @@ import { TALENTS } from './datos';
 import { buyTalent, chooseLevel, costOf, finishRun, levelOf, stats, talentState, type Meta } from './meta';
 import { bestSpot, createRun, moveCursor, startRun, stepRun } from './run';
 
+/** Segundos que pasa un jugador entre partidas (ver el fin, comprar en el árbol). */
+export const PAUSA_ENTRE_PARTIDAS = 6;
+
 /** Alto típico del campo en un celular vertical (unidades). */
 export const BOT_FIELD_H = 700;
 
@@ -59,4 +62,33 @@ export function playAndShop(meta: Meta, seed: number): BotRun {
   if (r.gano || nivel < meta.nivel) chooseLevel(meta, meta.nivel);
   else chooseLevel(meta, nivel - 1);
   return { nivel, gano: r.gano, oro: r.oro, premio, reventados: r.reventados, total: r.total, segundos: r.segundos, muroCaido: r.muroCaido, compras };
+}
+
+export interface SimulatedPlay {
+  partidas: number;
+  ganadas: number;
+  desde: number;
+  hasta: number;
+  compras: number;
+  oro: number;
+}
+
+/**
+ * Juega `segundos` de tiempo de juego como lo haría un jugador atento (partidas, oro, compras en el
+ * árbol, avanzar de nivel o juntar oro en el anterior), sobre la partida guardada. La última partida se
+ * termina aunque se pase un poco del tiempo. Lo usa el modo pruebas ("+1 min de juego").
+ */
+export function simulatePlay(meta: Meta, segundos: number, seed = Date.now()): SimulatedPlay {
+  const r: SimulatedPlay = { partidas: 0, ganadas: 0, desde: meta.nivel, hasta: meta.nivel, compras: 0, oro: 0 };
+  let t = 0;
+  while (t < segundos) {
+    const p = playAndShop(meta, seed + r.partidas * 7919);
+    t += p.segundos + PAUSA_ENTRE_PARTIDAS;
+    r.partidas++;
+    if (p.gano) r.ganadas++;
+    r.compras += p.compras.length;
+    r.oro += p.oro + p.premio;
+  }
+  r.hasta = meta.nivel;
+  return r;
 }

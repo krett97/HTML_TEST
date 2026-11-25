@@ -66,7 +66,6 @@
 {/if}
 {#if __PRUEBAS__}
   <button type="button" class="terminar" onclick={() => juego.endNow()} data-testid="terminar">⏭</button>
-  <button type="button" class="terminar mas-tiempo" onclick={() => juego.addMinute()} data-testid="mas-minuto">+1m</button>
 {/if}
 
 <style>
@@ -312,9 +311,5 @@
     background: var(--panel);
     font-size: 14px;
     opacity: 0.7;
-  }
-  .terminar.mas-tiempo {
-    top: calc(136px + env(safe-area-inset-top));
-    font-size: 12px;
   }
 </style>

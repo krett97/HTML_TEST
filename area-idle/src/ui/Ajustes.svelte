@@ -1,6 +1,7 @@
 <script lang="ts">
   // Ajustes: sonido, idioma y reiniciar desde cero (dos toques). En la versión de pruebas, oro de regalo.
-  import { t } from '../i18n';
+  import { locale, t } from '../i18n';
+  import { formatGold } from '../core/format';
 
   import { useJuego } from './context';
 
@@ -8,6 +9,12 @@
   const juego = useJuego();
   const view = juego.view;
   let confirmar = $state(false);
+  let resumen = $state('');
+
+  function jugar(min: number) {
+    const r = juego.simulatePlay(min * 60);
+    resumen = $t('ajustes.resumen', { min, partidas: r.partidas, ganadas: r.ganadas, desde: r.desde, hasta: r.hasta, compras: r.compras, oro: formatGold(r.oro) });
+  }
   let timer: ReturnType<typeof setTimeout> | undefined;
 
   function reiniciar() {
@@ -35,7 +42,7 @@
   </label>
   <label class="fila">
     <span>{$t('ajustes.idioma')}</span>
-    <select value={$view.meta.ajustes.idioma ?? ''} onchange={(e) => juego.setLanguage(e.currentTarget.value === 'en' ? 'en' : 'es')}>
+    <select value={$view.meta.ajustes.idioma ?? $locale} onchange={(e) => juego.setLanguage(e.currentTarget.value === 'en' ? 'en' : 'es')}>
       <option value="es">Español</option>
       <option value="en">English</option>
     </select>
@@ -51,9 +58,16 @@
       {/each}
       <button type="button" class="btn" onclick={() => juego.unlockNext()} data-testid="mas-nivel">{$t('ajustes.masNivel')}</button>
       <button type="button" class="btn" onclick={() => (juego.simulateAway(3600), cerrar())} data-testid="simular-hora">{$t('ajustes.simular')}</button>
-      <button type="button" class="btn" onclick={() => juego.addMinute()} data-testid="mas-minuto-ajustes">{$t('ajustes.masMinuto')}</button>
     </div>
-    <p class="version" data-testid="minutos-extra">{$t('ajustes.minutosExtra', { n: $view.minutosExtra })}</p>
+    <!-- Como si hubieras jugado ese tiempo: partidas, oro, compras en el árbol y niveles. -->
+    <div class="botones">
+      {#each [1, 10] as min (min)}
+        <button type="button" class="btn" onclick={() => jugar(min)} data-testid="jugar-{min}-min">{$t('ajustes.jugarMin', { n: min })}</button>
+      {/each}
+    </div>
+    {#if resumen}
+      <p class="resumen" data-testid="resultado-simulado">{resumen}</p>
+    {/if}
   {/if}
   <p class="version">{$t('ajustes.version', { v: __APP_VERSION__ })}</p>
 </div>
@@ -122,6 +136,14 @@
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
+  }
+  .resumen {
+    margin: 0;
+    padding: 6px 10px;
+    border: 2px solid var(--line);
+    border-radius: 12px;
+    background: #e8f6dd;
+    font-size: 13px;
   }
   .version {
     margin: 0;

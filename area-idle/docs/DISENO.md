@@ -1,6 +1,6 @@
 # Campo de Slimes: diseño del prototipo
 
-> Versión 0.5.0. Nombre provisional. Nació de pausar el juego del gato
+> Versión 0.5.1. Nombre provisional. Nació de pausar el juego del gato
 > ([`../../gato-idle/docs/DECISIONES.md`](../../gato-idle/docs/DECISIONES.md)), tomando su base técnica y su
 > arte en código ([`../../REUSO.md`](../../REUSO.md)). Referencia de sensación: *Don't Stop The Pop!*
 > (cientos de cosas reventando en un área) y el idle del castor (rocas que caen, mundo que cambia por fase).
@@ -93,7 +93,9 @@ estabas" dice cuánto tiempo pasó y cuánto oro se juntó, con un botón para c
   el de los slimes, el premio por nivel y lo que se junta sin jugar.
 - En el árbol, junto al oro, una píldora dice cuánto se gana por minuto sin jugar.
 - El juego guarda la hora en cada guardado (también cada 20 s y al pasar a segundo plano). El modo
-  pruebas tiene "Simular 1 h fuera", "+1 nivel" y "+1 min por partida" (y en la partida, "+1m" junto a ⏭).
+  pruebas tiene "Simular 1 h fuera", "+1 nivel" y **"+1 min de juego" / "+10 min de juego"**: el jugador
+  simulado del simulador juega ese tiempo sobre tu partida (partidas, oro, compras en el árbol, niveles) y
+  sale un resumen ("En 10 min de juego: 23 partidas (17 ganadas), nivel 3 → 14, 75 mejoras, +8.95K de oro").
 
 ## 5c. Jefes (desde 0.4.0)
 
@@ -167,7 +169,7 @@ unas 30 partidas de 45 minutos y ahí sirve Muralla reforzada. (El bot no cobra 
 
 ## 7. Técnica
 
-- `src/core/` es lógica pura y probada (50 pruebas): `run.ts` (la partida paso a paso; devuelve eventos),
+- `src/core/` es lógica pura y probada (51 pruebas): `run.ts` (la partida paso a paso; devuelve eventos),
   `stats.ts` (estadísticas desde los talentos), `meta.ts` (oro, árbol, guardado), `datos.ts`, `bot.ts`.
 - `src/game/Campo.ts` (Phaser 4) solo dibuja los eventos: sprites reciclados para cientos de slimes,
   números de daño con una **fuente de mapa de bits** hecha al arrancar (`numeros.ts`), partículas, flechas

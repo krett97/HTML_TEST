@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { playAndShop } from '../src/core/bot';
+import { playAndShop, simulatePlay } from '../src/core/bot';
 import { activeGoldPerMinute, idleGoldPerMinute, idleReward, idleUnlocked } from '../src/core/inactivo';
 import { isBossLevel, JEFE, JEFES, bossFor, zoneOf, DESDE, INACTIVO, ROJO_DESDE, AZUL_DESDE, DAMAGE_TYPES, damageMultiplier, ENEMIES, levelConfig, PRIMERA_OLA, SECCIONES, TALENT_BY_ID, TALENTS } from '../src/core/datos';
 import { formatClock, formatNum } from '../src/core/format';
@@ -560,6 +560,21 @@ describe('guardado', () => {
     expect(m.oro).toBe(0);
     expect(m.talentos).toEqual({ danio: 40 });
     expect(m.ajustes.sonido).toBe(true);
+  });
+});
+
+describe('modo pruebas: jugar tiempo simulado', () => {
+  it('"+1 min de juego" juega partidas, compra y avanza sobre la partida guardada', () => {
+    const meta = createMeta();
+    const r = simulatePlay(meta, 60, 1);
+    expect(r.partidas).toBeGreaterThanOrEqual(2);
+    expect(r.desde).toBe(1);
+    expect(r.hasta).toBe(meta.nivel);
+    expect(meta.partidas).toBe(r.partidas);
+    expect(r.compras).toBeGreaterThan(0);
+    expect(levelOf(meta, 'danio')).toBeGreaterThan(0);
+    const diez = simulatePlay(meta, 600, 2);
+    expect(diez.hasta).toBeGreaterThan(diez.desde);
   });
 });
 

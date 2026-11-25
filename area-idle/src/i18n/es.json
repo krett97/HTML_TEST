@@ -135,8 +135,8 @@
     "terminar": "Terminar partida",
     "masNivel": "+1 nivel",
     "simular": "Simular 1 h fuera",
-    "masMinuto": "+1 min por partida",
-    "minutosExtra": "Tiempo extra en cada partida: {n} min"
+    "jugarMin": "+{n} min de juego",
+    "resumen": "En {min} min de juego: {partidas} partidas ({ganadas} ganadas), nivel {desde} → {hasta}, {compras} mejoras compradas, +{oro} de oro."
   },
   "secciones": {
     "jugador": "Jugador",

@@ -96,10 +96,7 @@ async function flow(name, browser, fn, opts) {
     const danio = await page.evaluate(() => window.juego.run.stats.danio);
     check(danio === 3, `la partida no usa el daño comprado (${danio})`);
     check((await page.getByTestId('reloj').textContent()).includes('00:2'), 'el reloj no arrancó en 20 s');
-    // Modo pruebas: +1 minuto a la partida en curso.
-    await page.getByTestId('mas-minuto').click();
-    await page.waitForTimeout(200);
-    check((await page.getByTestId('reloj').textContent()).includes('01:'), 'el +1 min no sumó un minuto al reloj');
+
   });
 
   await flow('tres secciones: mago con explosiones cuadradas y arqueros con flechas', browser, async (page) => {
@@ -294,6 +291,21 @@ async function flow(name, browser, fn, opts) {
     await page.getByTestId('mejorar').click();
     await page.getByTestId('abrir-glosario').click();
     for (const k of ['goblin', 'lobo', 'orco', 'orcoArquero', 'loboBlanco']) check(!(await page.getByTestId(`enemigo-${k}`).textContent()).includes('???'), `el glosario esconde a ${k}`);
+  });
+
+  await flow('modo pruebas: "+10 min de juego" avanza la partida como si hubieras jugado', browser, async (page) => {
+    await page.getByTestId('terminar').click();
+    await page.getByTestId('mejorar').click();
+    await page.getByTestId('abrir-ajustes').click();
+    await page.getByTestId('jugar-10-min').click();
+    await page.waitForTimeout(300);
+    const resumen = await page.getByTestId('resultado-simulado').textContent();
+    check(/nivel 1 → \d+/.test(resumen), `el resumen no dice el avance: ${resumen}`);
+    await page.mouse.click(4, 4);
+    const nivel = Number((await page.getByTestId('nivel-actual').textContent()).match(/Nivel (\d+)/)[1]);
+    check(nivel >= 8, `en 10 min simulados solo llegó al nivel ${nivel}`);
+    await page.getByTestId('talento-danio').click();
+    check(!(await page.getByTestId('detalle').textContent()).includes('0/40'), 'no compró nada en el árbol');
   });
 
   await flow('guardado: al recargar se queda el oro y el árbol, y se llega al árbol', browser, async (page) => {
