@@ -350,6 +350,32 @@ async function flow(name, browser, fn, opts) {
     for (const k of ['escorpion', 'bandidoDesierto', 'minotauro', 'ciclope', 'esqueletoMago', 'liderBandido']) check(!(await page.getByTestId(`enemigo-${k}`).textContent()).includes('???'), `el glosario esconde a ${k}`);
   });
 
+  await flow('Montaña de piedra del 41 al 50 y el Dragón de acero en el 50', browser, async (page) => {
+    await page.getByTestId('terminar').click();
+    await page.getByTestId('mejorar').click();
+    await page.getByTestId('abrir-ajustes').click();
+    for (let i = 0; i < 40; i++) await page.getByTestId('mas-nivel').click();
+    await page.mouse.click(4, 4);
+    check((await page.getByTestId('nivel-actual').textContent()).includes('Montaña de piedra'), 'el nivel 41 no dice Montaña de piedra');
+    await page.getByTestId('jugar').click();
+    await page.waitForTimeout(500);
+    const tipos = await page.evaluate(() => [...new Set(window.juego.run.enemies.map((e) => e.kind))]);
+    check(tipos.every((k) => ['guerreroHierro', 'golem'].includes(k)), `en el nivel 41 salieron: ${tipos.join(', ')}`);
+    await page.getByTestId('terminar').click();
+    await page.getByTestId('mejorar').click();
+    await page.getByTestId('abrir-ajustes').click();
+    for (let i = 0; i < 9; i++) await page.getByTestId('mas-nivel').click();
+    await page.mouse.click(4, 4);
+    await page.getByTestId('jugar').click();
+    await page.waitForTimeout(500);
+    check((await page.getByTestId('vida-jefe').textContent()).includes('Dragón de acero'), 'el jefe del 50 no es el Dragón de acero');
+    await page.getByTestId('terminar').click();
+    await page.getByTestId('mejorar').click();
+    await page.getByTestId('abrir-glosario').click();
+    for (const k of ['guerreroHierro', 'golem', 'arqueroHierro', 'dragoncito', 'dragonAcero']) check(!(await page.getByTestId(`enemigo-${k}`).textContent()).includes('???'), `el glosario esconde a ${k}`);
+    check(!(await page.getByTestId('enemigo-golemito').count()), 'la piedrita sale en el glosario');
+  });
+
   await flow('modo pruebas: "+10 min de juego" avanza la partida como si hubieras jugado', browser, async (page) => {
     await page.getByTestId('terminar').click();
     await page.getByTestId('mejorar').click();

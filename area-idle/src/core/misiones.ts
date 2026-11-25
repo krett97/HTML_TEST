@@ -56,6 +56,9 @@ export const DIARIAS: MissionDef[] = [
   { id: 'escorpiones', medida: 'tipo:escorpion', meta: 100, gemas: 3, icono: 'arte:escorpion', desde: DESDE.escorpion },
   { id: 'minotauros', medida: 'tipo:minotauro', meta: 30, gemas: 4, icono: 'arte:minotauro', desde: DESDE.minotauro },
   { id: 'ciclopes', medida: 'tipo:ciclope', meta: 20, gemas: 5, icono: 'arte:ciclope', desde: DESDE.ciclope },
+  { id: 'guerreros', medida: 'tipo:guerreroHierro', meta: 100, gemas: 3, icono: 'arte:guerreroHierro', desde: DESDE.guerreroHierro },
+  { id: 'golems', medida: 'tipo:golem', meta: 30, gemas: 4, icono: 'arte:golem', desde: DESDE.golem },
+  { id: 'dragones', medida: 'tipo:dragoncito', meta: 20, gemas: 5, icono: 'arte:dragoncito', desde: DESDE.dragoncito },
 ];
 
 export const PERMANENTES: MissionDef[] = [
@@ -65,10 +68,13 @@ export const PERMANENTES: MissionDef[] = [
   { id: 'nivel30', medida: 'nivel', meta: 30, gemas: 20, icono: 'jugar' },
   { id: 'nivel35', medida: 'nivel', meta: 35, gemas: 25, icono: 'jugar' },
   { id: 'nivel40', medida: 'nivel', meta: 40, gemas: 30, icono: 'jugar' },
+  { id: 'nivel45', medida: 'nivel', meta: 45, gemas: 35, icono: 'jugar' },
+  { id: 'nivel50', medida: 'nivel', meta: 50, gemas: 40, icono: 'jugar' },
   { id: 'rey', medida: 'jefe:rey', meta: 1, gemas: 8, icono: 'arte:jefe_rey' },
   { id: 'loboBlanco', medida: 'jefe:loboBlanco', meta: 1, gemas: 12, icono: 'arte:loboBlanco' },
   { id: 'esqueletoMago', medida: 'jefe:esqueletoMago', meta: 1, gemas: 16, icono: 'arte:esqueletoMago' },
   { id: 'liderBandido', medida: 'jefe:liderBandido', meta: 1, gemas: 20, icono: 'arte:liderBandido' },
+  { id: 'dragonAcero', medida: 'jefe:dragonAcero', meta: 1, gemas: 25, icono: 'arte:dragonAcero' },
   { id: 'reventar1k', medida: 'reventados', meta: 1000, gemas: 3, icono: 'slimes' },
   { id: 'reventar10k', medida: 'reventados', meta: 10_000, gemas: 8, icono: 'slimes' },
   { id: 'reventar100k', medida: 'reventados', meta: 100_000, gemas: 15, icono: 'slimes' },

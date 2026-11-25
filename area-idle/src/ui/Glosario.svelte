@@ -18,11 +18,11 @@
     { id: 'mago', icono: 'mago', tipo: DAMAGE_TYPE_OF.mago },
   ] as const;
   /** Los comunes, agrupados por la zona donde salen; los jefes aparte. Cada uno con su dibujo. */
-  const COMUNES = ENEMY_KINDS.filter((k) => !ENEMIES[k].jefe).sort((a, b) => DESDE[a] - DESDE[b]);
-  const POR_ZONA = (['campo', 'batalla', 'pradera', 'desierto'] as const).map((z) => ({ zona: z, kinds: COMUNES.filter((k) => zoneOf(DESDE[k]) === z) }));
+  const COMUNES = ENEMY_KINDS.filter((k) => !ENEMIES[k].jefe && !ENEMIES[k].cria).sort((a, b) => DESDE[a] - DESDE[b]);
+  const POR_ZONA = (['campo', 'batalla', 'pradera', 'desierto', 'montana'] as const).map((z) => ({ zona: z, kinds: COMUNES.filter((k) => zoneOf(DESDE[k]) === z) }));
   const JEFES_KINDS = ENEMY_KINDS.filter((k) => ENEMIES[k].jefe).sort((a, b) => DESDE[a] - DESDE[b]);
-  const IMAGEN: Record<EnemyKind, string> = { verde: 'slime_verde', azul: 'slime_azul', rojo: 'slime_rojo', rey: 'jefe_rey', goblin: 'goblin', lobo: 'lobo', orco: 'orco', orcoArquero: 'orcoArquero', loboBlanco: 'loboBlanco', arana: 'arana', esqueleto: 'esqueleto', loboNegro: 'loboNegro', bandido: 'bandido', esqueletoMago: 'esqueletoMago', escorpion: 'escorpion', bandidoDesierto: 'bandidoDesierto', minotauro: 'minotauro', ciclope: 'ciclope', liderBandido: 'liderBandido' };
-  const MECANICAS: Partial<Record<EnemyKind, string[]>> = { rey: ['invoca', 'esquiva', 'aturdido', 'furia'], loboBlanco: ['aulla', 'embiste', 'hoz', 'furia'], esqueletoMago: ['invocaEsqueletos', 'teletransporte', 'bolaFuego', 'rearma'], liderBandido: ['llamaBandidos', 'embiste', 'abanico', 'esquivaMucho'] };
+  const IMAGEN: Record<EnemyKind, string> = { verde: 'slime_verde', azul: 'slime_azul', rojo: 'slime_rojo', rey: 'jefe_rey', goblin: 'goblin', lobo: 'lobo', orco: 'orco', orcoArquero: 'orcoArquero', loboBlanco: 'loboBlanco', arana: 'arana', esqueleto: 'esqueleto', loboNegro: 'loboNegro', bandido: 'bandido', esqueletoMago: 'esqueletoMago', escorpion: 'escorpion', bandidoDesierto: 'bandidoDesierto', minotauro: 'minotauro', ciclope: 'ciclope', liderBandido: 'liderBandido', golem: 'golem', golemito: 'golemito', guerreroHierro: 'guerreroHierro', arqueroHierro: 'arqueroHierro', dragoncito: 'dragoncito', dragonAcero: 'dragonAcero' };
+  const MECANICAS: Partial<Record<EnemyKind, string[]>> = { rey: ['invoca', 'esquiva', 'aturdido', 'furia'], loboBlanco: ['aulla', 'embiste', 'hoz', 'furia'], esqueletoMago: ['invocaEsqueletos', 'teletransporte', 'bolaFuego', 'rearma'], liderBandido: ['llamaBandidos', 'embiste', 'abanico', 'esquivaMucho'], dragonAcero: ['invocaDragones', 'vuelo', 'llamaradas', 'escamas'] };
 
   const visto = (kind: EnemyKind) => $view.meta.nivel >= DESDE[kind];
   const rapidez = (v: number) => (v < 7 ? 'lenta' : v < 12 ? 'normal' : 'rapida');

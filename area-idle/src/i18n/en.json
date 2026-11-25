@@ -203,7 +203,11 @@
       "rearma": "When it falls it reassembles once, with 30% life.",
       "llamaBandidos": "Calls his desert bandits.",
       "abanico": "Throws three daggers in a fan at the wall.",
-      "esquivaMucho": "Gets out of your circle faster than anyone."
+      "esquivaMucho": "Gets out of your circle faster than anyone.",
+      "invocaDragones": "Calls small dragons.",
+      "vuelo": "Flies high to another spot (your rain of arrows can't hit it in the air) and lands stunned: takes double damage.",
+      "llamaradas": "Spits five flames across the wall.",
+      "escamas": "Its steel scales halve the damage until it loses half its life."
     },
     "golpea": "{n} to the wall, up close",
     "embiste": "Charges and dodges"
@@ -292,13 +296,38 @@
     "liderBandido": {
       "nombre": "Bandit Leader",
       "texto": "The level 40 boss: red turban, eye patch and two scimitars."
+    },
+    "guerreroHierro": {
+      "nombre": "Iron warrior",
+      "texto": "Marches in heavy armor: takes half damage until it loses half its life; then the armor falls off and it runs faster."
+    },
+    "golem": {
+      "nombre": "Stone golem",
+      "texto": "Slow and hits the wall hard. When it falls it splits into two quick pebbles."
+    },
+    "golemito": {
+      "nombre": "Pebble",
+      "texto": "What's left of a golem."
+    },
+    "arqueroHierro": {
+      "nombre": "Iron archer",
+      "texto": "Shoots two iron arrows at once at the wall. The iron resists your arrows."
+    },
+    "dragoncito": {
+      "nombre": "Small dragon",
+      "texto": "Flies and spits fire at the wall. Your rain of arrows can't reach it: only archers and the mage."
+    },
+    "dragonAcero": {
+      "nombre": "Steel dragon",
+      "texto": "The level 50 boss: a huge dragon with steel scales."
     }
   },
   "zonas": {
     "campo": "Green field",
     "batalla": "Battlefield",
     "pradera": "Yellow meadow",
-    "desierto": "Desert"
+    "desierto": "Desert",
+    "montana": "Stone mountain"
   },
   "inactivo": {
     "titulo": "While you were away",
@@ -351,7 +380,13 @@
       "nivel40": "Reach level {n}",
       "escorpiones": "Pop {n} scorpions",
       "minotauros": "Pop {n} minotaurs",
-      "ciclopes": "Pop {n} cyclopes"
+      "ciclopes": "Pop {n} cyclopes",
+      "dragonAcero": "Beat the Steel dragon",
+      "nivel45": "Reach level {n}",
+      "nivel50": "Reach level {n}",
+      "guerreros": "Pop {n} iron warriors",
+      "golems": "Pop {n} golems",
+      "dragones": "Pop {n} small dragons"
     }
   },
   "ranking": {

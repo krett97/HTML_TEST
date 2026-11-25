@@ -6,14 +6,15 @@ todos antes de que se acabe el tiempo; si no, se reintenta o se juega el anterio
 el oro mejoras tres árboles: el tuyo, el del mago (explosiones de fuego cuadradas) y el de los arqueros
 (un objetivo a la vez, luego varios).
 
-**Estado: prototipo 0.12.0.** Cuatro zonas: **Campo verde** (niveles 1–10, slimes), **Campo de batalla**
+**Estado: prototipo 0.13.0.** Cinco zonas: **Campo verde** (niveles 1–10, slimes), **Campo de batalla**
 (11–20: goblins con lanzas, lobos, orcos y orcos arqueros, con espadas y tablas tiradas) y **Pradera
 amarilla** (21–30 y siguientes: arañas gigantes, esqueletos con espada y escudo, lobos negros y bandidos
 con dagas, entre cráneos y pedazos de armadura) y **Desierto** (31–40: escorpiones gigantes que se
-entierran, bandidos del desierto, minotauros y cíclopes).
+entierran, bandidos del desierto, minotauros y cíclopes) y **Montaña de piedra** (41–50: guerreros y
+arqueros de hierro, gólems que se parten y dragones pequeños que vuelan).
 Un **jefe cada 10 niveles**: el **Rey Slime** (naranja, con corona) en el 10, el **Lobo Blanco** (con
 una hoz en el hocico) en el 20, el **Esqueleto Mago** de fuego en el 30 y el **Líder de los bandidos** en
-el 40; después se repiten. En la primera zona, tres enemigos (slime verde;
+el 40 y el **Dragón de acero** en el 50; después se repiten. En la primera zona, tres enemigos (slime verde;
 azul desde el nivel 4; **rojo con resortera** desde el 7, que le tira piedras a la muralla y, si la tumba,
 deja sin atacar al mago y a los arqueros), **oro mientras no juegas** desde el nivel 3 (10 %; y en el árbol, el **modo guardia**: tus tropas
 pelean solas contra pocos enemigos, 20 %), y desde el 11

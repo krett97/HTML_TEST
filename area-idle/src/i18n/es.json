@@ -203,7 +203,11 @@
       "rearma": "Al caer se vuelve a armar una vez, con 30 % de vida.",
       "llamaBandidos": "Llama a sus bandidos del desierto.",
       "abanico": "Lanza tres dagas en abanico a la muralla.",
-      "esquivaMucho": "Es el que más rápido se sale de tu círculo."
+      "esquivaMucho": "Es el que más rápido se sale de tu círculo.",
+      "invocaDragones": "Llama dragones pequeños.",
+      "vuelo": "Vuela alto a otro lado (en el aire tu lluvia de flechas no le pega) y aterriza aturdido: recibe doble daño.",
+      "llamaradas": "Escupe cinco llamaradas a lo ancho de la muralla.",
+      "escamas": "Sus escamas de acero le quitan la mitad del daño hasta que pierde la mitad de su vida."
     },
     "golpea": "{n} a la muralla, de cerca",
     "embiste": "Embiste y esquiva"
@@ -292,13 +296,38 @@
     "liderBandido": {
       "nombre": "Líder de los bandidos",
       "texto": "El jefe del nivel 40: turbante rojo, parche y dos cimitarras."
+    },
+    "guerreroHierro": {
+      "nombre": "Guerrero de hierro",
+      "texto": "Marcha con armadura pesada: recibe la mitad del daño hasta perder la mitad de su vida; luego se le cae y corre más rápido."
+    },
+    "golem": {
+      "nombre": "Gólem de piedra",
+      "texto": "Lento y le pega fuerte a la muralla. Al caer se parte en dos piedritas rápidas."
+    },
+    "golemito": {
+      "nombre": "Piedrita",
+      "texto": "Lo que queda de un gólem."
+    },
+    "arqueroHierro": {
+      "nombre": "Arquero de hierro",
+      "texto": "Tira dos flechas de hierro a la vez a la muralla. El hierro aguanta tus flechas."
+    },
+    "dragoncito": {
+      "nombre": "Dragón pequeño",
+      "texto": "Vuela y escupe fuego a la muralla. Tu lluvia de flechas no lo alcanza: solo los arqueros y el mago."
+    },
+    "dragonAcero": {
+      "nombre": "Dragón de acero",
+      "texto": "El jefe del nivel 50: un dragón enorme de escamas de acero."
     }
   },
   "zonas": {
     "campo": "Campo verde",
     "batalla": "Campo de batalla",
     "pradera": "Pradera amarilla",
-    "desierto": "Desierto"
+    "desierto": "Desierto",
+    "montana": "Montaña de piedra"
   },
   "inactivo": {
     "titulo": "Mientras no estabas",
@@ -351,7 +380,13 @@
       "nivel40": "Llega al nivel {n}",
       "escorpiones": "Revienta {n} escorpiones",
       "minotauros": "Revienta {n} minotauros",
-      "ciclopes": "Revienta {n} cíclopes"
+      "ciclopes": "Revienta {n} cíclopes",
+      "dragonAcero": "Vence al Dragón de acero",
+      "nivel45": "Llega al nivel {n}",
+      "nivel50": "Llega al nivel {n}",
+      "guerreros": "Revienta {n} guerreros de hierro",
+      "golems": "Revienta {n} gólems",
+      "dragones": "Revienta {n} dragones pequeños"
     }
   },
   "ranking": {

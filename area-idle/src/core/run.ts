@@ -43,6 +43,10 @@ export interface Enemy {
   entierro?: number;
   /** Minotauros: ya va embistiendo. */
   cargando?: boolean;
+  /** Ya perdió la armadura (guerreros de hierro, Dragón de acero). */
+  sinArmadura?: boolean;
+  /** Salió de otro al partirse (piedritas del gólem): no cuenta para el nivel. */
+  cria?: boolean;
 }
 
 /** Una piedra de resortera en el aire, de un slime rojo a la muralla. */
@@ -63,7 +67,7 @@ export interface Pebble {
 }
 
 /** Velocidad de lo que vuela hacia la muralla (unidades por segundo). */
-const PROJECTILE_SPEED: Record<ProjectileKind, number> = { piedra: 170, lanza: 200, flecha: 260, baba: 170, hoz: 150, telarana: 140, daga: 240, bolaFuego: 160, roca: 110, cimitarra: 210 };
+const PROJECTILE_SPEED: Record<ProjectileKind, number> = { piedra: 170, lanza: 200, flecha: 260, baba: 170, hoz: 150, telarana: 140, daga: 240, bolaFuego: 160, roca: 110, cimitarra: 210, flechaHierro: 260, llamarada: 180 };
 
 export type Forma = { tipo: 'circulo'; r: number } | { tipo: 'rect'; w: number; h: number };
 
@@ -128,6 +132,8 @@ export type RunEvent =
   /** Un escorpión se metió bajo la arena o salió en otro lado. */
   | { type: 'burrow'; id: number; x: number; y: number }
   | { type: 'surface'; id: number; x: number; y: number }
+  /** Se le cayó la armadura (ya recibe todo el daño). */
+  | { type: 'armorBreak'; id: number; x: number; y: number }
   /** Un minotauro empezó a embestir la muralla. */
   | { type: 'charge'; id: number; x: number; y: number }
   /** Una telaraña enredó a un arquero: no tira por `dura` s. */
@@ -403,8 +409,15 @@ function damage(run: Run, e: Enemy, base: number, fuente: Source, events: RunEve
   const aturdido = run.jefe?.id === e.id && run.jefe.aturdido > 0 ? JEFE.aturdidoMult : 1;
   // Tus flechas pueden dar golpe crítico (Reliquia).
   const critico = fuente === 'jugador' && run.stats.critico.prob > 0 && run.rng() < run.stats.critico.prob;
-  const danio = base * damageMultiplier(e.kind, tipo) * aturdido * (critico ? run.stats.critico.mult : 1);
+  const def = ENEMIES[e.kind];
+  // Con armadura (guerreros de hierro, escamas del Dragón) recibe la mitad hasta perder media vida.
+  const armadura = def.armadura && !e.sinArmadura ? 0.5 : 1;
+  const danio = base * damageMultiplier(e.kind, tipo) * aturdido * armadura * (critico ? run.stats.critico.mult : 1);
   e.vida -= danio;
+  if (def.armadura && !e.sinArmadura && e.vida > 0 && e.vida <= e.vidaMax / 2) {
+    e.sinArmadura = true;
+    events.push({ type: 'armorBreak', id: e.id, x: e.x, y: e.y });
+  }
   // El esqueleto se rearma una vez (con parte de su vida) en vez de caer.
   const rearma = ENEMIES[e.kind].rearma;
   if (e.vida <= 0 && rearma && !e.rearmado) {
@@ -417,22 +430,51 @@ function damage(run: Run, e: Enemy, base: number, fuente: Source, events: RunEve
     events.push({ type: 'hit', id: e.id, x: e.x, y: e.y, danio, fuente, efecto: critico ? 'critico' : effectiveness(e.kind, tipo) });
     return;
   }
-  run.porTipo[e.kind] = (run.porTipo[e.kind] ?? 0) + 1;
-  const oro = run.guardia ? run.guardia.oroPorBaja : ENEMIES[e.kind].oro * run.nivel.oro * run.stats.oroMult;
+  // Las crías (piedritas del gólem) no cuentan para el nivel ni para las misiones; en guardia no dan oro.
+  const oro = e.cria && run.guardia ? 0 : run.guardia ? run.guardia.oroPorBaja : def.oro * run.nivel.oro * run.stats.oroMult;
   run.oro += oro;
-  run.reventados++;
+  if (!e.cria) {
+    run.porTipo[e.kind] = (run.porTipo[e.kind] ?? 0) + 1;
+    run.reventados++;
+  }
   events.push({ type: 'kill', id: e.id, kind: e.kind, x: e.x, y: e.y, oro, danio, fuente });
+  // El gólem se parte en piedritas.
+  if (def.parte) for (let i = 0; i < def.parte.n && run.enemies.length < MAX_VIVOS; i++) spawnCria(run, def.parte.en, e.x + (i - (def.parte.n - 1) / 2) * 14, e.y, events);
+}
+
+/** Una cría (piedrita de gólem) junto a donde cayó su padre: no cuenta para el nivel. */
+function spawnCria(run: Run, kind: EnemyKind, x: number, y: number, events: RunEvent[]): void {
+  const def = ENEMIES[kind];
+  const vida = def.vida * run.nivel.vida;
+  const angle = run.rng() * Math.PI * 2;
+  const enemy: Enemy = { id: run.nextId++, kind, x: Math.min(run.w - MARGIN, Math.max(MARGIN, x)), y, vx: Math.cos(angle) * def.velocidad, vy: Math.sin(angle) * def.velocidad, vida, vidaMax: vida, giro: between(run.rng, ...(def.giro ?? [1, 3])), cria: true };
+  run.enemies.push(enemy);
+  events.push({ type: 'spawn', id: enemy.id, kind, x: enemy.x, y: enemy.y });
+}
+
+/** ¿Está en el aire? (dragones pequeños, o el Dragón de acero a medio vuelo) Ahí tu lluvia de flechas y el suelo en llamas no le pegan. */
+export function inAir(run: Run, e: Enemy): boolean {
+  return !!ENEMIES[e.kind].vuela || (run.jefe?.id === e.id && !!run.jefe.salto && run.jefe.def.mueve === 'vuelo');
 }
 
 /** Daña a todos los enemigos dentro de la forma. */
 function blast(run: Run, x: number, y: number, forma: Forma, danio: number, fuente: Source, events: RunEvent[]): void {
-  for (const e of run.enemies) if (e.vida > 0 && !hidden(run, e) && inside(e, x, y, forma)) damage(run, e, danio, fuente, events);
+  const suelo = fuente === 'jugador' || fuente === 'fuego';
+  for (const e of run.enemies) if (e.vida > 0 && !hidden(run, e) && !(suelo && inAir(run, e)) && inside(e, x, y, forma)) damage(run, e, danio, fuente, events);
 }
 
 /** `n` enemigos vivos distintos, al azar. */
-function pickTargets(run: Run, n: number): Enemy[] {
+function pickTargets(run: Run, n: number, primeroAire = false): Enemy[] {
   const vivos = run.enemies.filter((e) => e.vida > 0 && !hidden(run, e));
   const out: Enemy[] = [];
+  if (primeroAire) {
+    const aire = vivos.filter((e) => inAir(run, e));
+    while (out.length < n && aire.length) {
+      const e = aire.splice(Math.floor(run.rng() * aire.length), 1)[0]!;
+      out.push(e);
+      vivos.splice(vivos.indexOf(e), 1);
+    }
+  }
   while (out.length < n && vivos.length) out.push(vivos.splice(Math.floor(run.rng() * vivos.length), 1)[0]!);
   return out;
 }
@@ -491,7 +533,7 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
         e.cargando = true;
         events.push({ type: 'charge', id: e.id, x: e.x, y: e.y });
       }
-      const vel = def.velocidad * (embiste ? def.carga! : 1);
+      const vel = def.velocidad * (embiste ? def.carga! : 1) * (def.armadura && e.sinArmadura ? 1.8 : 1);
       if (e.y >= bottom(run)) {
         e.vx = 0;
         e.vy = 0;
@@ -681,6 +723,11 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
     }
     const destino = arcos && arquero !== undefined ? { x: arcos[arquero]!.x, y: arcos[arquero]!.y - 14 } : { x: between(run.rng, 12, run.w - 12), y: ty };
     run.piedras.push({ id: run.nextId++, tipo, sx: e.x, sy: e.y - 8, x: e.x, y: e.y - 8, tx: destino.x, ty: destino.y, danio, ...(arquero !== undefined ? { arquero, enreda: def.enreda } : {}) });
+    // Los que tiran varios a la vez (arqueros de hierro): los demás caen a un lado.
+    for (let i = 1; i < (def.rafaga ?? 1); i++) {
+      const tx = Math.min(run.w - 12, Math.max(12, destino.x + (i % 2 ? 1 : -1) * 26 * Math.ceil(i / 2)));
+      run.piedras.push({ id: run.nextId++, tipo, sx: e.x, sy: e.y - 8, x: e.x, y: e.y - 8, tx, ty: destino.y, danio });
+    }
     events.push({ type: 'sling', id: e.id, x: e.x, y: e.y, tipo });
   }
   for (const p of run.piedras) {
@@ -736,7 +783,8 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
     while (run.arcos[i]! <= 0) {
       run.arcos[i]! += s.arqueros.intervalo;
       const origen = arcos[i]!;
-      const blancos = pickTargets(run, s.arqueros.objetivos);
+      // Los arqueros le tiran primero a los que vuelan (tu lluvia de flechas no los alcanza).
+      const blancos = pickTargets(run, s.arqueros.objetivos, true);
       if (blancos.length) events.push({ type: 'volley', arquero: i });
       for (const b of blancos) {
         run.arrows.push({ id: run.nextId++, x: origen.x, y: origen.y - 22, angulo: Math.atan2(b.y - origen.y, b.x - origen.x), objetivo: b.id, tx: b.x, ty: b.y, danio: s.arqueros.danio });
@@ -827,7 +875,7 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
  */
 export function bestSpot(run: Run): { x: number; y: number; cuantos: number } {
   const r = run.stats.radio;
-  const peso = (e: Enemy) => (hidden(run, e) ? 0 : run.jefe?.id === e.id ? 12 : e.tiro !== undefined && !run.muro.caido ? 4 : 1);
+  const peso = (e: Enemy) => (hidden(run, e) || inAir(run, e) ? 0 : run.jefe?.id === e.id ? 12 : e.tiro !== undefined && !run.muro.caido ? 4 : 1);
   let best = { x: run.cursor.x, y: run.cursor.y, cuantos: 0 };
   const paso = Math.max(1, Math.ceil(run.enemies.length / 60));
   for (let i = 0; i < run.enemies.length; i += paso) {

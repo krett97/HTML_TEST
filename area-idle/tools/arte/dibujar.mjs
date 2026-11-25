@@ -233,6 +233,56 @@ scene('liderBandido', svg(140, 150, g('translate(10 0) scale(1.25)', bandidoDesi
   s += o('M30 48 C44 44 90 44 104 48 C96 54 38 54 30 48 Z', '#5a3a8a', 5) + o('M44 46 C50 26 56 10 74 2 C70 14 78 30 90 46 Z', '#5a3a8a', 5) + o('M72 6 l6 -4 l-1 8 Z', '#5a3a8a', 3) + o('M60 34 l3 6 l6 1 l-4.5 4 l1 6 l-5.5 -3 l-5.5 3 l1 -6 l-4.5 -4 l6 -1 z', P.amarillo, 2.5);
   scene('esqueletoMago', svg(140, 160, s));
 }
+// ---- Montaña de piedra (niveles 41–50) ----
+scene('pena', svg(70, 52, o('M6 46 C4 30 14 14 30 10 C44 6 60 14 64 28 C68 40 62 48 52 48 Z', '#9a958c', 5) + f('M14 40 C24 46 50 46 60 38 C56 46 20 48 14 40 Z', '#7f7a72') + line('M26 20 l6 8 l-4 8', '#7f7a72', 2.5) + brillo(26, 18, 7, 3, 0.4)));
+scene('pino', svg(46, 72, rect(20, 56, 6, 14, 2, P.maderaS, 3) + o('M23 2 L40 26 H30 L42 44 H30 L44 60 H2 L16 44 H4 L16 26 H6 Z', '#3f7a58', 4) + line('M14 34 L22 30 M30 50 L22 46', '#2f5e44', 2.5)));
+// Gólem de piedra (120 × 124): bloques de roca con musgo, ojos brillantes y brazos enormes.
+{
+  const R = { roca: '#9a958c', sombra: '#7a756c', musgo: '#7cb85a' };
+  let s = '';
+  s += o('M12 60 C6 74 8 92 18 100 L30 96 C26 84 26 72 30 62 Z', R.roca, 5) + o('M108 60 C114 74 112 92 102 100 L90 96 C94 84 94 72 90 62 Z', R.roca, 5);
+  s += o('M30 82 L28 120 H52 L54 90 Z M90 82 L92 120 H68 L66 90 Z', R.sombra, 5);
+  s += o('M24 48 C22 30 40 18 60 18 C80 18 98 30 96 48 L92 92 C80 100 40 100 28 92 Z', R.roca, 6) + line('M40 40 l10 8 l-6 10 M78 58 l-8 6 l6 10', R.sombra, 3);
+  s += o('M36 22 C44 14 60 12 72 16 C66 20 50 22 36 22 Z', R.musgo, 3) + circ(84, 30, 5, R.musgo, 3);
+  s += o('M42 34 H54 V42 H42 Z M66 34 H78 V42 H66 Z', '#2b2622', 0) + rect(44, 36, 8, 4, 2, '#7ef0ff', 0) + rect(68, 36, 8, 4, 2, '#7ef0ff', 0);
+  s += line('M48 56 H72', '#2b2622', 4);
+  scene('golem', svg(120, 124, s));
+  scene('golemito', svg(60, 56, o('M8 40 C4 22 18 8 32 8 C46 8 56 20 52 38 C50 50 14 52 8 40 Z', R.roca, 5) + rect(18, 22, 7, 5, 2, '#7ef0ff', 0) + rect(34, 22, 7, 5, 2, '#7ef0ff', 0) + line('M24 34 H36', '#2b2622', 3) + o('M14 12 C20 6 30 6 36 8 C30 10 22 12 14 12 Z', R.musgo, 2.5)));
+}
+// Guerrero de hierro (100 × 112): armadura completa, yelmo con visera y pluma roja, espada y escudo.
+function hierro({ arco = false } = {}) {
+  const H = { metal: '#b9bfcc', metalS: '#8d93a6', oscuro: '#5c6276' };
+  let s = '';
+  if (arco) s += line('M84 26 C102 48 102 84 84 104', K, 9) + line('M84 26 C102 48 102 84 84 104', H.oscuro, 5) + line('M84 26 L84 104', P.blanco, 2);
+  else s += line('M86 24 L80 92', K, 8) + line('M86 24 L80 92', '#dfe5ee', 4) + rect(72, 88, 18, 6, 3, H.oscuro, 3) + rect(78, 94, 6, 12, 3, P.maderaS, 3);
+  s += o('M26 64 C22 82 20 98 20 110 H80 C80 98 78 82 74 64 Z', H.metal, 6) + line('M50 66 V108 M26 86 H74', H.metalS, 3) + circ(50, 76, 4, H.oscuro, 3);
+  s += o('M76 70 C82 70 86 74 86 80 l-4 4 C82 78 80 76 74 76 Z', H.metal, 4);
+  s += o('M28 44 C28 22 38 12 50 12 C62 12 72 22 72 44 C72 58 62 64 50 64 C38 64 28 58 28 44 Z', H.metal, 6) + rect(34, 36, 32, 8, 2, '#2b2622', 3) + line('M50 14 V36', H.metalS, 3);
+  s += circ(42, 40, 2, '#ffd23f', 0) + circ(58, 40, 2, '#ffd23f', 0);
+  s += o('M50 12 C54 2 66 0 72 6 C64 6 58 10 54 16 Z', P.rojo, 4) + brillo(38, 22, 6, 4, 0.5);
+  if (!arco) s += circ(22, 80, 18, H.oscuro, 6) + circ(22, 80, 11, H.metal, 0) + o('M22 70 l3 7 l7 1 l-5 5 l1 7 l-6 -3 l-6 3 l1 -7 l-5 -5 l7 -1 z', P.rojo, 2.5);
+  return s;
+}
+scene('guerreroHierro', svg(100, 112, hierro()));
+scene('arqueroHierro', svg(100, 112, hierro({ arco: true })));
+// Dragón pequeño (120 × 96): rojo con alas, cuernitos y una llamita en el hocico.
+function dragon(c, { grande = false } = {}) {
+  let s = '';
+  s += o('M54 46 C40 20 20 10 6 14 C18 24 22 34 24 44 C30 40 40 42 54 46 Z', c.ala, 5) + line('M10 16 L30 42 M20 18 L36 42', c.sombra, 2.5);
+  s += o('M66 46 C80 20 100 10 114 14 C102 24 98 34 96 44 C90 40 80 42 66 46 Z', c.ala, 5) + line('M110 16 L90 42 M100 18 L84 42', c.sombra, 2.5);
+  s += o('M40 62 C24 66 14 74 8 86 C20 80 30 78 42 76 Z', c.cuerpo, 5) + o('M6 88 l4 -10 l6 6 Z', c.cuerno, 3);
+  s += ell(60, 60, 24, 18, c.cuerpo, 6) + ell(60, 66, 14, 9, c.panza, 0);
+  if (grande) for (const [x, y] of [[48, 52], [60, 50], [72, 52], [54, 58], [66, 58]]) s += o(`M${x - 4} ${y} L${x} ${y - 5} L${x + 4} ${y} L${x} ${y + 4} Z`, c.escama, 2);
+  s += o('M74 44 C80 30 96 28 104 36 C110 42 108 52 98 54 C90 56 80 54 74 50 Z', c.cuerpo, 5);
+  s += o('M82 30 L80 20 L88 28 Z M94 30 L98 20 L100 32 Z', c.cuerno, 3);
+  s += circ(92, 40, 3.2, '#ffd23f', 0) + circ(92, 40, 1.6, K, 0) + circ(104, 46, 1.6, K, 0);
+  s += o('M108 48 C116 46 120 50 118 54 C114 56 110 54 108 52 Z', '#ff8a2a', 3);
+  for (const x of [50, 66]) s += rect(x, 72, 8, 12, 3, c.sombra, 4);
+  return s;
+}
+scene('dragoncito', svg(120, 96, dragon({ cuerpo: '#e0603c', sombra: '#a8402a', ala: '#f08a5a', panza: '#ffd59a', cuerno: P.crema })));
+// El jefe del nivel 50: Dragón de escamas de acero (180 × 144), plateado con escamas marcadas.
+scene('dragonAcero', svg(180, 144, g('scale(1.5)', dragon({ cuerpo: '#9aa3b4', sombra: '#5c6276', ala: '#b9c1d0', panza: '#dfe5ee', cuerno: '#3e4352', escama: '#dfe5ee' }, { grande: true })) + `<circle cx="138" cy="60" r="5" fill="#ff4a3a"/>`));
 // La telaraña que deja enredado a un arquero.
 scene('telarana', svg(64, 64, `<g fill="none" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" opacity=".95">` + [0, 45, 90, 135].map((a) => `<path d="M32 32 L${32 + 30 * Math.cos((a * Math.PI) / 180)} ${32 + 30 * Math.sin((a * Math.PI) / 180)} M32 32 L${32 - 30 * Math.cos((a * Math.PI) / 180)} ${32 - 30 * Math.sin((a * Math.PI) / 180)}"/>`).join('') + [10, 19, 28].map((r) => `<polygon points="${Array.from({ length: 8 }, (_, i) => `${32 + r * Math.cos((i * Math.PI) / 4)},${32 + r * Math.sin((i * Math.PI) / 4)}`).join(' ')}"/>`).join('') + '</g>'));
 // Lo que hay tirado en el campo de batalla.
@@ -328,7 +378,7 @@ function bloques(x0, y0, w, h, alto = 48, ancho = 80, desfase = 0) {
 
 // ---- El pasto (256 × 256, se repite): verde con matitas y manchas claras que cruzan el borde sin costura ----
 // (la Pradera amarilla usa el mismo dibujo con hierba seca)
-for (const [clave, base, claro, oscuro, ondas] of [['pasto', P.pasto, P.pastoC, P.pastoS], ['pasto_amarillo', '#d9c25e', '#efe19a', '#b3963a'], ['arena', '#ead08e', '#f6e4b4', '#cfae66', true]]) {
+for (const [clave, base, claro, oscuro, ondas] of [['pasto', P.pasto, P.pastoC, P.pastoS], ['pasto_amarillo', '#d9c25e', '#efe19a', '#b3963a'], ['arena', '#ead08e', '#f6e4b4', '#cfae66', true], ['roca_suelo', '#a7a39c', '#c4c0b8', '#7f7a72', 'grietas']]) {
   const mata = (x, y, c = oscuro) => line(`M${x} ${y} l-4 -9 M${x} ${y} l0 -11 M${x} ${y} l5 -9`, c, 3);
   const mancha = (x, y, rx, ry) => `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="${claro}" opacity=".35"/>`;
   let s = rect(0, 0, 256, 256, 0, base, 0);
@@ -338,7 +388,7 @@ for (const [clave, base, claro, oscuro, ondas] of [['pasto', P.pasto, P.pastoC, 
   for (const dx of [-256, 0, 256]) for (const dy of [-256, 0, 256]) {
     for (const [x, y, rx, ry] of manchas) s += mancha(x + dx, y + dy, rx, ry);
     // En la arena, en lugar de matitas, ondas de duna.
-    for (const [x, y] of matas) s += ondas ? line(`M${x + dx - 12} ${y + dy} q6 -5 12 0 t12 0`, oscuro, 2.5) : mata(x + dx, y + dy);
+    for (const [x, y] of matas) s += ondas === 'grietas' ? line(`M${x + dx - 10} ${y + dy - 4} l7 5 l5 -6 l8 4`, oscuro, 2.5) : ondas ? line(`M${x + dx - 12} ${y + dy} q6 -5 12 0 t12 0`, oscuro, 2.5) : mata(x + dx, y + dy);
   }
   scene(clave, svg(256, 256, s));
 }

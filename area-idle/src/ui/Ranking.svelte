@@ -30,7 +30,7 @@
   const posicion = (r: RankingRow, i: number) => ($rows.length && !$rows.some((x) => x.tuyo) && r.id === 'yo' ? '—' : String(i + 1));
   const MEDALLAS = ['#e8a91c', '#9aa3b2', '#c47a3a'];
   // El dibujo de cada fila: el último jefe que venció (o un slime, si aún no vence ninguno).
-  const IMAGEN: Partial<Record<EnemyKind, string>> = { rey: 'jefe_rey', loboBlanco: 'loboBlanco', esqueletoMago: 'esqueletoMago', liderBandido: 'liderBandido' };
+  const IMAGEN: Partial<Record<EnemyKind, string>> = { rey: 'jefe_rey', loboBlanco: 'loboBlanco', esqueletoMago: 'esqueletoMago', liderBandido: 'liderBandido', dragonAcero: 'dragonAcero' };
   function trofeo(nivel: number): string {
     const ultimo = Math.floor((nivel - 1) / JEFE.cada) * JEFE.cada;
     return ultimo > 0 ? artUrl(IMAGEN[bossFor(ultimo)] ?? 'slime_verde') : artUrl('slime_verde');

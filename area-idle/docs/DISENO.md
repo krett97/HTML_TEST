@@ -1,6 +1,6 @@
 # Campo de Slimes: diseño del prototipo
 
-> Versión 0.12.0. Nombre provisional. Nació de pausar el juego del gato
+> Versión 0.13.0. Nombre provisional. Nació de pausar el juego del gato
 > ([`../../gato-idle/docs/DECISIONES.md`](../../gato-idle/docs/DECISIONES.md)), tomando su base técnica y su
 > arte en código ([`../../REUSO.md`](../../REUSO.md)). Referencia de sensación: *Don't Stop The Pop!*
 > (cientos de cosas reventando en un área) y el idle del castor (rocas que caen, mundo que cambia por fase).
@@ -105,7 +105,8 @@ estabas" dice cuánto tiempo pasó y cuánto oro se juntó, con un botón para c
 corona de oro, capa roja y cejas de enojo. En un nivel de jefe se gana **al vencerlo** (su escolta
 revienta con él); hay **10 s más** de tiempo y el **premio es ×5**. Su vida es la de todos los slimes de un
 nivel normal ×6 (en el nivel 10: unas 16 600). Orden (desde 0.12.0): **Rey Slime** (10), **Lobo Blanco**
-(20), **Esqueleto Mago** (30) y **Líder de los bandidos** (40); en el 50, 60… se repiten en ese orden.
+(20), **Esqueleto Mago** (30), **Líder de los bandidos** (40) y **Dragón de acero** (50); en el 60, 70… se
+repiten en ese orden.
 
 Lo que hace (`JEFE` en `datos.ts`):
 
@@ -207,6 +208,28 @@ atoraba en el nivel 29 (con cualquier jefe): la vida crecía ×1.3 por nivel y e
 las mejoras ya estaban al máximo. Desde el nivel 20: vida ×1.14 y oro ×1.15 por nivel; **Daño** llega a
 100 (pasado su nivel 40 cada nivel cuesta ×1.2 en vez de ×1.4) y **Muralla reforzada** a 20. Los niveles
 1–20 no cambian.
+
+## 5d4. Montaña de piedra (41–50) y Dragón de acero (50) (desde 0.13.0)
+
+Suelo de roca gris con grietas, peñascos, pinos y cascos tirados.
+
+| Enemigo | Desde | Vida | Velocidad | Qué hace | Débil a | Fuerte contra | Oro |
+|---|---|---|---|---|---|---|---|
+| Guerrero de hierro (el más común) | 41 | 10 | Normal | Marcha y golpea la muralla (3). **Armadura**: recibe la mitad del daño hasta perder media vida; entonces se le cae y marcha ×1.8 | Energía | — | 4 |
+| Gólem de piedra | 41 | 22 | Muy lenta | Marcha y golpea fuerte (7); al caer **se parte en dos piedritas** rápidas que no cuentan para el nivel | Hielo | Fuego | 9 |
+| Arquero de hierro | 43 | 9 | Lenta | **Dos flechas de hierro** a la vez a la muralla (1.5 cada una, cada 3.4 s) | Energía | Físico | 7 |
+| Dragón pequeño (el más fuerte) | 45 | 12 | Rápida | **Vuela**: tu lluvia de flechas y el suelo en llamas no le pegan; escupe fuego a la muralla (3) | Hielo | Fuego | 12 |
+
+- **Los arqueros le tiran primero a los que vuelan** (desde 0.13.0): sin eso, entre cientos de enemigos
+  nadie bajaba a los dragones y quemaban la muralla.
+- **Dragón de acero** (jefe del 50): vuela alto a otro lado (en el aire tu círculo no le pega) y aterriza
+  aturdido; llama dragones pequeños; escupe **cinco llamaradas** a lo ancho de la muralla; sus **escamas**
+  le quitan la mitad del daño hasta que pierde media vida. Tiene 75 % de la vida normal de un jefe (con
+  85 % el simulador nunca le ganaba; con 70 %, al primer intento; con 75 %, en ~8).
+- El daño de los ataques a la muralla crece ×1.05 por nivel hasta el 20 y luego solo ×1.02 (con ×1.05
+  para siempre, en la montaña la muralla caía en cada partida aunque estuviera al máximo).
+- Misiones: diarias de guerreros de hierro (100), gólems (30) y dragones pequeños (20); permanentes
+  "Llega al 45" (35), "Llega al 50" (40) y "Vence al Dragón de acero" (25).
 
 ## 5e. Misiones, gemas moradas y Reliquias (desde 0.6.0)
 
@@ -340,11 +363,12 @@ compra lo más barato y, si pierde un nivel, juega una vez el anterior para junt
 | 20 | 19 |
 | 30 | 29 |
 | 45 | 35 |
-| 60 | 37 |
-| 75 | 41 |
+| 60 | 39 |
+| 90 | 48 |
+| 120 | 52 |
 
 (0.6.0: el bot también cobra misiones y compra la Reliquia más barata. 0.12.0: curvas nuevas desde el 20.)
-Jefes: el Rey ~3 intentos, el Lobo ~5, el Esqueleto Mago ~3 y el Líder 1–3. En el desierto la muralla es
+Jefes: el Rey ~3 intentos, el Lobo ~5, el Esqueleto Mago ~3, el Líder ~13 y el Dragón de acero ~8. En el desierto la muralla es
 el reto (del 36 al 38 cae seguido: ahí sirve Muralla reforzada hasta 20).
 
 Al principio pierde los niveles 3, 4 y 7 alguna vez, junta oro en el anterior y pasa. Del 11 al 20 casi
@@ -353,7 +377,7 @@ unas 30 partidas de 45 minutos y ahí sirve Muralla reforzada. (El bot no cobra 
 
 ## 7. Técnica
 
-- `src/core/` es lógica pura y probada (98 pruebas): `run.ts` (la partida paso a paso; devuelve eventos),
+- `src/core/` es lógica pura y probada (104 pruebas): `run.ts` (la partida paso a paso; devuelve eventos),
   `stats.ts` (estadísticas desde los talentos), `meta.ts` (oro, gemas, árbol, guardado), `misiones.ts`
   (contadores, diarias y permanentes), `ranking.ts`, `pvp.ts` (poder, ligas, peleas, tienda), `datos.ts`, `bot.ts`. `src/services/ranking.ts`
   conecta el ranking con la base de datos de la página publicada.

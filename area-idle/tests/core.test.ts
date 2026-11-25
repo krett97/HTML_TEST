@@ -4,7 +4,7 @@ import { activeGoldPerMinute, idleGoldPerMinute, idleReward, idleUnlocked } from
 import { isBossLevel, JEFE, JEFES, bossFor, zoneOf, DESDE, INACTIVO, ROJO_DESDE, AZUL_DESDE, DAMAGE_TYPES, damageMultiplier, ENEMIES, levelConfig, PRIMERA_OLA, SECCIONES, TALENT_BY_ID, TALENTS } from '../src/core/datos';
 import { formatClock, formatNum } from '../src/core/format';
 import { buyTalent, chooseLevel, costOf, createMeta, finishRun, levelOf, loadMeta, talentState, talentVisible } from '../src/core/meta';
-import { hidden } from '../src/core/run';
+import { hidden, inAir } from '../src/core/run';
 import { autoAiming, createGuardRun, guardLevel, startGuardRun, updateGuardRun } from '../src/core/run';
 import { AUTOAPUNTAR } from '../src/core/datos';
 import { GUARDIA } from '../src/core/datos';
@@ -330,7 +330,8 @@ describe('segunda zona: campo de batalla', () => {
     expect(bossFor(20)).toBe('loboBlanco');
     expect(bossFor(30)).toBe('esqueletoMago');
     expect(bossFor(40)).toBe('liderBandido');
-    expect(bossFor(50)).toBe('rey');
+    expect(bossFor(50)).toBe('dragonAcero');
+    expect(bossFor(60)).toBe('rey');
     const run = createRun(computeStats({}), 560, 20, 1);
     const inicio = startRun(run);
     expect(bossOf(run)!.kind).toBe('loboBlanco');
@@ -1202,5 +1203,98 @@ describe('curvas de la segunda mitad', () => {
     const base = (n: number) => 3 * (15 + 8 * (n - 1)) * levelConfig(n).vida * JEFE.vida;
     expect(levelConfig(30).jefe!.vida).toBeCloseTo(base(30) * 0.7, -2);
     expect(levelConfig(40).jefe!.vida).toBeCloseTo(base(40) * 1.5, -2);
+  });
+});
+
+describe('quinta zona: Montaña de piedra, y el Dragón de acero', () => {
+  const quieta = (run: Run) => {
+    run.stats = { ...run.stats, ritmo: 0, duracion: 999 };
+    run.cursor = { x: -999, y: -999 };
+  };
+  it('del 41 al 50: guerreros de hierro y gólems; arqueros de hierro desde el 43 y dragones desde el 45', () => {
+    expect(zoneOf(41)).toBe('montana');
+    const quienes = (n: number) => levelConfig(n).mezcla.map(([k]) => k).sort();
+    expect(quienes(41)).toEqual(['golem', 'guerreroHierro']);
+    expect(quienes(43)).toEqual(['arqueroHierro', 'golem', 'guerreroHierro']);
+    expect(quienes(45)).toEqual(['arqueroHierro', 'dragoncito', 'golem', 'guerreroHierro']);
+    expect(levelConfig(50).jefe?.kind).toBe('dragonAcero');
+    // El daño a la muralla crece ×1.02 por nivel después del 20.
+    expect(levelConfig(45).ataque / levelConfig(44).ataque).toBeCloseTo(1.02);
+  });
+  it('la armadura quita la mitad del daño hasta perder media vida; luego se cae y marcha más rápido', () => {
+    const run = createRun(computeStats({}), 560, 41, 21);
+    quieta(run);
+    const g = { id: 820, kind: 'guerreroHierro' as const, x: 150, y: 150, vx: 0, vy: 0, vida: 10, vidaMax: 10, giro: 99 };
+    run.enemies.push(g);
+    moveCursor(run, 150, 150);
+    const ev: RunEvent[] = [];
+    for (let i = 0; i < 12; i++) ev.push(...stepRun(run, 0.05));
+    const golpe = ev.find((e) => e.type === 'hit' && e.id === 820);
+    expect(golpe).toMatchObject({ danio: 0.5 });
+    g.vida = 5.2;
+    const y0 = g.y;
+    for (let i = 0; i < 20; i++) ev.push(...stepRun(run, 0.05));
+    expect(ev.some((e) => e.type === 'armorBreak')).toBe(true);
+    expect(g.sinArmadura).toBe(true);
+    run.cursor = { x: -999, y: -999 };
+    const y1 = g.y;
+    stepRun(run, 0.5);
+    expect(g.y - y1).toBeGreaterThan(ENEMIES.guerreroHierro.velocidad * 0.5 * 1.5);
+    expect(y1).toBeGreaterThanOrEqual(y0);
+  });
+  it('el gólem se parte en dos piedritas que no cuentan para el nivel', () => {
+    const run = createRun(computeStats({}), 560, 41, 22);
+    quieta(run);
+    run.enemies.push({ id: 821, kind: 'golem', x: 150, y: 200, vx: 0, vy: 0, vida: 0.1, vidaMax: 10, giro: 99 });
+    moveCursor(run, 150, 200);
+    const ev: RunEvent[] = [];
+    for (let i = 0; i < 6; i++) ev.push(...stepRun(run, 0.05));
+    expect(ev.some((e) => e.type === 'kill' && e.kind === 'golem')).toBe(true);
+    const crias = run.enemies.filter((e) => e.kind === 'golemito');
+    expect(crias).toHaveLength(2);
+    expect(crias.every((e) => e.cria)).toBe(true);
+    expect(run.reventados).toBe(1);
+    for (const c of crias) c.vida = 0.01;
+    moveCursor(run, crias[0]!.x, crias[0]!.y);
+    for (let i = 0; i < 20; i++) stepRun(run, 0.05);
+    expect(run.reventados).toBe(1);
+  });
+  it('los dragones pequeños vuelan: tu lluvia de flechas no les pega; los arqueros sí, y les tiran primero', () => {
+    const run = createRun(computeStats({ arqueros: 1 }), 560, 45, 23);
+    quieta(run);
+    const d = { id: 822, kind: 'dragoncito' as const, x: 150, y: 200, vx: 0, vy: 0, vida: 1e9, vidaMax: 1e9, giro: 99 };
+    for (let i = 0; i < 20; i++) run.enemies.push({ id: 900 + i, kind: 'guerreroHierro', x: 300, y: 100 + i, vx: 0, vy: 0, vida: 1e9, vidaMax: 1e9, giro: 99 });
+    run.enemies.push(d);
+    expect(inAir(run, d)).toBe(true);
+    moveCursor(run, 150, 200);
+    const ev: RunEvent[] = [];
+    for (let i = 0; i < 40; i++) ev.push(...stepRun(run, 0.05));
+    const golpes = ev.filter((e) => e.type === 'hit' && e.id === 822);
+    expect(golpes.length).toBeGreaterThan(0);
+    expect(golpes.every((e) => e.type === 'hit' && e.fuente === 'arquero')).toBe(true);
+  });
+  it('el arquero de hierro tira dos flechas a la vez', () => {
+    const run = createRun(computeStats({}), 560, 43, 24);
+    quieta(run);
+    run.enemies.push({ id: 823, kind: 'arqueroHierro', x: 150, y: 200, vx: 0, vy: 0, vida: 1e9, vidaMax: 1e9, giro: 99, tiro: 0.01 });
+    stepRun(run, 0.05);
+    expect(run.piedras.filter((p) => p.tipo === 'flechaHierro')).toHaveLength(2);
+  });
+  it('el Dragón de acero vuela (en el aire tu círculo no le pega), lanza cinco llamaradas y tiene escamas', () => {
+    const run = createRun(computeStats({}), 560, 50, 25);
+    startRun(run);
+    const jefe = bossOf(run)!;
+    expect(jefe.kind).toBe('dragonAcero');
+    expect(run.enemies.some((e) => e.kind === 'dragoncito')).toBe(true);
+    let enAire = false;
+    let llamas = 0;
+    for (let i = 0; i < 200; i++) {
+      stepRun(run, 0.05);
+      if (run.jefe!.salto) enAire ||= inAir(run, jefe);
+      llamas = Math.max(llamas, run.piedras.filter((p) => p.tipo === 'llamarada').length);
+    }
+    expect(enAire).toBe(true);
+    expect(llamas).toBeGreaterThanOrEqual(5);
+    expect(ENEMIES.dragonAcero.armadura).toBe(true);
   });
 });

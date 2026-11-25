@@ -8,10 +8,10 @@ export const DAMAGE_TYPES_EN_JUEGO: DamageType[] = ['fisico', 'fuego'];
 /** Cuánto reciben los enemigos del tipo al que son débiles y del que son fuertes. */
 export const EFFECTIVENESS = { debil: 1.5, fuerte: 0.5 } as const;
 
-export type EnemyKind = 'verde' | 'azul' | 'rojo' | 'rey' | 'goblin' | 'lobo' | 'orco' | 'orcoArquero' | 'loboBlanco' | 'arana' | 'esqueleto' | 'loboNegro' | 'bandido' | 'esqueletoMago' | 'escorpion' | 'minotauro' | 'ciclope' | 'bandidoDesierto' | 'liderBandido';
+export type EnemyKind = 'verde' | 'azul' | 'rojo' | 'rey' | 'goblin' | 'lobo' | 'orco' | 'orcoArquero' | 'loboBlanco' | 'arana' | 'esqueleto' | 'loboNegro' | 'bandido' | 'esqueletoMago' | 'escorpion' | 'minotauro' | 'ciclope' | 'bandidoDesierto' | 'liderBandido' | 'golem' | 'golemito' | 'guerreroHierro' | 'arqueroHierro' | 'dragoncito' | 'dragonAcero';
 
 /** Lo que vuela hacia la muralla: piedra de resortera, lanza de goblin, flecha de orco, baba del Rey, hoz del Lobo, telaraña de araña y daga de bandido. */
-export type ProjectileKind = 'piedra' | 'lanza' | 'flecha' | 'baba' | 'hoz' | 'telarana' | 'daga' | 'bolaFuego' | 'roca' | 'cimitarra';
+export type ProjectileKind = 'piedra' | 'lanza' | 'flecha' | 'baba' | 'hoz' | 'telarana' | 'daga' | 'bolaFuego' | 'roca' | 'cimitarra' | 'flechaHierro' | 'llamarada';
 
 export interface EnemyDef {
   id: EnemyKind;
@@ -42,6 +42,16 @@ export interface EnemyDef {
   entierra?: { cada: number; dura: number };
   /** Al marchar, pasando la mitad del campo embiste: su velocidad ×`carga` (minotauros). */
   carga?: number;
+  /** Armadura: recibe la mitad del daño mientras tenga más de la mitad de su vida; al perderla, marcha ×1.8 más rápido. */
+  armadura?: boolean;
+  /** Al caer se parte en `n` enemigos de tipo `en` (los gólems, en piedritas). */
+  parte?: { en: EnemyKind; n: number };
+  /** Sale de otro (al partirse): no cuenta para los enemigos del nivel. No sale en el glosario. */
+  cria?: boolean;
+  /** Vuela: la lluvia de flechas de tu círculo y el suelo en llamas no le pegan (los arqueros y el mago sí). */
+  vuela?: boolean;
+  /** Cuántos proyectiles tira a la vez (los arqueros de hierro, 2). */
+  rafaga?: number;
   /** Tipos de daño que le hacen más (×1.5) y menos (×0.5). */
   debil: DamageType[];
   fuerte: DamageType[];
@@ -94,6 +104,20 @@ export const ENEMIES: Record<EnemyKind, EnemyDef> = {
   // El jefe del nivel 40: el Líder de los bandidos. Llama a sus bandidos, embiste, lanza un abanico de dagas y
   // es el que más esquiva tu círculo.
   liderBandido: { id: 'liderBandido', vida: 0, oro: 0, radio: 30, velocidad: 6, ataque: 0, debil: ['hielo'], fuerte: ['fuego'], jefe: true },
+  // ---- Montaña de piedra (niveles 41–50) ----
+  // Guerrero de hierro (el más común): marcha con armadura pesada (mitad de daño hasta perder media vida; luego corre).
+  guerreroHierro: { id: 'guerreroHierro', vida: 10, oro: 4, radio: 11, velocidad: 8, ataque: 3, tiro: 2.5, marcha: true, armadura: true, debil: ['energia'], fuerte: [] },
+  // Gólem de piedra: lento, le pega fuerte a la muralla y al caer se parte en dos piedritas.
+  golem: { id: 'golem', vida: 22, oro: 9, radio: 15, velocidad: 5, ataque: 7, tiro: 3.5, marcha: true, parte: { en: 'golemito', n: 2 }, debil: ['hielo'], fuerte: ['fuego'] },
+  // Piedrita: lo que queda de un gólem. Rápida y débil; no cuenta para el nivel.
+  golemito: { id: 'golemito', vida: 4, oro: 1, radio: 8, velocidad: 18, ataque: 0, giro: [0.4, 1], cria: true, debil: ['hielo'], fuerte: [] },
+  // Arquero de hierro: dos flechas de hierro a la vez a la muralla; el hierro aguanta tus flechas.
+  arqueroHierro: { id: 'arqueroHierro', vida: 9, oro: 7, radio: 10, velocidad: 6, ataque: 1.5, tiro: 3.4, proyectil: 'flechaHierro', rafaga: 2, debil: ['energia'], fuerte: ['fisico'] },
+  // Dragón pequeño (el más fuerte de la zona): vuela (tu lluvia de flechas no le pega) y escupe fuego a la muralla.
+  dragoncito: { id: 'dragoncito', vida: 12, oro: 12, radio: 12, velocidad: 20, ataque: 3, tiro: 4, proyectil: 'llamarada', vuela: true, giro: [0.8, 1.6], debil: ['hielo'], fuerte: ['fuego'] },
+  // El jefe del nivel 50: dragón de escamas de acero. Vuela a otro lado, invoca dragones pequeños, escupe cinco
+  // llamaradas a lo ancho de la muralla y sus escamas le quitan la mitad del daño hasta perder media vida.
+  dragonAcero: { id: 'dragonAcero', vida: 0, oro: 0, radio: 32, velocidad: 5, ataque: 0, armadura: true, debil: ['hielo'], fuerte: ['fuego'], jefe: true },
 };
 export const ENEMY_KINDS = Object.keys(ENEMIES) as EnemyKind[];
 
@@ -132,9 +156,10 @@ export const BASE = {
  * flores, piedras y arbustos y slimes; la segunda (Campo de batalla), espadas y tablas tiradas, y
  * goblins, lobos y orcos; la tercera (Pradera amarilla, 21–30), hierba seca, cráneos y pedazos de
  * armadura, y arañas, esqueletos, lobos negros y bandidos; la cuarta (Desierto, 31–40), arena, cactus y
- * vasijas, y escorpiones, bandidos del desierto, minotauros y cíclopes. Después del 40 sigue el desierto.
+ * vasijas, y escorpiones, bandidos del desierto, minotauros y cíclopes; la quinta (Montaña de piedra, 41–50),
+ * roca, peñascos y pinos, y guerreros y arqueros de hierro, gólems y dragones pequeños. Después del 50 sigue la montaña.
  */
-export type ZoneId = 'campo' | 'batalla' | 'pradera' | 'desierto';
+export type ZoneId = 'campo' | 'batalla' | 'pradera' | 'desierto' | 'montana';
 export const ZONAS: { id: ZoneId; desde: number }[] = [
   { id: 'campo', desde: 1 },
   { id: 'batalla', desde: 11 },
@@ -142,6 +167,8 @@ export const ZONAS: { id: ZoneId; desde: number }[] = [
   { id: 'pradera', desde: 21 },
   // Desierto: arena, cactus, vasijas rotas y cráneos; escorpiones, bandidos del desierto, minotauros y cíclopes.
   { id: 'desierto', desde: 31 },
+  // Montaña de piedra: suelo de roca, peñascos y pinos; guerreros y arqueros de hierro, gólems y dragones pequeños.
+  { id: 'montana', desde: 41 },
 ];
 export function zoneOf(nivel: number): ZoneId {
   let z: ZoneId = 'campo';
@@ -190,7 +217,7 @@ export interface BossDef {
   invoca: number;
   escoltaN: number;
   /** Cómo se mueve a otro lado cada `cada` s: brincando en arco, embistiendo por el piso o teletransportándose (dura `dura` s). */
-  mueve: 'brinco' | 'embestida' | 'teletransporte';
+  mueve: 'brinco' | 'embestida' | 'teletransporte' | 'vuelo';
   cada: number;
   dura: number;
   /** Segundos aturdido después de moverse. */
@@ -216,10 +243,13 @@ export const JEFES: Partial<Record<EnemyKind, BossDef>> = {
   // Se teletransporta entre llamas (y queda recuperándose), invoca esqueletos y lanza bolas de fuego.
   esqueletoMago: { escolta: 'esqueleto', inicial: 3, invoca: 5, escoltaN: 2, mueve: 'teletransporte', cada: 4, dura: 0.4, aturdido: 1.3, proyectil: 'bolaFuego', lanza: 3.5, golpe: 16, esquiva: 18, alerta: 28, vida: 0.7 },
   // Embiste rapidísimo, llama bandidos del desierto, lanza tres dagas en abanico y esquiva más que nadie.
+  // Vuela alto a otro lado (en el aire tu círculo no le pega) y aterriza aturdido; llama dragones pequeños y
+  // escupe cinco llamaradas a lo ancho de la muralla.
+  dragonAcero: { escolta: 'dragoncito', inicial: 2, invoca: 6, escoltaN: 1, mueve: 'vuelo', cada: 5, dura: 0.9, aturdido: 1.6, proyectil: 'llamarada', lanza: 4, golpe: 8, rafaga: 5, esquiva: 18, alerta: 26, vida: 0.75 },
   liderBandido: { escolta: 'bandidoDesierto', inicial: 5, invoca: 3.5, escoltaN: 2, mueve: 'embestida', cada: 3, dura: 0.3, aturdido: 1, proyectil: 'daga', lanza: 3, golpe: 8, rafaga: 3, esquiva: 40, alerta: 34, vida: 1.5 },
 };
-/** Los jefes en orden: Rey Slime (10), Lobo Blanco (20), Esqueleto Mago (30), Líder de los bandidos (40); luego se repiten. */
-export const ORDEN_JEFES: EnemyKind[] = ['rey', 'loboBlanco', 'esqueletoMago', 'liderBandido'];
+/** Los jefes en orden: Rey Slime (10), Lobo Blanco (20), Esqueleto Mago (30), Líder de los bandidos (40), Dragón de acero (50); luego se repiten. */
+export const ORDEN_JEFES: EnemyKind[] = ['rey', 'loboBlanco', 'esqueletoMago', 'liderBandido', 'dragonAcero'];
 export function bossFor(nivel: number): EnemyKind {
   return ORDEN_JEFES[(Math.max(1, Math.round(nivel / JEFE.cada)) - 1) % ORDEN_JEFES.length]!;
 }
@@ -227,7 +257,7 @@ export const isBossLevel = (nivel: number): boolean => nivel % JEFE.cada === 0;
 /** Desde qué nivel sale cada enemigo (los de la segunda zona, desde que empieza). */
 export const AZUL_DESDE = 4;
 export const ROJO_DESDE = 7;
-export const DESDE: Record<EnemyKind, number> = { verde: 1, azul: AZUL_DESDE, rojo: ROJO_DESDE, rey: 10, goblin: 11, lobo: 11, orco: 13, orcoArquero: 15, loboBlanco: 20, arana: 21, loboNegro: 21, esqueleto: 23, bandido: 25, esqueletoMago: 30, escorpion: 31, bandidoDesierto: 31, minotauro: 33, ciclope: 35, liderBandido: 40 };
+export const DESDE: Record<EnemyKind, number> = { verde: 1, azul: AZUL_DESDE, rojo: ROJO_DESDE, rey: 10, goblin: 11, lobo: 11, orco: 13, orcoArquero: 15, loboBlanco: 20, arana: 21, loboNegro: 21, esqueleto: 23, bandido: 25, esqueletoMago: 30, escorpion: 31, bandidoDesierto: 31, minotauro: 33, ciclope: 35, liderBandido: 40, guerreroHierro: 41, golem: 41, golemito: 41, arqueroHierro: 43, dragoncito: 45, dragonAcero: 50 };
 export const PRIMERA_OLA = 0.3;
 export const LLEGADA = 8;
 /** Lo más que puede haber vivos a la vez (por rendimiento; el resto espera su turno). */
@@ -239,6 +269,12 @@ function mixFor(n: number): [EnemyKind, number][] {
     const azul = n < AZUL_DESDE ? 0 : Math.min(0.5, 0.1 + 0.05 * (n - AZUL_DESDE));
     const rojo = n < ROJO_DESDE ? 0 : Math.min(0.12, 0.06 + 0.01 * (n - ROJO_DESDE));
     return [['azul', azul], ['rojo', rojo], ['verde', 1 - azul - rojo]];
+  }
+  if (zoneOf(n) === 'montana') {
+    const golem = 0.15;
+    const arquero = n < DESDE.arqueroHierro ? 0 : Math.min(0.1, 0.05 + 0.02 * (n - DESDE.arqueroHierro));
+    const dragon = n < DESDE.dragoncito ? 0 : Math.min(0.12, 0.05 + 0.02 * (n - DESDE.dragoncito));
+    return [['golem', golem], ['arqueroHierro', arquero], ['dragoncito', dragon], ['guerreroHierro', 1 - golem - arquero - dragon]];
   }
   if (zoneOf(n) === 'desierto') {
     const bandidos = 0.15;
@@ -262,10 +298,13 @@ function mixFor(n: number): [EnemyKind, number][] {
 /**
  * Cómo crecen la vida y el oro de los enemigos por nivel. Hasta el 20, la vida ×1.3 y el oro ×1.05 por
  * nivel; desde ahí la vida crece menos y el oro más (si no, hacia el 29 las mejoras ya no alcanzan y el
- * juego se atora: lo mostró el simulador al agregar el desierto).
+ * juego se atora: lo mostró el simulador al agregar el desierto). El daño a la muralla, ×1.05 hasta el 20
+ * y luego ×1.02 (la muralla tiene un máximo; con ×1.05 para siempre, en la montaña caía en cada partida).
  */
-export const CURVA = { vida: 1.3, oro: 1.05, desde: 20, vidaTarde: 1.14, oroTarde: 1.15 };
+export const CURVA = { vida: 1.3, oro: 1.05, desde: 20, vidaTarde: 1.14, oroTarde: 1.15, ataqueTarde: 1.02 };
 export const vidaNivel = (n: number): number => Math.pow(CURVA.vida, Math.min(n, CURVA.desde) - 1) * Math.pow(CURVA.vidaTarde, Math.max(0, n - CURVA.desde));
+/** El daño de los ataques a la muralla: ×1.05 por nivel desde el 7 hasta el 20; después solo ×`ataqueTarde` (la muralla tiene un máximo). */
+export const ataqueNivel = (n: number): number => Math.pow(1.05, Math.max(0, Math.min(n, CURVA.desde) - ROJO_DESDE)) * Math.pow(CURVA.ataqueTarde, Math.max(0, n - CURVA.desde));
 export const oroNivel = (n: number): number => Math.pow(CURVA.oro, Math.min(n, CURVA.desde) - 1) * Math.pow(CURVA.oroTarde, Math.max(0, n - CURVA.desde));
 
 export function levelConfig(nivel: number): LevelConfig {
@@ -281,7 +320,7 @@ export function levelConfig(nivel: number): LevelConfig {
     mezcla,
     azules: parte('azul'),
     rojos: parte('rojo'),
-    ataque: Math.pow(1.05, Math.max(0, n - ROJO_DESDE)),
+    ataque: ataqueNivel(n),
     premio: Math.round(8 * Math.pow(1.12, n - 1) * (isBossLevel(n) ? JEFE.premio : 1)),
     jefe: isBossLevel(n) ? { kind: bossFor(n), vida: Math.round(3 * (15 + 8 * (n - 1)) * vidaNivel(n) * JEFE.vida * (JEFES[bossFor(n)]?.vida ?? 1)) } : null,
   };
