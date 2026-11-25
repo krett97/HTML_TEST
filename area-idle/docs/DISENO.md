@@ -1,6 +1,6 @@
 # Campo de Slimes: diseño del prototipo
 
-> Versión 0.10.0. Nombre provisional. Nació de pausar el juego del gato
+> Versión 0.11.0. Nombre provisional. Nació de pausar el juego del gato
 > ([`../../gato-idle/docs/DECISIONES.md`](../../gato-idle/docs/DECISIONES.md)), tomando su base técnica y su
 > arte en código ([`../../REUSO.md`](../../REUSO.md)). Referencia de sensación: *Don't Stop The Pop!*
 > (cientos de cosas reventando en un área) y el idle del castor (rocas que caen, mundo que cambia por fase).
@@ -152,6 +152,31 @@ hielo. Cada jefe tiene sus números en `JEFES` (`datos.ts`); en los niveles 30, 
 El simulador llega al nivel 20 hacia el minuto 27 (la primera zona se pasa hacia el 9): la segunda
 zona es un salto claro de dificultad, sobre todo por la muralla.
 
+## 5d2. Tercera zona: Pradera amarilla (desde 0.11.0)
+
+Niveles 21–30 (y los siguientes hasta que haya una cuarta zona): **hierba amarilla y seca**, y en lugar de
+arbustos hay **cráneos, cascos y petos abollados**. Enemigos:
+
+| Enemigo | Desde | Vida | Velocidad | Qué hace | Débil a | Fuerte contra | Oro |
+|---|---|---|---|---|---|---|---|
+| Araña gigante | 21 | 6 | Normal | Escupe **telaraña** a un arquero y lo deja enredado 2.5 s (no tira) | Fuego | Hielo | 2.5 |
+| Lobo negro | 21 | 5 | Rapidísima | Sale en **manada de 3** | Físico | Muerte | 1.5 |
+| Esqueleto (espada y escudo) | 23 | 14 | Lenta | Marcha a la muralla y la golpea (5); al caer **se rearma una vez** con media vida | Luz | Físico | 7 |
+| Bandido con dagas (el más fuerte) | 25 | 10 | Normal | Lanza **dagas** a la muralla muy seguido (3 cada 1.8 s) y **se aparta de tu círculo** | Físico | — | 9 |
+
+- Las arañas son el resto de cada nivel; los lobos negros salen en 10 % de los turnos (como son de a 3,
+  son ~25 % de los enemigos); los esqueletos, del 8 % al 20 %; los bandidos, del 5 % al 12 %.
+- **Telarañas con medida:** cada arquero recibe una a la vez y, al soltarse, no lo pueden volver a
+  enredar en 4 s. Con 110 arañas en el campo los arqueros pasan ~27 % del tiempo enredados (sin ese
+  límite pasaban casi todo el tiempo). Sin arqueros, la telaraña le pega a la muralla (2).
+- El esqueleto aguanta las flechas (escudo) y se levanta otra vez: aquí el mago importa. El bandido
+  premia apuntar a mano (el autoapuntado es muy lento para él).
+- El jefe del nivel 30 sigue siendo el Rey Slime (se alternan); falta uno propio de la zona.
+- Misiones diarias nuevas: revienta 120 arañas (3), 40 esqueletos (4, desde el 23) y 25 bandidos (4, desde el 25).
+
+Con el simulador se llega al nivel 21 hacia el minuto 22 y al 28 hacia el 45; del 21 al 30 pierde ~17
+veces (junta oro en el anterior y sigue).
+
 ## 5e. Misiones, gemas moradas y Reliquias (desde 0.6.0)
 
 Al pasar el nivel 10 (al vencer al Rey Slime) se abren las **misiones**, que dan **gemas moradas**, la
@@ -293,7 +318,7 @@ unas 30 partidas de 45 minutos y ahí sirve Muralla reforzada. (El bot no cobra 
 
 ## 7. Técnica
 
-- `src/core/` es lógica pura y probada (85 pruebas): `run.ts` (la partida paso a paso; devuelve eventos),
+- `src/core/` es lógica pura y probada (90 pruebas): `run.ts` (la partida paso a paso; devuelve eventos),
   `stats.ts` (estadísticas desde los talentos), `meta.ts` (oro, gemas, árbol, guardado), `misiones.ts`
   (contadores, diarias y permanentes), `ranking.ts`, `pvp.ts` (poder, ligas, peleas, tienda), `datos.ts`, `bot.ts`. `src/services/ranking.ts`
   conecta el ranking con la base de datos de la página publicada.

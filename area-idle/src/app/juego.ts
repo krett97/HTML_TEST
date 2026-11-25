@@ -212,6 +212,7 @@ export class Juego {
       else if (e.type === 'wallHit') this.audio.play('golpeMuro');
       else if (e.type === 'wallDown') this.audio.play('derrumbe');
       else if (e.type === 'wallRepair') this.audio.play('repara');
+      else if (e.type === 'rise') this.audio.play('invoca');
       else if (e.type === 'hit' && e.efecto === 'critico') this.audio.play('critico');
       else if (e.type === 'fire') this.audio.play('fuego');
       else if (e.type === 'end') this.end(e.gano);

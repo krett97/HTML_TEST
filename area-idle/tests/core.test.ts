@@ -1017,3 +1017,85 @@ describe('autoapuntado', () => {
     expect(AUTOAPUNTAR.espera).toBe(2.5);
   });
 });
+
+describe('tercera zona: Pradera amarilla', () => {
+  const sinLlegadas = (run: Run) => {
+    run.stats = { ...run.stats, ritmo: 0, duracion: 999 };
+    run.cursor = { x: -999, y: -999 };
+  };
+  it('del 21 al 30: arañas y lobos negros; esqueletos desde el 23 y bandidos desde el 25', () => {
+    expect(zoneOf(20)).toBe('batalla');
+    expect(zoneOf(21)).toBe('pradera');
+    expect(zoneOf(35)).toBe('pradera');
+    const quienes = (n: number) => levelConfig(n).mezcla.map(([k]) => k).sort();
+    expect(quienes(21)).toEqual(['arana', 'loboNegro']);
+    expect(quienes(23)).toEqual(['arana', 'esqueleto', 'loboNegro']);
+    expect(quienes(25)).toEqual(['arana', 'bandido', 'esqueleto', 'loboNegro']);
+    expect(levelConfig(30).jefe?.kind).toBe('rey');
+  });
+  it('los lobos negros llegan de a 3, juntos', () => {
+    const run = createRun(computeStats({}), 560, 21, 5);
+    run.nivel = { ...run.nivel, mezcla: [['loboNegro', 1]], total: 9 };
+    startRun(run);
+    expect(run.enemies).toHaveLength(9);
+    expect(run.salieron).toBe(9);
+    for (let i = 0; i < 9; i += 3) {
+      const [a, b, c] = run.enemies.slice(i, i + 3);
+      for (const e of [b!, c!]) expect(Math.hypot(e.x - a!.x, e.y - a!.y)).toBeLessThan(30);
+    }
+  });
+  it('el esqueleto se rearma una vez con media vida y solo cuenta al caer del todo', () => {
+    const run = createRun(computeStats({}), 560, 23, 6);
+    sinLlegadas(run);
+    run.enemies.push({ id: 800, kind: 'esqueleto', x: 100, y: 200, vx: 0, vy: 0, vida: 0.5, vidaMax: 10, giro: 99 });
+    moveCursor(run, 100, 200);
+    const eventos: RunEvent[] = [];
+    for (let i = 0; i < 4; i++) eventos.push(...stepRun(run, 0.2));
+    expect(eventos.filter((e) => e.type === 'rise')).toHaveLength(1);
+    expect(run.reventados).toBe(0);
+    const esq = run.enemies.find((e) => e.id === 800)!;
+    expect(esq.rearmado).toBe(true);
+    esq.vida = 0.1;
+    for (let i = 0; i < 4; i++) eventos.push(...stepRun(run, 0.2));
+    expect(eventos.filter((e) => e.type === 'rise')).toHaveLength(1);
+    expect(eventos.some((e) => e.type === 'kill' && e.kind === 'esqueleto')).toBe(true);
+    expect(run.reventados).toBe(1);
+  });
+  it('el bandido se aparta de tu círculo', () => {
+    const run = createRun(computeStats({}), 560, 25, 7);
+    run.stats = { ...run.stats, ritmo: 0, duracion: 999 };
+    run.enemies.push({ id: 801, kind: 'bandido', x: 180, y: 250, vx: 0, vy: 0, vida: 1e9, vidaMax: 1e9, giro: 99 });
+    moveCursor(run, 175, 250);
+    for (let i = 0; i < 10; i++) stepRun(run, 0.05);
+    const b = run.enemies.find((e) => e.id === 801)!;
+    expect(Math.hypot(b.x - 175, b.y - 250)).toBeGreaterThan(15);
+  });
+  it('la telaraña enreda a un arquero 3 s (no tira); sin arqueros, le pega a la muralla', () => {
+    const run = createRun(computeStats({ arqueros: 1 }), 560, 21, 8);
+    sinLlegadas(run);
+    run.enemies.push({ id: 802, kind: 'arana', x: 180, y: 300, vx: 0, vy: 0, vida: 1e9, vidaMax: 1e9, giro: 99, tiro: 0.01 });
+    const eventos: RunEvent[] = [];
+    for (let i = 0; i < 60 && !eventos.some((e) => e.type === 'web'); i++) eventos.push(...stepRun(run, 0.05));
+    const tela = eventos.find((e) => e.type === 'web');
+    expect(tela).toMatchObject({ arquero: 0, dura: ENEMIES.arana.enreda });
+    // Muchas arañas no lo dejan enredado para siempre: una telaraña por arquero a la vez.
+    expect(run.piedras.filter((p) => p.tipo === 'telarana')).toHaveLength(0);
+    const despues: RunEvent[] = [];
+    for (let i = 0; i < 40; i++) despues.push(...stepRun(run, 0.05));
+    expect(despues.some((e) => e.type === 'volley')).toBe(false);
+    expect(despues.some((e) => e.type === 'web')).toBe(false);
+    expect(run.muro.vida).toBe(run.muro.max);
+    // Al soltarse tira otra vez y por 4 s no lo pueden volver a enredar.
+    const suelto: RunEvent[] = [];
+    for (let i = 0; i < 60; i++) suelto.push(...stepRun(run, 0.05));
+    expect(suelto.some((e) => e.type === 'volley')).toBe(true);
+    expect(suelto.some((e) => e.type === 'web')).toBe(false);
+    const sola = createRun(computeStats({}), 560, 21, 9);
+    sinLlegadas(sola);
+    sola.enemies.push({ id: 803, kind: 'arana', x: 180, y: 300, vx: 0, vy: 0, vida: 1e9, vidaMax: 1e9, giro: 99, tiro: 0.01 });
+    const ev2: RunEvent[] = [];
+    for (let i = 0; i < 80; i++) ev2.push(...stepRun(sola, 0.05));
+    expect(ev2.some((e) => e.type === 'web')).toBe(false);
+    expect(ev2.find((e) => e.type === 'wallHit')).toMatchObject({ danio: ENEMIES.arana.ataque * sola.nivel.ataque });
+  });
+});

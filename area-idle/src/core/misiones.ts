@@ -50,6 +50,9 @@ export const DIARIAS: MissionDef[] = [
   { id: 'lobos', medida: 'tipo:lobo', meta: 60, gemas: 3, icono: 'arte:lobo' },
   { id: 'orcos', medida: 'tipo:orco', meta: 40, gemas: 4, icono: 'arte:orco', desde: DESDE.orco },
   { id: 'arqueros', medida: 'tipo:orcoArquero', meta: 25, gemas: 4, icono: 'arte:orcoArquero', desde: DESDE.orcoArquero },
+  { id: 'aranas', medida: 'tipo:arana', meta: 120, gemas: 3, icono: 'arte:arana', desde: DESDE.arana },
+  { id: 'esqueletos', medida: 'tipo:esqueleto', meta: 40, gemas: 4, icono: 'arte:esqueleto', desde: DESDE.esqueleto },
+  { id: 'bandidos', medida: 'tipo:bandido', meta: 25, gemas: 4, icono: 'arte:bandido', desde: DESDE.bandido },
 ];
 
 export const PERMANENTES: MissionDef[] = [

@@ -8,10 +8,10 @@ export const DAMAGE_TYPES_EN_JUEGO: DamageType[] = ['fisico', 'fuego'];
 /** Cuánto reciben los enemigos del tipo al que son débiles y del que son fuertes. */
 export const EFFECTIVENESS = { debil: 1.5, fuerte: 0.5 } as const;
 
-export type EnemyKind = 'verde' | 'azul' | 'rojo' | 'rey' | 'goblin' | 'lobo' | 'orco' | 'orcoArquero' | 'loboBlanco';
+export type EnemyKind = 'verde' | 'azul' | 'rojo' | 'rey' | 'goblin' | 'lobo' | 'orco' | 'orcoArquero' | 'loboBlanco' | 'arana' | 'esqueleto' | 'loboNegro' | 'bandido';
 
-/** Lo que vuela hacia la muralla: piedra de resortera, lanza de goblin, flecha de orco, baba del Rey, hoz del Lobo. */
-export type ProjectileKind = 'piedra' | 'lanza' | 'flecha' | 'baba' | 'hoz';
+/** Lo que vuela hacia la muralla: piedra de resortera, lanza de goblin, flecha de orco, baba del Rey, hoz del Lobo, telaraña de araña y daga de bandido. */
+export type ProjectileKind = 'piedra' | 'lanza' | 'flecha' | 'baba' | 'hoz' | 'telarana' | 'daga';
 
 export interface EnemyDef {
   id: EnemyKind;
@@ -30,6 +30,14 @@ export interface EnemyDef {
   marcha?: boolean;
   /** Cada cuántos segundos cambia de rumbo (los lobos, muy seguido). */
   giro?: [number, number];
+  /** Sale en manada: cuando aparece uno, llegan estos en total (los lobos negros, de a 3). */
+  manada?: number;
+  /** Al caer la primera vez se rearma con esta parte de su vida (los esqueletos). */
+  rearma?: number;
+  /** Se aleja de tu círculo a esta velocidad cuando lo tiene cerca (los bandidos). */
+  esquiva?: number;
+  /** Su proyectil enreda a un arquero estos segundos en vez de pegarle a la muralla (las arañas). */
+  enreda?: number;
   /** Tipos de daño que le hacen más (×1.5) y menos (×0.5). */
   debil: DamageType[];
   fuerte: DamageType[];
@@ -58,6 +66,15 @@ export const ENEMIES: Record<EnemyKind, EnemyDef> = {
   orcoArquero: { id: 'orcoArquero', vida: 9, oro: 8, radio: 11, velocidad: 5, ataque: 4, tiro: 3, proyectil: 'flecha', debil: ['fuego'], fuerte: ['fisico'] },
   // El jefe del nivel 20: un lobo blanco enorme con una hoz en la boca. Embiste, aúlla (llama lobos) y avienta la hoz.
   loboBlanco: { id: 'loboBlanco', vida: 0, oro: 0, radio: 30, velocidad: 6, ataque: 0, debil: ['fuego'], fuerte: ['hielo'], jefe: true },
+  // ---- Pradera amarilla (niveles 21–30) ----
+  // Araña gigante: escupe telaraña a un arquero y lo deja enredado (sin tirar) unos segundos. Se quema fácil.
+  arana: { id: 'arana', vida: 6, oro: 2.5, radio: 11, velocidad: 14, ataque: 2, tiro: 7, proyectil: 'telarana', enreda: 2.5, giro: [0.8, 2], debil: ['fuego'], fuerte: ['hielo'] },
+  // Esqueleto con espada y escudo: marcha a la muralla y la golpea; el escudo aguanta flechas y, al caer, se rearma una vez.
+  esqueleto: { id: 'esqueleto', vida: 14, oro: 7, radio: 11, velocidad: 8, ataque: 5, tiro: 2.5, marcha: true, rearma: 0.5, debil: ['luz'], fuerte: ['fisico'] },
+  // Lobo negro: sale en manada de 3 y es más rápido que el gris.
+  loboNegro: { id: 'loboNegro', vida: 5, oro: 1.5, radio: 10, velocidad: 30, ataque: 0, manada: 3, giro: [0.3, 0.8], debil: ['fisico'], fuerte: ['muerte'] },
+  // Bandido con dagas (el más fuerte de la zona): las lanza a la muralla muy seguido y se aparta de tu círculo.
+  bandido: { id: 'bandido', vida: 10, oro: 9, radio: 10, velocidad: 10, ataque: 3, tiro: 1.8, proyectil: 'daga', esquiva: 26, debil: ['fisico'], fuerte: [] },
 };
 export const ENEMY_KINDS = Object.keys(ENEMIES) as EnemyKind[];
 
@@ -92,14 +109,17 @@ export const BASE = {
 } as const;
 
 /**
- * Zonas: el mismo campo verde, pero cada 10 niveles cambia lo que hay tirado y quién sale. La primera
- * (Campo verde) tiene flores, piedras y arbustos y slimes; la segunda (Campo de batalla), espadas y
- * tablas tiradas, y goblins, lobos y orcos. Después del nivel 20 sigue la segunda hasta que haya más.
+ * Zonas: cada 10 niveles cambia el campo, lo que hay tirado y quién sale. La primera (Campo verde) tiene
+ * flores, piedras y arbustos y slimes; la segunda (Campo de batalla), espadas y tablas tiradas, y
+ * goblins, lobos y orcos; la tercera (Pradera amarilla, 21–30), hierba seca, cráneos y pedazos de
+ * armadura, y arañas, esqueletos, lobos negros y bandidos. Después del 30 sigue la tercera hasta que haya más.
  */
-export type ZoneId = 'campo' | 'batalla';
+export type ZoneId = 'campo' | 'batalla' | 'pradera';
 export const ZONAS: { id: ZoneId; desde: number }[] = [
   { id: 'campo', desde: 1 },
   { id: 'batalla', desde: 11 },
+  // Pradera amarilla: hierba seca, cráneos y pedazos de armadura; arañas, esqueletos, lobos negros y bandidos.
+  { id: 'pradera', desde: 21 },
 ];
 export function zoneOf(nivel: number): ZoneId {
   let z: ZoneId = 'campo';
@@ -176,7 +196,7 @@ export const isBossLevel = (nivel: number): boolean => nivel % JEFE.cada === 0;
 /** Desde qué nivel sale cada enemigo (los de la segunda zona, desde que empieza). */
 export const AZUL_DESDE = 4;
 export const ROJO_DESDE = 7;
-export const DESDE: Record<EnemyKind, number> = { verde: 1, azul: AZUL_DESDE, rojo: ROJO_DESDE, rey: 10, goblin: 11, lobo: 11, orco: 13, orcoArquero: 15, loboBlanco: 20 };
+export const DESDE: Record<EnemyKind, number> = { verde: 1, azul: AZUL_DESDE, rojo: ROJO_DESDE, rey: 10, goblin: 11, lobo: 11, orco: 13, orcoArquero: 15, loboBlanco: 20, arana: 21, loboNegro: 21, esqueleto: 23, bandido: 25 };
 export const PRIMERA_OLA = 0.3;
 export const LLEGADA = 8;
 /** Lo más que puede haber vivos a la vez (por rendimiento; el resto espera su turno). */
@@ -188,6 +208,13 @@ function mixFor(n: number): [EnemyKind, number][] {
     const azul = n < AZUL_DESDE ? 0 : Math.min(0.5, 0.1 + 0.05 * (n - AZUL_DESDE));
     const rojo = n < ROJO_DESDE ? 0 : Math.min(0.12, 0.06 + 0.01 * (n - ROJO_DESDE));
     return [['azul', azul], ['rojo', rojo], ['verde', 1 - azul - rojo]];
+  }
+  if (zoneOf(n) === 'pradera') {
+    // Los lobos negros salen de a 3: con 10 % de los turnos son ~25 % de los enemigos.
+    const lobos = 0.1;
+    const esqueleto = n < DESDE.esqueleto ? 0 : Math.min(0.2, 0.08 + 0.03 * (n - DESDE.esqueleto));
+    const bandido = n < DESDE.bandido ? 0 : Math.min(0.12, 0.05 + 0.02 * (n - DESDE.bandido));
+    return [['loboNegro', lobos], ['esqueleto', esqueleto], ['bandido', bandido], ['arana', 1 - lobos - esqueleto - bandido]];
   }
   const lobo = 0.22;
   const orco = n < DESDE.orco ? 0 : Math.min(0.2, 0.08 + 0.03 * (n - DESDE.orco));

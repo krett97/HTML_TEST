@@ -110,6 +110,54 @@ function orco({ arco = false } = {}) {
 }
 scene('orco', svg(112, 112, orco()));
 scene('orcoArquero', svg(112, 112, orco({ arco: true })));
+// ---- Pradera amarilla (niveles 21–30) ----
+// Lobo negro: el mismo lobo, oscuro y con ojos rojos.
+scene('loboNegro', svg(112, 84, lobo({ pelo: '#4a4a58', peloS: '#2c2c36', peloC: '#7a7a8c' }, { enojado: true })));
+// Araña gigante (112 × 84): abdomen grande con marca roja, ocho patas dobladas y un racimo de ojos rojos.
+{
+  const ARA = { cuerpo: '#4a3550', sombra: '#33243a', claro: '#7a5a86' };
+  let s = '';
+  for (const [x0, y0, x1, y1, x2, y2] of [[44, 50, 22, 26, 6, 58], [48, 54, 28, 40, 12, 74], [62, 54, 80, 40, 98, 74], [66, 50, 88, 26, 106, 58], [50, 56, 36, 58, 24, 80], [60, 56, 74, 58, 86, 80], [46, 48, 30, 16, 18, 34], [64, 48, 80, 16, 92, 34]])
+    s += line(`M${x0} ${y0} L${x1} ${y1} L${x2} ${y2}`, K, 8) + line(`M${x0} ${y0} L${x1} ${y1} L${x2} ${y2}`, ARA.sombra, 4);
+  s += ell(55, 40, 24, 20, ARA.cuerpo, 6) + f('M38 50 C46 60 66 60 74 50 C66 56 46 56 38 50 Z', ARA.sombra) + o('M50 30 L55 24 L60 30 L55 44 Z', '#d8443a', 3);
+  s += ell(55, 62, 15, 12, ARA.cuerpo, 6) + brillo(46, 28, 7, 4, 0.4);
+  for (const [x, y, r] of [[50, 60, 3.2], [60, 60, 3.2], [46, 66, 2.2], [64, 66, 2.2], [55, 56, 2]]) s += circ(x, y, r, '#ff4a3a', 0) + circ(x - 0.8, y - 0.8, 0.8, P.blanco, 0);
+  s += o('M51 72 l-3 6 l5 -2 Z M59 72 l3 6 l-5 -2 Z', P.crema, 2.5);
+  scene('arana', svg(112, 84, s));
+}
+// Esqueleto con espada y escudo (96 × 112): cráneo, costillas, espada a un lado y escudo redondo al frente.
+{
+  const HUE = { hueso: '#efe8d6', huesoS: '#c9bfa6' };
+  let s = '';
+  s += line('M78 20 L84 76', K, 8) + line('M78 20 L84 76', '#dfe5ee', 4) + rect(74, 72, 18, 6, 3, P.oroS, 3) + rect(80, 76, 6, 14, 3, P.maderaS, 3);
+  s += o('M34 62 C34 80 36 96 38 108 H62 C64 96 66 80 66 62 Z', HUE.huesoS, 5) + line('M50 64 V104 M38 72 H62 M38 82 H62 M40 92 H60', HUE.hueso, 3.5);
+  s += circ(50, 36, 22, HUE.hueso, 6) + f('M30 44 C36 58 64 58 70 44 C64 52 36 52 30 44 Z', HUE.huesoS);
+  s += ell(42, 36, 6, 7, '#2b1d16', 0) + ell(58, 36, 6, 7, '#2b1d16', 0) + circ(42, 37, 1.8, '#ff6b5e', 0) + circ(58, 37, 1.8, '#ff6b5e', 0);
+  s += o('M47 46 L50 42 L53 46 Z', '#2b1d16', 0) + rect(40, 50, 20, 7, 2, HUE.hueso, 3) + line('M45 50 V57 M50 50 V57 M55 50 V57', K, 1.6);
+  s += circ(26, 78, 20, P.maderaS, 6) + circ(26, 78, 13, P.madera, 0) + circ(26, 78, 20, 'none', 0) + `<circle cx="26" cy="78" r="17" fill="none" stroke="${P.grisS}" stroke-width="4"/>` + circ(26, 78, 4.5, P.grisS, 3);
+  scene('esqueleto', svg(96, 112, s));
+}
+// Bandido con dagas (96 × 104): capucha café, pañoleta roja tapando la boca, ojos entrecerrados y una daga en cada mano.
+{
+  const BAN = { capa: '#6a4a3a', capaS: '#4e3528', piel: '#e8b98f', panuelo: '#b8352c' };
+  let s = '';
+  const daga = (x, y, rot) => g(`rotate(${rot} ${x} ${y})`, o(`M${x - 3} ${y} L${x} ${y - 20} L${x + 3} ${y} Z`, '#dfe5ee', 3) + rect(x - 6, y, 12, 4, 2, P.oroS, 2.5) + rect(x - 2, y + 4, 4, 9, 2, P.maderaS, 2.5));
+  s += o('M22 64 C18 82 16 96 16 102 H80 C80 96 78 82 74 64 Z', BAN.capa, 6) + f('M48 66 V102 H60 C60 90 58 78 56 66 Z', BAN.capaS);
+  s += daga(14, 70, -30) + daga(82, 70, 30);
+  s += circ(14, 76, 6, BAN.piel, 4) + circ(82, 76, 6, BAN.piel, 4);
+  s += o('M20 50 C20 22 34 10 48 10 C62 10 76 22 76 50 C76 64 64 70 48 70 C32 70 20 64 20 50 Z', BAN.capa, 6);
+  s += o('M30 44 C30 32 38 26 48 26 C58 26 66 32 66 44 C66 56 58 62 48 62 C38 62 30 56 30 44 Z', BAN.piel, 4);
+  s += o('M30 48 C38 54 58 54 66 48 L66 56 C58 64 38 64 30 56 Z', BAN.panuelo, 4);
+  s += line('M36 40 l8 2 M60 40 l-8 2', K, 3.5) + circ(41, 44, 2.6, K, 0) + circ(55, 44, 2.6, K, 0);
+  s += brillo(38, 22, 7, 4, 0.35);
+  scene('bandido', svg(96, 104, s));
+}
+// Lo que hay tirado en la pradera: cráneos, cascos y petos abollados.
+scene('craneo', svg(60, 46, ell(30, 40, 24, 5, '#00000022', 0) + o('M10 26 C10 12 20 4 30 4 C40 4 50 12 50 26 C50 32 46 36 42 38 V42 H18 V38 C14 36 10 32 10 26 Z', '#efe8d6', 4) + ell(22, 24, 5.5, 6, '#2b1d16', 0) + ell(38, 24, 5.5, 6, '#2b1d16', 0) + o('M28 32 L30 28 L32 32 Z', '#2b1d16', 0) + line('M24 38 V42 M30 38 V42 M36 38 V42', K, 1.8)));
+scene('casco', svg(58, 44, o('M6 34 C6 16 16 6 29 6 C42 6 52 16 52 34 Z', '#b9bfcc', 5) + rect(4, 30, 50, 8, 3, '#8d93a6', 4) + line('M29 8 V30', '#8d93a6', 3) + o('M14 20 l6 4 l-2 6 Z', '#6d7383', 0) + brillo(18, 14, 5, 3, 0.6)));
+scene('peto', svg(56, 50, o('M8 10 C18 4 38 4 48 10 L44 42 C36 48 20 48 12 42 Z', '#b9bfcc', 5) + line('M28 8 V44 M14 22 H42', '#8d93a6', 3) + o('M38 26 l6 -4 l-2 8 Z', '#6d7383', 0) + brillo(18, 14, 5, 3, 0.5)));
+// La telaraña que deja enredado a un arquero.
+scene('telarana', svg(64, 64, `<g fill="none" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" opacity=".95">` + [0, 45, 90, 135].map((a) => `<path d="M32 32 L${32 + 30 * Math.cos((a * Math.PI) / 180)} ${32 + 30 * Math.sin((a * Math.PI) / 180)} M32 32 L${32 - 30 * Math.cos((a * Math.PI) / 180)} ${32 - 30 * Math.sin((a * Math.PI) / 180)}"/>`).join('') + [10, 19, 28].map((r) => `<polygon points="${Array.from({ length: 8 }, (_, i) => `${32 + r * Math.cos((i * Math.PI) / 4)},${32 + r * Math.sin((i * Math.PI) / 4)}`).join(' ')}"/>`).join('') + '</g>'));
 // Lo que hay tirado en el campo de batalla.
 scene('espada', svg(90, 30, g('rotate(-12 45 15)', o('M18 12 H74 L82 15 L74 18 H18 Z', '#dfe5ee', 4) + line('M22 15 H72', '#a9b3c4', 2) + rect(12, 6, 6, 18, 2, P.oroS, 3) + rect(2, 11, 12, 8, 3, P.maderaS, 3))));
 scene('tabla', svg(90, 34, g('rotate(8 45 17)', rect(4, 8, 82, 18, 4, P.madera, 4) + line('M10 14 H60 M24 20 H80', P.maderaS, 2) + circ(12, 17, 2, K, 0) + circ(78, 17, 2, K, 0))));
@@ -202,10 +250,11 @@ function bloques(x0, y0, w, h, alto = 48, ancho = 80, desfase = 0) {
 }
 
 // ---- El pasto (256 × 256, se repite): verde con matitas y manchas claras que cruzan el borde sin costura ----
-{
-  const mata = (x, y, c = P.pastoS) => line(`M${x} ${y} l-4 -9 M${x} ${y} l0 -11 M${x} ${y} l5 -9`, c, 3);
-  const mancha = (x, y, rx, ry) => `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="${P.pastoC}" opacity=".35"/>`;
-  let s = rect(0, 0, 256, 256, 0, P.pasto, 0);
+// (la Pradera amarilla usa el mismo dibujo con hierba seca)
+for (const [clave, base, claro, oscuro] of [['pasto', P.pasto, P.pastoC, P.pastoS], ['pasto_amarillo', '#d9c25e', '#efe19a', '#b3963a']]) {
+  const mata = (x, y, c = oscuro) => line(`M${x} ${y} l-4 -9 M${x} ${y} l0 -11 M${x} ${y} l5 -9`, c, 3);
+  const mancha = (x, y, rx, ry) => `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="${claro}" opacity=".35"/>`;
+  let s = rect(0, 0, 256, 256, 0, base, 0);
   const manchas = [[40, 50, 38, 20], [190, 30, 30, 16], [120, 150, 44, 22], [230, 200, 36, 18], [30, 220, 30, 16]];
   const matas = [[20, 30], [70, 90], [150, 40], [210, 110], [100, 200], [180, 170], [240, 250], [60, 160], [130, 100], [200, 230], [10, 120], [160, 250]];
   // Cada cosa se dibuja también desplazada 256 a los lados para que el borde case.
@@ -213,7 +262,7 @@ function bloques(x0, y0, w, h, alto = 48, ancho = 80, desfase = 0) {
     for (const [x, y, rx, ry] of manchas) s += mancha(x + dx, y + dy, rx, ry);
     for (const [x, y] of matas) s += mata(x + dx, y + dy);
   }
-  scene('pasto', svg(256, 256, s));
+  scene(clave, svg(256, 256, s));
 }
 
 // ---- Decoraciones del campo ----

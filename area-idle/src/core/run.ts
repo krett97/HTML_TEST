@@ -16,6 +16,8 @@ export const ARROW_FALL = 0.16;
 export const FIREBALL_FLIGHT = 0.28;
 /** Velocidad de las flechas de los arqueros (unidades por segundo). */
 const ARROW_SPEED = 330;
+/** Después de soltarse de una telaraña, el arquero no puede volver a quedar enredado en estos segundos. */
+export const TELA_INMUNE = 4;
 /** Abajo del campo, la muralla donde están el mago y los arqueros (los enemigos no llegan ahí). */
 export const ALLY_ROW = 50;
 /** Lo que sube la torre del mago desde abajo (unidades). */
@@ -34,6 +36,8 @@ export interface Enemy {
   giro: number;
   /** Segundos hasta tirar la siguiente piedra (solo los que tienen resortera). */
   tiro?: number;
+  /** Ya se rearmó una vez (los esqueletos). */
+  rearmado?: boolean;
 }
 
 /** Una piedra de resortera en el aire, de un slime rojo a la muralla. */
@@ -48,10 +52,13 @@ export interface Pebble {
   tx: number;
   ty: number;
   danio: number;
+  /** La telaraña va hacia un arquero (su número) y lo enreda `enreda` s. */
+  arquero?: number;
+  enreda?: number;
 }
 
 /** Velocidad de lo que vuela hacia la muralla (unidades por segundo). */
-const PROJECTILE_SPEED: Record<ProjectileKind, number> = { piedra: 170, lanza: 200, flecha: 260, baba: 170, hoz: 150 };
+const PROJECTILE_SPEED: Record<ProjectileKind, number> = { piedra: 170, lanza: 200, flecha: 260, baba: 170, hoz: 150, telarana: 140, daga: 240 };
 
 export type Forma = { tipo: 'circulo'; r: number } | { tipo: 'rect'; w: number; h: number };
 
@@ -111,6 +118,10 @@ export type RunEvent =
   | { type: 'bossSummon'; id: number; x: number; y: number }
   | { type: 'bossThrow'; id: number; x: number; y: number }
   | { type: 'bossRage'; id: number }
+  /** Un esqueleto cayó y se volvió a armar (con parte de su vida). */
+  | { type: 'rise'; id: number; x: number; y: number }
+  /** Una telaraña enredó a un arquero: no tira por `dura` s. */
+  | { type: 'web'; arquero: number; dura: number }
   /** Se acabó: `gano` si se reventaron todos los slimes del nivel antes de que se acabara el tiempo. */
   | { type: 'end'; gano: boolean };
 
@@ -145,6 +156,9 @@ export interface Run {
   mago: number;
   /** Lo que le falta a cada arquero para tirar. */
   arcos: number[];
+  /** Segundos que le quedan enredado (telaraña) a cada arquero, y luego sin poder enredarse otra vez. */
+  enredos: number[];
+  inmunes: number[];
   acumulado: number;
   nextId: number;
   oro: number;
@@ -184,6 +198,8 @@ export function createRun(base: Stats, h: number, nivel = 1, seed = Date.now(), 
     mago: stats.mago.intervalo * 0.5,
     // Los arqueros no tiran todos juntos.
     arcos: Array.from({ length: stats.arqueros.cantidad }, (_, i) => 0.3 + (i * stats.arqueros.intervalo) / Math.max(1, stats.arqueros.cantidad)),
+    enredos: Array.from({ length: stats.arqueros.cantidad }, () => 0),
+    inmunes: Array.from({ length: stats.arqueros.cantidad }, () => 0),
     acumulado: 0,
     nextId: 1,
     oro: 0,
@@ -223,6 +239,10 @@ export function updateGuardRun(run: Run, base: Stats, oroPorBaja: number): void 
   run.muro.max = run.muro.vida = run.stats.muro.vida;
   while (run.arcos.length < run.stats.arqueros.cantidad) run.arcos.push(0.3 + run.arcos.length * 0.2);
   run.arcos.length = run.stats.arqueros.cantidad;
+  while (run.enredos.length < run.arcos.length) run.enredos.push(0);
+  run.enredos.length = run.arcos.length;
+  while (run.inmunes.length < run.arcos.length) run.inmunes.push(0);
+  run.inmunes.length = run.arcos.length;
 }
 
 /** Los primeros enemigos de la guardia. */
@@ -317,14 +337,27 @@ function spawn(run: Run, events: RunEvent[]): void {
     r -= p;
   }
   const def = ENEMIES[kind];
+  const x0 = between(run.rng, MARGIN, run.w - MARGIN);
+  const y0 = between(run.rng, run.arriba, bottom(run));
+  // Los que salen en manada (lobos negros) llegan juntos, uno al lado del otro.
+  const cuantos = Math.max(1, def.manada ?? 1);
+  for (let i = 0; i < cuantos && (i === 0 || (run.salieron < run.nivel.total && run.enemies.length < MAX_VIVOS) || !!run.guardia); i++) {
+    const x = i === 0 ? x0 : Math.min(run.w - MARGIN, Math.max(MARGIN, x0 + between(run.rng, -18, 18)));
+    const y = i === 0 ? y0 : Math.min(bottom(run), Math.max(run.arriba, y0 + between(run.rng, -14, 14)));
+    spawnOne(run, kind, x, y, events);
+  }
+}
+
+function spawnOne(run: Run, kind: EnemyKind, x: number, y: number, events: RunEvent[]): void {
+  const def = ENEMIES[kind];
   const vida = def.vida * run.nivel.vida;
   run.salieron++;
   const angle = run.rng() * Math.PI * 2;
   const enemy: Enemy = {
     id: run.nextId++,
     kind,
-    x: between(run.rng, MARGIN, run.w - MARGIN),
-    y: between(run.rng, run.arriba, bottom(run)),
+    x,
+    y,
     // Los que marchan (orcos) van directo hacia la muralla.
     vx: def.marcha ? 0 : Math.cos(angle) * def.velocidad,
     vy: def.marcha ? def.velocidad : Math.sin(angle) * def.velocidad,
@@ -357,6 +390,14 @@ function damage(run: Run, e: Enemy, base: number, fuente: Source, events: RunEve
   const critico = fuente === 'jugador' && run.stats.critico.prob > 0 && run.rng() < run.stats.critico.prob;
   const danio = base * damageMultiplier(e.kind, tipo) * aturdido * (critico ? run.stats.critico.mult : 1);
   e.vida -= danio;
+  // El esqueleto se rearma una vez (con parte de su vida) en vez de caer.
+  const rearma = ENEMIES[e.kind].rearma;
+  if (e.vida <= 0 && rearma && !e.rearmado) {
+    e.rearmado = true;
+    e.vida = e.vidaMax * rearma;
+    events.push({ type: 'rise', id: e.id, x: e.x, y: e.y });
+    return;
+  }
   if (e.vida > 0) {
     events.push({ type: 'hit', id: e.id, x: e.x, y: e.y, danio, fuente, efecto: critico ? 'critico' : effectiveness(e.kind, tipo) });
     return;
@@ -425,6 +466,18 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
       e.x = Math.min(run.w - MARGIN, Math.max(MARGIN, e.x + e.vx * step));
       e.y = Math.min(bottom(run), e.y + e.vy * step);
       continue;
+    }
+    // Los bandidos se apartan de tu círculo cuando lo tienen cerca.
+    if (def.esquiva && !run.guardia) {
+      const dx = e.x - run.cursor.x;
+      const dy = e.y - run.cursor.y;
+      const d = Math.hypot(dx, dy);
+      if (d < s.radio + def.radio + 18) {
+        const ang = d > 0.01 ? Math.atan2(dy, dx) : run.rng() * Math.PI * 2;
+        e.vx = Math.cos(ang) * def.esquiva;
+        e.vy = Math.sin(ang) * def.esquiva;
+        e.giro = 0.4;
+      }
     }
     e.giro -= step;
     if (e.giro <= 0) {
@@ -576,7 +629,17 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
       continue;
     }
     const tipo = def.proyectil ?? 'piedra';
-    run.piedras.push({ id: run.nextId++, tipo, sx: e.x, sy: e.y - 8, x: e.x, y: e.y - 8, tx: between(run.rng, 12, run.w - 12), ty, danio });
+    // La araña le apunta a un arquero libre (ni enredado, ni recién soltado, ni con otra telaraña en
+    // camino); si todos están ocupados, espera. Sin arqueros, le tira a la muralla.
+    const arcos = def.enreda && run.stats.arqueros.cantidad > 0 ? archerSpots(run) : null;
+    let arquero: number | undefined;
+    if (arcos) {
+      const libres = arcos.map((_, i) => i).filter((i) => run.enredos[i]! <= 0 && run.inmunes[i]! <= 0 && !run.piedras.some((p) => p.arquero === i));
+      if (!libres.length) continue;
+      arquero = libres[Math.floor(run.rng() * libres.length)]!;
+    }
+    const destino = arcos && arquero !== undefined ? { x: arcos[arquero]!.x, y: arcos[arquero]!.y - 14 } : { x: between(run.rng, 12, run.w - 12), y: ty };
+    run.piedras.push({ id: run.nextId++, tipo, sx: e.x, sy: e.y - 8, x: e.x, y: e.y - 8, tx: destino.x, ty: destino.y, danio, ...(arquero !== undefined ? { arquero, enreda: def.enreda } : {}) });
     events.push({ type: 'sling', id: e.id, x: e.x, y: e.y, tipo });
   }
   for (const p of run.piedras) {
@@ -592,6 +655,14 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
     p.x = p.tx;
     p.y = p.ty;
     p.id = -1;
+    // La telaraña enreda a su arquero (si la muralla sigue en pie); lo demás le pega a la muralla.
+    if (p.arquero !== undefined && p.enreda && p.arquero < run.enredos.length) {
+      if (!run.muro.caido) {
+        run.enredos[p.arquero] = Math.max(run.enredos[p.arquero]!, p.enreda);
+        events.push({ type: 'web', arquero: p.arquero, dura: p.enreda });
+      }
+      continue;
+    }
     hitWall(run, p.tx, p.ty, p.danio, events);
   }
   run.piedras = run.piedras.filter((p) => p.id !== -1);
@@ -613,6 +684,13 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
   // Los arqueros: cada uno tira una flecha a cada uno de sus objetivos.
   const arcos = archerSpots(run);
   if (!run.muro.caido) run.arcos.forEach((_, i) => {
+    // Enredado en telaraña: no tira hasta soltarse.
+    if (run.enredos[i]! > 0) {
+      run.enredos[i] = Math.max(0, run.enredos[i]! - step);
+      if (run.enredos[i] === 0) run.inmunes[i] = TELA_INMUNE;
+      return;
+    }
+    run.inmunes[i] = Math.max(0, run.inmunes[i]! - step);
     run.arcos[i]! -= step;
     while (run.arcos[i]! <= 0) {
       run.arcos[i]! += s.arqueros.intervalo;

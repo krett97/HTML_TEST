@@ -245,11 +245,28 @@
     "loboBlanco": {
       "nombre": "White Wolf",
       "texto": "The level 20 boss: huge, white, with a scythe in its jaws."
+    },
+    "arana": {
+      "nombre": "Giant spider",
+      "texto": "Spits web at an archer and leaves them tangled (not shooting) for 3 s. Fire burns it easily."
+    },
+    "esqueleto": {
+      "nombre": "Skeleton",
+      "texto": "With sword and shield: marches to the wall and hits it. The shield blocks arrows and, when it falls, it reassembles once with half its life."
+    },
+    "loboNegro": {
+      "nombre": "Black wolf",
+      "texto": "Comes in packs of 3 and is even faster than the grey one."
+    },
+    "bandido": {
+      "nombre": "Bandit",
+      "texto": "Throws daggers at the wall very often and steps away from your circle: aim at it by hand."
     }
   },
   "zonas": {
     "campo": "Green field",
-    "batalla": "Battlefield"
+    "batalla": "Battlefield",
+    "pradera": "Yellow meadow"
   },
   "inactivo": {
     "titulo": "While you were away",
@@ -292,7 +309,10 @@
       "compras50": "Buy {n} upgrades",
       "compras150": "Buy {n} upgrades",
       "orcos100": "Pop {n} orcs",
-      "intacta20": "Win {n} levels without losing the wall"
+      "intacta20": "Win {n} levels without losing the wall",
+      "aranas": "Pop {n} spiders",
+      "esqueletos": "Pop {n} skeletons (for good)",
+      "bandidos": "Pop {n} bandits"
     }
   },
   "ranking": {

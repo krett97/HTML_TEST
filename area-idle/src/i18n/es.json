@@ -245,11 +245,28 @@
     "loboBlanco": {
       "nombre": "Lobo Blanco",
       "texto": "El jefe del nivel 20: enorme, blanco y con una hoz en el hocico."
+    },
+    "arana": {
+      "nombre": "Araña gigante",
+      "texto": "Escupe telaraña a un arquero y lo deja enredado (sin tirar) 3 s. El fuego la quema fácil."
+    },
+    "esqueleto": {
+      "nombre": "Esqueleto",
+      "texto": "Con espada y escudo: marcha a la muralla y la golpea. El escudo aguanta las flechas y, al caer, se vuelve a armar una vez con media vida."
+    },
+    "loboNegro": {
+      "nombre": "Lobo negro",
+      "texto": "Sale en manada de 3 y es todavía más rápido que el gris."
+    },
+    "bandido": {
+      "nombre": "Bandido",
+      "texto": "Lanza dagas a la muralla muy seguido y se aparta de tu círculo: hay que apuntarle a mano."
     }
   },
   "zonas": {
     "campo": "Campo verde",
-    "batalla": "Campo de batalla"
+    "batalla": "Campo de batalla",
+    "pradera": "Pradera amarilla"
   },
   "inactivo": {
     "titulo": "Mientras no estabas",
@@ -292,7 +309,10 @@
       "compras50": "Compra {n} mejoras",
       "compras150": "Compra {n} mejoras",
       "orcos100": "Revienta {n} orcos",
-      "intacta20": "Gana {n} niveles sin que caiga la muralla"
+      "intacta20": "Gana {n} niveles sin que caiga la muralla",
+      "aranas": "Revienta {n} arañas",
+      "esqueletos": "Revienta {n} esqueletos (del todo)",
+      "bandidos": "Revienta {n} bandidos"
     }
   },
   "ranking": {

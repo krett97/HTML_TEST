@@ -6,8 +6,10 @@ todos antes de que se acabe el tiempo; si no, se reintenta o se juega el anterio
 el oro mejoras tres árboles: el tuyo, el del mago (explosiones de fuego cuadradas) y el de los arqueros
 (un objetivo a la vez, luego varios).
 
-**Estado: prototipo 0.10.0.** Dos zonas: **Campo verde** (niveles 1–10, slimes) y **Campo de batalla**
-(11–20 y siguientes: goblins con lanzas, lobos, orcos y orcos arqueros, con espadas y tablas tiradas).
+**Estado: prototipo 0.11.0.** Tres zonas: **Campo verde** (niveles 1–10, slimes), **Campo de batalla**
+(11–20: goblins con lanzas, lobos, orcos y orcos arqueros, con espadas y tablas tiradas) y **Pradera
+amarilla** (21–30 y siguientes: arañas gigantes, esqueletos con espada y escudo, lobos negros y bandidos
+con dagas, entre cráneos y pedazos de armadura).
 Un **jefe cada 10 niveles**: el **Rey Slime** (naranja, con corona) en el 10 y el **Lobo Blanco** (con
 una hoz en el hocico) en el 20; después se alternan. En la primera zona, tres enemigos (slime verde;
 azul desde el nivel 4; **rojo con resortera** desde el 7, que le tira piedras a la muralla y, si la tumba,

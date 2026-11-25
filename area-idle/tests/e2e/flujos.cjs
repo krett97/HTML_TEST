@@ -296,6 +296,27 @@ async function flow(name, browser, fn, opts) {
     for (const k of ['goblin', 'lobo', 'orco', 'orcoArquero', 'loboBlanco']) check(!(await page.getByTestId(`enemigo-${k}`).textContent()).includes('???'), `el glosario esconde a ${k}`);
   });
 
+  await flow('tercera zona: Pradera amarilla con arañas y lobos negros; esqueletos y bandidos después', browser, async (page) => {
+    await page.getByTestId('terminar').click();
+    await page.getByTestId('mejorar').click();
+    await page.getByTestId('abrir-ajustes').click();
+    for (let i = 0; i < 20; i++) await page.getByTestId('mas-nivel').click();
+    await page.mouse.click(4, 4);
+    check((await page.getByTestId('nivel-actual').textContent()).includes('Pradera amarilla'), 'el nivel 21 no dice Pradera amarilla');
+    await page.getByTestId('jugar').click();
+    await page.waitForTimeout(500);
+    check((await page.getByTestId('nivel-partida').textContent()).includes('Pradera amarilla'), 'la partida no dice Pradera amarilla');
+    const tipos = await page.evaluate(() => [...new Set(window.juego.run.enemies.map((e) => e.kind))]);
+    check(tipos.every((k) => ['arana', 'loboNegro'].includes(k)), `en el nivel 21 salieron: ${tipos.join(', ')}`);
+    await page.getByTestId('terminar').click();
+    await page.getByTestId('mejorar').click();
+    await page.getByTestId('abrir-ajustes').click();
+    for (let i = 0; i < 4; i++) await page.getByTestId('mas-nivel').click();
+    await page.mouse.click(4, 4);
+    await page.getByTestId('abrir-glosario').click();
+    for (const k of ['arana', 'esqueleto', 'loboNegro', 'bandido']) check(!(await page.getByTestId(`enemigo-${k}`).textContent()).includes('???'), `el glosario esconde a ${k}`);
+  });
+
   await flow('modo pruebas: "+10 min de juego" avanza la partida como si hubieras jugado', browser, async (page) => {
     await page.getByTestId('terminar').click();
     await page.getByTestId('mejorar').click();

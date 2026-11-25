@@ -19,9 +19,9 @@
   ] as const;
   /** Los comunes, agrupados por la zona donde salen; los jefes aparte. Cada uno con su dibujo. */
   const COMUNES = ENEMY_KINDS.filter((k) => !ENEMIES[k].jefe).sort((a, b) => DESDE[a] - DESDE[b]);
-  const POR_ZONA = (['campo', 'batalla'] as const).map((z) => ({ zona: z, kinds: COMUNES.filter((k) => zoneOf(DESDE[k]) === z) }));
+  const POR_ZONA = (['campo', 'batalla', 'pradera'] as const).map((z) => ({ zona: z, kinds: COMUNES.filter((k) => zoneOf(DESDE[k]) === z) }));
   const JEFES_KINDS = ENEMY_KINDS.filter((k) => ENEMIES[k].jefe).sort((a, b) => DESDE[a] - DESDE[b]);
-  const IMAGEN: Record<EnemyKind, string> = { verde: 'slime_verde', azul: 'slime_azul', rojo: 'slime_rojo', rey: 'jefe_rey', goblin: 'goblin', lobo: 'lobo', orco: 'orco', orcoArquero: 'orcoArquero', loboBlanco: 'loboBlanco' };
+  const IMAGEN: Record<EnemyKind, string> = { verde: 'slime_verde', azul: 'slime_azul', rojo: 'slime_rojo', rey: 'jefe_rey', goblin: 'goblin', lobo: 'lobo', orco: 'orco', orcoArquero: 'orcoArquero', loboBlanco: 'loboBlanco', arana: 'arana', esqueleto: 'esqueleto', loboNegro: 'loboNegro', bandido: 'bandido' };
   const MECANICAS: Partial<Record<EnemyKind, string[]>> = { rey: ['invoca', 'esquiva', 'aturdido', 'furia'], loboBlanco: ['aulla', 'embiste', 'hoz', 'furia'] };
 
   const visto = (kind: EnemyKind) => $view.meta.nivel >= DESDE[kind];
