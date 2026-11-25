@@ -90,7 +90,7 @@
 {/if}
 <div class="buttons">
   <button type="button" class="btn" onclick={() => game.save()}>{$t('ajustes.guardarAhora')}</button>
-  <button type="button" class="btn btn--danger" onclick={reset}>
+  <button type="button" class="btn btn--danger" onclick={reset} data-testid="reiniciar">
     {confirmingReset ? $t('ajustes.borrarConfirmar') : $t('ajustes.borrar')}
   </button>
 </div>

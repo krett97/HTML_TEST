@@ -1056,9 +1056,19 @@ Tiempos con `npm run simular` (5 toques/s): el departamento la primera vez en 15
 **Qué cambió (`src/ui/tabs/Mejoras.svelte`, `src/ui/Panel.svelte`).**
 
 - En la pestaña Mejoras el panel ya **no tiene scroll ni altura fija** (`.panel.compacta`: mide lo que mide su contenido) y la **escena toma todo el resto** de la pantalla. En las demás pestañas el panel sigue midiendo lo de siempre (lista con scroll).
-- De arriba abajo: la **franja del nivel** (◀ objeto · "Nivel 3 de 63" · roturas/meta o el aviso del guardián/jefe/mudanza ▶), el **próximo descubrimiento** (una línea; en pantallas de menos de 640 px de alto, solo la pista y la barra), el selector ×1/×10 y la **fila de botones grandes**: Fuerza (ícono, nivel, "Daño 6 → 7", precio) y Valor ("+$3.1 → +$3.4", precio). Los botones son amarillos cuando alcanza y grises cuando no; la etiqueta "¡Nuevo!" va en la esquina.
+- De arriba abajo: la **franja del nivel** (◀ objeto · "Nivel 3 de 63" · roturas/meta o el aviso del guardián/jefe/mudanza ▶), el selector ×1/×10 y la **fila de botones grandes**: Fuerza (ícono, nivel, "Daño 6 → 7", precio) y Valor ("+$3.1 → +$3.4", precio). Los botones son amarillos cuando alcanza y grises cuando no; la etiqueta "¡Nuevo!" va en la esquina.
 - **Más mejoras** es el tercer botón grande, con un punto rojo con cuántas mejoras se pueden comprar ya. Abre una **ventana** (misma receta que la maquinita: fondo oscuro + hoja centrada, se cierra tocando fuera o la ✕) con las tarjetas de antes: Garras afiladas, Sombrero ridículo, Saco de jefe, Garras marcadoras y los trofeos de los jefes. Aparece hasta que se descubre la primera de ellas.
 - Los `data-testid` y `data-tuto` de siempre (`comprar-fuerza`, `comprar-valor`, `objeto`, `proximo`, `nivel-*`) siguen igual, así que el tutorial y los flujos E2E no cambian; los nuevos son `abrir-mas` y `mas-mejoras`.
 
 **Medidas.** En 390×844 la escena pasa de ~300 px a ~400 px de alto y en 768×1024 a ~590 px; en 320×568 queda en los 160 px mínimos y nada se desborda (flujos 8-10 de `tests/e2e/flujos.cjs`).
+
+## 56. Menos texto y reinicio a la mano (versión 0.36.1)
+
+- **Se quitó la tarjeta "Próximo descubrimiento"** de la pantalla principal (y su componente `NextDiscovery`, `view.proximo` y sus textos). El juego tenía demasiado texto; qué sigue se entiende jugando. En su lugar, el paso `meta` del tutorial lo dice una sola vez, señalando la franja del nivel: "Rompe {n} y pasas de nivel. ¿Quieres descubrir más? Avanza niveles y mejora Fuerza."
+- **Reiniciar desde cero.** El botón de Ajustes (antes "Borrar partida") ahora se llama así, y el panel de pruebas (🛠) tiene el mismo botón hasta arriba. Los dos piden dos toques y dejan la partida como recién instalada (tutorial incluido); solo se conservan los ajustes.
+
+**Pendiente de diseño (no construido).**
+
+- **Nivel especial contrarreloj.** La idea de la lluvia de objetos con límite de tiempo no va en los niveles normales: será un nivel aparte que se desbloquea en algún punto de la historia. Falta definir cuándo se abre, qué premia y qué pasa si se acaba el tiempo.
+- **Cantidad de niveles.** 63 niveles (uno por objeto) se sienten muchos: la cocina tiene 9 y la sala 10 antes de su guardián, y la meta de roturas crece en cada uno (10 en el vaso, 62 en el refri). Falta decidir cómo reducirlos.
 

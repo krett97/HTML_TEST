@@ -18,7 +18,7 @@
     "monedas": "Down it goes! [[gato]] Every broken thing gives coins. The owner puts out another. Never learns.",
     "fuerza": "Buy Strength: my swats hit harder.",
     "valor": "Buy Value: this object pays more coins every time I knock it down. Science.",
-    "meta": "Down here you see what's next. Break {n} of each thing to level up. Spoiler: more destruction.",
+    "meta": "Break {n} to level up. Want to discover more? Clear levels and upgrade [[fuerza]] Strength.",
     "aliado": "A kitten wants in. Adopt it in [[gatito]] Allies: it breaks stuff even when you don't tap.",
     "video": "Your video is ready! Upload it in [[canal]] Channel: you start over, but stronger.",
     "ok": "Got it!",
@@ -228,8 +228,8 @@
     "ultimoGuardado": "Last saved: {hora}",
     "nuncaGuardado": "Not saved yet",
     "soloMemoria": "This browser can't save: progress is lost when you close it.",
-    "borrar": "Delete game",
-    "borrarConfirmar": "Are you sure? All progress will be lost.",
+    "borrar": "Restart from scratch",
+    "borrarConfirmar": "Sure? Tap again to start over.",
     "pruebas": "Testing",
     "probarAnuncio": "Test rewarded ad",
     "anuncioOk": "Reward received",
@@ -284,14 +284,9 @@
     "ganancia": "+{dps} dmg/s"
   },
   "descubrimientos": {
-    "proximo": "Next discovery",
-    "misterio": "???",
-    "pistaFuncion": "Something new for the cat",
-    "pistaAliado": "A new ally",
     "roturas": "Knock off {n} more items",
     "objeto": "Advance levels",
     "nuevo": "New!",
-    "todo": "You have discovered everything in this version. Get followers in the Channel to move… and beat every boss. Will the cat reach the Moon?",
     "fuerza": "Strength",
     "valor": "Value",
     "laboratorio": "Cat research",
@@ -381,7 +376,11 @@
     "jefe": "[[pepino]] Fight the boss",
     "estilo": "Visual style",
     "estiloPixel": "Pixel art",
-    "estiloVector": "Vector (pilot)"
+    "estiloVector": "Vector (pilot)",
+    "reiniciar": "Restart from scratch",
+    "reiniciarConfirmar": "Sure? Tap again",
+    "reiniciado": "New game: everything from scratch.",
+    "partida": "Game"
   },
   "canal": {
     "titulo": "Owner's channel",

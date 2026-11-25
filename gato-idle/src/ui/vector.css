@@ -313,10 +313,6 @@ html[data-estilo="vector"] .badge {
   color: #fff;
   box-shadow: 0 2px 0 var(--line);
 }
-html[data-estilo="vector"] .card[data-testid="proximo"] {
-  border-style: dashed;
-  background: #fff4dc;
-}
 
 /* Pestañas: la etiqueta de nuevo, más chica para no tapar el ícono. */
 html[data-estilo="vector"] .tab .badge {

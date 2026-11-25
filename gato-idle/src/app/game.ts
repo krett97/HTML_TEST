@@ -41,7 +41,7 @@ import { canAfford } from '../core/wallet';
 import type { AllyDef, GameData, ObjectDef, SkillDef } from '../core/data';
 import { sacoMultiplier, startTurbo, turboActive, turboCooldown, type Effect } from '../core/modifiers';
 import { finishResearch, researchRemaining, researchStatus, startResearch, type ResearchStatus } from '../core/research';
-import { checkUnlocks, hasUnlock, nextUnlock } from '../core/unlocks';
+import { checkUnlocks, hasUnlock } from '../core/unlocks';
 import { lastObjectIndex, moveIfReady, moveUnlocked, nextHome } from '../core/mudanza';
 import {
   buyCritChance,
@@ -175,17 +175,6 @@ export interface ResearchView {
   alcanzado: boolean;
 }
 
-export interface NextUnlockView {
-  /** "fuerza", "valor", "aliado:raton"… */
-  id: string;
-  tipo: 'funcion' | 'aliado';
-  condicion: 'roturas' | 'objeto';
-  /** Para "objeto": el id del objeto al que hay que llegar. */
-  objeto: string | null;
-  actual: number;
-  meta: number;
-}
-
 /** Lo que la UI necesita mostrar, ya formateado. */
 export interface ViewModel {
   dinero: string;
@@ -283,7 +272,6 @@ export interface ViewModel {
   };
   /** Descubrimientos recientes (para la etiqueta "¡Nuevo!"). */
   nuevos: string[];
-  proximo: NextUnlockView | null;
   laboratorio: {
     actual: { id: string; restante: number; duracion: number } | null;
     proyectos: ResearchView[];
@@ -1516,7 +1504,6 @@ export class Game {
     const puedeSaco = saco.alcanza;
     const puedeMarca = marca.alcanza;
     const aliados = d.allies.map((ally) => this.allyView(ally, fmt));
-    const next = nextUnlock(s, d);
     const now = Date.now();
     const current = s.laboratorio.actual;
     const currentDef = current ? d.research.find((r) => r.id === current.id) : undefined;
@@ -1635,14 +1622,6 @@ export class Game {
       offline: this.offlineView(fmt),
       patrocinio: { visible: this.sponsorVisible() && !this.sponsorBusy && !this.fight, recompensa: fmt(sponsorReward(s, d)) },
       jefe: this.bossView(fmt),
-      proximo: next && {
-        id: next.unlock.id,
-        tipo: next.unlock.id.startsWith('aliado:') ? 'aliado' : 'funcion',
-        condicion: 'roturas' in next.unlock.condicion ? 'roturas' : 'objeto',
-        objeto: 'objeto' in next.unlock.condicion ? next.unlock.condicion.objeto : null,
-        actual: next.current,
-        meta: next.target,
-      },
       laboratorio: {
         actual: current && currentDef ? { id: current.id, restante: researchRemaining(s, now), duracion: currentDef.duracion } : null,
         proyectos: d.research.map((r) => ({

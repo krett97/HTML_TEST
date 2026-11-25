@@ -18,7 +18,7 @@
     "monedas": "¡Al suelo! [[gato]] Cada cosa rota da monedas. El dueño pone otra. Nunca aprende.",
     "fuerza": "Compra Fuerza: mis manotazos pegan más fuerte.",
     "valor": "Compra Valor: este objeto me deja más monedas cada vez que lo tiro. Es ciencia.",
-    "meta": "Aquí abajo ves qué sigue. Rompe {n} de cada cosa para pasar de nivel. Spoiler: más destrucción.",
+    "meta": "Rompe {n} y pasas de nivel. ¿Quieres descubrir más? Avanza niveles y mejora [[fuerza]] Fuerza.",
     "aliado": "Un gatito quiere unirse. Adóptalo en [[gatito]] Aliados: rompe cosas aunque no toques.",
     "video": "¡Ya hay video! Súbelo en [[canal]] Canal: empiezas de cero, pero más fuerte.",
     "ok": "¡Va!",
@@ -228,8 +228,8 @@
     "ultimoGuardado": "Último guardado: {hora}",
     "nuncaGuardado": "Aún no se ha guardado",
     "soloMemoria": "Este navegador no permite guardar: el progreso se pierde al cerrar.",
-    "borrar": "Borrar partida",
-    "borrarConfirmar": "¿Seguro? Se pierde todo el progreso.",
+    "borrar": "Reiniciar desde cero",
+    "borrarConfirmar": "¿Seguro? Toca otra vez y empiezas de cero.",
     "pruebas": "Pruebas",
     "probarAnuncio": "Probar anuncio recompensado",
     "anuncioOk": "Recompensa recibida",
@@ -284,14 +284,9 @@
     "ganancia": "+{dps} daño/s"
   },
   "descubrimientos": {
-    "proximo": "Próximo descubrimiento",
-    "misterio": "???",
-    "pistaFuncion": "Algo nuevo para el gato",
-    "pistaAliado": "Un nuevo aliado",
     "roturas": "Tira {n} objetos más",
     "objeto": "Avanza de nivel",
     "nuevo": "¡Nuevo!",
-    "todo": "Ya descubriste todo lo de esta versión. Junta seguidores en el Canal para mudarte… y vence a cada jefe. ¿Llegará el gato a la Luna?",
     "fuerza": "Fuerza",
     "valor": "Valor",
     "laboratorio": "Investigación gatuna",
@@ -381,7 +376,11 @@
     "jefe": "[[pepino]] Pelear con el jefe",
     "estilo": "Estilo visual",
     "estiloPixel": "Pixel art",
-    "estiloVector": "Vectorial (piloto)"
+    "estiloVector": "Vectorial (piloto)",
+    "reiniciar": "Reiniciar desde cero",
+    "reiniciarConfirmar": "¿Seguro? Toca otra vez",
+    "reiniciado": "Partida nueva: todo desde cero.",
+    "partida": "Partida"
   },
   "canal": {
     "titulo": "Canal del dueño",

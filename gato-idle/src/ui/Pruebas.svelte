@@ -27,12 +27,31 @@
     clearTimeout(messageTimer);
     messageTimer = setTimeout(() => (message = ''), 5000);
   }
-  onDestroy(() => clearTimeout(messageTimer));
+  onDestroy(() => {
+    clearTimeout(messageTimer);
+    clearTimeout(resetTimer);
+  });
 
   async function show() {
     open = true;
     target = '';
     slots = await game.testSlots();
+  }
+
+  // Reiniciar pide dos toques, igual que en Ajustes.
+  let confirmingReset = $state(false);
+  let resetTimer: ReturnType<typeof setTimeout> | undefined;
+  async function restart() {
+    if (!confirmingReset) {
+      confirmingReset = true;
+      resetTimer = setTimeout(() => (confirmingReset = false), 4000);
+      return;
+    }
+    clearTimeout(resetTimer);
+    confirmingReset = false;
+    await game.resetGame();
+    slots = await game.testSlots();
+    say($t('pruebas.reiniciado'));
   }
 
   function money(seconds: number) {
@@ -97,6 +116,14 @@
     <p class="message" aria-live="polite" data-testid="mensaje-pruebas">{message}</p>
 
     <div class="body">
+      <section>
+        <h3>🔄 {$t('pruebas.partida')}</h3>
+        <div class="buttons">
+          <button type="button" class="btn btn--danger" onclick={restart} data-testid="pruebas-reiniciar">
+            {confirmingReset ? $t('pruebas.reiniciarConfirmar') : $t('pruebas.reiniciar')}
+          </button>
+        </div>
+      </section>
       <section>
         <h3>🎨 {$t('pruebas.estilo')}</h3>
         <div class="buttons">

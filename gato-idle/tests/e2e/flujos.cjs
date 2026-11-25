@@ -228,6 +228,27 @@ const money = async (page) => page.getByTestId('dinero').textContent();
     check((await page.evaluate(() => document.documentElement.dataset.estilo)) === 'pixel', 'no regresó al pixel art');
   });
 
+  await flow('reiniciar desde cero: en Ajustes y en el panel de pruebas', browser, async (page) => {
+    await page.getByTestId('saltar-tutorial').click();
+    check(!(await page.getByTestId('proximo').count()), 'sigue la tarjeta de próximo descubrimiento');
+    await page.go('plato');
+    check((await page.getByTestId('objeto').textContent()).includes('Plato'), 'no llegó al plato');
+    // En Ajustes: dos toques.
+    await page.getByRole('tab', { name: /Ajustes/ }).click();
+    await page.getByTestId('reiniciar').click();
+    await page.getByTestId('reiniciar').click();
+    await page.waitForTimeout(600);
+    await page.getByRole('tab', { name: /Mejoras/ }).click();
+    check((await page.getByTestId('objeto').textContent()).includes('Vaso'), 'Ajustes no reinició al vaso');
+    check(await page.getByTestId('tutorial-tocar').count(), 'tras reiniciar no vuelve el tutorial');
+    check((await money(page)).trim() === '0', 'tras reiniciar quedó dinero');
+    // En el panel de pruebas.
+    await page.getByTestId('saltar-tutorial').click();
+    await page.go('taza');
+    await page.pruebas(async () => { await page.getByTestId('pruebas-reiniciar').click(); await page.getByTestId('pruebas-reiniciar').click(); await page.waitForTimeout(500); });
+    check((await page.getByTestId('objeto').textContent()).includes('Vaso'), 'el panel de pruebas no reinició al vaso');
+  });
+
   await flow('versión de tienda: sin modo pruebas', browser, async (page) => {
     const file = path.resolve(__dirname, '../../dist-archivo/swat-to-the-moon.html');
     if (!require('fs').existsSync(file)) throw new Error('falta dist-archivo (npm run build:compartir)');

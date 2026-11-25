@@ -1,5 +1,5 @@
 <script lang="ts">
-  // La pantalla principal: sin scroll. Arriba la franja del nivel, el próximo descubrimiento y el selector
+  // La pantalla principal: sin scroll. Arriba la franja del nivel y el selector
   // ×1/×10; abajo los botones grandes que más se usan (Fuerza y Valor) y "Más mejoras", que abre una
   // ventana con el resto (críticos, sombrero, saco, garras marcadoras y los trofeos).
   import { bossText } from '../bossText';
@@ -9,7 +9,6 @@
   import { t } from '../../i18n';
   import { useGame } from '../context';
   import NewBadge from '../NewBadge.svelte';
-  import NextDiscovery from '../NextDiscovery.svelte';
   import BuyAmount from '../BuyAmount.svelte';
 
   const game = useGame();
@@ -35,7 +34,7 @@
 
 <div class="juego">
   <!-- Franja del nivel: cuántos van rotos de los que pide; ◀ ▶ ponen en la mesa un nivel ya pasado. -->
-  <div class="franja" data-testid="nivel">
+  <div class="franja" data-testid="nivel" data-tuto="meta">
     <button type="button" class="nav" aria-label={$t('mejoras.nivelAtras')} disabled={$view.nivel.jugando <= 0} onclick={() => game.goToLevel(-1)} data-testid="nivel-atras">◀</button>
     <div class="nivel-info">
       <div class="nivel-top">
@@ -63,8 +62,6 @@
     </div>
     <button type="button" class="nav" aria-label={$t('mejoras.nivelAdelante')} disabled={$view.nivel.enEtapa} onclick={() => game.goToLevel(1)} data-testid="nivel-adelante">▶</button>
   </div>
-
-  <NextDiscovery />
 
   {#if $view.funciones.fuerza}
     <div class="compra"><BuyAmount /></div>
