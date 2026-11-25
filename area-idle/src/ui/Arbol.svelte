@@ -8,6 +8,7 @@
   import Ajustes from './Ajustes.svelte';
   import Glosario from './Glosario.svelte';
   import Misiones from './Misiones.svelte';
+  import Ranking from './Ranking.svelte';
   import { DAMAGE_TYPE_OF } from '../core/run';
   import { effectValues } from './efectos';
   import Icon from './Icon.svelte';
@@ -23,6 +24,7 @@
   let ajustes = $state(false);
   let glosario = $state(false);
   let misiones = $state(false);
+  let ranking = $state(false);
   /** El tipo de daño de cada sección (marca en la esquina de su pestaña). */
   const TIPO: Partial<Record<Seccion, string>> = { jugador: DAMAGE_TYPE_OF.jugador, mago: DAMAGE_TYPE_OF.mago, arqueros: DAMAGE_TYPE_OF.arquero };
   /** Las Reliquias (con gemas) se ven desde que se abren las misiones. */
@@ -81,6 +83,9 @@
         <button type="button" class="redondo con-punto" aria-label={$t('misiones.titulo')} onclick={() => (misiones = true)} data-testid="abrir-misiones">
           <Icon name="misiones" size={28} />{#if $view.misiones.listas > 0}<span class="punto-rojo cifra">{$view.misiones.listas}</span>{/if}
         </button>
+      {/if}
+      {#if $view.ranking.abierto}
+        <button type="button" class="redondo" aria-label={$t('ranking.titulo')} onclick={() => (ranking = true)} data-testid="abrir-ranking"><Icon name="trofeo" size={28} /></button>
       {/if}
       <button type="button" class="redondo" aria-label={$t('glosario.titulo')} onclick={() => (glosario = true)} data-testid="abrir-glosario"><Icon name="glosario" size={28} /></button>
       <button type="button" class="redondo" aria-label={$t('ajustes.titulo')} onclick={() => (ajustes = true)} data-testid="abrir-ajustes"><Icon name="ajustes" size={26} /></button>
@@ -162,6 +167,9 @@
 
 {#if ajustes}
   <Ajustes cerrar={() => (ajustes = false)} />
+{/if}
+{#if ranking}
+  <Ranking cerrar={() => (ranking = false)} />
 {/if}
 {#if misiones}
   <Misiones cerrar={() => (misiones = false)} />

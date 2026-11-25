@@ -22,11 +22,13 @@ function check(cond, msg) {
 }
 
 async function fresh(browser, opts = {}) {
-  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, locale: 'es-MX', ...opts });
+  const { init, ...ctx } = opts;
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, locale: 'es-MX', ...ctx });
   const page = await context.newPage();
   page.errors = [];
   page.on('pageerror', (e) => page.errors.push(e.message));
   page.on('console', (m) => { if (m.type() === 'error') page.errors.push(m.text()); });
+  if (init) await context.addInitScript(init);
   await page.goto(opts.url ?? URL);
   await page.waitForTimeout(1200);
   page.tap = async (x = 0.5, y = 0.45) => { const box = await page.getByTestId('campo').boundingBox(); await page.mouse.click(box.x + box.width * x, box.y + box.height * y); };
@@ -383,6 +385,70 @@ async function flow(name, browser, fn, opts) {
     check((await page.getByTestId('gemas').textContent()).trim() === '10', 'no sumó las 10 gemas de prueba');
   });
 
+  await flow('ranking del nivel 17 sin conexión: tu fila y tu nombre', browser, async (page) => {
+    await page.getByTestId('terminar').click();
+    await page.getByTestId('mejorar').click();
+    await page.getByTestId('abrir-ajustes').click();
+    for (let i = 0; i < 15; i++) await page.getByTestId('mas-nivel').click();
+    await page.mouse.click(4, 4);
+    check(!(await page.getByTestId('abrir-ranking').count()), 'el ranking se ve antes del nivel 17');
+    await page.getByTestId('abrir-ajustes').click();
+    await page.getByTestId('mas-nivel').click();
+    await page.mouse.click(4, 4);
+    await page.getByTestId('abrir-ranking').click();
+    await page.waitForTimeout(300);
+    check(await page.getByTestId('ranking-sin-conexion').count(), 'no avisa que no hay ranking en línea');
+    check((await page.getByTestId('ranking-tuyo').textContent()).includes('17'), 'tu fila no dice nivel 17');
+    await page.getByTestId('nombre-jugador').fill('  Kike  ');
+    await page.getByTestId('guardar-nombre').click();
+    await page.waitForTimeout(150);
+    check((await page.getByTestId('ranking-tuyo').textContent()).includes('Kike'), 'tu fila no trae tu nombre');
+    await page.reload();
+    await page.waitForTimeout(1200);
+    check((await page.evaluate(() => window.juego.meta.nombre)) === 'Kike', 'el nombre no se guardó');
+  });
+
+  await flow('ranking compartido (en Claude): tabla ordenada, tu fila se escribe y la basura no entra', browser, async (page) => {
+    await page.getByTestId('terminar').click();
+    await page.getByTestId('mejorar').click();
+    await page.getByTestId('abrir-ajustes').click();
+    for (let i = 0; i < 17; i++) await page.getByTestId('mas-nivel').click();
+    await page.mouse.click(4, 4);
+    await page.getByTestId('abrir-ranking').click();
+    await page.waitForTimeout(400);
+    check(!(await page.getByTestId('ranking-sin-conexion').count()), 'dice sin conexión teniendo base de datos');
+    const filas = await page.$$eval('[data-testid^="ranking-"]', (els) => els.map((e) => e.textContent.replace(/\s+/g, ' ').trim()));
+    check(filas.length === 4, `deberían ser 4 filas (3 buenas y la tuya), hay ${filas.length}: ${filas.join(' | ')}`);
+    check(filas[0].includes('Lupita') && filas[0].includes('Nivel 31'), `la primera no es Lupita: ${filas[0]}`);
+    check(filas[1].includes('Beto') && filas[2].includes('Ana'), `el empate no va por reventados: ${filas.join(' | ')}`);
+    check(!filas.some((f) => f.includes('Tramposo')), 'entró una fila con nivel imposible');
+    check(filas[3].includes('Nivel 18') && filas[3].includes('4'), `tu fila no va cuarta con nivel 18: ${filas[3]}`);
+    await page.getByTestId('nombre-jugador').fill('Kike');
+    await page.getByTestId('guardar-nombre').click();
+    await page.waitForTimeout(200);
+    const mia = await page.evaluate(() => window.__ranking.get('u-yo'));
+    check(mia && mia.nombre === 'Kike' && mia.nivel === 18, `no se escribió tu fila: ${JSON.stringify(mia)}`);
+    check(await page.evaluate(() => [...window.__ranking.keys()].every((k) => k !== 'u-otro' || window.__ranking.get(k).nombre === 'Lupita')), 'se escribió la fila de otro');
+  }, {
+    init: () => {
+      const filas = new Map([
+        ['u-ana', { nombre: 'Ana', nivel: 22, reventados: 500 }],
+        ['u-beto', { nombre: 'Beto', nivel: 22, reventados: 9000 }],
+        ['u-otro', { nombre: 'Lupita', nivel: 31, reventados: 40000 }],
+        ['u-trampa', { nombre: 'Tramposo', nivel: 1e12, reventados: 1 }],
+      ]);
+      window.__ranking = filas;
+      const oyentes = [];
+      const avisar = () => {
+        const docs = [...filas.entries()].sort((a, b) => b[1].nivel - a[1].nivel).map(([id, d]) => ({ id, data: () => ({ ...d }) }));
+        for (const fn of oyentes) fn({ docs, metadata: { fromCache: false } });
+      };
+      const consulta = { orderBy: () => consulta, limit: () => consulta, onSnapshot: (fn) => { oyentes.push(fn); setTimeout(avisar, 30); return () => {}; } };
+      const db = { collection: () => consulta, doc: (ruta) => ({ set: async (data) => { filas.set(ruta.split('/')[1], data); setTimeout(avisar, 10); } }) };
+      window.claude = { use: async (n) => (n === 'db' ? db : n === 'user' ? { id: async () => 'u-yo' } : null) };
+    },
+  });
+
   for (const [w, h] of [[320, 568], [390, 844], [768, 1024]]) {
     await flow(`pantalla ${w}×${h}: nada se sale`, browser, async (page) => {
       const desborda = () => page.evaluate(() => document.documentElement.scrollWidth > innerWidth || document.documentElement.scrollHeight > innerHeight);
@@ -394,9 +460,10 @@ async function flow(name, browser, fn, opts) {
       await page.oro(1000000);
       for (const id of ['danio', 'radio', 'slimes', 'cadencia']) await page.comprar(id, 3);
       await page.getByTestId('abrir-ajustes').click();
-      for (let i = 0; i < 10; i++) await page.getByTestId('mas-nivel').click();
+      for (let i = 0; i < 16; i++) await page.getByTestId('mas-nivel').click();
       await page.mouse.click(4, 4);
       check(await page.getByTestId('seccion-reliquias').count(), 'no salen las Reliquias');
+      check(await page.getByTestId('abrir-ranking').count(), 'no sale el trofeo del ranking');
       // Las 4 pestañas y todo el encabezado (oro, gemas, misiones, glosario, ajustes) dentro de la pantalla.
       const arriba = await page.$$eval('[data-testid^="seccion-"], [data-testid^="abrir-"], [data-testid="oro-total"], [data-testid="gemas"], [data-testid="ritmo-inactivo"]', (els) => els.filter((e) => { const r = e.getBoundingClientRect(); return r.left < 0 || r.right > innerWidth || r.top < 0; }).map((e) => e.dataset.testid));
       check(arriba.length === 0, `no caben arriba: ${arriba.join(', ')}`);

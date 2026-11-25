@@ -287,5 +287,19 @@
       "orcos100": "Pop {n} orcs",
       "intacta20": "Win {n} levels without losing the wall"
     }
+  },
+  "ranking": {
+    "titulo": "Ranking",
+    "tuNombre": "Your name",
+    "guardar": "Save",
+    "guardado": "Done! That's how you show up.",
+    "anonimo": "Anonymous",
+    "tu": "(you)",
+    "nivel": "Level {n}",
+    "reventados": "{n} popped",
+    "cargando": "Loading the ranking…",
+    "sinConexion": "No online ranking here: only your row shows. Play the version published on Claude to compete.",
+    "soloLectura": "You can see the ranking, but with this access you don't show up in it.",
+    "nuevo": "New! Ranking: compare your level with other players."
   }
 }

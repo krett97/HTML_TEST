@@ -7,7 +7,8 @@ import { buyTalent, chooseLevel, costOf, createMeta, finishRun, levelOf, loadMet
 import { ALLY_ROW, archerSpots, bossOf, createRun, DAMAGE_TYPE_OF, FIELD_W, moveCursor, startRun, stepRun, type Run, type RunEvent } from '../src/core/run';
 import { computeStats } from '../src/core/stats';
 import { BONO_DIARIO, claimableCount, claimBonus, claimMission, dailyProgress, dayKey, DIARIAS, DIARIAS_POR_DIA, MISSION_BY_ID, msUntilReset, permanentProgress, rollDaily } from '../src/core/misiones';
-import { MISIONES_DESDE } from '../src/core/datos';
+import { MISIONES_DESDE, RANKING_DESDE } from '../src/core/datos';
+import { cleanName, MAX_NAME, rankingEntry, rankingUnlocked, readRow, sortRows } from '../src/core/ranking';
 
 /** Una partida vacía con un enemigo puesto a mano. */
 function withEnemy(run: Run, x: number, y: number, vida = 3): void {
@@ -728,5 +729,48 @@ describe('misiones y gemas', () => {
     expect(roto.cuenta.partidas).toBe(0);
     expect(roto.misiones.diarias.every((id) => MISSION_BY_ID[id])).toBe(true);
     expect(Array.isArray(roto.misiones.logros)).toBe(true);
+  });
+});
+
+describe('ranking', () => {
+  it('se abre en el nivel 17', () => {
+    expect(RANKING_DESDE).toBe(17);
+    expect(rankingUnlocked({ nivel: 16 })).toBe(false);
+    expect(rankingUnlocked({ nivel: 17 })).toBe(true);
+  });
+  it('limpia nombres: sin caracteres de control, espacios de más ni largos de más', () => {
+    expect(cleanName('  Ana\u0000  la   Grande ')).toBe('Ana la Grande');
+    expect(cleanName('x'.repeat(40))).toHaveLength(MAX_NAME);
+    expect(cleanName('a\u202eb')).toBe('ab');
+    expect(cleanName(42)).toBe('');
+  });
+  it('tu fila: nombre, nivel más alto y reventados', () => {
+    const meta = createMeta();
+    meta.nivel = 21;
+    meta.reventados = 12_345.6;
+    meta.nombre = ' Kike ';
+    expect(rankingEntry(meta)).toEqual({ nombre: 'Kike', nivel: 21, reventados: 12_345 });
+  });
+  it('las filas de otros se revisan: niveles imposibles o basura se descartan', () => {
+    expect(readRow('a', { nombre: 'Ana', nivel: 30, reventados: 900 }, 'a')).toEqual({ id: 'a', nombre: 'Ana', nivel: 30, reventados: 900, tuyo: true });
+    expect(readRow('b', { nombre: 'B', nivel: 3, reventados: 1 }, 'a')).toBeNull();
+    expect(readRow('b', { nombre: 'B', nivel: 1e9 }, 'a')).toBeNull();
+    expect(readRow('b', { nombre: 'B', nivel: 20.5 }, 'a')).toBeNull();
+    expect(readRow('b', { nombre: 'B', nivel: '20' }, 'a')).toMatchObject({ nivel: 20, reventados: 0, tuyo: false });
+    expect(readRow('b', undefined, 'a')).toBeNull();
+  });
+  it('orden: más nivel primero; si empatan, más reventados', () => {
+    const filas = sortRows([
+      { nombre: 'a', nivel: 20, reventados: 10 },
+      { nombre: 'b', nivel: 25, reventados: 1 },
+      { nombre: 'c', nivel: 20, reventados: 50 },
+    ]);
+    expect(filas.map((f) => f.nombre)).toEqual(['b', 'c', 'a']);
+  });
+  it('el nombre se guarda y se limpia al cargar', () => {
+    const meta = createMeta();
+    meta.nombre = 'Kike';
+    expect(loadMeta(JSON.parse(JSON.stringify(meta))).nombre).toBe('Kike');
+    expect(loadMeta({ ...JSON.parse(JSON.stringify(meta)), nombre: { x: 1 } }).nombre).toBe('');
   });
 });

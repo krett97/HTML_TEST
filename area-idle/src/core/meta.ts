@@ -1,5 +1,6 @@
 // Lo que se guarda entre partidas: el oro, los niveles del árbol y los récords.
 import { ENEMY_KINDS, levelConfig, TALENT_BY_ID, TALENTS, type EnemyKind, type TalentDef, type TalentId } from './datos';
+import { cleanName } from './ranking';
 import { emptyCounters, emptyMissions, MISSION_BY_ID, type Counters, type MissionsState } from './misiones';
 import { computeStats, type Stats } from './stats';
 
@@ -28,10 +29,12 @@ export interface Meta {
   ultimaVez: number;
   /** Avisos que ya se vieron (la primera vez que se juega, etc.). */
   vistos: string[];
+  /** Tu nombre en el ranking (desde el nivel 17). */
+  nombre: string;
 }
 
 export function createMeta(): Meta {
-  return { version: SAVE_VERSION, oro: 0, talentos: {}, partidas: 0, nivel: 1, jugando: 1, mejor: 0, reventados: 0, ajustes: { sonido: true, idioma: null }, gemas: 0, cuenta: emptyCounters(), misiones: emptyMissions(), ultimaVez: 0, vistos: [] };
+  return { version: SAVE_VERSION, oro: 0, talentos: {}, partidas: 0, nivel: 1, jugando: 1, mejor: 0, reventados: 0, ajustes: { sonido: true, idioma: null }, gemas: 0, cuenta: emptyCounters(), misiones: emptyMissions(), ultimaVez: 0, vistos: [], nombre: '' };
 }
 
 export const levelOf = (meta: Meta, id: TalentId): number => meta.talentos[id] ?? 0;
@@ -159,6 +162,7 @@ export function loadMeta(raw: unknown): Meta {
     })(),
     ultimaVez: num(r.ultimaVez, 0),
     vistos: Array.isArray(r.vistos) ? r.vistos.filter((v): v is string => typeof v === 'string') : [],
+    nombre: cleanName(r.nombre),
   };
 }
 

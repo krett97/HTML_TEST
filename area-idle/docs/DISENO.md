@@ -1,6 +1,6 @@
 # Campo de Slimes: diseño del prototipo
 
-> Versión 0.6.0. Nombre provisional. Nació de pausar el juego del gato
+> Versión 0.7.0. Nombre provisional. Nació de pausar el juego del gato
 > ([`../../gato-idle/docs/DECISIONES.md`](../../gato-idle/docs/DECISIONES.md)), tomando su base técnica y su
 > arte en código ([`../../REUSO.md`](../../REUSO.md)). Referencia de sensación: *Don't Stop The Pop!*
 > (cientos de cosas reventando en un área) y el idle del castor (rocas que caen, mundo que cambia por fase).
@@ -184,6 +184,23 @@ alcanzan para Poder 4, Críticos 3, Carcaj 1 y Albañil 2. Después, ~14 al día
 Modo pruebas: **+10 gemas** y **Nuevo día** (otras 3 diarias, desde cero). "+1/+10 min de juego" juega
 pero deja las misiones sin cobrar, para que las cobres tú.
 
+## 5f. Ranking (desde 0.7.0)
+
+Al llegar al **nivel 17** sale un aviso en el fin de partida y un **trofeo** en el árbol. La ventana
+muestra a cada jugador con su **nombre**, el **nivel más alto** al que ha llegado y cuántos enemigos ha
+reventado (desempata), con el dibujo del último jefe que venció. Tu fila va resaltada y, si no estás
+entre los primeros 100, sale al final.
+
+- **Dónde vive la tabla:** igual que en el juego del gato (`src/services/ranking.ts`). En la versión
+  publicada en Claude usa la base de datos de la página: cada jugador escribe solo su fila
+  (`ranking/<su id>`) y todos leen. La versión de pruebas y la versión para compartir son páginas
+  distintas, así que cada una tiene su propio ranking (los botones de pruebas no ensucian el de verdad).
+- **Fuera de Claude** (APK, archivo HTML) no hay servidor: se ve solo tu fila y un aviso. Un ranking en
+  línea para la app pediría un servicio (por ejemplo, las tablas de Google Play Juegos o una base de
+  datos propia).
+- Lo que llega de otros jugadores se revisa antes de mostrarse (`readRow`): nombres limpios (sin
+  caracteres de control, 16 letras), niveles enteros entre 17 y 100 000.
+
 ## 6. Ritmo (`npm run simular`)
 
 Un bot que toca donde hay más slimes cada segundo (los rojos cuentan por cuatro: los busca primero),
@@ -206,9 +223,10 @@ unas 30 partidas de 45 minutos y ahí sirve Muralla reforzada. (El bot no cobra 
 
 ## 7. Técnica
 
-- `src/core/` es lógica pura y probada (60 pruebas): `run.ts` (la partida paso a paso; devuelve eventos),
+- `src/core/` es lógica pura y probada (66 pruebas): `run.ts` (la partida paso a paso; devuelve eventos),
   `stats.ts` (estadísticas desde los talentos), `meta.ts` (oro, gemas, árbol, guardado), `misiones.ts`
-  (contadores, diarias y permanentes), `datos.ts`, `bot.ts`.
+  (contadores, diarias y permanentes), `ranking.ts`, `datos.ts`, `bot.ts`. `src/services/ranking.ts`
+  conecta el ranking con la base de datos de la página publicada.
 - `src/game/Campo.ts` (Phaser 4) solo dibuja los eventos: sprites reciclados para cientos de slimes,
   números de daño con una **fuente de mapa de bits** hecha al arrancar (`numeros.ts`), partículas, flechas
   de los arqueros dibujadas en una sola capa. El canvas va hasta densidad 2.

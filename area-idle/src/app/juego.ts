@@ -11,6 +11,8 @@ import { ENEMIES, levelConfig, type EnemyKind, type ZoneId } from '../core/datos
 import { locale, detectLocale } from '../i18n';
 import type { AudioEngine } from '../services/audio';
 import { clearRaw, loadRaw, saveRaw } from '../services/storage';
+import { RankingService } from '../services/ranking';
+import { cleanName, rankingEntry, rankingUnlocked } from '../core/ranking';
 
 export type Fase = 'jugando' | 'fin' | 'arbol';
 
@@ -40,6 +42,9 @@ export interface Vista {
   abrioMisiones: boolean;
   /** Misiones abiertas y cuántas cosas hay para cobrar. */
   misiones: { abiertas: boolean; listas: number };
+  /** Ranking (desde el nivel 17): si ya se abrió y tu nombre. */
+  ranking: { abierto: boolean; nombre: string };
+  abrioRanking: boolean;
   /** El jefe del nivel (si es de jefe): quién, su vida y si está aturdido o furioso. */
   jefe: { kind: EnemyKind; vida: number; max: number; aturdido: boolean; furia: boolean } | null;
   /** El nivel elegido en el árbol es de jefe (corona en el selector). */
@@ -69,6 +74,9 @@ export class Juego {
   private pendiente: { segundos: number; oro: number; tope: boolean } | null = null;
   private abrioInactivo = false;
   private abrioMisiones = false;
+  private abrioRanking = false;
+  /** El ranking compartido (en Claude) o solo tu fila (fuera de Claude). */
+  readonly ranking = new RankingService();
   /** Al abrir: quien ya jugó llega al árbol; quien es nuevo, directo a jugar. */
   fase: Fase = 'jugando';
   private ultimaVista = 0;
@@ -184,9 +192,11 @@ export class Juego {
     const run = this.run!;
     const antes = idleUnlocked(this.meta);
     const misionesAntes = missionsUnlocked(this.meta);
+    const rankingAntes = rankingUnlocked(this.meta);
     this.premio = finishRun(this.meta, { oro: run.oro, reventados: run.reventados, gano, nivel: run.nivel.nivel, porTipo: run.porTipo, muroCaido: run.muro.caido, jefe: run.nivel.jefe?.kind ?? null });
     this.abrioInactivo = !antes && idleUnlocked(this.meta);
     this.abrioMisiones = !misionesAntes && missionsUnlocked(this.meta);
+    this.abrioRanking = !rankingAntes && rankingUnlocked(this.meta);
     if (!this.meta.vistos.includes('primera')) this.meta.vistos.push('primera');
     this.fase = 'fin';
     this.audio.play(gano ? 'fin' : 'pierde');
@@ -299,6 +309,21 @@ export class Juego {
   save(): void {
     this.meta.ultimaVez = Date.now();
     saveRaw(this.meta);
+    // Con el ranking abierto, tu fila se manda cada que se guarda (solo si cambió).
+    if (rankingUnlocked(this.meta)) {
+      void this.ranking.start();
+      this.ranking.submit(rankingEntry(this.meta));
+    }
+  }
+
+  /** Tu nombre en el ranking. Devuelve true si cambió. */
+  setName(nombre: string): boolean {
+    const limpio = cleanName(nombre);
+    if (!limpio || limpio === this.meta.nombre) return false;
+    this.meta.nombre = limpio;
+    this.save();
+    this.publish();
+    return true;
   }
 
   private publish(): void {
@@ -329,6 +354,8 @@ export class Juego {
       ritmoInactivo: idleUnlocked(this.meta) ? { porMinuto: idleGoldPerMinute(this.meta), horas: stats(this.meta).inactivo.horas } : null,
       abrioInactivo: this.abrioInactivo && this.fase === 'fin',
       abrioMisiones: this.abrioMisiones && this.fase === 'fin',
+      abrioRanking: this.abrioRanking && this.fase === 'fin',
+      ranking: { abierto: rankingUnlocked(this.meta), nombre: this.meta.nombre },
       misiones: { abiertas: missionsUnlocked(this.meta), listas: claimableCount(this.meta) },
       vivos: run?.enemies.length ?? 0,
       toco: this.toco,

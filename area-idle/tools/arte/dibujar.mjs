@@ -306,6 +306,8 @@ icon('poder', I(o('M32 4 l7 14 l15 2 l-11 10 l3 15 l-14 -7 l-14 7 l3 -15 l-11 -1
 icon('critico', I(o('M32 4 l6 16 l18 -6 l-10 16 l16 8 l-18 4 l4 18 l-16 -10 l-16 10 l4 -18 l-18 -4 l16 -8 l-10 -16 l18 6 z', '#ff5a8a', 5) + line('M24 26 l16 16 M40 26 l-16 16', P.blanco, 5)));
 icon('carcaj', I(o('M18 18 l20 -6 l12 42 l-20 6 z', P.maderaS, 5) + line('M26 16 l-6 -12 M32 14 l-2 -12 M38 12 l2 -12', K, 3) + o('M16 4 l4 6 l4 -6 z M26 2 l4 6 l4 -6 z M38 0 l2 7 l5 -5 z', '#c9a9f5', 3) + circ(46, 46, 9, '#a46cf0', 4) + line('M46 41 v10 M41 46 h10', P.blanco, 3)));
 icon('albanil', I(rect(6, 34, 26, 14, 2, '#c9c0b2', 4) + rect(20, 46, 26, 14, 2, '#c9c0b2', 4) + g('rotate(35 40 24)', rect(36, 6, 8, 34, 3, P.maderaS, 4) + rect(26, 4, 28, 12, 3, P.grisS, 4)) + circ(52, 52, 8, P.pasto, 4) + line('M52 48 v8 M48 52 h8', P.blanco, 3)));
+// Trofeo del ranking: copa dorada con asas, una estrella y su base.
+icon('trofeo', I(o('M14 12 C4 12 4 30 18 32 M50 12 C60 12 60 30 46 32', 'none', 5) + o('M14 6 H50 V22 C50 34 42 40 32 40 C22 40 14 34 14 22 Z', P.oro, 5) + rect(28, 40, 8, 8, 1, P.oroS, 4) + rect(18, 48, 28, 10, 3, P.maderaS, 5) + o('M32 13 l3 6 l6 1 l-4.5 4 l1 6 l-5.5 -3 l-5.5 3 l1 -6 l-4.5 -4 l6 -1 z', P.blanco, 2.5) + brillo(20, 14, 4, 6, 0.7)));
 icon('moneda', I(moneda(32, 32, 26)));
 icon('reloj', I(circ(32, 32, 26, P.blanco) + line('M32 32 v-16 M32 32 l12 8', K, 6) + circ(32, 32, 4, P.rojo, 0)));
 icon('candado', I(o('M18 28 v-8 a14 14 0 0 1 28 0 v8', 'none', 6) + rect(10, 28, 44, 30, 8, P.oro, 5) + circ(32, 41, 5, K, 0) + rect(29, 42, 6, 10, 2, K, 0)));

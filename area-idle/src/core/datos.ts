@@ -223,6 +223,8 @@ export const INACTIVO = { desde: 3, eficiencia: 0.15, porNivel: 0.1, horas: 2, h
 
 /** Desde qué nivel se abren las misiones (diarias y permanentes), las gemas moradas y las Reliquias. */
 export const MISIONES_DESDE = 11;
+/** El ranking se abre al llegar a este nivel. */
+export const RANKING_DESDE = 17;
 
 export type Seccion = 'jugador' | 'mago' | 'arqueros' | 'reliquias';
 export const SECCIONES: Seccion[] = ['jugador', 'mago', 'arqueros', 'reliquias'];

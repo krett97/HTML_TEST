@@ -287,5 +287,19 @@
       "orcos100": "Revienta {n} orcos",
       "intacta20": "Gana {n} niveles sin que caiga la muralla"
     }
+  },
+  "ranking": {
+    "titulo": "Ranking",
+    "tuNombre": "Tu nombre",
+    "guardar": "Guardar",
+    "guardado": "¡Listo! Así sales en el ranking.",
+    "anonimo": "Anónimo",
+    "tu": "(tú)",
+    "nivel": "Nivel {n}",
+    "reventados": "{n} reventados",
+    "cargando": "Cargando el ranking…",
+    "sinConexion": "Aquí no hay ranking en línea: solo se ve tu fila. Juega la versión publicada en Claude para competir.",
+    "soloLectura": "Puedes ver el ranking, pero con este acceso no apareces en él.",
+    "nuevo": "¡Nuevo! Ranking: compara tu nivel con el de otros jugadores."
   }
 }
