@@ -38,6 +38,11 @@ export interface Enemy {
   tiro?: number;
   /** Ya se rearmó una vez (los esqueletos). */
   rearmado?: boolean;
+  /** Escorpiones: segundos que le quedan bajo tierra (no se le puede pegar) y hasta volver a enterrarse. */
+  bajoTierra?: number;
+  entierro?: number;
+  /** Minotauros: ya va embistiendo. */
+  cargando?: boolean;
 }
 
 /** Una piedra de resortera en el aire, de un slime rojo a la muralla. */
@@ -58,7 +63,7 @@ export interface Pebble {
 }
 
 /** Velocidad de lo que vuela hacia la muralla (unidades por segundo). */
-const PROJECTILE_SPEED: Record<ProjectileKind, number> = { piedra: 170, lanza: 200, flecha: 260, baba: 170, hoz: 150, telarana: 140, daga: 240 };
+const PROJECTILE_SPEED: Record<ProjectileKind, number> = { piedra: 170, lanza: 200, flecha: 260, baba: 170, hoz: 150, telarana: 140, daga: 240, bolaFuego: 160, roca: 110, cimitarra: 210 };
 
 export type Forma = { tipo: 'circulo'; r: number } | { tipo: 'rect'; w: number; h: number };
 
@@ -120,6 +125,11 @@ export type RunEvent =
   | { type: 'bossRage'; id: number }
   /** Un esqueleto cayó y se volvió a armar (con parte de su vida). */
   | { type: 'rise'; id: number; x: number; y: number }
+  /** Un escorpión se metió bajo la arena o salió en otro lado. */
+  | { type: 'burrow'; id: number; x: number; y: number }
+  | { type: 'surface'; id: number; x: number; y: number }
+  /** Un minotauro empezó a embestir la muralla. */
+  | { type: 'charge'; id: number; x: number; y: number }
   /** Una telaraña enredó a un arquero: no tira por `dura` s. */
   | { type: 'web'; arquero: number; dura: number }
   /** Se acabó: `gano` si se reventaron todos los slimes del nivel antes de que se acabara el tiempo. */
@@ -371,6 +381,11 @@ function spawnOne(run: Run, kind: EnemyKind, x: number, y: number, events: RunEv
 }
 
 /** ¿El enemigo está dentro de la forma? Cuenta un poco de su cuerpo, no solo el centro. */
+/** ¿No se le puede pegar ahora? (escorpión bajo la arena, o el jefe a media teletransportación) */
+export function hidden(run: Run, e: Enemy): boolean {
+  return (e.bajoTierra ?? 0) > 0 || (run.jefe?.id === e.id && !!run.jefe.salto && run.jefe.def.mueve === 'teletransporte');
+}
+
 export function inside(e: Enemy, x: number, y: number, forma: Forma): boolean {
   const extra = ENEMIES[e.kind].radio * 0.6;
   const dx = e.x - x;
@@ -411,12 +426,12 @@ function damage(run: Run, e: Enemy, base: number, fuente: Source, events: RunEve
 
 /** Daña a todos los enemigos dentro de la forma. */
 function blast(run: Run, x: number, y: number, forma: Forma, danio: number, fuente: Source, events: RunEvent[]): void {
-  for (const e of run.enemies) if (e.vida > 0 && inside(e, x, y, forma)) damage(run, e, danio, fuente, events);
+  for (const e of run.enemies) if (e.vida > 0 && !hidden(run, e) && inside(e, x, y, forma)) damage(run, e, danio, fuente, events);
 }
 
 /** `n` enemigos vivos distintos, al azar. */
 function pickTargets(run: Run, n: number): Enemy[] {
-  const vivos = run.enemies.filter((e) => e.vida > 0);
+  const vivos = run.enemies.filter((e) => e.vida > 0 && !hidden(run, e));
   const out: Enemy[] = [];
   while (out.length < n && vivos.length) out.push(vivos.splice(Math.floor(run.rng() * vivos.length), 1)[0]!);
   return out;
@@ -453,15 +468,36 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
   for (const e of run.enemies) {
     if (run.jefe && e.id === run.jefe.id) continue;
     const def = ENEMIES[e.kind];
+    // Los escorpiones se meten bajo la arena un rato (ahí no se les puede pegar) y salen más adelante.
+    if (def.entierra) {
+      if ((e.bajoTierra ?? 0) > 0) {
+        e.bajoTierra! -= step;
+        if (e.bajoTierra! <= 0) events.push({ type: 'surface', id: e.id, x: e.x, y: e.y });
+      } else {
+        e.entierro = (e.entierro ?? def.entierra.cada) - step;
+        if (e.entierro <= 0) {
+          e.bajoTierra = def.entierra.dura;
+          e.entierro = def.entierra.cada * between(run.rng, 0.8, 1.2);
+          events.push({ type: 'burrow', id: e.id, x: e.x, y: e.y });
+        }
+      }
+    }
     // En guardia nadie marcha hacia la muralla: todos pasean.
     if (def.marcha && !run.guardia) {
-      // Marchan hacia la muralla (bamboleándose un poco) y al llegar se quedan golpeándola.
+      // Marchan hacia la muralla (bamboleándose un poco) y al llegar se quedan golpeándola. Los que
+      // embisten (minotauros), pasando la mitad del campo van mucho más rápido.
+      const embiste = !!def.carga && e.y > (run.arriba + bottom(run)) / 2;
+      if (embiste && !e.cargando) {
+        e.cargando = true;
+        events.push({ type: 'charge', id: e.id, x: e.x, y: e.y });
+      }
+      const vel = def.velocidad * (embiste ? def.carga! : 1);
       if (e.y >= bottom(run)) {
         e.vx = 0;
         e.vy = 0;
       } else {
-        e.vy = def.velocidad;
-        e.vx = Math.sin(run.t * 2 + e.id) * def.velocidad * 0.4;
+        e.vy = vel;
+        e.vx = embiste ? 0 : Math.sin(run.t * 2 + e.id) * def.velocidad * 0.4;
       }
       e.x = Math.min(run.w - MARGIN, Math.max(MARGIN, e.x + e.vx * step));
       e.y = Math.min(bottom(run), e.y + e.vy * step);
@@ -517,8 +553,13 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
     if (j.lanza <= 0 && !j.salto) {
       j.lanza += jd.lanza * ritmo;
       if (!run.muro.caido) {
-        const tx = between(run.rng, 12, run.w - 12);
-        run.piedras.push({ id: run.nextId++, tipo: jd.proyectil, sx: boss.x, sy: boss.y - 20, x: boss.x, y: boss.y - 20, tx, ty: run.h - ALLY_ROW + 14, danio: jd.golpe * run.nivel.ataque });
+        // Uno, o varios en abanico (el Líder de los bandidos, tres dagas).
+        const n = jd.rafaga ?? 1;
+        const centro = between(run.rng, 12 + 40 * (n - 1), run.w - 12 - 40 * (n - 1));
+        for (let i = 0; i < n; i++) {
+          const tx = centro + (i - (n - 1) / 2) * 80;
+          run.piedras.push({ id: run.nextId++, tipo: jd.proyectil, sx: boss.x, sy: boss.y - 20, x: boss.x, y: boss.y - 20, tx, ty: run.h - ALLY_ROW + 14, danio: jd.golpe * run.nivel.ataque });
+        }
         events.push({ type: 'bossThrow', id: boss.id, x: boss.x, y: boss.y });
       }
     }
@@ -718,7 +759,7 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
       a.x = a.tx;
       a.y = a.ty;
       // Si el blanco ya reventó, la flecha se clava en el pasto.
-      if (blanco && blanco.vida > 0) damage(run, blanco, a.danio, 'arquero', events);
+      if (blanco && blanco.vida > 0 && !hidden(run, blanco)) damage(run, blanco, a.danio, 'arquero', events);
       a.objetivo = -1;
     } else {
       a.x += (dx / d) * paso;
@@ -786,7 +827,7 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
  */
 export function bestSpot(run: Run): { x: number; y: number; cuantos: number } {
   const r = run.stats.radio;
-  const peso = (e: Enemy) => (run.jefe?.id === e.id ? 12 : e.tiro !== undefined && !run.muro.caido ? 4 : 1);
+  const peso = (e: Enemy) => (hidden(run, e) ? 0 : run.jefe?.id === e.id ? 12 : e.tiro !== undefined && !run.muro.caido ? 4 : 1);
   let best = { x: run.cursor.x, y: run.cursor.y, cuantos: 0 };
   const paso = Math.max(1, Math.ceil(run.enemies.length / 60));
   for (let i = 0; i < run.enemies.length; i += paso) {

@@ -156,6 +156,83 @@ scene('loboNegro', svg(112, 84, lobo({ pelo: '#4a4a58', peloS: '#2c2c36', peloC:
 scene('craneo', svg(60, 46, ell(30, 40, 24, 5, '#00000022', 0) + o('M10 26 C10 12 20 4 30 4 C40 4 50 12 50 26 C50 32 46 36 42 38 V42 H18 V38 C14 36 10 32 10 26 Z', '#efe8d6', 4) + ell(22, 24, 5.5, 6, '#2b1d16', 0) + ell(38, 24, 5.5, 6, '#2b1d16', 0) + o('M28 32 L30 28 L32 32 Z', '#2b1d16', 0) + line('M24 38 V42 M30 38 V42 M36 38 V42', K, 1.8)));
 scene('casco', svg(58, 44, o('M6 34 C6 16 16 6 29 6 C42 6 52 16 52 34 Z', '#b9bfcc', 5) + rect(4, 30, 50, 8, 3, '#8d93a6', 4) + line('M29 8 V30', '#8d93a6', 3) + o('M14 20 l6 4 l-2 6 Z', '#6d7383', 0) + brillo(18, 14, 5, 3, 0.6)));
 scene('peto', svg(56, 50, o('M8 10 C18 4 38 4 48 10 L44 42 C36 48 20 48 12 42 Z', '#b9bfcc', 5) + line('M28 8 V44 M14 22 H42', '#8d93a6', 3) + o('M38 26 l6 -4 l-2 8 Z', '#6d7383', 0) + brillo(18, 14, 5, 3, 0.5)));
+// ---- Desierto (niveles 31–40) ----
+scene('cactus', svg(54, 70, o('M22 66 V16 C22 6 34 6 34 16 V66 Z', '#5fa55a', 5) + o('M22 40 H12 C6 40 6 34 6 30 V22 C6 16 14 16 14 22 V32 H22', '#5fa55a', 5) + o('M34 32 H42 V20 C42 14 50 14 50 20 V30 C50 38 46 42 40 42 H34', '#5fa55a', 5) + line('M28 14 V60', '#3f8040', 2.5) + f('M16 68 H40 V70 H16 Z', '#00000022')));
+scene('vasija', svg(52, 48, o('M14 10 H38 L36 16 C46 22 48 34 42 42 C38 46 14 46 10 42 C4 34 6 22 16 16 Z', '#c8703a', 5) + line('M12 28 H40', '#e8a46a', 4) + o('M30 30 L40 24 L44 40 Z', '#8a4a24', 0) + brillo(18, 22, 4, 3, 0.5)));
+// Escorpión gigante (120 × 84): caparazón café rojizo, tenazas al frente y la cola curva con aguijón.
+{
+  const ESC = { cuerpo: '#c06a36', sombra: '#8f4a22', claro: '#e89a5e' };
+  let s = '';
+  for (const [x0, y0, x1, y1] of [[40, 56, 26, 76], [52, 60, 44, 80], [66, 60, 74, 80], [78, 56, 92, 76]]) s += line(`M${x0} ${y0} L${x1} ${y1}`, K, 7) + line(`M${x0} ${y0} L${x1} ${y1}`, ESC.sombra, 3.5);
+  s += o('M30 52 C38 28 22 10 40 4 C52 0 60 10 54 18 L50 14 C52 8 42 8 42 16 C42 26 48 36 44 50 Z', ESC.cuerpo, 5) + o('M50 12 L60 6 L56 18 Z', P.crema, 3);
+  s += ell(60, 52, 28, 14, ESC.cuerpo, 6) + line('M44 46 V58 M56 44 V60 M68 44 V60 M78 46 V58', ESC.sombra, 3) + brillo(52, 44, 8, 3, 0.4);
+  s += line('M84 50 L98 42', K, 8) + line('M84 50 L98 42', ESC.sombra, 4) + o('M96 34 C110 30 118 40 112 48 L104 44 L110 40 C106 36 100 38 98 42 Z', ESC.cuerpo, 4);
+  s += line('M84 58 L100 62', K, 8) + line('M84 58 L100 62', ESC.sombra, 4) + o('M98 56 C112 52 118 64 112 70 L104 64 L110 62 C106 58 100 60 100 62 Z', ESC.cuerpo, 4);
+  s += circ(86, 48, 2.6, K, 0) + circ(90, 52, 2.6, K, 0);
+  scene('escorpion', svg(120, 84, s));
+}
+// Bandido del desierto (96 × 104): turbante y pañoleta arena, ojos entrecerrados y una cimitarra.
+function bandidoDesierto({ lider = false } = {}) {
+  const T = lider ? { tela: '#a8322c', telaS: '#7e2420', ropa: '#3e3a56' } : { tela: '#e2c48c', telaS: '#b99a5e', ropa: '#c8a066' };
+  const piel = '#c98b5c';
+  let s = '';
+  // Cimitarra curva en la mano derecha (el líder, también en la izquierda).
+  const cimitarra = (x, y, flip) => g(`translate(${x} ${y}) scale(${flip ? -1 : 1} 1)`, o('M0 0 C10 -8 16 -24 12 -40 C20 -26 18 -8 4 4 Z', '#dfe5ee', 3.5) + rect(-4, 2, 10, 4, 2, P.oroS, 2.5) + rect(-1, 6, 5, 10, 2, P.maderaS, 2.5));
+  s += o('M22 64 C18 82 16 96 16 102 H80 C80 96 78 82 74 64 Z', T.ropa, 6) + f('M48 66 V102 H60 C60 90 58 78 56 66 Z', '#00000022');
+  if (lider) s += line('M22 72 L74 92', P.oroS, 5) + circ(48, 82, 4, P.amarillo, 3);
+  s += cimitarra(78, 66, false) + circ(80, 76, 6, piel, 4);
+  if (lider) s += cimitarra(14, 66, true);
+  s += circ(14, 76, 6, piel, 4);
+  s += o('M30 46 C30 32 38 26 48 26 C58 26 66 32 66 46 C66 58 58 64 48 64 C38 64 30 58 30 46 Z', piel, 5);
+  s += o('M28 50 C36 58 60 58 68 50 L68 58 C60 68 36 68 28 58 Z', T.tela, 4);
+  s += o('M24 36 C22 16 36 8 48 8 C60 8 74 16 72 36 C64 28 32 28 24 36 Z', T.tela, 5) + line('M28 26 C40 20 56 20 68 26', T.telaS, 3);
+  if (lider) s += o('M44 12 l4 -6 l4 6 Z', P.amarillo, 2.5) + circ(48, 14, 3, '#5bd1a8', 2);
+  s += line('M37 40 l8 2 M59 40 l-8 2', K, 3.5) + circ(42, 44, 2.6, K, 0);
+  s += lider ? o('M51 40 H60 V47 H51 Z', K, 0) + line('M48 38 L64 34', K, 2) : circ(55, 44, 2.6, K, 0);
+  return s;
+}
+scene('bandidoDesierto', svg(96, 104, bandidoDesierto()));
+scene('liderBandido', svg(140, 150, g('translate(10 0) scale(1.25)', bandidoDesierto({ lider: true }))));
+// Minotauro guerrero (120 × 120): cabeza de toro con cuernos, argolla en la nariz, peto de cuero y hacha.
+{
+  const MIN = { pelo: '#8a5a3a', peloS: '#6a4128', hocico: '#c89a7a' };
+  let s = '';
+  s += line('M96 18 L88 108', K, 9) + line('M96 18 L88 108', P.maderaS, 5) + o('M92 16 C112 10 118 30 110 44 C104 36 98 32 94 32 Z', '#dfe5ee', 4) + o('M96 16 C80 10 76 28 82 40 C86 34 90 30 94 30 Z', '#c9d0dc', 4);
+  s += o('M26 70 C22 88 20 104 20 116 H96 C96 104 94 88 90 70 Z', MIN.pelo, 6) + o('M32 74 H84 L80 100 H36 Z', '#7a4f2a', 4) + line('M58 74 V100', '#5a3a20', 3);
+  s += o('M86 74 C92 76 96 80 96 86 l-6 4 C88 84 84 80 80 80 Z', MIN.pelo, 4);
+  s += o('M20 30 C6 26 2 12 8 4 C12 14 18 20 30 22 Z', P.crema, 4) + o('M96 30 C110 26 114 12 108 4 C104 14 98 20 86 22 Z', P.crema, 4);
+  s += circ(58, 42, 28, MIN.pelo, 6) + f('M34 52 C42 68 74 68 82 52 C74 62 42 62 34 52 Z', MIN.peloS);
+  s += ell(58, 56, 16, 11, MIN.hocico, 4) + circ(52, 56, 2.4, K, 0) + circ(64, 56, 2.4, K, 0) + `<circle cx="58" cy="64" r="5" fill="none" stroke="${P.oroS}" stroke-width="3"/>`;
+  s += circ(46, 38, 3.4, '#d8443a', 0) + circ(70, 38, 3.4, '#d8443a', 0) + cejas(58, 38, 10);
+  scene('minotauro', svg(120, 120, s));
+}
+// Cíclope guerrero (124 × 128): gigante gris azulado con un solo ojo, casco y garrote con clavos.
+{
+  const CIC = { piel: '#9fb4c8', pielS: '#7a90a6' };
+  let s = '';
+  s += o('M92 40 C104 32 114 40 110 54 L92 108 L82 104 Z', P.maderaS, 5) + circ(104, 44, 3, '#dfe5ee', 2) + circ(98, 58, 3, '#dfe5ee', 2) + circ(108, 56, 3, '#dfe5ee', 2);
+  s += o('M24 72 C20 92 18 110 18 124 H98 C98 110 96 92 92 72 Z', '#8a6a4a', 6) + line('M22 96 H96', '#6a4f34', 4) + rect(52, 92, 14, 10, 2, P.oroS, 3);
+  s += o('M88 76 C94 78 98 82 98 88 l-6 4 C90 86 86 82 82 82 Z', CIC.piel, 4);
+  s += circ(58, 46, 32, CIC.piel, 6) + f('M30 58 C38 76 78 76 86 58 C78 70 38 70 30 58 Z', CIC.pielS);
+  s += circ(58, 42, 13, P.blanco, 5) + circ(60, 43, 6.5, '#d8443a', 0) + circ(60, 43, 3, K, 0) + circ(57, 40, 1.8, P.blanco, 0);
+  s += line('M42 28 L74 28', K, 5) + o('M44 64 Q58 58 72 64 Q58 70 44 64 Z', '#4a2a2a', 3) + o('M50 64 l2 4 l2 -4 Z M62 64 l2 4 l2 -4 Z', P.blanco, 0);
+  s += o('M26 26 C28 10 44 4 58 4 C72 4 88 10 90 26 C80 18 70 16 58 16 C46 16 36 18 26 26 Z', '#b9bfcc', 5) + o('M56 2 L58 -8 L60 2 Z', '#8d93a6', 3);
+  scene('ciclope', svg(124, 128, g('translate(0 6)', s)));
+}
+// El jefe del nivel 30: Esqueleto Mago de fuego (140 × 160): sombrero morado de mago, túnica, bastón con llama.
+{
+  const HUE = { hueso: '#efe8d6', huesoS: '#c9bfa6' };
+  let s = '';
+  s += line('M112 40 L104 152', K, 9) + line('M112 40 L104 152', P.maderaS, 5);
+  s += g('translate(94 -2) scale(0.56)', o('M32 4 c4 14 20 20 20 36 a20 20 0 0 1 -40 0 c0 -10 6 -14 8 -22 c4 6 6 8 8 8 c0 -8 2 -16 4 -22 z', P.fuego, 7) + f('M32 30 c2 8 10 10 10 18 a10 10 0 0 1 -20 0 c0 -6 4 -8 6 -12 c2 3 3 3 4 3 z', P.fuegoC));
+  s += o('M34 92 C28 116 24 138 22 154 H112 C110 138 106 116 100 92 Z', '#5a3a8a', 6) + line('M44 110 H92 M40 130 H96', '#3e2766', 4) + o('M60 92 L67 152 L74 92 Z', '#3e2766', 0);
+  s += o('M98 98 C106 98 110 102 110 108 l-6 4 C102 106 98 104 94 104 Z', HUE.hueso, 4);
+  s += circ(67, 66, 28, HUE.hueso, 6) + f('M42 76 C50 92 84 92 92 76 C84 86 50 86 42 76 Z', HUE.huesoS);
+  s += ell(57, 66, 8, 9, '#2b1d16', 0) + ell(77, 66, 8, 9, '#2b1d16', 0) + circ(57, 67, 3.4, '#ff8a2a', 0) + circ(77, 67, 3.4, '#ff8a2a', 0) + circ(57, 67, 1.4, P.amarillo, 0) + circ(77, 67, 1.4, P.amarillo, 0);
+  s += o('M63 78 L67 72 L71 78 Z', '#2b1d16', 0) + rect(55, 82, 24, 8, 2, HUE.hueso, 3) + line('M61 82 V90 M67 82 V90 M73 82 V90', K, 1.8);
+  s += o('M30 48 C44 44 90 44 104 48 C96 54 38 54 30 48 Z', '#5a3a8a', 5) + o('M44 46 C50 26 56 10 74 2 C70 14 78 30 90 46 Z', '#5a3a8a', 5) + o('M72 6 l6 -4 l-1 8 Z', '#5a3a8a', 3) + o('M60 34 l3 6 l6 1 l-4.5 4 l1 6 l-5.5 -3 l-5.5 3 l1 -6 l-4.5 -4 l6 -1 z', P.amarillo, 2.5);
+  scene('esqueletoMago', svg(140, 160, s));
+}
 // La telaraña que deja enredado a un arquero.
 scene('telarana', svg(64, 64, `<g fill="none" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" opacity=".95">` + [0, 45, 90, 135].map((a) => `<path d="M32 32 L${32 + 30 * Math.cos((a * Math.PI) / 180)} ${32 + 30 * Math.sin((a * Math.PI) / 180)} M32 32 L${32 - 30 * Math.cos((a * Math.PI) / 180)} ${32 - 30 * Math.sin((a * Math.PI) / 180)}"/>`).join('') + [10, 19, 28].map((r) => `<polygon points="${Array.from({ length: 8 }, (_, i) => `${32 + r * Math.cos((i * Math.PI) / 4)},${32 + r * Math.sin((i * Math.PI) / 4)}`).join(' ')}"/>`).join('') + '</g>'));
 // Lo que hay tirado en el campo de batalla.
@@ -251,7 +328,7 @@ function bloques(x0, y0, w, h, alto = 48, ancho = 80, desfase = 0) {
 
 // ---- El pasto (256 × 256, se repite): verde con matitas y manchas claras que cruzan el borde sin costura ----
 // (la Pradera amarilla usa el mismo dibujo con hierba seca)
-for (const [clave, base, claro, oscuro] of [['pasto', P.pasto, P.pastoC, P.pastoS], ['pasto_amarillo', '#d9c25e', '#efe19a', '#b3963a']]) {
+for (const [clave, base, claro, oscuro, ondas] of [['pasto', P.pasto, P.pastoC, P.pastoS], ['pasto_amarillo', '#d9c25e', '#efe19a', '#b3963a'], ['arena', '#ead08e', '#f6e4b4', '#cfae66', true]]) {
   const mata = (x, y, c = oscuro) => line(`M${x} ${y} l-4 -9 M${x} ${y} l0 -11 M${x} ${y} l5 -9`, c, 3);
   const mancha = (x, y, rx, ry) => `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="${claro}" opacity=".35"/>`;
   let s = rect(0, 0, 256, 256, 0, base, 0);
@@ -260,7 +337,8 @@ for (const [clave, base, claro, oscuro] of [['pasto', P.pasto, P.pastoC, P.pasto
   // Cada cosa se dibuja también desplazada 256 a los lados para que el borde case.
   for (const dx of [-256, 0, 256]) for (const dy of [-256, 0, 256]) {
     for (const [x, y, rx, ry] of manchas) s += mancha(x + dx, y + dy, rx, ry);
-    for (const [x, y] of matas) s += mata(x + dx, y + dy);
+    // En la arena, en lugar de matitas, ondas de duna.
+    for (const [x, y] of matas) s += ondas ? line(`M${x + dx - 12} ${y + dy} q6 -5 12 0 t12 0`, oscuro, 2.5) : mata(x + dx, y + dy);
   }
   scene(clave, svg(256, 256, s));
 }

@@ -47,7 +47,9 @@ export function stats(meta: Meta): Stats {
 }
 
 export function costOf(def: TalentDef, nivel: number): number {
-  return Math.ceil(def.costo.base * Math.pow(def.costo.crece, nivel));
+  const { base, crece, tarde } = def.costo;
+  if (!tarde || nivel <= tarde.desde) return Math.ceil(base * Math.pow(crece, nivel));
+  return Math.ceil(base * Math.pow(crece, tarde.desde) * Math.pow(tarde.crece, nivel - tarde.desde));
 }
 
 export type TalentState = 'bloqueado' | 'disponible' | 'maximo';

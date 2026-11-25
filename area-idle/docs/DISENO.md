@@ -1,6 +1,6 @@
 # Campo de Slimes: diseño del prototipo
 
-> Versión 0.11.0. Nombre provisional. Nació de pausar el juego del gato
+> Versión 0.12.0. Nombre provisional. Nació de pausar el juego del gato
 > ([`../../gato-idle/docs/DECISIONES.md`](../../gato-idle/docs/DECISIONES.md)), tomando su base técnica y su
 > arte en código ([`../../REUSO.md`](../../REUSO.md)). Referencia de sensación: *Don't Stop The Pop!*
 > (cientos de cosas reventando en un área) y el idle del castor (rocas que caen, mundo que cambia por fase).
@@ -104,8 +104,8 @@ estabas" dice cuánto tiempo pasó y cuánto oro se juntó, con un botón para c
 **Cada 10 niveles hay un jefe.** El primero, en el nivel 10, es el **Rey Slime**: naranja, gigante, con
 corona de oro, capa roja y cejas de enojo. En un nivel de jefe se gana **al vencerlo** (su escolta
 revienta con él); hay **10 s más** de tiempo y el **premio es ×5**. Su vida es la de todos los slimes de un
-nivel normal ×6 (en el nivel 10: unas 16 600). En los niveles 20, 30… vuelve, más fuerte, hasta que haya
-jefes nuevos.
+nivel normal ×6 (en el nivel 10: unas 16 600). Orden (desde 0.12.0): **Rey Slime** (10), **Lobo Blanco**
+(20), **Esqueleto Mago** (30) y **Líder de los bandidos** (40); en el 50, 60… se repiten en ese orden.
 
 Lo que hace (`JEFE` en `datos.ts`):
 
@@ -147,7 +147,7 @@ las flechas y casi todos le pegan a la muralla.
 de brincar **embiste** por el piso rapidísimo (deja una estela de polvo) y se queda **jadeando** 1.2 s
 (recibe ×2); **aúlla** para llamar lobos; **avienta su hoz** girando contra la muralla (14 de daño); esquiva
 tu círculo más rápido que el Rey (32 u/s) y a media vida se enfurece. Débil al fuego, fuerte contra el
-hielo. Cada jefe tiene sus números en `JEFES` (`datos.ts`); en los niveles 30, 40… se alternan.
+hielo. Cada jefe tiene sus números en `JEFES` (`datos.ts`).
 
 El simulador llega al nivel 20 hacia el minuto 27 (la primera zona se pasa hacia el 9): la segunda
 zona es un salto claro de dificultad, sobre todo por la muralla.
@@ -176,6 +176,37 @@ arbustos hay **cráneos, cascos y petos abollados**. Enemigos:
 
 Con el simulador se llega al nivel 21 hacia el minuto 22 y al 28 hacia el 45; del 21 al 30 pierde ~17
 veces (junta oro en el anterior y sigue).
+
+## 5d3. Esqueleto Mago (30), Desierto (31–40) y Líder de los bandidos (40) (desde 0.12.0)
+
+**Esqueleto Mago de fuego** (jefe del 30): esqueleto con sombrero morado de mago y bastón en llamas.
+Invoca esqueletos (2 cada 5 s), se **teletransporta** entre llamas cada 4 s (mientras, no se le puede
+pegar) y queda recuperándose (×2 de daño), lanza **bolas de fuego** a la muralla (16) y, al caer, **se
+rearma una vez con 30 % de vida**. Aguanta el fuego (tu mago le hace la mitad). Por todas esas defensas
+tiene 70 % de la vida normal de un jefe (con el 100 % el simulador necesitaba ~18 intentos; así, ~3, como
+el Rey).
+
+**Desierto** (31–40 y siguientes): arena con ondas, cactus, vasijas rotas y cráneos.
+
+| Enemigo | Desde | Vida | Velocidad | Qué hace | Débil a | Fuerte contra | Oro |
+|---|---|---|---|---|---|---|---|
+| Escorpión gigante | 31 | 9 | Normal | Se **entierra** en la arena 1.6 s cada ~4 s: ahí no se le puede pegar | Hielo | Físico | 3 |
+| Bandido del desierto | 31 | 8 | Normal | Lanza **cimitarras** a la muralla (3 cada 2.2 s) y esquiva tu círculo | Hielo | Fuego | 3 |
+| Minotauro guerrero | 33 | 26 | Lenta | Marcha y, pasando la mitad del campo, **embiste** (×3) y golpea la muralla (6) | Fuego | — | 12 |
+| Cíclope guerrero (el más fuerte) | 35 | 30 | Muy lenta | Avienta **rocas** enormes a la muralla (7 cada 6 s) | Luz | Fuego | 15 |
+
+**Líder de los bandidos** (jefe del 40): turbante rojo, parche y dos cimitarras. Llama bandidos del
+desierto, **embiste** cada 3 s, lanza **tres dagas en abanico** y es el que más esquiva tu círculo. Tiene
+150 % de la vida normal de un jefe.
+
+Misiones nuevas: diarias de escorpiones (100), minotauros (30) y cíclopes (20); permanentes "Llega al 35"
+(25), "Llega al 40" (30), "Vence al Esqueleto Mago" (16) y "Vence al Líder" (20).
+
+**Curvas de la segunda mitad (0.12.0).** Al agregar el desierto, el simulador mostró que el juego se
+atoraba en el nivel 29 (con cualquier jefe): la vida crecía ×1.3 por nivel y el oro ×1.05, y casi todas
+las mejoras ya estaban al máximo. Desde el nivel 20: vida ×1.14 y oro ×1.15 por nivel; **Daño** llega a
+100 (pasado su nivel 40 cada nivel cuesta ×1.2 en vez de ×1.4) y **Muralla reforzada** a 20. Los niveles
+1–20 no cambian.
 
 ## 5e. Misiones, gemas moradas y Reliquias (desde 0.6.0)
 
@@ -304,13 +335,17 @@ compra lo más barato y, si pierde un nivel, juega una vez el anterior para junt
 | Minuto | Nivel superado |
 |---|---|
 | 5 | 4 |
-| 10 | 12 |
+| 10 | 9–12 |
 | 15 | 17 |
 | 20 | 19 |
-| 30 | 25 |
-| 45 | 27 |
+| 30 | 29 |
+| 45 | 35 |
+| 60 | 37 |
+| 75 | 41 |
 
-(0.6.0: el bot también cobra misiones y compra la Reliquia más barata.)
+(0.6.0: el bot también cobra misiones y compra la Reliquia más barata. 0.12.0: curvas nuevas desde el 20.)
+Jefes: el Rey ~3 intentos, el Lobo ~5, el Esqueleto Mago ~3 y el Líder 1–3. En el desierto la muralla es
+el reto (del 36 al 38 cae seguido: ahí sirve Muralla reforzada hasta 20).
 
 Al principio pierde los niveles 3, 4 y 7 alguna vez, junta oro en el anterior y pasa. Del 11 al 20 casi
 no pierde (llegan el mago y los arqueros). Del 21 en adelante los rojos son el reto: la muralla cae en
@@ -318,7 +353,7 @@ unas 30 partidas de 45 minutos y ahí sirve Muralla reforzada. (El bot no cobra 
 
 ## 7. Técnica
 
-- `src/core/` es lógica pura y probada (90 pruebas): `run.ts` (la partida paso a paso; devuelve eventos),
+- `src/core/` es lógica pura y probada (98 pruebas): `run.ts` (la partida paso a paso; devuelve eventos),
   `stats.ts` (estadísticas desde los talentos), `meta.ts` (oro, gemas, árbol, guardado), `misiones.ts`
   (contadores, diarias y permanentes), `ranking.ts`, `pvp.ts` (poder, ligas, peleas, tienda), `datos.ts`, `bot.ts`. `src/services/ranking.ts`
   conecta el ranking con la base de datos de la página publicada.

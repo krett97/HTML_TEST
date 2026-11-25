@@ -317,6 +317,39 @@ async function flow(name, browser, fn, opts) {
     for (const k of ['arana', 'esqueleto', 'loboNegro', 'bandido']) check(!(await page.getByTestId(`enemigo-${k}`).textContent()).includes('???'), `el glosario esconde a ${k}`);
   });
 
+  await flow('Esqueleto Mago en el 30, Desierto del 31 al 40 y el Líder de los bandidos en el 40', browser, async (page) => {
+    await page.getByTestId('terminar').click();
+    await page.getByTestId('mejorar').click();
+    await page.getByTestId('abrir-ajustes').click();
+    for (let i = 0; i < 29; i++) await page.getByTestId('mas-nivel').click();
+    await page.mouse.click(4, 4);
+    await page.getByTestId('jugar').click();
+    await page.waitForTimeout(500);
+    check((await page.getByTestId('vida-jefe').textContent()).includes('Esqueleto Mago'), 'el jefe del 30 no es el Esqueleto Mago');
+    await page.getByTestId('terminar').click();
+    await page.getByTestId('mejorar').click();
+    await page.getByTestId('abrir-ajustes').click();
+    await page.getByTestId('mas-nivel').click();
+    await page.mouse.click(4, 4);
+    check((await page.getByTestId('nivel-actual').textContent()).includes('Desierto'), 'el nivel 31 no dice Desierto');
+    await page.getByTestId('jugar').click();
+    await page.waitForTimeout(500);
+    const tipos = await page.evaluate(() => [...new Set(window.juego.run.enemies.map((e) => e.kind))]);
+    check(tipos.every((k) => ['escorpion', 'bandidoDesierto'].includes(k)), `en el nivel 31 salieron: ${tipos.join(', ')}`);
+    await page.getByTestId('terminar').click();
+    await page.getByTestId('mejorar').click();
+    await page.getByTestId('abrir-ajustes').click();
+    for (let i = 0; i < 9; i++) await page.getByTestId('mas-nivel').click();
+    await page.mouse.click(4, 4);
+    await page.getByTestId('jugar').click();
+    await page.waitForTimeout(500);
+    check((await page.getByTestId('vida-jefe').textContent()).includes('Líder de los bandidos'), 'el jefe del 40 no es el Líder de los bandidos');
+    await page.getByTestId('terminar').click();
+    await page.getByTestId('mejorar').click();
+    await page.getByTestId('abrir-glosario').click();
+    for (const k of ['escorpion', 'bandidoDesierto', 'minotauro', 'ciclope', 'esqueletoMago', 'liderBandido']) check(!(await page.getByTestId(`enemigo-${k}`).textContent()).includes('???'), `el glosario esconde a ${k}`);
+  });
+
   await flow('modo pruebas: "+10 min de juego" avanza la partida como si hubieras jugado', browser, async (page) => {
     await page.getByTestId('terminar').click();
     await page.getByTestId('mejorar').click();
@@ -329,7 +362,7 @@ async function flow(name, browser, fn, opts) {
     const nivel = Number((await page.getByTestId('nivel-actual').textContent()).match(/Nivel (\d+)/)[1]);
     check(nivel >= 8, `en 10 min simulados solo llegó al nivel ${nivel}`);
     await page.getByTestId('talento-danio').click();
-    check(!(await page.getByTestId('detalle').textContent()).includes('0/40'), 'no compró nada en el árbol');
+    check(!/(^|\D)0\/100/.test(await page.getByTestId('detalle').textContent()), 'no compró nada en el árbol');
   });
 
   await flow('guardado: al recargar se queda el oro y el árbol, y se llega al árbol', browser, async (page) => {
@@ -343,7 +376,7 @@ async function flow(name, browser, fn, opts) {
     check(await page.getByTestId('arbol').count(), 'al volver no se llega al árbol');
     check((await page.getByTestId('oro-total').textContent()) === oro, 'el oro no se guardó');
     await page.getByTestId('talento-danio').click();
-    check((await page.getByTestId('detalle').textContent()).includes('1/40'), 'el nivel de Daño no se guardó');
+    check((await page.getByTestId('detalle').textContent()).includes('1/100'), 'el nivel de Daño no se guardó');
   });
 
   await flow('reiniciar desde cero', browser, async (page) => {
@@ -357,7 +390,7 @@ async function flow(name, browser, fn, opts) {
     await page.waitForTimeout(300);
     check((await page.getByTestId('oro-total').textContent()).trim() === '0', 'quedó oro');
     await page.getByTestId('talento-danio').click();
-    check((await page.getByTestId('detalle').textContent()).includes('0/40'), 'quedó nivel de Daño');
+    check(/(^|\D)0\/100/.test(await page.getByTestId('detalle').textContent()), 'quedó nivel de Daño');
     await page.reload();
     await page.waitForTimeout(1200);
     check(await page.getByTestId('reloj').count(), 'tras reiniciar no empieza jugando como nuevo');

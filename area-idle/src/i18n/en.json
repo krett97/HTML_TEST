@@ -196,7 +196,14 @@
       "furia": "At half health it rages: everything faster.",
       "aulla": "Howls to call wolves.",
       "embiste": "Charges across the field and pants afterwards: takes double damage.",
-      "hoz": "Hurls its spinning scythe at your wall."
+      "hoz": "Hurls its spinning scythe at your wall.",
+      "invocaEsqueletos": "Summons skeletons that march to the wall.",
+      "teletransporte": "Teleports in flames (can't be hit meanwhile) and is left recovering: takes double damage.",
+      "bolaFuego": "Throws fireballs at the wall. Your mage's fire barely hurts it.",
+      "rearma": "When it falls it reassembles once, with 30% life.",
+      "llamaBandidos": "Calls his desert bandits.",
+      "abanico": "Throws three daggers in a fan at the wall.",
+      "esquivaMucho": "Gets out of your circle faster than anyone."
     },
     "golpea": "{n} to the wall, up close",
     "embiste": "Charges and dodges"
@@ -261,12 +268,37 @@
     "bandido": {
       "nombre": "Bandit",
       "texto": "Throws daggers at the wall very often and steps away from your circle: aim at it by hand."
+    },
+    "esqueletoMago": {
+      "nombre": "Skeleton Mage",
+      "texto": "The level 30 boss: a skeleton with a wizard hat and a fire staff."
+    },
+    "escorpion": {
+      "nombre": "Giant scorpion",
+      "texto": "Burrows into the sand (can't be hit there) and pops up elsewhere. Its shell resists arrows."
+    },
+    "bandidoDesierto": {
+      "nombre": "Desert bandit",
+      "texto": "Throws scimitars at the wall and steps away from your circle. Used to the heat, it resists fire."
+    },
+    "minotauro": {
+      "nombre": "Minotaur warrior",
+      "texto": "Marches to the wall and, halfway there, charges and hits it hard with its axe."
+    },
+    "ciclope": {
+      "nombre": "Cyclops warrior",
+      "texto": "The strongest in the desert: lots of life, and it hurls huge rocks at the wall."
+    },
+    "liderBandido": {
+      "nombre": "Bandit Leader",
+      "texto": "The level 40 boss: red turban, eye patch and two scimitars."
     }
   },
   "zonas": {
     "campo": "Green field",
     "batalla": "Battlefield",
-    "pradera": "Yellow meadow"
+    "pradera": "Yellow meadow",
+    "desierto": "Desert"
   },
   "inactivo": {
     "titulo": "While you were away",
@@ -312,7 +344,14 @@
       "intacta20": "Win {n} levels without losing the wall",
       "aranas": "Pop {n} spiders",
       "esqueletos": "Pop {n} skeletons (for good)",
-      "bandidos": "Pop {n} bandits"
+      "bandidos": "Pop {n} bandits",
+      "esqueletoMago": "Beat the Skeleton Mage",
+      "liderBandido": "Beat the Bandit Leader",
+      "nivel35": "Reach level {n}",
+      "nivel40": "Reach level {n}",
+      "escorpiones": "Pop {n} scorpions",
+      "minotauros": "Pop {n} minotaurs",
+      "ciclopes": "Pop {n} cyclopes"
     }
   },
   "ranking": {

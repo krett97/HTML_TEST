@@ -203,8 +203,9 @@ export class Juego {
       else if (e.type === 'kill') this.audio.play(e.kind === 'azul' ? 'popGrande' : 'pop');
       else if (e.type === 'impact') this.audio.play(e.fuente === 'mago' ? 'magia' : 'disparo');
       else if (e.type === 'volley') this.audio.play('arco');
-      else if (e.type === 'sling') this.audio.play(e.tipo === 'golpe' ? 'golpeMuro' : e.tipo === 'flecha' ? 'arco' : e.tipo === 'lanza' ? 'lanza' : 'resortera');
-      else if (e.type === 'bossJump') this.audio.play(run.jefe?.def.mueve === 'embestida' ? 'embiste' : 'brinco');
+      else if (e.type === 'sling') this.audio.play(e.tipo === 'golpe' ? 'golpeMuro' : e.tipo === 'flecha' ? 'arco' : e.tipo === 'lanza' || e.tipo === 'cimitarra' || e.tipo === 'roca' ? 'lanza' : 'resortera');
+      else if (e.type === 'bossJump') this.audio.play(run.jefe?.def.mueve === 'embestida' ? 'embiste' : run.jefe?.def.mueve === 'teletransporte' ? 'magia' : 'brinco');
+      else if (e.type === 'charge') this.audio.play('embiste');
       else if (e.type === 'bossStun') this.audio.play('aturde');
       else if (e.type === 'bossSummon') this.audio.play(run.jefe?.def.escolta === 'lobo' ? 'aullido' : 'invoca');
       else if (e.type === 'bossThrow') this.audio.play('lanza');

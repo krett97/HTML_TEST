@@ -196,7 +196,14 @@
       "furia": "A media vida se enfurece: todo más seguido.",
       "aulla": "Aúlla para llamar lobos.",
       "embiste": "Embiste rapidísimo a otro lado y se queda jadeando: recibe doble daño.",
-      "hoz": "Avienta su hoz girando contra la muralla."
+      "hoz": "Avienta su hoz girando contra la muralla.",
+      "invocaEsqueletos": "Invoca esqueletos que marchan a la muralla.",
+      "teletransporte": "Se teletransporta entre llamas (mientras, no se le puede pegar) y queda recuperándose: recibe doble daño.",
+      "bolaFuego": "Lanza bolas de fuego a la muralla. El fuego de tu mago casi no le hace.",
+      "rearma": "Al caer se vuelve a armar una vez, con 30 % de vida.",
+      "llamaBandidos": "Llama a sus bandidos del desierto.",
+      "abanico": "Lanza tres dagas en abanico a la muralla.",
+      "esquivaMucho": "Es el que más rápido se sale de tu círculo."
     },
     "golpea": "{n} a la muralla, de cerca",
     "embiste": "Embiste y esquiva"
@@ -261,12 +268,37 @@
     "bandido": {
       "nombre": "Bandido",
       "texto": "Lanza dagas a la muralla muy seguido y se aparta de tu círculo: hay que apuntarle a mano."
+    },
+    "esqueletoMago": {
+      "nombre": "Esqueleto Mago",
+      "texto": "El jefe del nivel 30: un esqueleto con sombrero de mago y bastón de fuego."
+    },
+    "escorpion": {
+      "nombre": "Escorpión gigante",
+      "texto": "Se entierra en la arena (ahí no se le puede pegar) y sale en otro lado. Su caparazón aguanta las flechas."
+    },
+    "bandidoDesierto": {
+      "nombre": "Bandido del desierto",
+      "texto": "Lanza cimitarras a la muralla y se aparta de tu círculo. Acostumbrado al calor, aguanta el fuego."
+    },
+    "minotauro": {
+      "nombre": "Minotauro guerrero",
+      "texto": "Marcha hacia la muralla y, a media cancha, embiste y la golpea fuerte con su hacha."
+    },
+    "ciclope": {
+      "nombre": "Cíclope guerrero",
+      "texto": "El más fuerte del desierto: mucha vida y le avienta rocas enormes a la muralla."
+    },
+    "liderBandido": {
+      "nombre": "Líder de los bandidos",
+      "texto": "El jefe del nivel 40: turbante rojo, parche y dos cimitarras."
     }
   },
   "zonas": {
     "campo": "Campo verde",
     "batalla": "Campo de batalla",
-    "pradera": "Pradera amarilla"
+    "pradera": "Pradera amarilla",
+    "desierto": "Desierto"
   },
   "inactivo": {
     "titulo": "Mientras no estabas",
@@ -312,7 +344,14 @@
       "intacta20": "Gana {n} niveles sin que caiga la muralla",
       "aranas": "Revienta {n} arañas",
       "esqueletos": "Revienta {n} esqueletos (del todo)",
-      "bandidos": "Revienta {n} bandidos"
+      "bandidos": "Revienta {n} bandidos",
+      "esqueletoMago": "Vence al Esqueleto Mago",
+      "liderBandido": "Vence al Líder de los bandidos",
+      "nivel35": "Llega al nivel {n}",
+      "nivel40": "Llega al nivel {n}",
+      "escorpiones": "Revienta {n} escorpiones",
+      "minotauros": "Revienta {n} minotauros",
+      "ciclopes": "Revienta {n} cíclopes"
     }
   },
   "ranking": {

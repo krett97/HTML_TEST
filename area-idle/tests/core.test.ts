@@ -4,6 +4,7 @@ import { activeGoldPerMinute, idleGoldPerMinute, idleReward, idleUnlocked } from
 import { isBossLevel, JEFE, JEFES, bossFor, zoneOf, DESDE, INACTIVO, ROJO_DESDE, AZUL_DESDE, DAMAGE_TYPES, damageMultiplier, ENEMIES, levelConfig, PRIMERA_OLA, SECCIONES, TALENT_BY_ID, TALENTS } from '../src/core/datos';
 import { formatClock, formatNum } from '../src/core/format';
 import { buyTalent, chooseLevel, costOf, createMeta, finishRun, levelOf, loadMeta, talentState, talentVisible } from '../src/core/meta';
+import { hidden } from '../src/core/run';
 import { autoAiming, createGuardRun, guardLevel, startGuardRun, updateGuardRun } from '../src/core/run';
 import { AUTOAPUNTAR } from '../src/core/datos';
 import { GUARDIA } from '../src/core/datos';
@@ -324,10 +325,12 @@ describe('segunda zona: campo de batalla', () => {
     expect(levelConfig(DESDE.orcoArquero).mezcla.map(([k]) => k)).toContain('orcoArquero');
     for (const n of [1, 5, 11, 15, 19]) expect(levelConfig(n).mezcla.reduce((t, [, p]) => t + p, 0)).toBeCloseTo(1);
   });
-  it('el jefe del 20 es el Lobo Blanco y llama lobos; los jefes se alternan', () => {
+  it('el jefe del 20 es el Lobo Blanco y llama lobos; luego vienen el Esqueleto Mago y el Líder, y se repiten', () => {
     expect(bossFor(10)).toBe('rey');
     expect(bossFor(20)).toBe('loboBlanco');
-    expect(bossFor(30)).toBe('rey');
+    expect(bossFor(30)).toBe('esqueletoMago');
+    expect(bossFor(40)).toBe('liderBandido');
+    expect(bossFor(50)).toBe('rey');
     const run = createRun(computeStats({}), 560, 20, 1);
     const inicio = startRun(run);
     expect(bossOf(run)!.kind).toBe('loboBlanco');
@@ -566,7 +569,7 @@ describe('guardado', () => {
     expect(loadMeta(null)).toEqual(createMeta());
     const m = loadMeta({ oro: -5, talentos: { danio: 999, inventado: 3 }, ajustes: { sonido: 'si' } });
     expect(m.oro).toBe(0);
-    expect(m.talentos).toEqual({ danio: 40 });
+    expect(m.talentos).toEqual({ danio: TALENT_BY_ID.danio.max });
     expect(m.ajustes.sonido).toBe(true);
   });
 });
@@ -1026,12 +1029,13 @@ describe('tercera zona: Pradera amarilla', () => {
   it('del 21 al 30: arañas y lobos negros; esqueletos desde el 23 y bandidos desde el 25', () => {
     expect(zoneOf(20)).toBe('batalla');
     expect(zoneOf(21)).toBe('pradera');
-    expect(zoneOf(35)).toBe('pradera');
+    expect(zoneOf(30)).toBe('pradera');
+    expect(zoneOf(31)).toBe('desierto');
     const quienes = (n: number) => levelConfig(n).mezcla.map(([k]) => k).sort();
     expect(quienes(21)).toEqual(['arana', 'loboNegro']);
     expect(quienes(23)).toEqual(['arana', 'esqueleto', 'loboNegro']);
     expect(quienes(25)).toEqual(['arana', 'bandido', 'esqueleto', 'loboNegro']);
-    expect(levelConfig(30).jefe?.kind).toBe('rey');
+    expect(levelConfig(30).jefe?.kind).toBe('esqueletoMago');
   });
   it('los lobos negros llegan de a 3, juntos', () => {
     const run = createRun(computeStats({}), 560, 21, 5);
@@ -1097,5 +1101,106 @@ describe('tercera zona: Pradera amarilla', () => {
     for (let i = 0; i < 80; i++) ev2.push(...stepRun(sola, 0.05));
     expect(ev2.some((e) => e.type === 'web')).toBe(false);
     expect(ev2.find((e) => e.type === 'wallHit')).toMatchObject({ danio: ENEMIES.arana.ataque * sola.nivel.ataque });
+  });
+});
+
+describe('cuarta zona: Desierto, y los jefes del 30 y el 40', () => {
+  const quieta = (run: Run) => {
+    run.stats = { ...run.stats, ritmo: 0, duracion: 999 };
+    run.cursor = { x: -999, y: -999 };
+  };
+  it('del 31 al 40: escorpiones y bandidos del desierto; minotauros desde el 33 y cíclopes desde el 35', () => {
+    expect(zoneOf(31)).toBe('desierto');
+    const quienes = (n: number) => levelConfig(n).mezcla.map(([k]) => k).sort();
+    expect(quienes(31)).toEqual(['bandidoDesierto', 'escorpion']);
+    expect(quienes(33)).toEqual(['bandidoDesierto', 'escorpion', 'minotauro']);
+    expect(quienes(35)).toEqual(['bandidoDesierto', 'ciclope', 'escorpion', 'minotauro']);
+    for (const n of [31, 35, 39]) expect(levelConfig(n).mezcla.reduce((t, [, p]) => t + p, 0)).toBeCloseTo(1);
+    expect(levelConfig(40).jefe?.kind).toBe('liderBandido');
+  });
+  it('el escorpión se entierra: bajo la arena no se le puede pegar', () => {
+    const run = createRun(computeStats({}), 560, 31, 11);
+    quieta(run);
+    const esc = { id: 810, kind: 'escorpion' as const, x: 150, y: 250, vx: 0, vy: 0, vida: 100, vidaMax: 100, giro: 99, entierro: 0.01 };
+    run.enemies.push(esc);
+    const ev = stepRun(run, 0.05);
+    expect(ev.some((e) => e.type === 'burrow')).toBe(true);
+    expect(hidden(run, esc)).toBe(true);
+    moveCursor(run, esc.x, esc.y);
+    for (let i = 0; i < 6; i++) stepRun(run, 0.05);
+    expect(esc.vida).toBe(100);
+    const sale: RunEvent[] = [];
+    for (let i = 0; i < 40; i++) sale.push(...stepRun(run, 0.05));
+    expect(sale.some((e) => e.type === 'surface')).toBe(true);
+  });
+  it('el minotauro embiste pasando la mitad del campo', () => {
+    const run = createRun(computeStats({}), 560, 33, 12);
+    quieta(run);
+    const mino = { id: 811, kind: 'minotauro' as const, x: 180, y: 100, vx: 0, vy: 0, vida: 1e9, vidaMax: 1e9, giro: 99 };
+    run.enemies.push(mino);
+    stepRun(run, 0.5);
+    const lento = mino.y - 100;
+    const eventos: RunEvent[] = [];
+    mino.y = 400;
+    eventos.push(...stepRun(run, 0.5));
+    expect(mino.y - 400).toBeGreaterThan(lento * 2.5);
+    expect(eventos.filter((e) => e.type === 'charge')).toHaveLength(1);
+    expect(stepRun(run, 0.1).some((e) => e.type === 'charge')).toBe(false);
+  });
+  it('el Esqueleto Mago se teletransporta (sin que se le pueda pegar), invoca esqueletos y se rearma una vez', () => {
+    const run = createRun(computeStats({}), 560, 30, 13);
+    startRun(run);
+    expect(bossOf(run)!.kind).toBe('esqueletoMago');
+    expect(run.enemies.filter((e) => e.kind === 'esqueleto').length).toBeGreaterThan(0);
+    const jefe = bossOf(run)!;
+    let vioOculto = false;
+    for (let i = 0; i < 200 && !vioOculto; i++) {
+      stepRun(run, 0.05);
+      if (run.jefe!.salto) vioOculto = hidden(run, jefe);
+    }
+    expect(vioOculto).toBe(true);
+    for (let i = 0; i < 20; i++) stepRun(run, 0.05);
+    jefe.vida = 0.01;
+    moveCursor(run, jefe.x, jefe.y);
+    run.jefe!.aturdido = 5;
+    run.jefe!.salto = null;
+    run.jefe!.brinco = 99;
+    const ev: RunEvent[] = [];
+    for (let i = 0; i < 20; i++) ev.push(...stepRun(run, 0.05));
+    expect(ev.some((e) => e.type === 'rise' && e.id === jefe.id)).toBe(true);
+    expect(bossOf(run)).toBeDefined();
+    expect(jefe.vida).toBeGreaterThan(jefe.vidaMax * 0.2);
+  });
+  it('el Líder de los bandidos lanza tres dagas en abanico', () => {
+    const run = createRun(computeStats({}), 560, 40, 14);
+    startRun(run);
+    expect(bossOf(run)!.kind).toBe('liderBandido');
+    const ev: RunEvent[] = [];
+    for (let i = 0; i < 80 && !ev.some((e) => e.type === 'bossThrow'); i++) ev.push(...stepRun(run, 0.05));
+    const dagas = run.piedras.filter((p) => p.tipo === 'daga');
+    expect(dagas.length).toBeGreaterThanOrEqual(3);
+    const xs = dagas.slice(0, 3).map((p) => p.tx).sort((a, b) => a - b);
+    expect(xs[2]! - xs[0]!).toBeCloseTo(160);
+  });
+});
+
+describe('curvas de la segunda mitad', () => {
+  it('hasta el 20 la vida ×1.3 y el oro ×1.05 por nivel; desde ahí la vida ×1.14 y el oro ×1.15', () => {
+    expect(levelConfig(20).vida / levelConfig(19).vida).toBeCloseTo(1.3);
+    expect(levelConfig(21).vida / levelConfig(20).vida).toBeCloseTo(1.14);
+    expect(levelConfig(21).oro / levelConfig(20).oro).toBeCloseTo(1.15);
+    expect(levelConfig(35).oro / levelConfig(34).oro).toBeCloseTo(1.15);
+  });
+  it('Daño llega a 100 y, pasado el 40, cada nivel cuesta solo ×1.2 más', () => {
+    const d = TALENT_BY_ID.danio;
+    expect(d.max).toBe(100);
+    expect(costOf(d, 40) / costOf(d, 39)).toBeCloseTo(1.4, 1);
+    expect(costOf(d, 50) / costOf(d, 49)).toBeCloseTo(1.2, 1);
+    expect(TALENT_BY_ID.muralla.max).toBe(20);
+  });
+  it('el Esqueleto Mago tiene menos vida (por sus defensas) y el Líder más', () => {
+    const base = (n: number) => 3 * (15 + 8 * (n - 1)) * levelConfig(n).vida * JEFE.vida;
+    expect(levelConfig(30).jefe!.vida).toBeCloseTo(base(30) * 0.7, -2);
+    expect(levelConfig(40).jefe!.vida).toBeCloseTo(base(40) * 1.5, -2);
   });
 });

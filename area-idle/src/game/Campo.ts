@@ -6,7 +6,7 @@ import type { Juego } from '../app/juego';
 import { ENEMIES, levelConfig, type EnemyKind, type ZoneId } from '../core/datos';
 import { formatNum } from '../core/format';
 import { crearFuenteNumeros, NUMEROS } from './numeros';
-import { ALLY_ROW, archerSpots, autoAiming, FIELD_W, wizardSpot, type Forma, type Run, type RunEvent } from '../core/run';
+import { ALLY_ROW, archerSpots, autoAiming, FIELD_W, hidden, wizardSpot, type Forma, type Run, type RunEvent } from '../core/run';
 
 const URLS = import.meta.glob<string>('../assets/arte/*.png', { eager: true, query: '?url', import: 'default' });
 
@@ -19,7 +19,7 @@ const FLECHA_PX = 72;
 /** Cuántas cosas a la vez, como máximo (con cientos de slimes no caben todas). */
 const MAX_NUMEROS = 70;
 const MAX_MANCHAS = 60;
-const COLOR: Record<EnemyKind, number> = { verde: 0x8be06a, azul: 0x5cc1f2, rojo: 0xff6b5e, rey: 0xffa53a, goblin: 0x7cc35a, lobo: 0x9aa0ad, orco: 0x8aa070, orcoArquero: 0x8aa070, loboBlanco: 0xf4f6fb, arana: 0x5a3f66, esqueleto: 0xe8e0cc, loboNegro: 0x4a4a58, bandido: 0x8a5a3c };
+const COLOR: Record<EnemyKind, number> = { verde: 0x8be06a, azul: 0x5cc1f2, rojo: 0xff6b5e, rey: 0xffa53a, goblin: 0x7cc35a, lobo: 0x9aa0ad, orco: 0x8aa070, orcoArquero: 0x8aa070, loboBlanco: 0xf4f6fb, arana: 0x5a3f66, esqueleto: 0xe8e0cc, loboNegro: 0x4a4a58, bandido: 0x8a5a3c, esqueletoMago: 0x8a5ad1, escorpion: 0xc06a36, bandidoDesierto: 0xe2c48c, minotauro: 0x8a5a3a, ciclope: 0x9fb4c8, liderBandido: 0xa8322c };
 /** Textura de cada enemigo y su ancho (el jefe va en un lienzo más grande, con corona). */
 const TEXTURA: Record<EnemyKind, { key: string; base: (radio: number) => number; origenY: number }> = {
   verde: { key: 'slime_verde', base: (r) => (r * 2.3) / 96, origenY: 0.92 },
@@ -35,15 +35,22 @@ const TEXTURA: Record<EnemyKind, { key: string; base: (radio: number) => number;
   esqueleto: { key: 'esqueleto', base: (r) => (r * 2.6) / 96, origenY: 0.97 },
   loboNegro: { key: 'loboNegro', base: (r) => (r * 3) / 112, origenY: 0.93 },
   bandido: { key: 'bandido', base: (r) => (r * 2.6) / 96, origenY: 0.97 },
+  esqueletoMago: { key: 'esqueletoMago', base: (r) => (r * 3.4) / 140, origenY: 0.95 },
+  escorpion: { key: 'escorpion', base: (r) => (r * 3.2) / 120, origenY: 0.9 },
+  bandidoDesierto: { key: 'bandidoDesierto', base: (r) => (r * 2.6) / 96, origenY: 0.97 },
+  minotauro: { key: 'minotauro', base: (r) => (r * 2.6) / 120, origenY: 0.97 },
+  ciclope: { key: 'ciclope', base: (r) => (r * 2.6) / 124, origenY: 0.97 },
+  liderBandido: { key: 'liderBandido', base: (r) => (r * 3.4) / 140, origenY: 0.95 },
 };
 /** Lo que hay tirado en el pasto según la zona (clave del dibujo y su escala). */
 const ADORNOS: Record<ZoneId, [string, number][]> = {
   campo: [['flor_blanca', 0.2], ['flor_roja', 0.2], ['piedra', 0.24], ['arbusto', 0.3]],
   batalla: [['espada', 0.22], ['tabla', 0.22], ['escudo', 0.26], ['piedra', 0.22], ['espada', 0.2], ['flor_blanca', 0.16]],
   pradera: [['craneo', 0.24], ['casco', 0.24], ['peto', 0.26], ['piedra', 0.22], ['craneo', 0.2], ['espada', 0.2]],
+  desierto: [['cactus', 0.3], ['vasija', 0.24], ['craneo', 0.2], ['piedra', 0.22], ['cactus', 0.24]],
 };
 /** El pasto de cada zona (la Pradera amarilla tiene hierba seca). */
-const PASTO: Record<ZoneId, string> = { campo: 'pasto', batalla: 'pasto', pradera: 'pasto_amarillo' };
+const PASTO: Record<ZoneId, string> = { campo: 'pasto', batalla: 'pasto', pradera: 'pasto_amarillo', desierto: 'arena' };
 const AMARILLO = 0xffd23f;
 const AZUL_AUTO = 0x6cc8f5;
 const FUEGO = 0xff8a2a;
@@ -172,6 +179,12 @@ export class Campo extends Phaser.Scene {
       esqueleto: particulas(COLOR.esqueleto, { scale: { start: 0.11, end: 0 } }),
       loboNegro: particulas(COLOR.loboNegro),
       bandido: particulas(COLOR.bandido),
+      esqueletoMago: particulas(COLOR.esqueletoMago, { speed: { min: 60, max: 200 }, scale: { start: 0.16, end: 0 }, lifespan: { min: 400, max: 800 } }),
+      escorpion: particulas(COLOR.escorpion),
+      bandidoDesierto: particulas(COLOR.bandidoDesierto),
+      minotauro: particulas(COLOR.minotauro, { scale: { start: 0.12, end: 0 } }),
+      ciclope: particulas(COLOR.ciclope, { scale: { start: 0.12, end: 0 } }),
+      liderBandido: particulas(COLOR.liderBandido, { speed: { min: 60, max: 200 }, scale: { start: 0.16, end: 0 }, lifespan: { min: 400, max: 800 } }),
       piedra: particulas(0xc9c0b2, { speed: { min: 40, max: 110 }, angle: { min: 200, max: 340 }, gravityY: 300, scale: { start: 0.07, end: 0.03 }, lifespan: 500, tint: [0xc9c0b2, 0xa89e8f, 0x8a7f70] }),
       fuego: particulas(FUEGO, { speed: { min: 50, max: 140 }, scale: { start: 0.1, end: 0 }, gravityY: -30, tint: [FUEGO, AMARILLO, 0xef5a4c] }),
       llama: particulas(FUEGO, { gravityY: -90, speed: { min: 5, max: 25 }, angle: { min: 250, max: 290 }, scale: { start: 0.07, end: 0 }, lifespan: 420, tint: [FUEGO, AMARILLO] }),
@@ -389,6 +402,11 @@ export class Campo extends Phaser.Scene {
         if (v.salto >= v.saltoDura) v.saltoDura = 0;
       }
       if (jefe) v.img.setTint(run.jefe!.furia && Math.sin(this.tiempo * 12) > 0 ? 0xff8a80 : 0xffffff);
+      // Bajo la arena (escorpión) apenas se ve; a media teletransportación (Esqueleto Mago), nada.
+      const oculto = hidden(run, e);
+      const alfa = !oculto ? 1 : jefe ? 0 : 0.18;
+      v.img.setAlpha(alfa);
+      v.sombra.setVisible(!oculto);
       v.img
         .setPosition(e.x, e.y - salto * (jefe ? 3.5 : 2.4) - alto)
         .setScale(s * (1 + 0.08 * aplasta + 0.25 * v.golpe), s * (1 - 0.08 * aplasta - 0.2 * v.golpe))
@@ -491,6 +509,17 @@ export class Campo extends Phaser.Scene {
         }
         case 'bossJump': {
           const v = this.slimes.get(e.id);
+          if (run.jefe?.def.mueve === 'teletransporte') {
+            // Se desvanece en llamas y reaparece en otro lado entre llamas.
+            this.emisores.llama.explode(18, e.x, e.y - 20);
+            this.anilloEn(e.x, e.y - 10, FUEGO, 0.5);
+            this.time.delayedCall(e.dura * 1000, () => {
+              this.emisores.llama.explode(18, e.tx, e.ty - 20);
+              this.anilloEn(e.tx, e.ty - 10, FUEGO, 0.5);
+            });
+            if (v) v.golpe = 0.8;
+            break;
+          }
           const embiste = run.jefe?.def.mueve === 'embestida';
           if (v) {
             // El Rey brinca en arco; el Lobo embiste por el piso (se estira y deja una estela de polvo).
@@ -522,6 +551,18 @@ export class Campo extends Phaser.Scene {
         case 'bossThrow': {
           const v = this.slimes.get(e.id);
           if (v) v.golpe = 0.9;
+          break;
+        }
+        case 'burrow':
+        case 'surface':
+          // El escorpión se mete o sale de la arena: polvo.
+          this.emisores.polvo.explode(e.type === 'burrow' ? 8 : 10, e.x, e.y);
+          break;
+        case 'charge': {
+          // El minotauro arranca a embestir: bufido de polvo.
+          const v = this.slimes.get(e.id);
+          if (v) v.golpe = -0.6;
+          this.emisores.polvo.explode(12, e.x, e.y);
           break;
         }
         case 'rise': {
@@ -621,6 +662,30 @@ export class Campo extends Phaser.Scene {
         g.lineStyle(4.6, CAFE).beginPath().arc(p.x, y, 7, a, a + 2.4).strokePath();
         g.lineStyle(2.6, 0xdfe5ee).beginPath().arc(p.x, y, 7, a, a + 2.4).strokePath();
         g.lineStyle(2.4, 0xb2733a).lineBetween(p.x, y, p.x + Math.cos(a + 3.6) * 8, y + Math.sin(a + 3.6) * 8);
+        continue;
+      }
+      if (p.tipo === 'bolaFuego') {
+        // Bola de fuego del Esqueleto Mago: grande, naranja con centro amarillo, en un arco alto.
+        const y = p.y - Math.sin(Math.PI * avance) * 60;
+        g.fillStyle(0xef5a4c, 0.5).fillCircle(p.x, y, 8.5);
+        g.fillStyle(FUEGO).fillCircle(p.x, y, 6.2);
+        g.fillStyle(AMARILLO).fillCircle(p.x - 1, y - 1, 3.2);
+        continue;
+      }
+      if (p.tipo === 'roca') {
+        // La roca del cíclope: grande y gris, en un arco alto y lento.
+        const y = p.y - Math.sin(Math.PI * avance) * 70;
+        g.fillStyle(CAFE).fillCircle(p.x, y, 7.5);
+        g.fillStyle(0xa89e8f).fillCircle(p.x, y, 6.3);
+        g.fillStyle(0xc9c0b2).fillCircle(p.x - 2, y - 2, 2.4);
+        continue;
+      }
+      if (p.tipo === 'cimitarra') {
+        // Cimitarra girando (media luna plateada), en un arco bajo.
+        const y = p.y - Math.sin(Math.PI * avance) * 22;
+        const a = this.tiempo * 16;
+        g.lineStyle(3.6, CAFE).beginPath().arc(p.x, y, 5.5, a, a + 2.2).strokePath();
+        g.lineStyle(2, 0xdfe5ee).beginPath().arc(p.x, y, 5.5, a, a + 2.2).strokePath();
         continue;
       }
       if (p.tipo === 'telarana') {
