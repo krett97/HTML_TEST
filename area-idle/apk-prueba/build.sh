@@ -13,7 +13,7 @@ OUT=build
 VERSION=$(node -p "require('../package.json').version")
 # versionCode: 1.2.3 → 10203
 VERSION_CODE=$(node -p "const [a,b,c]='$VERSION'.split('.').map(Number); a*10000+b*100+c || 1")
-APK="$OUT/swat-to-the-moon-prueba-$VERSION.apk"
+APK="$OUT/campo-de-slimes-prueba-$VERSION.apk"
 
 rm -rf "$OUT"
 mkdir -p "$OUT/assets" "$OUT/classes"
