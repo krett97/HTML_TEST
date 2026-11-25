@@ -208,8 +208,8 @@ const money = async (page) => page.getByTestId('dinero').textContent();
     }, { viewport: { width: w, height: h } });
   }
 
-  await flow('piloto vectorial: arte y interfaz redonda sin errores', browser, async (page) => {
-    // ?estilo=vector se guarda y recarga el arte a 8 px por unidad con la hoja vector.css.
+  await flow('estilos: vectorial (el de ahora) y pixel art con el botón de pruebas', browser, async (page) => {
+    // El vectorial es el estilo por defecto; ?estilo= y el botón de pruebas cambian entre los dos.
     await page.goto(URL + '?estilo=vector');
     await page.waitForTimeout(1500);
     check((await page.evaluate(() => document.documentElement.dataset.estilo)) === 'vector', 'no se activó el estilo vectorial');

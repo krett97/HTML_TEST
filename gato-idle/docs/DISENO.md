@@ -1009,16 +1009,27 @@ Cambios de escena que salieron de esto: los personajes ya no "respiran" (se veí
 
 Pendiente: un segundo cuadro de reposo dibujado por personaje (en vez de estirar el sprite) y la tanda de eventos aleatorios.
 
-## 53. Piloto vectorial: arte dibujado en código, sin herramientas de pago
+## 53. Arte vectorial dibujado en código: el estilo del juego
 
-Tras la pasada HD, el pixel art de PixelLab seguía sin convencer y la herramienta es de pago. Prueba de otra vía: **caricatura plana dibujada en SVG desde código** (`tools/vector/dibujar.mjs`), que se renderiza a PNG con `@resvg/resvg-js` (gratis, en el repo). El estilo queda garantizado por construcción: una paleta, un grosor de contorno (café oscuro), dos tonos por color y formas redondas, las mismas para personajes, objetos, cuartos e íconos.
+Tras la pasada HD, el pixel art de PixelLab seguía sin convencer y la herramienta es de pago. Se cambió todo el arte a **caricatura plana dibujada en SVG desde código** (`tools/vector/`), renderizada a PNG con `@resvg/resvg-js` (gratis, en el repo). El estilo queda garantizado por construcción: una paleta (`lib.mjs`), un grosor de contorno (café oscuro, 5–6 px), dos tonos por color, brillos con opacidad y formas redondas, iguales para personajes, objetos, cuartos e íconos. Cambiar un color o el grosor de línea en todo el juego es una línea.
 
-El piloto cubre la **cocina completa** (gato con sus 6 cuadros: reposo, manotazo, garras, saco y sus golpes; gatito y su golpe; barra, azulejo, piso, ventana, reloj; vaso, taza, plato y tostadora), el **sombrero**, 24 **íconos** de la interfaz y un **tema de interfaz** redondo (`src/ui/vector.css`: tarjetas blancas con borde grueso y sombra dura, botones amarillos con relieve, pestañas redondas, letra Fredoka).
+Módulos (cada uno dibuja su parte al importarse; `node tools/vector/dibujar.mjs` corre todos):
 
-Se activa con `?estilo=vector` (o el botón del panel de pruebas; queda guardado) y convive con el pixel art en el mismo build (`src/app/estilo.ts`):
+| Módulo | Qué dibuja |
+|---|---|
+| `cocina.mjs` | gato (reposo, manotazo, garras, saco y sus golpes), sombrero, gatito y su golpe, barra, azulejo, piso, ventana, reloj, vaso, taza, plato, tostadora |
+| `personajes.mjs` | ratón, perro, perico, cuervo, mapache, cabra, dueño, Escoba Furiosa y derrotada |
+| `jefes.mjs` | Pepino, Aspiradora Industrial, Veterinario (y derrotados) |
+| `cuartos.mjs`, `cuartos_casa.mjs`, `cuartos_mansion.mjs`, `cuartos_luna.mjs` | pared y piso (256 × 256, se repiten), ventana, cuadro y muebles de los 13 cuartos restantes |
+| `objetos.mjs`, `objetos_casa.mjs`, `objetos_mansion.mjs`, `objetos_luna.mjs` | los 63 objetos (el mismo objeto y el mismo chiste que antes) |
+| `iconos.mjs` | los 58 íconos de la interfaz (64 × 64) |
 
-- `ART` pasa a 8 px por unidad y Phaser deja de ampliar sin suavizar (`pixelArt: false`), así el vectorial se ve nítido a la resolución del celular.
-- El arte vectorial (`src/assets/vector/`) se carga encima del de PixelLab con la misma clave; lo que aún no tiene versión vectorial se amplía ×2 sin suavizar al cargar (`upscalePixelArt`), para que todo mida lo mismo en el mundo.
-- La interfaz se cambia solo con CSS bajo `html[data-estilo="vector"]`, sin tocar los componentes.
+Reglas de medidas: el arte de escena va a **8 px por unidad** del mundo (el doble que el pixel art) y cada PNG mide en unidades lo mismo que el que sustituye, así `places.ts` (`FURNITURE`), las perchas y las posiciones no cambian. Los objetos se apoyan en el borde de abajo del lienzo (origen abajo al centro).
 
-Si el piloto convence, el camino es dibujar el resto (63 objetos, 14 cuartos, 8 personajes, 4 jefes, íconos que falten) con las mismas funciones del script, y luego quitar el pixel art y la bandera.
+Integración (`src/app/estilo.ts`): el vectorial es el estilo por defecto; el pixel art se conserva en `src/assets/arte` y se puede ver con `?estilo=pixel` o el botón del panel de pruebas, para comparar.
+
+- `ART` vale 8 con el vectorial (Phaser deja de ampliar sin suavizar: `pixelArt: false`) y 4 con el pixel art.
+- `art.ts` carga `src/assets/vector/` encima de `src/assets/arte/` con la misma clave; lo que no tenga versión vectorial se amplía ×2 sin suavizar al cargar (`upscalePixelArt`), para que mida lo mismo.
+- La interfaz redonda es solo CSS bajo `html[data-estilo="vector"]` (`src/ui/vector.css`: tarjetas blancas con borde grueso y sombra dura, botones amarillos con relieve, pestañas redondas, letra Fredoka); los componentes no cambian.
+
+Pendiente: retirar el pixel art y la bandera cuando ya no haga falta comparar; ícono de la app en el mismo estilo.

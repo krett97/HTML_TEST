@@ -1,10 +1,12 @@
-// Estilo visual del juego. "pixel": el arte de PixelLab (src/assets/arte, 4 px por unidad).
-// "vector": el piloto de caricatura plana dibujado en SVG (src/assets/vector, 8 px por unidad) y la
-// interfaz redonda (ui/vector.css). Se elige con ?estilo=vector en la URL o guardándolo en localStorage
-// (botón del panel de pruebas); se lee una vez al arrancar.
+// Estilo visual del juego. "vector" (el de ahora): caricatura plana dibujada en SVG desde código
+// (src/assets/vector, 8 px por unidad) y la interfaz redonda (ui/vector.css). "pixel": el arte anterior
+// de PixelLab (src/assets/arte, 4 px por unidad), que se conserva para comparar. Se elige con
+// ?estilo=pixel|vector en la URL o con el botón del panel de pruebas (queda en localStorage); se lee una
+// vez al arrancar.
 export type Estilo = 'pixel' | 'vector';
 
 function leer(): Estilo {
+  // Fuera del navegador (pruebas unitarias) manda el pixel art: sus números están a 4 px por unidad.
   if (typeof window === 'undefined') return 'pixel';
   try {
     const url = new URLSearchParams(window.location.search).get('estilo');
@@ -12,9 +14,9 @@ function leer(): Estilo {
       window.localStorage.setItem('estilo', url);
       return url;
     }
-    return window.localStorage.getItem('estilo') === 'vector' ? 'vector' : 'pixel';
+    return window.localStorage.getItem('estilo') === 'pixel' ? 'pixel' : 'vector';
   } catch {
-    return 'pixel';
+    return 'vector';
   }
 }
 

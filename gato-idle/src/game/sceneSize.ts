@@ -8,7 +8,7 @@
 // (4: alta definición). Las posiciones y reglas siguen en unidades del mundo; la cámara amplía ×ART.
 import { ES_VECTOR } from '../app/estilo';
 
-/** 4 (pixel art de PixelLab) u 8 (piloto vectorial: el SVG se renderiza con el doble de detalle). */
+/** 8 con el arte vectorial (el SVG se renderiza con el doble de detalle) o 4 con el pixel art de PixelLab. */
 export const ART = ES_VECTOR ? 8 : 4;
 /** Ancho del mundo (el área de juego: la barra, la mesa…). */
 export const SCENE_WIDTH = 180;
@@ -33,15 +33,23 @@ export interface SceneSize {
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
-export function computeSceneSize(cssWidth: number, cssHeight: number, dpr: number): SceneSize {
+/** Cómo se dibuja el arte: píxeles de arte por unidad y si es vectorial (se puede escalar a cualquier fracción). */
+export interface ArtMode {
+  art: number;
+  vector: boolean;
+}
+const MODO_ACTUAL: ArtMode = { art: ART, vector: ES_VECTOR };
+
+export function computeSceneSize(cssWidth: number, cssHeight: number, dpr: number, modo: ArtMode = MODO_ACTUAL): SceneSize {
   const deviceW = cssWidth * dpr;
   const deviceH = cssHeight * dpr;
-  const raw = Math.min(deviceW / (VIEW_MIN_WIDTH * ART), deviceH / (MIN_HEIGHT * ART));
+  const raw = Math.min(deviceW / (VIEW_MIN_WIDTH * modo.art), deviceH / (MIN_HEIGHT * modo.art));
   // Con el arte a 4 píxeles por unidad, un píxel de arte es diminuto: abajo de 2 se acepta una fracción
   // (píxeles de 1 y 2 del dispositivo, que no se notan) antes que quedarse lejos; en ventanas chicas de
   // densidad 1 incluso se encoge (hasta la mitad) para que quepa el cuarto.
-  const pixelScale = raw >= 2 ? Math.floor(raw) : Math.max(0.5, raw);
-  const unit = pixelScale * ART;
+  // El vectorial se ve nítido a cualquier escala: se usa la fracción exacta (siempre se ven ~120 unidades).
+  const pixelScale = modo.vector ? Math.max(0.5, raw) : raw >= 2 ? Math.floor(raw) : Math.max(0.5, raw);
+  const unit = pixelScale * modo.art;
   return {
     pixelScale,
     width: clamp(Math.floor(deviceW / unit), VIEW_MIN_WIDTH, MAX_WIDTH),

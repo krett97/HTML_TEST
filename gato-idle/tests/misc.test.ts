@@ -43,6 +43,17 @@ describe('tamaño de la escena', () => {
     expect(cameraScroll(90, 238)).toBe(-29);
   });
 
+  it('vectorial (8 px por unidad): escala exacta, siempre ~120 unidades a lo ancho y sin pasos enteros', () => {
+    const vector = { art: 8, vector: true };
+    const phone = computeSceneSize(390, 380, 2, vector);
+    expect(phone.pixelScale).toBeCloseTo(0.792, 2);
+    expect(phone).toMatchObject({ width: 123, height: 120 });
+    const dense = computeSceneSize(390, 420, 3, vector);
+    expect(dense.pixelScale).toBeCloseTo(1.219, 2);
+    expect(dense.width).toBe(120);
+    expect(computeSceneSize(100, 100, 1, vector)).toEqual({ pixelScale: 0.5, width: 120, height: 120, zoom: 0.5 });
+  });
+
   it('densidades fraccionarias dan píxeles enteros del dispositivo', () => {
     const size = computeSceneSize(412, 400, 2.625);
     expect(Number.isInteger(size.pixelScale)).toBe(true);

@@ -131,8 +131,8 @@ const RAINBOW = ['#ef5a4c', '#f6a44c', '#ffe27a', '#5ec47a', '#6cc8f5', '#8e5bd1
   let s = '';
   const AC = C.acero, ACS = C.aceroS;
   // capa roja detrás
-  s += o('M52 96 c-20 60 -26 160 -14 236 h108 c12 -76 6 -176 -14 -236 z', P.rojo, 5);
-  s += f('M118 100 c18 60 22 150 12 230 h-20 c12 -80 10 -170 -8 -230 z', C.rojoS);
+  s += o('M46 96 c-24 60 -30 160 -16 236 h124 c14 -76 8 -176 -16 -236 z', P.rojo, 5);
+  s += f('M120 100 c22 60 26 150 14 230 h-22 c12 -80 10 -170 -8 -230 z', C.rojoS);
   // botas
   s += rect(50, 320, 44, 44, 12, ACS, 5) + rect(90, 320, 44, 44, 12, ACS, 5);
   s += f('M56 348 h32 v6 a6 6 0 0 1 -6 6 h-20 a6 6 0 0 1 -6 -6 z M96 348 h32 v6 a6 6 0 0 1 -6 6 h-20 a6 6 0 0 1 -6 -6 z', C.negroC);
@@ -152,32 +152,35 @@ const RAINBOW = ['#ef5a4c', '#f6a44c', '#ffe27a', '#5ec47a', '#6cc8f5', '#8e5bd1
   s += line('M92 110 v84', K, 3);
   s += brillo(60, 110, 8, 60, 0.55);
   // brazo derecho (del lado del espectador derecho) colgando
-  s += rect(128, 120, 30, 76, 14, AC, 5);
-  s += f('M146 126 h7 v64 h-7 z', ACS);
-  s += circ(146, 206, 16, ACS, 5) + line('M140 206 h12', K, 3);
-  // brazo izquierdo doblado hacia adelante, sosteniendo al gatito
-  s += rect(26, 120, 30, 60, 14, AC, 5);
-  s += f('M30 126 h7 v50 h-7 z', ACS);
-  s += rect(24, 170, 70, 26, 13, AC, 5);
-  s += f('M30 184 h56 v2 a6 6 0 0 1 -6 6 h-44 a6 6 0 0 1 -6 -6 z', ACS);
-  s += circ(90, 184, 15, ACS, 5) + line('M84 182 h10', K, 3);
-  // gatito
+  s += rect(134, 120, 30, 76, 14, AC, 5);
+  s += f('M152 126 h7 v64 h-7 z', ACS);
+  s += circ(152, 206, 16, ACS, 5) + line('M146 206 h12', K, 3);
+  // brazo izquierdo (lado del espectador izquierdo): parte alta
+  s += rect(20, 120, 30, 60, 14, AC, 5);
+  s += f('M24 126 h7 v50 h-7 z', ACS);
+  // hombreras
+  s += ell(40, 110, 30, 18, AC, 5) + ell(144, 110, 30, 18, AC, 5);
+  s += f('M146 96 c16 0 26 8 26 16 c-2 6 -8 10 -16 10 c6 -10 4 -20 -10 -26 z', ACS);
+  s += brillo(20, 104, 18, 6, 0.6) + brillo(124, 104, 18, 6, 0.6);
+  // gatito (cuerpo detrás del antebrazo, cabeza asomando)
   let gato = '';
+  gato += o('M-18 18 c-6 10 -8 24 -6 36 h48 c2 -12 0 -26 -6 -36 z', P.naranja, 4);
+  gato += line('M-8 30 h4 M4 30 h4', P.naranjaS, 4);
   gato += o('M-22 -10 l6 -26 l20 14 z', P.naranja, 4) + o('M22 -10 l-6 -26 l-20 14 z', P.naranja, 4);
   gato += f('M-16 -14 l3 -12 l10 8 z M16 -14 l-3 -12 l-10 8 z', P.rosa);
   gato += o('M-26 0 c0 -18 12 -26 26 -26 c14 0 26 8 26 26 c0 16 -12 24 -26 24 c-14 0 -26 -8 -26 -24 z', P.naranja, 4);
   gato += f('M-18 8 c0 -6 6 -10 12 -8 c4 2 6 6 6 10 c-2 4 -6 6 -10 4 c-4 -2 -8 -3 -8 -6 z M18 8 c0 -6 -6 -10 -12 -8 c-4 2 -6 6 -6 10 c2 4 6 6 10 4 c4 -2 8 -3 8 -6 z', P.crema);
   gato += line('M-10 -16 l-2 8 M0 -18 v8 M10 -16 l2 8', P.naranjaS, 4);
   gato += eyes(0, 2, 10, 5.5, false) + nose(0, 9, 5) + line('M-4 15 q4 4 8 0', K, 3) + whiskers(0, 10, 11);
-  s += g('translate(44 150)', gato);
-  // hombreras
-  s += ell(44, 110, 26, 18, AC, 5) + ell(140, 110, 26, 18, AC, 5);
-  s += f('M140 96 c14 0 22 8 22 16 c-2 6 -8 10 -16 10 c6 -10 4 -20 -6 -26 z', ACS);
-  s += brillo(26, 104, 16, 6, 0.6) + brillo(122, 104, 16, 6, 0.6);
+  s += g('translate(46 150)', gato);
+  // antebrazo doblado hacia adelante, sosteniendo al gatito
+  s += rect(22, 172, 72, 26, 13, AC, 5);
+  s += f('M28 186 h58 v2 a6 6 0 0 1 -6 6 h-46 a6 6 0 0 1 -6 -6 z', ACS);
+  s += circ(90, 186, 15, ACS, 5) + line('M84 184 h10', K, 3);
   // bufanda roja
   s += o('M54 84 c20 -10 56 -10 76 0 c4 6 4 14 0 20 c-20 8 -56 8 -76 0 c-4 -6 -4 -14 0 -20 z', P.rojo, 5);
-  s += o('M54 96 c-4 20 -10 36 -22 56 c8 2 14 2 20 -2 c10 -18 12 -34 12 -52 z', P.rojo, 5);
-  s += f('M108 90 c8 1 16 2 22 4 c2 4 2 8 0 12 c-6 2 -14 3 -22 4 c6 -6 6 -14 0 -20 z M58 104 c-4 16 -8 28 -16 44 h-4 c8 -16 12 -30 14 -46 z', C.rojoS);
+  s += o('M130 96 c4 20 10 36 22 56 c-8 2 -14 2 -20 -2 c-10 -18 -12 -34 -12 -52 z', P.rojo, 5);
+  s += f('M108 90 c8 1 16 2 22 4 c2 4 2 8 0 12 c-6 2 -14 3 -22 4 c6 -6 6 -14 0 -20 z M138 106 c4 16 8 28 14 42 h-6 c-6 -14 -10 -26 -12 -42 z', C.rojoS);
   // yelmo
   s += o('M54 46 c0 -24 16 -40 38 -40 c22 0 38 16 38 40 v38 c-24 6 -52 6 -76 0 z', AC, 5);
   s += f('M106 10 c14 6 24 20 24 36 v36 c-6 2 -12 3 -18 4 c4 -26 6 -50 -6 -76 z', ACS);
@@ -204,16 +207,16 @@ const RAINBOW = ['#ef5a4c', '#f6a44c', '#ffe27a', '#5ec47a', '#6cc8f5', '#8e5bd1
   s += line('M148 262 v30', NS, 5);
   s += rect(114, 296, 20, 10, 4, P.oro, 4) + rect(138, 298, 20, 10, 4, P.oro, 4) + rect(162, 296, 20, 10, 4, P.oro, 4);
   // tapa abierta (vista por debajo) y su interior
-  const tapa = 'M70 150 L230 24 L288 70 L288 150 z';
+  const tapa = 'M70 150 L232 8 L288 56 L288 150 z';
   s += o(tapa, N, 5);
-  s += f('M86 146 L226 38 L278 78 L278 146 z', P.vino);
-  s += f('M240 76 L278 106 L278 146 h-10 L240 110 z', C.vinoS);
-  s += line('M112 134 L220 50 M140 142 L250 60', P.oro, 3.5);
-  s += line('M112 134 L220 50 M140 142 L250 60', C.oroC, 1.5);
-  s += f('M232 36 L252 52 L246 58 L228 44 z', BL, 'opacity=".3"');
+  s += f('M86 146 L228 22 L278 64 L278 146 z', P.vino);
+  s += f('M240 66 L278 96 L278 146 h-10 L240 104 z', C.vinoS);
+  s += line('M112 134 L224 36 M140 142 L254 46', P.oro, 3.5);
+  s += line('M112 134 L224 36 M140 142 L254 46', C.oroC, 1.5);
+  s += f('M234 22 L254 38 L248 44 L230 30 z', BL, 'opacity=".3"');
   s += o(tapa, 'none', 5);
   // bastón de la tapa
-  s += line('M200 150 L246 62', K, 10) + line('M200 150 L246 62', P.maderaS, 5);
+  s += line('M200 150 L248 50', K, 10) + line('M200 150 L248 50', P.maderaS, 5);
   // cuerpo
   const cuerpo = 'M20 150 h186 c48 0 82 22 82 54 v44 c0 6 -4 10 -10 10 h-258 c-6 0 -10 -4 -10 -10 v-88 c0 -6 4 -10 10 -10 z';
   s += o(cuerpo, N, 5);
@@ -297,8 +300,8 @@ const RAINBOW = ['#ef5a4c', '#f6a44c', '#ffe27a', '#5ec47a', '#6cc8f5', '#8e5bd1
   s += circ(140, 44, 5, P.rojo, 3) + circ(154, 44, 5, P.pasto, 3);
   s += rect(120, 60, 34, 26, 6, C.ciruelaS, 4) + line('M128 68 h18 M128 76 h12', C.lila, 3);
   // asa arriba
-  s += rect(100, 14, 70, 22, 10, C.ciruela, 5);
-  s += f('M106 18 h58 v5 h-58 z', C.lila, 'opacity=".5"');
+  s += rect(100, 8, 70, 26, 11, C.ciruela, 5);
+  s += f('M106 12 h58 v5 h-58 z', C.lila, 'opacity=".5"');
   // lente
   s += circ(62, 72, 30, C.ciruelaC, 5);
   s += circ(62, 72, 22, C.negro, 4);
@@ -348,9 +351,9 @@ const RAINBOW = ['#ef5a4c', '#f6a44c', '#ffe27a', '#5ec47a', '#6cc8f5', '#8e5bd1
   let s = '';
   const R = P.rosa, RS = C.pink;
   // cola arcoíris (detrás)
-  const cola = 'M300 206 c40 -20 60 -70 50 -130 c-4 -30 10 -46 36 -40';
-  s += line(cola, K, 46);
-  RAINBOW.forEach((c, i) => s += line(cola, c, 36 - i * 6.5));
+  const cola = 'M296 208 c40 -20 56 -70 46 -126 c-4 -28 6 -40 26 -38';
+  s += line(cola, K, 42);
+  RAINBOW.forEach((c, i) => s += line(cola, c, 32 - i * 5.8));
   // aro
   s += ell(198, 226, 192, 64, R, 5);
   s += f('M30 250 c40 30 300 30 340 0 c-20 22 -70 36 -170 36 c-100 0 -150 -14 -170 -36 z', RS);
@@ -362,7 +365,7 @@ const RAINBOW = ['#ef5a4c', '#f6a44c', '#ffe27a', '#5ec47a', '#6cc8f5', '#8e5bd1
   s += o('M62 236 c-26 -60 -14 -130 30 -160 l56 24 c-18 44 -14 84 12 136 z', R, 5);
   s += f('M120 108 c-10 40 -8 80 18 128 h-26 c-18 -44 -20 -84 -8 -128 z', RS);
   // crin arcoíris sobre el cuello
-  const crin = 'M104 78 c30 10 40 50 36 100 c-2 18 10 40 20 58';
+  const crin = 'M94 86 c30 10 40 50 36 92 c-2 18 10 40 20 56';
   s += line(crin, K, 30);
   RAINBOW.forEach((c, i) => s += line(crin, c, 22 - i * 4));
   // cabeza
@@ -420,8 +423,8 @@ const RAINBOW = ['#ef5a4c', '#f6a44c', '#ffe27a', '#5ec47a', '#6cc8f5', '#8e5bd1
   let s = '';
   const helice = (cx, cy, rx) => ell(cx, cy, rx, 8, C.lila, 4) + f(`M${cx - rx + 6} ${cy} a${rx - 6} 4 0 0 1 ${(rx - 6) * 2} 0 a${rx - 6} 4 0 0 1 -${(rx - 6) * 2} 0 z`, BL, 'opacity=".45"') + circ(cx, cy, 5, C.negro, 3);
   // brazos traseros y hélices de atrás
-  s += line('M50 20 L100 48 M190 20 L140 48', K, 12) + line('M50 20 L100 48 M190 20 L140 48', C.negroC, 6);
-  s += helice(48, 18, 42) + helice(192, 18, 42);
+  s += line('M50 15 L100 48 M190 15 L140 48', K, 12) + line('M50 15 L100 48 M190 15 L140 48', C.negroC, 6);
+  s += helice(48, 13, 42) + helice(192, 13, 42);
   // patas
   s += rect(86, 66, 10, 18, 4, C.negro, 4) + rect(144, 66, 10, 18, 4, C.negro, 4);
   // cuerpo
@@ -444,7 +447,7 @@ const RAINBOW = ['#ef5a4c', '#f6a44c', '#ffe27a', '#5ec47a', '#6cc8f5', '#8e5bd1
   // remolque
   s += rect(30, 196, 500, 18, 7, P.grisS, 5);
   s += f('M36 206 h488 v2 a6 6 0 0 1 -6 6 h-476 a6 6 0 0 1 -6 -6 z', C.negroC);
-  s += rect(500, 206, 42, 12, 6, P.grisS, 5) + circ(540, 212, 7, C.negro, 4);
+  s += rect(496, 206, 38, 12, 6, P.grisS, 5) + circ(533, 212, 6.5, C.negro, 4);
   s += rect(70, 206, 16, 44, 4, P.grisS, 5);
   s += circ(78, 250, 16, C.negro, 5) + circ(78, 250, 5, P.gris, 3);
   s += o('M352 214 c0 -32 24 -46 50 -46 c26 0 50 14 50 46 h-16 c0 -22 -14 -34 -34 -34 c-20 0 -34 12 -34 34 z', P.grisS, 5);
@@ -452,7 +455,7 @@ const RAINBOW = ['#ef5a4c', '#f6a44c', '#ffe27a', '#5ec47a', '#6cc8f5', '#8e5bd1
   s += circ(402, 234, 16, P.gris, 4) + circ(402, 234, 5, C.negro, 0);
   for (let i = 0; i < 4; i++) s += g(`rotate(${i * 45} 402 234)`, line('M402 222 v24', P.grisS, 3));
   // casco
-  const casco = 'M8 150 c0 -30 30 -46 76 -52 l330 -16 c56 -2 100 16 126 46 c10 12 6 26 -8 30 l-40 36 h-466 c-16 0 -22 -8 -22 -20 z';
+  const casco = 'M8 150 c0 -30 30 -46 76 -52 l320 -16 c56 -2 100 16 126 46 c10 12 6 26 -8 30 l-40 36 h-456 c-16 0 -22 -8 -22 -20 z';
   s += o(casco, P.amarillo, 5);
   s += clipP('casco', casco);
   s += clipped('casco', f('M0 160 h560 v40 h-560 z', P.azulS) + f('M0 172 h560 v30 h-560 z', C.azulO) + f('M0 152 h560 v9 h-560 z', BL) + f('M330 86 c50 -2 110 12 150 40 l-14 20 c-30 -24 -80 -34 -130 -40 z', C.amarilloS) + f('M30 150 c-6 -20 20 -36 40 -38 l-8 36 z', C.amarilloS, 'opacity=".6"'));
