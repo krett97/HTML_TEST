@@ -102,6 +102,8 @@ export class MainScene extends Phaser.Scene {
     /** El sol del jardín. */
     sol: Phaser.GameObjects.Image;
   };
+  /** Último parpadeo blanco del jefe (ms de la escena). */
+  private lastBossFlash = -1000;
   private scratches!: Phaser.GameObjects.Graphics;
   /** Rasguños brillantes de las Garras marcadoras (se dibujan cada cuadro mientras dura la marca). */
   private markScratches!: Phaser.GameObjects.Graphics;
@@ -475,7 +477,10 @@ export class MainScene extends Phaser.Scene {
       else if (event.embestida) this.rammingHit();
       this.controller.playSound('rasguno', { tono: 0.8, minGapMs: 45 });
     }
-    // El pepino se apachurra y parpadea en blanco con cada golpe.
+    // El jefe se apachurra y parpadea en blanco con el golpe; con toda la pandilla pegando, a lo mucho
+    // unas 6 veces por segundo (si no, se queda blanco casi todo el tiempo).
+    if (this.time.now - this.lastBossFlash < 160) return;
+    this.lastBossFlash = this.time.now;
     this.tweens.killTweensOf(this.object);
     this.object.setScale(this.objectScale);
     this.tweens.add({ targets: this.object, scaleY: 0.93 * this.objectScale, scaleX: 1.05 * this.objectScale, duration: 50, yoyo: true });
