@@ -229,6 +229,13 @@ export const INACTIVO = { desde: 3, eficiencia: 0.1, porNivel: 0.1, horas: 2, ho
  */
 export const GUARDIA = { cada: 2.5, max: 12, extra: 0.1, iniciales: 3 } as const;
 
+/**
+ * Autoapuntado (talento del jugador): si no tocas en `espera` s, tu círculo se va solo hacia donde hay más
+ * enemigos, a `velocidad` (+`porNivel` por nivel) unidades por segundo, y cada `cada` s vuelve a elegir.
+ * Es lento a propósito (el campo mide 360 de ancho): tocar siempre es mejor.
+ */
+export const AUTOAPUNTAR = { velocidad: 12, porNivel: 6, espera: 2.5, cada: 1 } as const;
+
 /** Desde qué nivel se abren las misiones (diarias y permanentes), las gemas moradas y las Reliquias. */
 export const MISIONES_DESDE = 11;
 /** El ranking se abre al llegar a este nivel. */
@@ -250,6 +257,7 @@ export type TalentId =
   | 'botin'
   | 'inactivo'
   | 'bolsa'
+  | 'autoapuntar'
   // Mago
   | 'mago'
   | 'magoRapido'
@@ -301,6 +309,7 @@ export const TALENTS: TalentDef[] = [
   // Oro mientras no juegas (se abre solo al llegar al nivel 3; estos lo mejoran).
   { id: 'inactivo', seccion: 'jugador', icono: 'inactivo', max: 7, costo: { base: 40, crece: 2.2 }, requiere: { id: 'oro', nivel: 1 }, nivelMin: 3, pos: [1, 3] },
   { id: 'bolsa', seccion: 'jugador', icono: 'bolsa', max: 10, costo: { base: 60, crece: 2 }, requiere: { id: 'inactivo', nivel: 1 }, pos: [2, 3] },
+  { id: 'autoapuntar', seccion: 'jugador', icono: 'autoapuntar', max: 5, costo: { base: 50, crece: 2.4 }, requiere: { id: 'radio', nivel: 3 }, pos: [-2, 2] },
 
   // ---- Mago: rectángulos de fuego ----
   { id: 'mago', seccion: 'mago', icono: 'mago', max: 1, costo: { base: 200, crece: 1 }, requiere: { id: 'cadencia', nivel: 3 }, raiz: true, pos: [0, 0] },

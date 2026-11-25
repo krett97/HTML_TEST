@@ -137,6 +137,10 @@
     "albanil": {
       "nombre": "Mason",
       "efecto": "Once per level, a battered wall recovers {a} → {b}"
+    },
+    "autoapuntar": {
+      "nombre": "Auto-aim",
+      "efecto": "If you don't tap, your circle drifts toward enemies, slowly: {a} → {b}"
     }
   },
   "ajustes": {

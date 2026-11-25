@@ -6,7 +6,7 @@ import type { Juego } from '../app/juego';
 import { ENEMIES, levelConfig, type EnemyKind, type ZoneId } from '../core/datos';
 import { formatNum } from '../core/format';
 import { crearFuenteNumeros, NUMEROS } from './numeros';
-import { ALLY_ROW, archerSpots, FIELD_W, wizardSpot, type Forma, type Run, type RunEvent } from '../core/run';
+import { ALLY_ROW, archerSpots, autoAiming, FIELD_W, wizardSpot, type Forma, type Run, type RunEvent } from '../core/run';
 
 const URLS = import.meta.glob<string>('../assets/arte/*.png', { eager: true, query: '?url', import: 'default' });
 
@@ -38,6 +38,7 @@ const ADORNOS: Record<ZoneId, [string, number][]> = {
   batalla: [['espada', 0.22], ['tabla', 0.22], ['escudo', 0.26], ['piedra', 0.22], ['espada', 0.2], ['flor_blanca', 0.16]],
 };
 const AMARILLO = 0xffd23f;
+const AZUL_AUTO = 0x6cc8f5;
 const FUEGO = 0xff8a2a;
 const CAFE = 0x3a2518;
 
@@ -82,6 +83,8 @@ export class Campo extends Phaser.Scene {
   private torre!: Phaser.GameObjects.Image;
   private cursor!: Phaser.GameObjects.Graphics;
   private cursorR = 0;
+  /** Si el círculo se dibujó en modo autoapuntado (azul). */
+  private cursorAuto = false;
   private readonly cursorPos = { x: FIELD_W / 2, y: 280 };
   private mago!: Phaser.GameObjects.Image;
   private arqueros: Phaser.GameObjects.Image[] = [];
@@ -775,12 +778,16 @@ export class Campo extends Phaser.Scene {
     this.cursorPos.x += (run.cursor.x - this.cursorPos.x) * k;
     this.cursorPos.y += (run.cursor.y - this.cursorPos.y) * k;
     const r = run.stats.radio;
-    if (r !== this.cursorR) {
+    // Cuando apunta solo (Autoapuntado), el círculo se pone azul: así se nota que no es tu dedo.
+    const auto = autoAiming(run);
+    if (r !== this.cursorR || auto !== this.cursorAuto) {
       this.cursorR = r;
+      this.cursorAuto = auto;
+      const color = auto ? AZUL_AUTO : AMARILLO;
       const g = this.cursor.clear();
-      g.fillStyle(AMARILLO, 0.16).fillCircle(0, 0, r);
+      g.fillStyle(color, 0.16).fillCircle(0, 0, r);
       g.lineStyle(2.4, CAFE, 0.85).strokeCircle(0, 0, r);
-      g.lineStyle(1.2, AMARILLO, 1).strokeCircle(0, 0, r - 1.6);
+      g.lineStyle(1.2, color, 1).strokeCircle(0, 0, r - 1.6);
       g.lineStyle(1.4, CAFE, 0.7).lineBetween(-4, 0, 4, 0).lineBetween(0, -4, 0, 4);
     }
     // Late un poco al disparar.

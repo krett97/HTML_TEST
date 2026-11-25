@@ -1,7 +1,7 @@
 // Una partida: el campo, los enemigos que aparecen y pasean, tu círculo donde caen flechas, el mago
 // con sus explosiones de fuego cuadradas y los arqueros que tiran a un objetivo a la vez. Lógica pura: la escena
 // llama a stepRun cada cuadro (a través del controlador) y dibuja los eventos.
-import { damageMultiplier, effectiveness, ENEMIES, GUARDIA, JEFE, JEFES, levelConfig, LLEGADA, MAX_VIVOS, PRIMERA_OLA, type BossDef, type DamageType, type EnemyKind, type LevelConfig, type ProjectileKind } from './datos';
+import { AUTOAPUNTAR, damageMultiplier, effectiveness, ENEMIES, GUARDIA, JEFE, JEFES, levelConfig, LLEGADA, MAX_VIVOS, PRIMERA_OLA, type BossDef, type DamageType, type EnemyKind, type LevelConfig, type ProjectileKind } from './datos';
 import { between, createRng, type Rng } from './rng';
 import type { Stats } from './stats';
 
@@ -137,6 +137,10 @@ export interface Run {
   /** Cuántos de cada tipo se reventaron en la partida (para las misiones). */
   porTipo: Partial<Record<EnemyKind, number>>;
   cursor: { x: number; y: number };
+  /** Segundos desde que tocaste (el autoapuntado espera un poco después de cada toque). */
+  manual: number;
+  /** Adónde va el autoapuntado y cuándo vuelve a elegir. */
+  auto: { tx: number; ty: number; falta: number };
   disparo: number;
   mago: number;
   /** Lo que le falta a cada arquero para tirar. */
@@ -173,6 +177,8 @@ export function createRun(base: Stats, h: number, nivel = 1, seed = Date.now(), 
     muro: { vida: stats.muro.vida, max: stats.muro.vida, caido: false, reparado: false },
     porTipo: {},
     cursor: { x: FIELD_W / 2, y: (alto - ALLY_ROW) / 2 },
+    manual: Infinity,
+    auto: { tx: FIELD_W / 2, ty: (alto - ALLY_ROW) / 2, falta: 0 },
     // El primer disparo sale enseguida.
     disparo: 0.15,
     mago: stats.mago.intervalo * 0.5,
@@ -291,7 +297,11 @@ export function bossOf(run: Run): Enemy | undefined {
 export function moveCursor(run: Run, x: number, y: number): void {
   run.cursor.x = Math.min(run.w, Math.max(0, x));
   run.cursor.y = Math.min(run.h, Math.max(0, y));
+  run.manual = 0;
 }
+
+/** ¿El círculo se está moviendo solo? (tienes Autoapuntado y no has tocado en un rato) */
+export const autoAiming = (run: Run): boolean => run.stats.autoapuntar.velocidad > 0 && !run.guardia && run.manual >= AUTOAPUNTAR.espera;
 
 const bottom = (run: Run) => run.h - ALLY_ROW - MARGIN;
 
@@ -515,6 +525,26 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
       run.acumulado -= 1;
       spawn(run, events);
     }
+  }
+
+  // Autoapuntado: si no has tocado en un rato, el círculo se va solo (despacio) a donde hay más enemigos.
+  run.manual += step;
+  if (autoAiming(run)) {
+    run.auto.falta -= step;
+    if (run.auto.falta <= 0) {
+      run.auto.falta = AUTOAPUNTAR.cada;
+      if (run.enemies.length) {
+        const b = bestSpot(run);
+        run.auto.tx = b.x;
+        run.auto.ty = b.y;
+      }
+    }
+    const dx = run.auto.tx - run.cursor.x;
+    const dy = run.auto.ty - run.cursor.y;
+    const d = Math.hypot(dx, dy);
+    const k = d > 0.01 ? Math.min(1, (s.autoapuntar.velocidad * step) / d) : 0;
+    run.cursor.x += dx * k;
+    run.cursor.y += dy * k;
   }
 
   // Tu círculo: cada intervalo empiezan a caer flechas donde está; pegan al aterrizar (en guardia, no).

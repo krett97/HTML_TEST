@@ -34,7 +34,7 @@ async function fresh(browser, opts = {}) {
   page.tap = async (x = 0.5, y = 0.45) => { const box = await page.getByTestId('campo').boundingBox(); await page.mouse.click(box.x + box.width * x, box.y + box.height * y); };
   page.oro = async (n) => { await page.getByTestId('abrir-ajustes').click(); await page.getByTestId(`oro-${n}`).click(); await page.mouse.click(4, 4); await page.waitForTimeout(150); };
   page.comprar = async (id, veces = 1) => {
-    const seccion = await page.evaluate((id) => ({ danio: 'jugador', radio: 'jugador', slimes: 'jugador', cadencia: 'jugador', botin: 'jugador', tiempo: 'jugador', oro: 'jugador', inactivo: 'jugador', mago: 'mago', arqueros: 'arqueros', multiflecha: 'arqueros', poder: 'reliquias', critico: 'reliquias', carcaj: 'reliquias', albanil: 'reliquias' })[id], id);
+    const seccion = await page.evaluate((id) => ({ danio: 'jugador', radio: 'jugador', slimes: 'jugador', cadencia: 'jugador', botin: 'jugador', tiempo: 'jugador', oro: 'jugador', inactivo: 'jugador', autoapuntar: 'jugador', mago: 'mago', arqueros: 'arqueros', multiflecha: 'arqueros', poder: 'reliquias', critico: 'reliquias', carcaj: 'reliquias', albanil: 'reliquias' })[id], id);
     await page.getByTestId(`seccion-${seccion}`).click();
     await page.getByTestId(`talento-${id}`).click();
     for (let i = 0; i < veces; i++) await page.getByTestId('comprar').click();
@@ -530,6 +530,30 @@ async function flow(name, browser, fn, opts) {
     await page.waitForTimeout(400);
     check(await page.getByTestId('reloj').count(), 'no empezó el nivel');
     check(!(await page.evaluate(() => !!window.juego.run?.guardia)), 'el nivel sigue en modo guardia');
+  });
+
+  await flow('autoapuntado: el círculo va solo (despacio) y tocar lo lleva al instante', browser, async (page) => {
+    await page.getByTestId('terminar').click();
+    await page.getByTestId('mejorar').click();
+    await page.oro(10000);
+    await page.comprar('danio', 1);
+    await page.comprar('radio', 3);
+    await page.comprar('autoapuntar', 1);
+    check((await page.getByTestId('detalle').textContent()).includes('1/5'), 'no se compró el Autoapuntado');
+    await page.getByTestId('jugar').click();
+    await page.waitForTimeout(300);
+    const inicio = await page.evaluate(() => ({ ...window.juego.run.cursor }));
+    await page.waitForTimeout(2000);
+    const luego = await page.evaluate(() => ({ ...window.juego.run.cursor }));
+    const avance = Math.hypot(luego.x - inicio.x, luego.y - inicio.y);
+    check(avance > 5 && avance < 40, `el círculo no se movió solo y despacio (${avance.toFixed(1)})`);
+    await page.tap(0.2, 0.6);
+    await page.waitForTimeout(150);
+    const tocado = await page.evaluate(() => ({ ...window.juego.run.cursor, manual: window.juego.run.manual }));
+    check(Math.abs(tocado.x - 72) < 4 && tocado.manual < 1, `tocar no llevó el círculo al instante (${tocado.x.toFixed(1)})`);
+    await page.waitForTimeout(1000);
+    const quieto = await page.evaluate(() => ({ ...window.juego.run.cursor }));
+    check(Math.abs(quieto.x - tocado.x) < 0.5, 'el autoapuntado no esperó después de tocar');
   });
 
   for (const [w, h] of [[320, 568], [390, 844], [768, 1024]]) {

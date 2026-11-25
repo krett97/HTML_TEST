@@ -1,5 +1,5 @@
 // Las estadísticas de una partida, calculadas de los niveles de los talentos.
-import { BASE, INACTIVO, type TalentId } from './datos';
+import { AUTOAPUNTAR, BASE, INACTIVO, type TalentId } from './datos';
 
 export type Levels = Partial<Record<TalentId, number>>;
 
@@ -27,6 +27,8 @@ export interface Stats {
   muro: { vida: number; reparar: number };
   /** Golpes críticos de tus flechas: probabilidad y cuánto multiplican. */
   critico: { prob: number; mult: number };
+  /** Autoapuntado: qué tan rápido se mueve solo tu círculo (0: no lo tienes). */
+  autoapuntar: { velocidad: number };
   /** Arqueros: cuántos, cada cuánto tiran, a cuántos objetivos a la vez y cuánto pega cada flecha. */
   arqueros: { cantidad: number; intervalo: number; objetivos: number; danio: number };
 }
@@ -65,6 +67,7 @@ export function computeStats(levels: Levels): Stats {
     },
     muro: { vida: BASE.muro.vida * (1 + 0.5 * lv(levels, 'muralla')), reparar: lv(levels, 'albanil') > 0 ? 0.25 + 0.15 * lv(levels, 'albanil') : 0 },
     critico: { prob: 0.05 * lv(levels, 'critico'), mult: 3 },
+    autoapuntar: { velocidad: lv(levels, 'autoapuntar') > 0 ? AUTOAPUNTAR.velocidad + AUTOAPUNTAR.porNivel * (lv(levels, 'autoapuntar') - 1) : 0 },
     arqueros: {
       cantidad: lv(levels, 'arqueros') > 0 ? 1 + lv(levels, 'masArqueros') : 0,
       intervalo: BASE.arqueros.intervalo * Math.pow(0.88, lv(levels, 'arcoRapido')),

@@ -317,6 +317,8 @@ icon('estandarte', I(line('M14 4 V62', P.maderaS, 6) + circ(14, 4, 4, P.oro, 3) 
 for (const [id, color, claro] of [['bronce', '#c47a3a', '#e8a46a'], ['plata', '#9aa3b2', '#d8dde6'], ['oro', '#e8a91c', '#ffd36e'], ['platino', '#3fb0a8', '#9ee6df'], ['diamante', '#5b8cff', '#b8ccff'], ['campeon', '#a24fe0', '#dcb6ff']]) {
   icon(`liga_${id}`, I(o('M32 4 L56 12 V32 C56 46 46 56 32 62 C18 56 8 46 8 32 V12 Z', color, 5) + f('M32 10 L50 16 V32 C50 42 43 50 32 55 Z', claro, 'opacity=".55"') + o('M32 20 l4 8.5 l9 1.2 l-6.6 6.3 l1.6 9 l-8 -4.4 l-8 4.4 l1.6 -9 l-6.6 -6.3 l9 -1.2 z', P.blanco, 3)));
 }
+// Autoapuntado: una mira azul con su flecha que da vuelta (se mueve sola).
+icon('autoapuntar', I(circ(30, 34, 22, P.azulC, 5) + circ(30, 34, 11, 'none', 4) + line('M30 6 V16 M30 52 V62 M2 34 H12 M48 34 H58', K, 4) + circ(30, 34, 4, P.rojo, 0) + line('M44 6 C54 8 60 14 61 24', P.azulS, 5) + o('M55 22 L62 28 L66 19 Z', P.azulS, 3)));
 icon('moneda', I(moneda(32, 32, 26)));
 icon('reloj', I(circ(32, 32, 26, P.blanco) + line('M32 32 v-16 M32 32 l12 8', K, 6) + circ(32, 32, 4, P.rojo, 0)));
 icon('candado', I(o('M18 28 v-8 a14 14 0 0 1 28 0 v8', 'none', 6) + rect(10, 28, 44, 30, 8, P.oro, 5) + circ(32, 41, 5, K, 0) + rect(29, 42, 6, 10, 2, K, 0)));

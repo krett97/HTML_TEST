@@ -4,7 +4,8 @@ import { activeGoldPerMinute, idleGoldPerMinute, idleReward, idleUnlocked } from
 import { isBossLevel, JEFE, JEFES, bossFor, zoneOf, DESDE, INACTIVO, ROJO_DESDE, AZUL_DESDE, DAMAGE_TYPES, damageMultiplier, ENEMIES, levelConfig, PRIMERA_OLA, SECCIONES, TALENT_BY_ID, TALENTS } from '../src/core/datos';
 import { formatClock, formatNum } from '../src/core/format';
 import { buyTalent, chooseLevel, costOf, createMeta, finishRun, levelOf, loadMeta, talentState, talentVisible } from '../src/core/meta';
-import { createGuardRun, guardLevel, startGuardRun, updateGuardRun } from '../src/core/run';
+import { autoAiming, createGuardRun, guardLevel, startGuardRun, updateGuardRun } from '../src/core/run';
+import { AUTOAPUNTAR } from '../src/core/datos';
 import { GUARDIA } from '../src/core/datos';
 import { ALLY_ROW, archerSpots, bossOf, createRun, DAMAGE_TYPE_OF, FIELD_W, moveCursor, startRun, stepRun, type Run, type RunEvent } from '../src/core/run';
 import { computeStats } from '../src/core/stats';
@@ -966,5 +967,53 @@ describe('modo guardia', () => {
     expect(run.guardia!.oroPorBaja).toBe(2);
     expect(run.stats.duracion).toBe(Infinity);
     expect(run.enemies).toHaveLength(enemigos);
+  });
+});
+
+describe('autoapuntado', () => {
+  const enGrupo = (run: Run) => {
+    for (let i = 0; i < 6; i++) run.enemies.push({ id: 700 + i, kind: 'verde', x: 300 + (i % 3) * 4, y: 120 + i * 3, vx: 0, vy: 0, vida: 1e9, vidaMax: 1e9, giro: 999 });
+  };
+  it('se abre con Área 3; va de 12 a 36 de velocidad (lento: el campo mide 360)', () => {
+    expect(TALENT_BY_ID.autoapuntar.requiere).toEqual({ id: 'radio', nivel: 3 });
+    expect(computeStats({}).autoapuntar.velocidad).toBe(0);
+    expect(computeStats({ autoapuntar: 1 }).autoapuntar.velocidad).toBe(12);
+    expect(computeStats({ autoapuntar: 5 }).autoapuntar.velocidad).toBe(36);
+  });
+  it('sin el talento el círculo no se mueve solo', () => {
+    const run = createRun(computeStats({}), 560, 1, 1);
+    run.stats = { ...run.stats, ritmo: 0 };
+    enGrupo(run);
+    const antes = { ...run.cursor };
+    for (let i = 0; i < 100; i++) stepRun(run, 0.05);
+    expect(run.cursor).toEqual(antes);
+  });
+  it('con el talento va solo hacia el grupo, despacio', () => {
+    const run = createRun(computeStats({ autoapuntar: 1 }), 560, 1, 1);
+    run.stats = { ...run.stats, ritmo: 0, duracion: 999 };
+    enGrupo(run);
+    const inicio = { ...run.cursor };
+    expect(autoAiming(run)).toBe(true);
+    for (let i = 0; i < 20; i++) stepRun(run, 0.05);
+    // En 1 s avanza ~12 unidades hacia ellos (tocar lo pone ahí al instante).
+    const avance = Math.hypot(run.cursor.x - inicio.x, run.cursor.y - inicio.y);
+    expect(avance).toBeGreaterThan(10);
+    expect(avance).toBeLessThan(13);
+    expect(run.cursor.x).toBeGreaterThan(inicio.x);
+    for (let i = 0; i < 400; i++) stepRun(run, 0.05);
+    expect(Math.abs(run.cursor.x - 304)).toBeLessThan(6);
+  });
+  it('si tocas, espera 2.5 s antes de volver a moverse solo', () => {
+    const run = createRun(computeStats({ autoapuntar: 5 }), 560, 1, 1);
+    run.stats = { ...run.stats, ritmo: 0, duracion: 999 };
+    enGrupo(run);
+    moveCursor(run, 50, 300);
+    for (let i = 0; i < 40; i++) stepRun(run, 0.05);
+    expect(run.cursor).toEqual({ x: 50, y: 300 });
+    expect(autoAiming(run)).toBe(false);
+    for (let i = 0; i < 20; i++) stepRun(run, 0.05);
+    expect(autoAiming(run)).toBe(true);
+    expect(run.cursor.x).toBeGreaterThan(50);
+    expect(AUTOAPUNTAR.espera).toBe(2.5);
   });
 });

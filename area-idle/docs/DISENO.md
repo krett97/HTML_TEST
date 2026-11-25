@@ -1,6 +1,6 @@
 # Campo de Slimes: diseño del prototipo
 
-> Versión 0.9.0. Nombre provisional. Nació de pausar el juego del gato
+> Versión 0.10.0. Nombre provisional. Nació de pausar el juego del gato
 > ([`../../gato-idle/docs/DECISIONES.md`](../../gato-idle/docs/DECISIONES.md)), tomando su base técnica y su
 > arte en código ([`../../REUSO.md`](../../REUSO.md)). Referencia de sensación: *Don't Stop The Pop!*
 > (cientos de cosas reventando en un área) y el idle del castor (rocas que caen, mundo que cambia por fase).
@@ -40,7 +40,7 @@ Nivel 5") y el oro. Ahí arriba no aparecen ni pasean slimes, para que nada qued
 
 | Sección | Ataque | Tipo de daño | Talentos |
 |---|---|---|---|
-| **Jugador** | Tu círculo: lluvia de flechas en el área | Físico | Daño (raíz), Área, Atraer slimes (llegan más rápido), Cadencia, Tiempo, Botín (premio por nivel), Ganancia de oro (todo el oro), Oro inactivo, Bolsa grande |
+| **Jugador** | Tu círculo: lluvia de flechas en el área | Físico | Daño (raíz), Área, Atraer slimes (llegan más rápido), Cadencia, Tiempo, Botín (premio por nivel), Ganancia de oro (todo el oro), Oro inactivo, Bolsa grande, Autoapuntado (5i) |
 | **Mago** | Bola de fuego que revienta en un **cuadrado** (40 × 40) donde hay alguien | Fuego | Mago (raíz), Mago veloz, Fuego mágico, Explosión grande, Suelo en llamas (tierra quemada con borde de brasas), Fuego intenso |
 | **Arqueros** | Flechas a **un objetivo a la vez**; con Flechas múltiples, a 2, 3… 5 | Físico | Arquero (raíz), Más arqueros (hasta 6), Flechas múltiples, Arco veloz, Puntas de acero, Muralla reforzada |
 | **Reliquias** (desde el nivel 11, con **gemas**) | — | — | Poder ancestral (raíz), Golpes críticos, Carcaj encantado, Albañil (ver 5e) |
@@ -258,6 +258,19 @@ de atrás se ve más claro y **tus tropas pelean solas**. Tu círculo descansa.
 - Al comprar en el árbol, la guardia toma lo nuevo sin empezar de nuevo; el primer arquero (o el mago) la
   arranca. Solo suena el "pop" de cada baja.
 
+## 5i. Autoapuntado (desde 0.10.0)
+
+Talento del árbol del jugador (junto a Tiempo; pide **Área 3**; 5 niveles, desde 50 de oro ×2.4). Si no
+tocas en **2.5 s**, tu círculo se va **solo** hacia donde hay más enemigos (el mismo cálculo que usa el
+simulador; los que atacan la muralla y el jefe pesan más) y vuelve a elegir cada segundo. Mientras apunta
+solo, el círculo se pone **azul**.
+
+Es lento a propósito: **12 unidades por segundo** en el nivel 1 y +6 por nivel, hasta 36 (el campo mide
+360 de ancho: en el nivel 1 cruza medio campo en ~15 s; al máximo, en ~5 s). Tocar lo lleva al instante
+y lo deja quieto 2.5 s, así que **apuntar siempre es mejor**: sirve para jugar con una mano o distraído, no
+para ganarle al jugador. Contra los jefes que esquivan tu círculo casi no sirve. En el modo guardia tu
+círculo sigue descansando.
+
 ## 6. Ritmo (`npm run simular`)
 
 Un bot que toca donde hay más slimes cada segundo (los rojos cuentan por cuatro: los busca primero),
@@ -280,7 +293,7 @@ unas 30 partidas de 45 minutos y ahí sirve Muralla reforzada. (El bot no cobra 
 
 ## 7. Técnica
 
-- `src/core/` es lógica pura y probada (81 pruebas): `run.ts` (la partida paso a paso; devuelve eventos),
+- `src/core/` es lógica pura y probada (85 pruebas): `run.ts` (la partida paso a paso; devuelve eventos),
   `stats.ts` (estadísticas desde los talentos), `meta.ts` (oro, gemas, árbol, guardado), `misiones.ts`
   (contadores, diarias y permanentes), `ranking.ts`, `pvp.ts` (poder, ligas, peleas, tienda), `datos.ts`, `bot.ts`. `src/services/ranking.ts`
   conecta el ranking con la base de datos de la página publicada.

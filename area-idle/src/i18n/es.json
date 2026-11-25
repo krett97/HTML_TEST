@@ -137,6 +137,10 @@
     "albanil": {
       "nombre": "Albañil",
       "efecto": "Una vez por nivel, si la muralla queda baja, recupera {a} → {b}"
+    },
+    "autoapuntar": {
+      "nombre": "Autoapuntado",
+      "efecto": "Si no tocas, tu círculo va solo hacia los enemigos, despacio: {a} → {b}"
     }
   },
   "ajustes": {

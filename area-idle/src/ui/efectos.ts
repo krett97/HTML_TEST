@@ -11,6 +11,7 @@ const VALOR: Partial<Record<TalentId, (s: Stats, l: Levels) => string>> = {
   botin: (s) => `×${uno(s.premioMult)}`,
   inactivo: (s) => `${Math.round(s.inactivo.eficiencia * 100)}%`,
   bolsa: (s) => String(s.inactivo.horas),
+  autoapuntar: (s) => String(s.autoapuntar.velocidad),
   muralla: (s) => formatNum(s.muro.vida),
   poder: (_, l) => `+${10 * (l.poder ?? 0)}%`,
   critico: (s) => `${Math.round(s.critico.prob * 100)}%`,
