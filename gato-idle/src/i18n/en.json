@@ -205,7 +205,14 @@
     "alFrente": "Back to the front",
     "juntando": "Farming an earlier level: breaks here don't count toward progress.",
     "guardianEspera": "The room's guardian blocks the way: challenge it in the scene.",
-    "jefeEspera": "The house boss blocks the way: challenge it in the scene."
+    "jefeEspera": "The house boss blocks the way: challenge it in the scene.",
+    "masMejoras": "More upgrades",
+    "listas": "{n} to buy",
+    "nadaListo": "Crits, suit and more",
+    "abrir": "Open",
+    "cerrar": "Close",
+    "valorCorto": "+${actual} → +${siguiente}",
+    "juntandoCorto": "Farming an earlier level"
   },
   "ajustes": {
     "sonido": "Sound",

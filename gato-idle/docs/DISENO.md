@@ -1048,3 +1048,17 @@ Antes el dueño compraba el siguiente objeto cada 5 niveles de Valor: avanzar er
 - **Jugador automático** (`bot.ts`, simulador y "avanzar como jugador"): las roturas de cada rato cuentan para el nivel; pelea al guardián con el daño por segundo que tiene; si el frente cae a más de 6 s por rotura, junta dinero en el nivel anterior que más deje; las compras se puntúan por lo que rinden en el frente; se detiene ante el jefe de la casa o la mudanza (los resuelve quien llama).
 
 Tiempos con `npm run simular` (5 toques/s): el departamento la primera vez en 15 min; horas de juego activo hasta cada casa: sin anuncios casa 0.7 h · mansión 1.3 h · Luna 2.6 h · último jefe 3.4 h; con los videos ×2, 2.4 h; con turbo además, 2.0 h (antes: 2.8 / 2.2 / 1.8). Los jefes de casa se vencen al llegar o tras dos minutos más.
+
+## 55. La pantalla principal sin scroll (versión 0.36.0)
+
+**Por qué.** Lo que más toca el jugador es subir el daño del gato (Fuerza) y lo que paga el objeto (Valor). En la pestaña Mejoras eso estaba en una lista con scroll, junto a los críticos, el Saco y las Garras marcadoras, y la escena quedaba apretada arriba. La referencia son los idle de celular con tres botones grandes abajo: se entiende qué hace cada uno sin leer.
+
+**Qué cambió (`src/ui/tabs/Mejoras.svelte`, `src/ui/Panel.svelte`).**
+
+- En la pestaña Mejoras el panel ya **no tiene scroll ni altura fija** (`.panel.compacta`: mide lo que mide su contenido) y la **escena toma todo el resto** de la pantalla. En las demás pestañas el panel sigue midiendo lo de siempre (lista con scroll).
+- De arriba abajo: la **franja del nivel** (◀ objeto · "Nivel 3 de 63" · roturas/meta o el aviso del guardián/jefe/mudanza ▶), el **próximo descubrimiento** (una línea; en pantallas de menos de 640 px de alto, solo la pista y la barra), el selector ×1/×10 y la **fila de botones grandes**: Fuerza (ícono, nivel, "Daño 6 → 7", precio) y Valor ("+$3.1 → +$3.4", precio). Los botones son amarillos cuando alcanza y grises cuando no; la etiqueta "¡Nuevo!" va en la esquina.
+- **Más mejoras** es el tercer botón grande, con un punto rojo con cuántas mejoras se pueden comprar ya. Abre una **ventana** (misma receta que la maquinita: fondo oscuro + hoja centrada, se cierra tocando fuera o la ✕) con las tarjetas de antes: Garras afiladas, Sombrero ridículo, Saco de jefe, Garras marcadoras y los trofeos de los jefes. Aparece hasta que se descubre la primera de ellas.
+- Los `data-testid` y `data-tuto` de siempre (`comprar-fuerza`, `comprar-valor`, `objeto`, `proximo`, `nivel-*`) siguen igual, así que el tutorial y los flujos E2E no cambian; los nuevos son `abrir-mas` y `mas-mejoras`.
+
+**Medidas.** En 390×844 la escena pasa de ~300 px a ~400 px de alto y en 768×1024 a ~590 px; en 320×568 queda en los 160 px mínimos y nada se desborda (flujos 8-10 de `tests/e2e/flujos.cjs`).
+

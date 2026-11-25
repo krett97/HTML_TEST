@@ -35,7 +35,7 @@
     grid-template-columns: auto 1fr;
     align-items: center;
     gap: 10px;
-    padding: 10px 12px;
+    padding: 6px 10px;
     border: 2px dashed var(--gold);
     border-radius: 4px;
     background: var(--bg);
@@ -52,12 +52,17 @@
     font-size: 14px;
   }
   .hint {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
     color: var(--muted);
     font-size: 13px;
   }
   .bar {
-    height: 8px;
-    margin-top: 6px;
+    height: 6px;
+    margin-top: 4px;
     border: 2px solid var(--line);
     background: var(--panel);
   }
@@ -65,5 +70,17 @@
     height: 100%;
     background: var(--gold);
     transition: width 200ms ease-out;
+  }
+  /* Pantallas bajas: una sola línea para dejarle sitio a la escena. */
+  @media (max-height: 640px) {
+    .card {
+      padding: 4px 10px;
+    }
+    .label {
+      display: none;
+    }
+    .bar {
+      margin-top: 2px;
+    }
   }
 </style>

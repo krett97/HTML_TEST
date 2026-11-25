@@ -55,7 +55,7 @@
 </script>
 
 <!-- Con el árbol abierto, el panel cubre también la escena (las pestañas se quedan abajo). -->
-<section class="panel" class:expandida={$arbolAbierto}>
+<section class="panel" class:expandida={$arbolAbierto} class:compacta={active === 'mejoras' && !$arbolAbierto}>
   <div class="content" role="tabpanel">
     {#if $arbolAbierto}<ArbolPantalla />{:else}<Current />{/if}
   </div>
@@ -94,6 +94,15 @@
     flex-direction: column;
     background: var(--panel);
     border-top: 2px solid var(--line);
+  }
+  /* La pantalla principal no tiene scroll: el panel mide lo que mide y la escena toma el resto. */
+  .panel.compacta {
+    height: auto;
+  }
+  .panel.compacta .content {
+    flex: 0 0 auto;
+    overflow: visible;
+    padding: 8px 10px 6px;
   }
   .panel.expandida {
     position: absolute;

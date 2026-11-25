@@ -205,7 +205,14 @@
     "alFrente": "Volver al frente",
     "juntando": "Juntando dinero en un nivel anterior: aquí las roturas no cuentan para avanzar.",
     "guardianEspera": "El guardián del cuarto bloquea el paso: rétalo en la escena.",
-    "jefeEspera": "El jefe de la casa bloquea el paso: rétalo en la escena."
+    "jefeEspera": "El jefe de la casa bloquea el paso: rétalo en la escena.",
+    "masMejoras": "Más mejoras",
+    "listas": "{n} para comprar",
+    "nadaListo": "Críticos, saco y más",
+    "abrir": "Abrir",
+    "cerrar": "Cerrar",
+    "valorCorto": "+${actual} → +${siguiente}",
+    "juntandoCorto": "Juntando dinero atrás"
   },
   "ajustes": {
     "sonido": "Sonido",
