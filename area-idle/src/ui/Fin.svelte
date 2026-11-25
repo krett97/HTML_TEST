@@ -24,6 +24,9 @@
     {:else}
       <p class="nota">{$t('fin.seQueda')}</p>
     {/if}
+    {#if $view.abrioPvp}
+      <div class="nuevo" data-testid="nuevo-pvp"><Icon name="pvp" size={36} /><span>{$t('pvp.nuevo')}</span></div>
+    {/if}
     {#if $view.abrioRanking}
       <div class="nuevo" data-testid="nuevo-ranking"><Icon name="trofeo" size={36} /><span>{$t('ranking.nuevo')}</span></div>
     {/if}

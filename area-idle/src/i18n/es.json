@@ -154,7 +154,10 @@
     "jugarMin": "+{n} min de juego",
     "resumen": "En {min} min de juego: {partidas} partidas ({ganadas} ganadas), nivel {desde} → {hasta}, {compras} mejoras compradas, +{oro} de oro.",
     "masGemas": "+10 gemas",
-    "nuevoDia": "Nuevo día (otras diarias)"
+    "nuevoDia": "Nuevo día (otras diarias)",
+    "pvpRecargar": "PvP: intentos 5/5",
+    "pvpSemana": "PvP: terminar semana",
+    "masMedallas": "+50 medallas"
   },
   "secciones": {
     "jugador": "Jugador",
@@ -301,5 +304,52 @@
     "sinConexion": "Aquí no hay ranking en línea: solo se ve tu fila. Juega la versión publicada en Claude para competir.",
     "soloLectura": "Puedes ver el ranking, pero con este acceso no apareces en él.",
     "nuevo": "¡Nuevo! Ranking: compara tu nivel con el de otros jugadores."
+  },
+  "ligas": {
+    "bronce": "Bronce",
+    "plata": "Plata",
+    "oro": "Oro",
+    "platino": "Platino",
+    "diamante": "Diamante",
+    "campeon": "Campeón"
+  },
+  "pvp": {
+    "titulo": "Arena PvP",
+    "liga": "Liga {liga}",
+    "termina": "La semana termina en {t}",
+    "puntos": "{n} pts",
+    "pts": "pts",
+    "tuPoder": "Tu poder",
+    "recarga": "+1 en {t}",
+    "lleno": "Intentos llenos",
+    "tu": "Tú",
+    "facil": "Fácil",
+    "parejo": "Parejo",
+    "dificil": "Difícil",
+    "sube": "Suben a {liga}",
+    "baja": "Bajan a {liga}",
+    "semanaFin": "Semana terminada: #{n} en {liga}",
+    "subes": "¡Subes a {liga}!",
+    "bajas": "Bajas a {liga}",
+    "sigues": "Sigues en tu liga",
+    "batalla": "Batalla",
+    "probabilidad": "Tenías {n}% de ganar",
+    "ganaste": "¡Ganaste!",
+    "perdiste": "Perdiste",
+    "continuar": "Continuar",
+    "saltar": "Saltar",
+    "nuevo": "¡Nuevo! Arena PvP: ligas semanales contra otros jugadores."
+  },
+  "tienda": {
+    "titulo": "Tienda PvP",
+    "oro": "Cofre de oro",
+    "gemas": "Bolsa de gemas",
+    "intento": "Pelea extra",
+    "estandarte": "Estandarte de guerra",
+    "oroTexto": "+{n} de oro ({m} min de juego)",
+    "gemasTexto": "+{n} gemas moradas",
+    "intentoTexto": "+1 intento ({n}/{max})",
+    "estandarteTexto": "Poder en el PvP +{a}% → +{b}% ({n}/{max})",
+    "como": "Medallas: 3 por pelea ganada, 1 por perdida y un premio al terminar la semana."
   }
 }

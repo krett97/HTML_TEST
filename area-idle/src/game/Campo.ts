@@ -385,7 +385,7 @@ export class Campo extends Phaser.Scene {
             // ¡Cayó el jefe! Gran explosión de baba, confeti y sacudida.
             for (let i = 0; i < 4; i++) this.time.delayedCall(i * 80, () => this.emisores[e.kind].explode(25, e.x + Phaser.Math.Between(-20, 20), e.y - 20));
             this.emisores.confeti.explode(40, e.x, e.y - 30);
-            this.cameras.main.shake(420, 0.01);
+            this.sacudir(380, 0.005);
             this.cameras.main.flash(300, 255, 220, 160);
             for (let i = 0; i < 5; i++) this.mancha(e.x + Phaser.Math.Between(-25, 25), e.y + Phaser.Math.Between(-10, 10), COLOR[e.kind]);
           } else this.emisores[e.kind].explode(e.kind === 'azul' ? 12 : 8, e.x, e.y - 6);
@@ -430,7 +430,8 @@ export class Campo extends Phaser.Scene {
           this.time.delayedCall(90, () => {
             if (!this.juego.run?.muro.caido) for (const img of [this.muralla, this.torre]) img.clearTint();
           });
-          this.cameras.main.shake(60, 0.002);
+          // Solo los golpes fuertes (jefes) mueven un poco la pantalla; los normales, no.
+          if (e.danio >= 10) this.sacudir(90, 0.0015);
           break;
         }
         case 'bossJump': {
@@ -455,7 +456,7 @@ export class Campo extends Phaser.Scene {
           // Cae de golpe: polvo, anillo y sacudida. Queda aturdido (estrellitas).
           this.emisores.polvo.explode(24, e.x, e.y);
           this.anilloEn(e.x, e.y, 0xffffff, 0.55);
-          this.cameras.main.shake(140, 0.005);
+          this.sacudir(140, 0.0025);
           break;
         case 'bossSummon': {
           const v = this.slimes.get(e.id);
@@ -470,7 +471,7 @@ export class Campo extends Phaser.Scene {
         }
         case 'bossRage':
           this.cameras.main.flash(260, 255, 90, 70);
-          this.cameras.main.shake(260, 0.007);
+          this.sacudir(220, 0.003);
           break;
         case 'wallDown':
           this.derrumbe(run);
@@ -494,7 +495,7 @@ export class Campo extends Phaser.Scene {
           } else {
             // Se acabó el tiempo: un destello rojizo y los slimes que quedan se quedan saltando.
             this.cameras.main.flash(260, 255, 120, 100);
-            this.cameras.main.shake(160, 0.004);
+            this.sacudir(140, 0.0015);
           }
           break;
       }
@@ -507,7 +508,7 @@ export class Campo extends Phaser.Scene {
     const y = this.alto - ALLY_ROW + 16;
     for (let i = 0; i < 8; i++) this.time.delayedCall(i * 50, () => this.emisores.piedra.explode(10, 20 + i * 45, y));
     for (let i = 0; i < 6; i++) this.emisores.polvo.explode(10, 30 + i * 60, y);
-    this.cameras.main.shake(320, 0.006);
+    this.sacudir(260, 0.003);
     const caer = (img: Phaser.GameObjects.Image, lado: number) => {
       this.tweens.killTweensOf(img);
       img.setTint(0x8a8a8a);
@@ -670,7 +671,18 @@ export class Campo extends Phaser.Scene {
     const marco = this.add.image(x, y, 'marco').setTint(0xef5a4c).setAlpha(1).setScale(sx, sy).setDepth(D.destello);
     this.tweens.add({ targets: [relleno, marco], alpha: 0, scaleX: sx * 1.08, scaleY: sy * 1.15, duration: 260, ease: 'Quad.out', onComplete: () => (relleno.destroy(), marco.destroy()) });
     for (let i = 0; i < 14; i++) this.emisores.fuego.explode(1, x + (Math.random() - 0.5) * forma.w, y + (Math.random() - 0.5) * forma.h);
-    this.cameras.main.shake(70, 0.0025);
+  }
+
+  /**
+   * Sacude la cámara, poquito y no seguido: si ya hubo una sacudida hace menos de medio segundo, solo
+   * cuenta una más fuerte.
+   */
+  private ultimaSacudida = { t: -1e9, fuerza: 0 };
+  private sacudir(ms: number, fuerza: number): void {
+    const ahora = this.time.now;
+    if (ahora - this.ultimaSacudida.t < 500 && fuerza <= this.ultimaSacudida.fuerza) return;
+    this.ultimaSacudida = { t: ahora, fuerza };
+    this.cameras.main.shake(ms, fuerza);
   }
 
   /** Las flechas de los arqueros en el aire (una raya con punta, hacia su blanco). */

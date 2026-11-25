@@ -449,6 +449,65 @@ async function flow(name, browser, fn, opts) {
     },
   });
 
+  await flow('PvP del nivel 19: liga de 100, pelea con batalla, intentos, tienda y fin de semana', browser, async (page) => {
+    await page.getByTestId('terminar').click();
+    await page.getByTestId('mejorar').click();
+    await page.getByTestId('abrir-ajustes').click();
+    for (let i = 0; i < 17; i++) await page.getByTestId('mas-nivel').click();
+    await page.mouse.click(4, 4);
+    check(!(await page.getByTestId('abrir-pvp').count()), 'el PvP se ve antes del nivel 19');
+    await page.getByTestId('abrir-ajustes').click();
+    await page.getByTestId('mas-nivel').click();
+    await page.mouse.click(4, 4);
+    check((await page.getByTestId('abrir-pvp').textContent()).includes('5/5'), 'el botón no dice 5/5');
+    await page.getByTestId('abrir-pvp').click();
+    await page.waitForTimeout(300);
+    check((await page.getByTestId('pvp-liga').textContent()).includes('Bronce'), 'no empieza en Bronce');
+    check((await page.locator('[data-testid="pvp-rival"]').count()) === 99, 'no hay 99 rivales');
+    check((await page.locator('[data-testid="pvp-tuyo"]').count()) === 1, 'no está tu fila');
+    check(/\d/.test(await page.getByTestId('mi-poder').textContent()), 'no se ve tu poder');
+    await page.locator('[data-testid^="pelear-"]').nth(50).click();
+    check(await page.getByTestId('batalla').count(), 'no abre la batalla');
+    await page.getByTestId('batalla-saltar').click();
+    check((await page.getByTestId('pvp-gano').count()) + (await page.getByTestId('pvp-perdio').count()) === 1, 'no sale el resultado');
+    await page.getByTestId('batalla-ok').click();
+    check((await page.getByTestId('pvp-intentos').textContent()).includes('4/5'), 'no gastó un intento');
+    const medallas = Number(await page.getByTestId('pvp-medallas').textContent());
+    check(medallas === 1 || medallas === 3, `medallas raras: ${medallas}`);
+    // Con medallas (modo pruebas), la tienda vende una pelea extra si no estás lleno.
+    await page.mouse.click(4, 4);
+    await page.getByTestId('abrir-ajustes').click();
+    await page.getByTestId('mas-medallas').click();
+    await page.mouse.click(4, 4);
+    await page.getByTestId('abrir-pvp').click();
+    await page.getByTestId('abrir-tienda-pvp').click();
+    check(!(await page.getByTestId('comprar-intento').isDisabled()), 'no deja comprar pelea extra con 4/5');
+    await page.getByTestId('comprar-intento').click();
+    check(await page.getByTestId('comprar-intento').isDisabled(), 'deja comprar pelea extra con 5/5');
+    check((await page.evaluate(() => window.juego.meta.pvp.intentos)) === 5, 'la pelea extra no sumó');
+    await page.mouse.click(4, 4);
+    await page.mouse.click(4, 4);
+    // Modo pruebas: intentos llenos y cerrar la semana.
+    await page.evaluate(() => { window.juego.meta.pvp.intentos = 1; });
+    await page.getByTestId('abrir-ajustes').click();
+    await page.getByTestId('pvp-recargar').click();
+    await page.getByTestId('pvp-fin-semana').click();
+    await page.mouse.click(4, 4);
+    await page.getByTestId('abrir-pvp').click();
+    await page.waitForTimeout(200);
+    check(await page.getByTestId('pvp-resultado').count(), 'no sale cómo te fue la semana');
+    check((await page.getByTestId('pvp-intentos').textContent()).includes('5/5'), 'no llenó los intentos');
+    await page.getByTestId('pvp-ok').click();
+    check(!(await page.getByTestId('pvp-resultado').count()), 'el resultado no se quita');
+    await page.getByTestId('abrir-tienda-pvp').click();
+    check(await page.getByTestId('comprar-intento').isDisabled(), 'deja comprar pelea extra con 5/5');
+    const oro = await page.evaluate(() => window.juego.meta.oro);
+    await page.getByTestId('comprar-oro').click();
+    check((await page.evaluate(() => window.juego.meta.oro)) > oro, 'el cofre no dio oro');
+    await page.getByTestId('comprar-estandarte').click();
+    check((await page.evaluate(() => window.juego.meta.pvp.estandarte)) === 1, 'no subió el Estandarte');
+  });
+
   for (const [w, h] of [[320, 568], [390, 844], [768, 1024]]) {
     await flow(`pantalla ${w}×${h}: nada se sale`, browser, async (page) => {
       const desborda = () => page.evaluate(() => document.documentElement.scrollWidth > innerWidth || document.documentElement.scrollHeight > innerHeight);
@@ -460,7 +519,7 @@ async function flow(name, browser, fn, opts) {
       await page.oro(1000000);
       for (const id of ['danio', 'radio', 'slimes', 'cadencia']) await page.comprar(id, 3);
       await page.getByTestId('abrir-ajustes').click();
-      for (let i = 0; i < 16; i++) await page.getByTestId('mas-nivel').click();
+      for (let i = 0; i < 18; i++) await page.getByTestId('mas-nivel').click();
       await page.mouse.click(4, 4);
       check(await page.getByTestId('seccion-reliquias').count(), 'no salen las Reliquias');
       check(await page.getByTestId('abrir-ranking').count(), 'no sale el trofeo del ranking');
@@ -473,6 +532,10 @@ async function flow(name, browser, fn, opts) {
         check(fuera.length === 0, `en ${sec} se salen: ${fuera.join(', ')}`);
       }
       check(!(await desborda()), 'el árbol se desborda');
+      await page.getByTestId('abrir-pvp').click();
+      const fueraPvp = await page.$$eval('[data-testid="pvp-liga"], [data-testid="mi-poder"], [data-testid="abrir-tienda-pvp"], [data-testid="pvp-intentos"]', (els) => els.filter((e) => { const r = e.getBoundingClientRect(); return r.left < 0 || r.right > innerWidth || r.top < 0 || r.bottom > innerHeight; }).map((e) => e.dataset.testid));
+      check(fueraPvp.length === 0, `en el PvP se salen: ${fueraPvp.join(', ')}`);
+      check(!(await desborda()), 'el PvP se desborda');
     }, { viewport: { width: w, height: h } });
   }
 

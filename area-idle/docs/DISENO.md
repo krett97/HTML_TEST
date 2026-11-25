@@ -1,6 +1,6 @@
 # Campo de Slimes: diseño del prototipo
 
-> Versión 0.7.0. Nombre provisional. Nació de pausar el juego del gato
+> Versión 0.8.0. Nombre provisional. Nació de pausar el juego del gato
 > ([`../../gato-idle/docs/DECISIONES.md`](../../gato-idle/docs/DECISIONES.md)), tomando su base técnica y su
 > arte en código ([`../../REUSO.md`](../../REUSO.md)). Referencia de sensación: *Don't Stop The Pop!*
 > (cientos de cosas reventando en un área) y el idle del castor (rocas que caen, mundo que cambia por fase).
@@ -201,6 +201,45 @@ entre los primeros 100, sale al final.
 - Lo que llega de otros jugadores se revisa antes de mostrarse (`readRow`): nombres limpios (sin
   caracteres de control, 16 letras), niveles enteros entre 17 y 100 000.
 
+## 5g. Arena PvP sin conexión (desde 0.8.0)
+
+Al llegar al **nivel 19** sale un aviso y, junto a "¡Jugar!", el botón **PvP** con tus intentos (5/5).
+Todo está en `src/core/pvp.ts`; la propuesta original del jugador y lo que se decidió para lo que no
+estaba dicho:
+
+- **Tu liga:** cada semana (lunes a lunes, hora local) estás en una liga de **100 jugadores**: tú y 99
+  rivales **simulados** (sin servidor no hay jugadores reales; cada uno tiene nombre, dibujo, poder y
+  puntos que va juntando durante la semana). Ligas: Bronce, Plata, Oro, Platino, Diamante y Campeón.
+- **Poder:** una cifra que junta tus árboles: tu círculo (daño × área ÷ cadencia, con críticos), el mago
+  (explosión y fuego × área ÷ cadencia), los arqueros (cuántos × objetivos × daño ÷ cadencia), todo por un
+  multiplicador de tiempo, muralla, Albañil y Estandarte. Se ve con su desglose.
+- **Batalla:** gana el de más poder con más probabilidad, no siempre: p⁴ / (p⁴ + q⁴) (con 1.5× de poder,
+  84 %). Se cuenta en ~5 s con dos barras de vida (se puede saltar). Cada rival dice si es Fácil, Parejo
+  o Difícil y cuántos puntos da.
+- **Puntos:** ganar da 6–40 (16 contra alguien con tus mismos puntos; más si tiene más); perder quita
+  2–10 (menos si tenía más que tú), sin bajar de 0.
+- **Intentos:** 5 como máximo; uno vuelve cada 2 h (mientras estás lleno, no corre el reloj).
+- **Rivales a tu altura:** su poder sale de **tu poder al empezar cada día** (sin el Estandarte), de la
+  liga (de ×0.7 en Bronce a ×1.5 en Campeón) y de qué tan buenos son (×0.5 a ×1.5), y sube 2 % por día de
+  la semana. Así lo que mejoras hoy te da ventaja hoy, y el Estandarte, siempre. (Sin esto, en un idle el
+  poder crece tanto en una semana que a media semana le ganabas a todos.)
+- **Fin de semana:** los **20 mejores suben**, los **20 peores bajan** (de Bronce no se baja; de Campeón
+  no se sube). Se cierra sola al volver y se muestra una vez cómo te fue.
+- **Medallas y tienda:** 3 por pelea ganada, 1 por perdida, y al cerrar la semana 30 (top 20), 12 (en
+  medio) o 4 (últimos 20), ×1.5 por cada liga de más. En la tienda: **cofre de oro** (15 min de juego, 5),
+  **pelea extra** (6), **5 gemas** (25) y **Estandarte de guerra** (+5 % de poder en el PvP por nivel,
+  hasta 20; desde 15, ×1.3 cada nivel).
+
+Simulación de una semana en Bronce (`fight` con un jugador que pelea contra el de más puntos que le gane
+con ≥75 %): quien entra una vez al día queda ~27.º (se queda), dos veces ~17.º (sube), tres veces ~12.º;
+quien entra cada 3 días, ~59.º. Para bajar hay que casi no pelear (los últimos 20 terminan con <40 puntos).
+
+Modo pruebas: **PvP: intentos 5/5**, **PvP: terminar semana** y **+50 medallas**.
+
+**Pantalla que se mueve:** desde 0.8.0 los golpes normales a la muralla ya no sacuden la pantalla (solo
+los de jefes, poquito), las explosiones del mago tampoco, y las demás sacudidas son más suaves y nunca
+seguidas (máximo una cada medio segundo).
+
 ## 6. Ritmo (`npm run simular`)
 
 Un bot que toca donde hay más slimes cada segundo (los rojos cuentan por cuatro: los busca primero),
@@ -223,9 +262,9 @@ unas 30 partidas de 45 minutos y ahí sirve Muralla reforzada. (El bot no cobra 
 
 ## 7. Técnica
 
-- `src/core/` es lógica pura y probada (66 pruebas): `run.ts` (la partida paso a paso; devuelve eventos),
+- `src/core/` es lógica pura y probada (76 pruebas): `run.ts` (la partida paso a paso; devuelve eventos),
   `stats.ts` (estadísticas desde los talentos), `meta.ts` (oro, gemas, árbol, guardado), `misiones.ts`
-  (contadores, diarias y permanentes), `ranking.ts`, `datos.ts`, `bot.ts`. `src/services/ranking.ts`
+  (contadores, diarias y permanentes), `ranking.ts`, `pvp.ts` (poder, ligas, peleas, tienda), `datos.ts`, `bot.ts`. `src/services/ranking.ts`
   conecta el ranking con la base de datos de la página publicada.
 - `src/game/Campo.ts` (Phaser 4) solo dibuja los eventos: sprites reciclados para cientos de slimes,
   números de daño con una **fuente de mapa de bits** hecha al arrancar (`numeros.ts`), partículas, flechas

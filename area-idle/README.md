@@ -6,14 +6,15 @@ todos antes de que se acabe el tiempo; si no, se reintenta o se juega el anterio
 el oro mejoras tres árboles: el tuyo, el del mago (explosiones de fuego cuadradas) y el de los arqueros
 (un objetivo a la vez, luego varios).
 
-**Estado: prototipo 0.7.0.** Dos zonas: **Campo verde** (niveles 1–10, slimes) y **Campo de batalla**
+**Estado: prototipo 0.8.0.** Dos zonas: **Campo verde** (niveles 1–10, slimes) y **Campo de batalla**
 (11–20 y siguientes: goblins con lanzas, lobos, orcos y orcos arqueros, con espadas y tablas tiradas).
 Un **jefe cada 10 niveles**: el **Rey Slime** (naranja, con corona) en el 10 y el **Lobo Blanco** (con
 una hoz en el hocico) en el 20; después se alternan. En la primera zona, tres enemigos (slime verde;
 azul desde el nivel 4; **rojo con resortera** desde el 7, que le tira piedras a la muralla y, si la tumba,
 deja sin atacar al mago y a los arqueros), **oro mientras no juegas** desde el nivel 3, y desde el 11
 **misiones diarias y permanentes** que dan **gemas moradas** para la cuarta sección del árbol,
-**Reliquias**, y desde el 17 un **ranking** (compartido en la versión publicada en Claude). 25 talentos en cuatro secciones, seis tipos de daño (dos en juego: físico y fuego) y un
+**Reliquias**, desde el 17 un **ranking** (compartido en la versión publicada en Claude) y desde el 19 una **arena PvP**
+sin conexión (ligas semanales de 100 con rivales simulados, intentos que se recargan y tienda de medallas). 25 talentos en cuatro secciones, seis tipos de daño (dos en juego: físico y fuego) y un
 glosario de enemigos.
 
 - Diseño y decisiones: [`docs/DISENO.md`](docs/DISENO.md)

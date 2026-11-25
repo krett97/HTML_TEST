@@ -9,6 +9,8 @@
   import Glosario from './Glosario.svelte';
   import Misiones from './Misiones.svelte';
   import Ranking from './Ranking.svelte';
+  import Pvp from './Pvp.svelte';
+  import { INTENTOS_MAX } from '../core/pvp';
   import { DAMAGE_TYPE_OF } from '../core/run';
   import { effectValues } from './efectos';
   import Icon from './Icon.svelte';
@@ -25,6 +27,7 @@
   let glosario = $state(false);
   let misiones = $state(false);
   let ranking = $state(false);
+  let pvp = $state(false);
   /** El tipo de daño de cada sección (marca en la esquina de su pestaña). */
   const TIPO: Partial<Record<Seccion, string>> = { jugador: DAMAGE_TYPE_OF.jugador, mago: DAMAGE_TYPE_OF.mago, arqueros: DAMAGE_TYPE_OF.arquero };
   /** Las Reliquias (con gemas) se ven desde que se abren las misiones. */
@@ -162,11 +165,21 @@
     <span class="nivel-actual" data-testid="nivel-actual"><small class="zona">{$t(`zonas.${$view.zona}`)}{#if $view.nivelDeJefe}&nbsp;· {$t('hud.jefe')}{/if}</small><span class="con-corona">{#if $view.nivelDeJefe}<Icon name="corona" size={24} />{/if}{$t('hud.nivel', { n: meta.jugando })}</span>{#if meta.jugando < meta.nivel}<small>{$t('arbol.paraOro')}</small>{/if}</span>
     <button type="button" class="flecha" aria-label={$t('arbol.nivelSiguiente')} disabled={meta.jugando >= meta.nivel} onclick={() => juego.playLevel(meta.jugando + 1, false)} data-testid="nivel-mas">▶</button>
   </div>
-  <button type="button" class="btn btn--accent jugar" onclick={() => juego.play()} data-testid="jugar"><Icon name="jugar" size={26} /> {$t('arbol.jugar')}</button>
+  <div class="jugar-fila" class:con-pvp={$view.pvp.abierto}>
+    {#if $view.pvp.abierto}
+      <button type="button" class="btn pvp" onclick={() => (pvp = true)} data-testid="abrir-pvp">
+        <Icon name="pvp" size={28} /><span class="pvp-txt">PvP<small class="cifra">{meta.pvp.intentos}/{INTENTOS_MAX}</small></span>
+      </button>
+    {/if}
+    <button type="button" class="btn btn--accent jugar" onclick={() => juego.play()} data-testid="jugar"><Icon name="jugar" size={26} /> {$t('arbol.jugar')}</button>
+  </div>
 </div>
 
 {#if ajustes}
   <Ajustes cerrar={() => (ajustes = false)} />
+{/if}
+{#if pvp}
+  <Pvp cerrar={() => (pvp = false)} />
 {/if}
 {#if ranking}
   <Ranking cerrar={() => (ranking = false)} />
@@ -469,5 +482,26 @@
   .jugar {
     min-height: 58px;
     font-size: 24px;
+  }
+  .jugar-fila {
+    display: grid;
+    gap: 8px;
+  }
+  .jugar-fila.con-pvp {
+    grid-template-columns: auto 1fr;
+  }
+  .pvp {
+    gap: 6px;
+    min-height: 58px;
+    padding: 4px 14px 4px 10px;
+    background: linear-gradient(#ffb3a8, #ef7a6c);
+    font-size: 20px;
+  }
+  .pvp-txt {
+    display: grid;
+    line-height: 1;
+  }
+  .pvp-txt small {
+    font-size: 13px;
   }
 </style>

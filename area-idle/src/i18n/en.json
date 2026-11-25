@@ -154,7 +154,10 @@
     "jugarMin": "+{n} min of play",
     "resumen": "In {min} min of play: {partidas} rounds ({ganadas} won), level {desde} → {hasta}, {compras} upgrades bought, +{oro} gold.",
     "masGemas": "+10 gems",
-    "nuevoDia": "New day (new dailies)"
+    "nuevoDia": "New day (new dailies)",
+    "pvpRecargar": "PvP: attempts 5/5",
+    "pvpSemana": "PvP: end week",
+    "masMedallas": "+50 medals"
   },
   "secciones": {
     "jugador": "Player",
@@ -301,5 +304,52 @@
     "sinConexion": "No online ranking here: only your row shows. Play the version published on Claude to compete.",
     "soloLectura": "You can see the ranking, but with this access you don't show up in it.",
     "nuevo": "New! Ranking: compare your level with other players."
+  },
+  "ligas": {
+    "bronce": "Bronze",
+    "plata": "Silver",
+    "oro": "Gold",
+    "platino": "Platinum",
+    "diamante": "Diamond",
+    "campeon": "Champion"
+  },
+  "pvp": {
+    "titulo": "PvP Arena",
+    "liga": "{liga} League",
+    "termina": "Week ends in {t}",
+    "puntos": "{n} pts",
+    "pts": "pts",
+    "tuPoder": "Your power",
+    "recarga": "+1 in {t}",
+    "lleno": "Attempts full",
+    "tu": "You",
+    "facil": "Easy",
+    "parejo": "Even",
+    "dificil": "Hard",
+    "sube": "Promoted to {liga}",
+    "baja": "Relegated to {liga}",
+    "semanaFin": "Week over: #{n} in {liga}",
+    "subes": "Promoted to {liga}!",
+    "bajas": "Down to {liga}",
+    "sigues": "You stay in your league",
+    "batalla": "Battle",
+    "probabilidad": "You had a {n}% chance to win",
+    "ganaste": "You won!",
+    "perdiste": "You lost",
+    "continuar": "Continue",
+    "saltar": "Skip",
+    "nuevo": "New! PvP Arena: weekly leagues against other players."
+  },
+  "tienda": {
+    "titulo": "PvP Shop",
+    "oro": "Gold chest",
+    "gemas": "Gem pouch",
+    "intento": "Extra fight",
+    "estandarte": "War banner",
+    "oroTexto": "+{n} gold ({m} min of play)",
+    "gemasTexto": "+{n} purple gems",
+    "intentoTexto": "+1 attempt ({n}/{max})",
+    "estandarteTexto": "PvP power +{a}% → +{b}% ({n}/{max})",
+    "como": "Medals: 3 per win, 1 per loss and a prize when the week ends."
   }
 }

@@ -46,6 +46,8 @@ export function formatDuration(seconds: number): string {
   const min = Math.max(1, Math.floor(seconds / 60));
   const h = Math.floor(min / 60);
   const m = min % 60;
+  // Más de un día: días y horas ("4 d 7 h").
+  if (h >= 24) return h % 24 ? `${Math.floor(h / 24)} d ${h % 24} h` : `${Math.floor(h / 24)} d`;
   if (!h) return `${m} min`;
   return m ? `${h} h ${m} min` : `${h} h`;
 }

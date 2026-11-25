@@ -9,7 +9,9 @@ import { claimableCount, claimBonus, claimMission, missionsUnlocked, rollDaily }
 import { bossOf, createRun, moveCursor, startRun, stepRun, type Run, type RunEvent } from '../core/run';
 import { ENEMIES, levelConfig, type EnemyKind, type ZoneId } from '../core/datos';
 import { locale, detectLocale } from '../i18n';
-import type { AudioEngine } from '../services/audio';
+import type { AudioEngine, SoundId } from '../services/audio';
+import { buyShop, endWeek, fight, INTENTOS_MAX, pvpUnlocked, syncPvp, type FightResult, type ShopId } from '../core/pvp';
+import { activeGoldPerMinute } from '../core/inactivo';
 import { clearRaw, loadRaw, saveRaw } from '../services/storage';
 import { RankingService } from '../services/ranking';
 import { cleanName, rankingEntry, rankingUnlocked } from '../core/ranking';
@@ -45,6 +47,9 @@ export interface Vista {
   /** Ranking (desde el nivel 17): si ya se abrió y tu nombre. */
   ranking: { abierto: boolean; nombre: string };
   abrioRanking: boolean;
+  /** PvP (desde el nivel 19). */
+  pvp: { abierto: boolean };
+  abrioPvp: boolean;
   /** El jefe del nivel (si es de jefe): quién, su vida y si está aturdido o furioso. */
   jefe: { kind: EnemyKind; vida: number; max: number; aturdido: boolean; furia: boolean } | null;
   /** El nivel elegido en el árbol es de jefe (corona en el selector). */
@@ -75,6 +80,7 @@ export class Juego {
   private abrioInactivo = false;
   private abrioMisiones = false;
   private abrioRanking = false;
+  private abrioPvp = false;
   /** El ranking compartido (en Claude) o solo tu fila (fuera de Claude). */
   readonly ranking = new RankingService();
   /** Al abrir: quien ya jugó llega al árbol; quien es nuevo, directo a jugar. */
@@ -193,10 +199,12 @@ export class Juego {
     const antes = idleUnlocked(this.meta);
     const misionesAntes = missionsUnlocked(this.meta);
     const rankingAntes = rankingUnlocked(this.meta);
+    const pvpAntes = pvpUnlocked(this.meta);
     this.premio = finishRun(this.meta, { oro: run.oro, reventados: run.reventados, gano, nivel: run.nivel.nivel, porTipo: run.porTipo, muroCaido: run.muro.caido, jefe: run.nivel.jefe?.kind ?? null });
     this.abrioInactivo = !antes && idleUnlocked(this.meta);
     this.abrioMisiones = !misionesAntes && missionsUnlocked(this.meta);
     this.abrioRanking = !rankingAntes && rankingUnlocked(this.meta);
+    this.abrioPvp = !pvpAntes && pvpUnlocked(this.meta);
     if (!this.meta.vistos.includes('primera')) this.meta.vistos.push('primera');
     this.fase = 'fin';
     this.audio.play(gano ? 'fin' : 'pierde');
@@ -267,6 +275,68 @@ export class Juego {
     return gemas;
   }
 
+  /** Vuelve a publicar la vista (p. ej. cuando vuelve un intento del PvP con la ventana abierta). */
+  refresh(): void {
+    this.publish();
+  }
+
+  /** Un sonido suelto (la batalla del PvP los pide). */
+  sonar(id: SoundId): void {
+    this.audio.play(id);
+  }
+
+  /** PvP: pelea contra un rival de tu liga. La ventana anima el resultado. */
+  pvpFight(rivalId: string): FightResult | null {
+    const r = fight(this.meta, rivalId, Date.now(), Math.random());
+    if (!r) {
+      this.audio.play('error');
+      return null;
+    }
+    this.save();
+    this.publish();
+    return r;
+  }
+
+  /** PvP: compra en la tienda (con medallas). */
+  pvpBuy(id: ShopId): boolean {
+    const ok = buyShop(this.meta, id, activeGoldPerMinute(this.meta));
+    this.audio.play(ok ? 'compra' : 'error');
+    if (ok) {
+      this.save();
+      this.publish();
+    }
+    return ok;
+  }
+
+  /** Ya se vio cómo te fue la semana pasada. */
+  pvpAck(): void {
+    this.meta.pvp.resultado = null;
+    this.save();
+    this.publish();
+  }
+
+  /** Modo pruebas del PvP: intentos llenos, cerrar la semana ya, medallas de regalo. */
+  pvpRefill(): void {
+    this.meta.pvp.intentos = INTENTOS_MAX;
+    this.meta.pvp.desde = Date.now();
+    this.save();
+    this.publish();
+  }
+
+  pvpEndWeek(): void {
+    if (!pvpUnlocked(this.meta)) return;
+    syncPvp(this.meta, Date.now());
+    endWeek(this.meta, Date.now());
+    this.save();
+    this.publish();
+  }
+
+  addMedals(n: number): void {
+    this.meta.pvp.medallas += n;
+    this.save();
+    this.publish();
+  }
+
   /** Modo pruebas: gemas de regalo y un día nuevo (otras diarias). */
   addGems(n: number): void {
     this.meta.gemas += n;
@@ -328,8 +398,10 @@ export class Juego {
 
   private publish(): void {
     const run = this.run;
-    // Las diarias cambian a medianoche (y se eligen la primera vez que se abren).
+    // Las diarias cambian a medianoche (y se eligen la primera vez que se abren); el PvP recarga
+    // intentos y, si cambió la semana, la cierra.
     rollDaily(this.meta, Date.now());
+    if (syncPvp(this.meta, Date.now())) saveRaw(this.meta);
     this.vista.set({
       fase: this.fase,
       restante: run ? Math.max(0, run.stats.duracion - run.t) : 0,
@@ -355,12 +427,14 @@ export class Juego {
       abrioInactivo: this.abrioInactivo && this.fase === 'fin',
       abrioMisiones: this.abrioMisiones && this.fase === 'fin',
       abrioRanking: this.abrioRanking && this.fase === 'fin',
+      abrioPvp: this.abrioPvp && this.fase === 'fin',
+      pvp: { abierto: pvpUnlocked(this.meta) },
       ranking: { abierto: rankingUnlocked(this.meta), nombre: this.meta.nombre },
       misiones: { abiertas: missionsUnlocked(this.meta), listas: claimableCount(this.meta) },
       vivos: run?.enemies.length ?? 0,
       toco: this.toco,
       // Una copia: la interfaz solo se entera de un cambio si recibe un objeto nuevo.
-      meta: { ...this.meta, talentos: { ...this.meta.talentos }, ajustes: { ...this.meta.ajustes }, cuenta: { ...this.meta.cuenta }, misiones: { ...this.meta.misiones } },
+      meta: { ...this.meta, talentos: { ...this.meta.talentos }, ajustes: { ...this.meta.ajustes }, cuenta: { ...this.meta.cuenta }, misiones: { ...this.meta.misiones }, pvp: { ...this.meta.pvp } },
       partida: this.partida,
     });
   }

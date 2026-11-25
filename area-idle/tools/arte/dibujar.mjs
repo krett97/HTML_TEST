@@ -308,6 +308,15 @@ icon('carcaj', I(o('M18 18 l20 -6 l12 42 l-20 6 z', P.maderaS, 5) + line('M26 16
 icon('albanil', I(rect(6, 34, 26, 14, 2, '#c9c0b2', 4) + rect(20, 46, 26, 14, 2, '#c9c0b2', 4) + g('rotate(35 40 24)', rect(36, 6, 8, 34, 3, P.maderaS, 4) + rect(26, 4, 28, 12, 3, P.grisS, 4)) + circ(52, 52, 8, P.pasto, 4) + line('M52 48 v8 M48 52 h8', P.blanco, 3)));
 // Trofeo del ranking: copa dorada con asas, una estrella y su base.
 icon('trofeo', I(o('M14 12 C4 12 4 30 18 32 M50 12 C60 12 60 30 46 32', 'none', 5) + o('M14 6 H50 V22 C50 34 42 40 32 40 C22 40 14 34 14 22 Z', P.oro, 5) + rect(28, 40, 8, 8, 1, P.oroS, 4) + rect(18, 48, 28, 10, 3, P.maderaS, 5) + o('M32 13 l3 6 l6 1 l-4.5 4 l1 6 l-5.5 -3 l-5.5 3 l1 -6 l-4.5 -4 l6 -1 z', P.blanco, 2.5) + brillo(20, 14, 4, 6, 0.7)));
+// PvP: espadas cruzadas, medalla, tienda, estandarte y un escudo por liga.
+const espadaPvp = (rot) => g(`rotate(${rot} 32 32)`, o('M29 4 H35 V40 H29 Z', '#dfe5ee', 4) + line('M32 8 V38', '#a9b3c4', 2) + rect(20, 40, 24, 6, 3, P.oroS, 4) + rect(28, 46, 8, 12, 3, P.maderaS, 4) + circ(32, 60, 3.5, P.oro, 3));
+icon('pvp', I(espadaPvp(-40) + espadaPvp(40)));
+icon('medalla', I(o('M18 4 L28 26 L36 26 L46 4 Z', P.rojo, 4) + line('M32 4 V26', P.blanco, 4) + circ(32, 40, 18, P.oro, 5) + circ(32, 40, 11, P.oroS, 0) + o('M32 32 l2.6 5.4 l5.9 .8 l-4.3 4.1 l1 5.8 l-5.2 -2.8 l-5.2 2.8 l1 -5.8 l-4.3 -4.1 l5.9 -.8 z', P.amarillo, 2.5)));
+icon('tienda', I(o('M8 26 H56 V58 H8 Z', P.crema, 5) + o('M4 26 L10 8 H54 L60 26 Z', P.rojo, 5) + line('M18 8 L16 26 M32 8 V26 M46 8 L48 26', P.blanco, 4) + o('M24 58 V40 H40 V58', P.maderaC, 4) + g('translate(42 30) scale(0.28)', o('M18 4 L28 26 L36 26 L46 4 Z', P.rojo, 8) + circ(32, 40, 18, P.oro, 8))));
+icon('estandarte', I(line('M14 4 V62', P.maderaS, 6) + circ(14, 4, 4, P.oro, 3) + o('M16 8 H54 L46 22 L54 36 H16 Z', P.morado, 5) + o('M30 14 l3 6 l6 1 l-4.5 4 l1 6 l-5.5 -3 l-5.5 3 l1 -6 l-4.5 -4 l6 -1 z', P.amarillo, 2.5)));
+for (const [id, color, claro] of [['bronce', '#c47a3a', '#e8a46a'], ['plata', '#9aa3b2', '#d8dde6'], ['oro', '#e8a91c', '#ffd36e'], ['platino', '#3fb0a8', '#9ee6df'], ['diamante', '#5b8cff', '#b8ccff'], ['campeon', '#a24fe0', '#dcb6ff']]) {
+  icon(`liga_${id}`, I(o('M32 4 L56 12 V32 C56 46 46 56 32 62 C18 56 8 46 8 32 V12 Z', color, 5) + f('M32 10 L50 16 V32 C50 42 43 50 32 55 Z', claro, 'opacity=".55"') + o('M32 20 l4 8.5 l9 1.2 l-6.6 6.3 l1.6 9 l-8 -4.4 l-8 4.4 l1.6 -9 l-6.6 -6.3 l9 -1.2 z', P.blanco, 3)));
+}
 icon('moneda', I(moneda(32, 32, 26)));
 icon('reloj', I(circ(32, 32, 26, P.blanco) + line('M32 32 v-16 M32 32 l12 8', K, 6) + circ(32, 32, 4, P.rojo, 0)));
 icon('candado', I(o('M18 28 v-8 a14 14 0 0 1 28 0 v8', 'none', 6) + rect(10, 28, 44, 30, 8, P.oro, 5) + circ(32, 41, 5, K, 0) + rect(29, 42, 6, 10, 2, K, 0)));

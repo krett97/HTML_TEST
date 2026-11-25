@@ -7,7 +7,9 @@ import { buyTalent, chooseLevel, costOf, createMeta, finishRun, levelOf, loadMet
 import { ALLY_ROW, archerSpots, bossOf, createRun, DAMAGE_TYPE_OF, FIELD_W, moveCursor, startRun, stepRun, type Run, type RunEvent } from '../src/core/run';
 import { computeStats } from '../src/core/stats';
 import { BONO_DIARIO, claimableCount, claimBonus, claimMission, dailyProgress, dayKey, DIARIAS, DIARIAS_POR_DIA, MISSION_BY_ID, msUntilReset, permanentProgress, rollDaily } from '../src/core/misiones';
-import { MISIONES_DESDE, RANKING_DESDE } from '../src/core/datos';
+import { MISIONES_DESDE, PVP_DESDE, RANKING_DESDE } from '../src/core/datos';
+import { buyShop, emptyPvp, endWeek, ESTANDARTE, fight, INTENTOS_MAX, leagueTable, LIGAS, loadPvp, msUntilWeekEnd, pointsFor, positionOf, powerOf, RECARGA_MS, refill, rivalsOf, shopCost, syncPvp, weekKey, winChance } from '../src/core/pvp';
+import { formatDuration } from '../src/core/format';
 import { cleanName, MAX_NAME, rankingEntry, rankingUnlocked, readRow, sortRows } from '../src/core/ranking';
 
 /** Una partida vacía con un enemigo puesto a mano. */
@@ -772,5 +774,146 @@ describe('ranking', () => {
     meta.nombre = 'Kike';
     expect(loadMeta(JSON.parse(JSON.stringify(meta))).nombre).toBe('Kike');
     expect(loadMeta({ ...JSON.parse(JSON.stringify(meta)), nombre: { x: 1 } }).nombre).toBe('');
+  });
+});
+
+describe('PvP', () => {
+  const MIE = new Date(2026, 10, 25, 15, 0).getTime(); // miércoles
+  const abierto = () => {
+    const meta = createMeta();
+    meta.nivel = PVP_DESDE;
+    meta.talentos = { danio: 10, radio: 3, cadencia: 3, arqueros: 1, multiflecha: 2 };
+    syncPvp(meta, MIE);
+    return meta;
+  };
+  it('el poder junta los tres árboles; el Estandarte lo sube 5 % por nivel', () => {
+    const base = powerOf(computeStats({}));
+    expect(base.total).toBeGreaterThan(0);
+    expect(base.mago).toBe(0);
+    expect(powerOf(computeStats({ danio: 5 })).total).toBeGreaterThan(base.total);
+    const conMago = powerOf(computeStats({ mago: 1, fuego: 1 }));
+    expect(conMago.mago).toBeGreaterThan(0);
+    expect(conMago.arqueros).toBe(0);
+    expect(powerOf(computeStats({ arqueros: 1 })).arqueros).toBeGreaterThan(0);
+    const s = computeStats({ danio: 8, arqueros: 1 });
+    expect(powerOf(s, 4).total / powerOf(s, 0).total).toBeCloseTo(1.2, 1);
+  });
+  it('gana el más fuerte casi siempre, pero no siempre', () => {
+    expect(winChance(100, 100)).toBeCloseTo(0.5);
+    expect(winChance(150, 100)).toBeCloseTo(0.835, 2);
+    expect(winChance(100, 150)).toBeCloseTo(0.165, 2);
+  });
+  it('semanas de lunes a lunes; la cuenta regresiva sale en días', () => {
+    expect(weekKey(MIE)).toBe('2026-11-23');
+    expect(weekKey(new Date(2026, 10, 29, 23, 59).getTime())).toBe('2026-11-23');
+    expect(weekKey(new Date(2026, 10, 30, 0, 1).getTime())).toBe('2026-11-30');
+    expect(msUntilWeekEnd(MIE)).toBe((4 * 24 + 9) * 3600_000);
+    expect(formatDuration(msUntilWeekEnd(MIE) / 1000)).toBe('4 d 9 h');
+    expect(formatDuration(90 * 60)).toBe('1 h 30 min');
+  });
+  it('se abre en el nivel 19 con 5 intentos en Bronce; un intento vuelve cada 2 h', () => {
+    const meta = createMeta();
+    meta.nivel = PVP_DESDE - 1;
+    expect(syncPvp(meta, MIE)).toBe(false);
+    expect(meta.pvp.semana).toBe('');
+    const m = abierto();
+    expect(m.pvp).toMatchObject({ semana: '2026-11-23', liga: 0, puntos: 0, intentos: INTENTOS_MAX });
+    const p = m.pvp;
+    p.intentos = 2;
+    p.desde = MIE;
+    refill(p, MIE + RECARGA_MS - 1);
+    expect(p.intentos).toBe(2);
+    refill(p, MIE + RECARGA_MS);
+    expect(p.intentos).toBe(3);
+    refill(p, MIE + 10 * RECARGA_MS);
+    expect(p.intentos).toBe(INTENTOS_MAX);
+  });
+  it('tu liga: 100 jugadores, siempre los mismos esa semana, ordenados por puntos', () => {
+    const m = abierto();
+    const rivales = rivalsOf(m.pvp);
+    expect(rivales).toHaveLength(99);
+    expect(new Set(rivales.map((r) => r.nombre)).size).toBe(99);
+    expect(rivalsOf(m.pvp).map((r) => r.nombre)).toEqual(rivales.map((r) => r.nombre));
+    const tabla = leagueTable(m, MIE);
+    expect(tabla).toHaveLength(100);
+    expect(tabla.filter((f) => f.tuyo)).toHaveLength(1);
+    for (let i = 1; i < tabla.length; i++) expect(tabla[i - 1]!.puntos).toBeGreaterThanOrEqual(tabla[i]!.puntos);
+    // Al final de la semana los rivales tienen todos sus puntos; a media semana, menos.
+    const final = leagueTable(m, MIE, true).reduce((a, f) => a + f.puntos, 0);
+    expect(tabla.reduce((a, f) => a + f.puntos, 0)).toBeLessThan(final);
+  });
+  it('ganarle a alguien con más puntos da más; perder quita poco y nunca baja de 0', () => {
+    expect(pointsFor(100, 300).gana).toBeGreaterThan(pointsFor(100, 100).gana);
+    expect(pointsFor(300, 0).gana).toBeGreaterThanOrEqual(6);
+    expect(pointsFor(0, 2000).gana).toBe(40);
+    expect(pointsFor(100, 300).pierde).toBeLessThan(pointsFor(300, 100).pierde);
+    const m = abierto();
+    const rival = leagueTable(m, MIE).find((f) => !f.tuyo)!;
+    const gano = fight(m, rival.id, MIE, 0)!;
+    expect(gano).toMatchObject({ gano: true, medallas: 3 });
+    expect(gano.puntos).toBeGreaterThan(0);
+    expect(m.pvp).toMatchObject({ intentos: INTENTOS_MAX - 1, puntos: gano.puntos, peleas: 1, ganadas: 1, medallas: 3 });
+    m.pvp.puntos = 1;
+    const perdio = fight(m, rival.id, MIE, 0.9999)!;
+    expect(perdio.gano).toBe(false);
+    expect(m.pvp.puntos).toBe(0);
+    expect(m.pvp.medallas).toBe(4);
+    m.pvp.intentos = 0;
+    expect(fight(m, rival.id, MIE, 0)).toBeNull();
+    expect(fight(abierto(), 'yo', MIE, 0)).toBeNull();
+  });
+  it('al terminar la semana: los 20 mejores suben, los 20 peores bajan (de Bronce no se baja)', () => {
+    const m = abierto();
+    m.pvp.puntos = 99_999;
+    const arriba = endWeek(m, MIE);
+    expect(arriba).toMatchObject({ liga: 0, nueva: 1, posicion: 1 });
+    expect(m.pvp).toMatchObject({ liga: 1, puntos: 0, ronda: 2 });
+    expect(m.pvp.medallas).toBe(arriba.medallas);
+    const abajo = endWeek(m, MIE);
+    expect(abajo.nueva).toBe(0);
+    expect(abajo.posicion).toBeGreaterThan(80);
+    expect(endWeek(m, MIE).nueva).toBe(0);
+    m.pvp.liga = LIGAS.length - 1;
+    m.pvp.puntos = 99_999;
+    expect(endWeek(m, MIE).nueva).toBe(LIGAS.length - 1);
+  });
+  it('si pasó la semana, al volver se cierra sola y queda el resultado para mostrarlo', () => {
+    const m = abierto();
+    m.pvp.puntos = 99_999;
+    const lunes = new Date(2026, 10, 30, 9).getTime();
+    expect(syncPvp(m, lunes)).toBe(true);
+    expect(m.pvp.semana).toBe('2026-11-30');
+    expect(m.pvp.resultado).toMatchObject({ posicion: 1, nueva: 1 });
+    expect(positionOf(leagueTable(m, lunes))).toBeGreaterThan(1);
+    expect(syncPvp(m, lunes + 1000)).toBe(false);
+  });
+  it('la tienda cobra medallas: cofre de oro, pelea extra (si no estás lleno), gemas y Estandarte', () => {
+    const m = abierto();
+    m.pvp.medallas = 100;
+    expect(buyShop(m, 'intento', 0)).toBe(false);
+    expect(buyShop(m, 'oro', 10)).toBe(true);
+    expect(m.oro).toBe(150);
+    expect(buyShop(m, 'gemas', 0)).toBe(true);
+    expect(m.gemas).toBe(5);
+    const antes = shopCost(m.pvp, 'estandarte');
+    expect(buyShop(m, 'estandarte', 0)).toBe(true);
+    expect(shopCost(m.pvp, 'estandarte')).toBeGreaterThan(antes);
+    expect(m.pvp.medallas).toBe(100 - 5 - 25 - antes);
+    m.pvp.intentos = 3;
+    expect(buyShop(m, 'intento', 0)).toBe(true);
+    expect(m.pvp.intentos).toBe(4);
+    m.pvp.medallas = 0;
+    expect(buyShop(m, 'oro', 10)).toBe(false);
+    expect(ESTANDARTE.max).toBe(20);
+  });
+  it('el PvP se guarda y tolera basura', () => {
+    const m = abierto();
+    m.pvp.medallas = 12;
+    expect(loadMeta(JSON.parse(JSON.stringify(m))).pvp).toEqual(m.pvp);
+    const roto = loadPvp({ liga: 99, intentos: -3, medallas: 'x', resultado: { liga: 'a' } });
+    expect(roto.liga).toBe(LIGAS.length - 1);
+    expect(roto.intentos).toBe(INTENTOS_MAX);
+    expect(roto.medallas).toBe(0);
+    expect(loadPvp(null)).toEqual(emptyPvp());
   });
 });

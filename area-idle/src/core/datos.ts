@@ -225,6 +225,8 @@ export const INACTIVO = { desde: 3, eficiencia: 0.15, porNivel: 0.1, horas: 2, h
 export const MISIONES_DESDE = 11;
 /** El ranking se abre al llegar a este nivel. */
 export const RANKING_DESDE = 17;
+/** El PvP (ligas semanales contra otros jugadores) se abre al llegar a este nivel. */
+export const PVP_DESDE = 19;
 
 export type Seccion = 'jugador' | 'mago' | 'arqueros' | 'reliquias';
 export const SECCIONES: Seccion[] = ['jugador', 'mago', 'arqueros', 'reliquias'];
