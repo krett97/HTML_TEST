@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { playAndShop } from '../src/core/bot';
 import { activeGoldPerMinute, idleGoldPerMinute, idleReward, idleUnlocked } from '../src/core/inactivo';
-import { INACTIVO, ROJO_DESDE, AZUL_DESDE, DAMAGE_TYPES, damageMultiplier, ENEMIES, levelConfig, PRIMERA_OLA, SECCIONES, TALENT_BY_ID, TALENTS } from '../src/core/datos';
+import { isBossLevel, JEFE, INACTIVO, ROJO_DESDE, AZUL_DESDE, DAMAGE_TYPES, damageMultiplier, ENEMIES, levelConfig, PRIMERA_OLA, SECCIONES, TALENT_BY_ID, TALENTS } from '../src/core/datos';
 import { formatClock, formatNum } from '../src/core/format';
 import { buyTalent, chooseLevel, costOf, createMeta, finishRun, levelOf, loadMeta, talentState, talentVisible } from '../src/core/meta';
-import { ALLY_ROW, archerSpots, createRun, DAMAGE_TYPE_OF, FIELD_W, moveCursor, startRun, stepRun, type Run, type RunEvent } from '../src/core/run';
+import { ALLY_ROW, archerSpots, bossOf, createRun, DAMAGE_TYPE_OF, FIELD_W, moveCursor, startRun, stepRun, type Run, type RunEvent } from '../src/core/run';
 import { computeStats } from '../src/core/stats';
 
 /** Una partida vacía con un enemigo puesto a mano. */
@@ -204,6 +204,102 @@ describe('niveles', () => {
     const meta = createMeta();
     meta.talentos.botin = 4;
     expect(finishRun(meta, { oro: 0, reventados: 15, gano: true, nivel: 1 })).toBe(Math.round(levelConfig(1).premio * 2));
+  });
+});
+
+describe('jefes', () => {
+  it('el nivel 10 es de jefe (y cada 10), con más tiempo y premio ×5', () => {
+    expect(isBossLevel(9)).toBe(false);
+    expect(isBossLevel(10)).toBe(true);
+    expect(levelConfig(10).jefe?.kind).toBe('rey');
+    expect(levelConfig(11).jefe).toBeNull();
+    expect(levelConfig(20).jefe!.vida).toBeGreaterThan(levelConfig(10).jefe!.vida);
+    const run = createRun(computeStats({}), 560, 10, 1);
+    expect(run.stats.duracion).toBe(20 + JEFE.extra);
+    expect(levelConfig(10).premio).toBe(Math.round(8 * Math.pow(1.12, 9) * JEFE.premio));
+  });
+  it('sale con su escolta, invoca más y brinca a otro lado', () => {
+    const run = createRun(computeStats({}), 560, 10, 1);
+    run.cursor = { x: -999, y: -999 };
+    const inicio = startRun(run);
+    expect(inicio.filter((e) => e.type === 'spawn')).toHaveLength(1 + JEFE.inicial);
+    const boss = bossOf(run)!;
+    expect(boss.kind).toBe('rey');
+    expect(boss.vida).toBe(levelConfig(10).jefe!.vida);
+    const events: RunEvent[] = [];
+    for (let i = 0; i < 130; i++) events.push(...stepRun(run, 0.05));
+    expect(events.filter((e) => e.type === 'bossSummon')).toHaveLength(2);
+    const salto = events.find((e) => e.type === 'bossJump');
+    expect(salto).toBeDefined();
+    if (salto?.type === 'bossJump') expect(Math.hypot(boss.x - salto.tx, boss.y - salto.ty)).toBeLessThan(1);
+  });
+  it('lanza bolas de baba a la muralla, cae aturdido (recibe ×2) y a media vida se enfurece', () => {
+    const run = createRun(computeStats({}), 560, 10, 1);
+    run.cursor = { x: -999, y: -999 };
+    startRun(run);
+    const events: RunEvent[] = [];
+    for (let i = 0; i < 160; i++) events.push(...stepRun(run, 0.05));
+    expect(events.some((e) => e.type === 'bossThrow')).toBe(true);
+    const golpe = events.find((e) => e.type === 'wallHit' && Math.abs(e.danio - JEFE.golpe * levelConfig(10).ataque) < 1e-9);
+    expect(golpe).toBeDefined();
+    const caida = events.find((e) => e.type === 'bossStun');
+    expect(caida).toBeDefined();
+    // Aturdido: el siguiente disparo le pega doble.
+    const boss = bossOf(run)!;
+    run.jefe!.aturdido = 1;
+    run.cursor = { x: boss.x, y: boss.y };
+    run.disparo = 0;
+    const antes = boss.vida;
+    const golpes: RunEvent[] = [];
+    for (let i = 0; i < 6; i++) golpes.push(...stepRun(run, 0.05));
+    const alJefe = golpes.find((e) => e.type === 'hit' && e.id === boss.id);
+    expect(alJefe).toMatchObject({ danio: run.stats.danio * 2 });
+    expect(boss.vida).toBeLessThan(antes);
+    // Furia a media vida.
+    boss.vida = boss.vidaMax * 0.4;
+    expect(stepRun(run, 0.05).some((e) => e.type === 'bossRage')).toBe(true);
+    expect(run.jefe!.furia).toBe(true);
+  });
+  it('esquiva tu círculo caminando, salvo aturdido', () => {
+    const run = createRun(computeStats({}), 560, 10, 1);
+    startRun(run);
+    run.enemies = run.enemies.filter((e) => e.kind === 'rey');
+    run.jefe!.brinco = 99;
+    run.jefe!.invoca = 99;
+    run.jefe!.lanza = 99;
+    const boss = bossOf(run)!;
+    boss.x = 180;
+    boss.y = 250;
+    run.cursor = { x: 170, y: 250 };
+    stepRun(run, 0.5);
+    expect(boss.x).toBeGreaterThan(185);
+    // Lejos del círculo, se queda quieto.
+    run.cursor = { x: 10, y: 450 };
+    const x = boss.x;
+    stepRun(run, 0.5);
+    expect(boss.x).toBe(x);
+    // Aturdido, no esquiva.
+    run.cursor = { x: boss.x - 5, y: boss.y };
+    run.jefe!.aturdido = 1;
+    stepRun(run, 0.3);
+    expect(boss.x).toBe(x);
+  });
+  it('se gana al vencer al jefe (y su escolta revienta); reventar escoltas no basta', () => {
+    const run = createRun(computeStats({}), 560, 10, 1);
+    run.cursor = { x: -999, y: -999 };
+    startRun(run);
+    for (const e of run.enemies) if (e.kind !== 'rey') e.vida = 0.001;
+    run.enemies = run.enemies.filter((e) => e.kind === 'rey');
+    run.reventados = 500;
+    expect(stepRun(run, 0.05).some((e) => e.type === 'end')).toBe(false);
+    bossOf(run)!.vida = 0.5;
+    run.cursor = { x: bossOf(run)!.x, y: bossOf(run)!.y };
+    run.disparo = 0;
+    const events: RunEvent[] = [];
+    for (let i = 0; i < 20 && !events.some((e) => e.type === 'end'); i++) events.push(...stepRun(run, 0.05));
+    expect(events.find((e) => e.type === 'end')).toEqual({ type: 'end', gano: true });
+    expect(events.some((e) => e.type === 'kill' && e.kind === 'rey')).toBe(true);
+    expect(run.enemies).toHaveLength(0);
   });
 });
 

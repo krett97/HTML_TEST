@@ -7,7 +7,10 @@
     "oro": "Gold",
     "nivel": "Level {n}",
     "progreso": "Slimes popped this level",
-    "murallaCaida": "The wall fell! Your allies can't attack this level."
+    "murallaCaida": "The wall fell! Your allies can't attack this level.",
+    "jefe": "BOSS!",
+    "aturdido": "Stunned! ×2 damage",
+    "furia": "It's enraged!"
   },
   "fin": {
     "reventados": "Popped",
@@ -19,7 +22,9 @@
     "seQueda": "You keep the gold you collected.",
     "siguiente": "Next",
     "reintentar": "Retry level {n}",
-    "anterior": "Level {n}"
+    "anterior": "Level {n}",
+    "ganoJefe": "You beat the {nombre}!",
+    "leQuedo": "{pct}% left"
   },
   "arbol": {
     "jugar": "Play!",
@@ -153,7 +158,15 @@
       "arqueros": "Archers",
       "mago": "Wizard"
     },
-    "ataca": "{n} to the wall"
+    "ataca": "{n} to the wall",
+    "jefes": "Bosses",
+    "brinca": "Jumps and dodges",
+    "mecanicas": {
+      "invoca": "Summons slimes around it.",
+      "esquiva": "Walks out of your circle and jumps elsewhere.",
+      "aturdido": "Stunned after landing: takes double damage.",
+      "furia": "At half health it rages: everything faster."
+    }
   },
   "tipos": {
     "fisico": "Physical",
@@ -175,6 +188,10 @@
     "rojo": {
       "nombre": "Red slime",
       "texto": "Carries a slingshot and pelts your wall. If the wall falls, your wizard and archers stop attacking."
+    },
+    "rey": {
+      "nombre": "King Slime",
+      "texto": "The first boss, at level 10. Huge, orange and crowned."
     }
   },
   "zonas": {

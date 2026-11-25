@@ -1,7 +1,7 @@
 // Una partida: el campo, los enemigos que aparecen y pasean, tu círculo donde caen flechas, el mago
 // con sus explosiones de fuego cuadradas y los arqueros que tiran a un objetivo a la vez. Lógica pura: la escena
 // llama a stepRun cada cuadro (a través del controlador) y dibuja los eventos.
-import { damageMultiplier, effectiveness, ENEMIES, levelConfig, LLEGADA, MAX_VIVOS, PRIMERA_OLA, type DamageType, type EnemyKind, type LevelConfig } from './datos';
+import { damageMultiplier, effectiveness, ENEMIES, JEFE, levelConfig, LLEGADA, MAX_VIVOS, PRIMERA_OLA, type DamageType, type EnemyKind, type LevelConfig } from './datos';
 import { between, createRng, type Rng } from './rng';
 import type { Stats } from './stats';
 
@@ -39,6 +39,8 @@ export interface Enemy {
 /** Una piedra de resortera en el aire, de un slime rojo a la muralla. */
 export interface Pebble {
   id: number;
+  /** La bola de baba del jefe (más grande). */
+  grande?: boolean;
   sx: number;
   sy: number;
   x: number;
@@ -100,6 +102,12 @@ export type RunEvent =
   | { type: 'sling'; id: number; x: number; y: number }
   | { type: 'wallHit'; x: number; y: number; danio: number; vida: number; max: number }
   | { type: 'wallDown' }
+  /** El jefe brinca a otro lado (llega en `dura` s), cae aturdido, invoca slimes, lanza baba o se enfurece. */
+  | { type: 'bossJump'; id: number; x: number; y: number; tx: number; ty: number; dura: number }
+  | { type: 'bossStun'; id: number; x: number; y: number; dura: number }
+  | { type: 'bossSummon'; id: number; x: number; y: number }
+  | { type: 'bossThrow'; id: number; x: number; y: number }
+  | { type: 'bossRage'; id: number }
   /** Se acabó: `gano` si se reventaron todos los slimes del nivel antes de que se acabara el tiempo. */
   | { type: 'end'; gano: boolean };
 
@@ -110,6 +118,8 @@ export interface Run {
   nivel: LevelConfig;
   /** Cuántos slimes del nivel ya salieron. */
   salieron: number;
+  /** El jefe del nivel (si es nivel de jefe): cuándo invoca, brinca y lanza otra vez, si va en el aire, si está aturdido y si ya se enfureció. */
+  jefe: { id: number; invoca: number; brinco: number; lanza: number; salto: { tx: number; ty: number; falta: number } | null; aturdido: number; furia: boolean } | null;
   gano: boolean;
   w: number;
   h: number;
@@ -134,13 +144,16 @@ export interface Run {
   rng: Rng;
 }
 
-export function createRun(stats: Stats, h: number, nivel = 1, seed = Date.now(), arriba = MARGIN): Run {
+export function createRun(base: Stats, h: number, nivel = 1, seed = Date.now(), arriba = MARGIN): Run {
   const alto = Math.max(240, h);
+  // En los niveles de jefe hay más tiempo.
+  const stats = levelConfig(nivel).jefe ? { ...base, duracion: base.duracion + JEFE.extra } : base;
   return {
     stats,
     arriba: Math.min(alto / 3, Math.max(MARGIN, arriba)),
     nivel: levelConfig(nivel),
     salieron: 0,
+    jefe: null,
     gano: false,
     w: FIELD_W,
     h: alto,
@@ -184,9 +197,45 @@ export function archerSpots(run: Run): { x: number; y: number }[] {
 /** Los enemigos del principio. Devuelve sus eventos para que la escena los dibuje. */
 export function startRun(run: Run): RunEvent[] {
   const events: RunEvent[] = [];
+  if (run.nivel.jefe) {
+    // El jefe sale arriba al centro, con su escolta.
+    const { kind, vida } = run.nivel.jefe;
+    const boss: Enemy = { id: run.nextId++, kind, x: run.w / 2, y: run.arriba + (bottom(run) - run.arriba) * 0.3, vx: 0, vy: 0, vida, vidaMax: vida, giro: Infinity };
+    run.enemies.push(boss);
+    run.jefe = { id: boss.id, invoca: JEFE.invoca, brinco: JEFE.brinco, lanza: JEFE.lanza * 0.6, salto: null, aturdido: 0, furia: false };
+    events.push({ type: 'spawn', id: boss.id, kind, x: boss.x, y: boss.y });
+    for (let i = 0; i < JEFE.inicial; i++) spawnNear(run, boss, events);
+    return events;
+  }
   const primeros = Math.ceil(run.nivel.total * PRIMERA_OLA);
   for (let i = 0; i < primeros; i++) spawn(run, events);
   return events;
+}
+
+/** Un slime verde de escolta junto al jefe. */
+function spawnNear(run: Run, boss: Enemy, events: RunEvent[]): void {
+  const def = ENEMIES.verde;
+  const a = run.rng() * Math.PI * 2;
+  const d = ENEMIES[boss.kind].radio + between(run.rng, 10, 30);
+  const vida = def.vida * run.nivel.vida;
+  const e: Enemy = {
+    id: run.nextId++,
+    kind: 'verde',
+    x: Math.min(run.w - MARGIN, Math.max(MARGIN, boss.x + Math.cos(a) * d)),
+    y: Math.min(bottom(run), Math.max(run.arriba, boss.y + Math.sin(a) * d)),
+    vx: Math.cos(a) * def.velocidad,
+    vy: Math.sin(a) * def.velocidad,
+    vida,
+    vidaMax: vida,
+    giro: between(run.rng, 1, 3),
+  };
+  run.enemies.push(e);
+  events.push({ type: 'spawn', id: e.id, kind: 'verde', x: e.x, y: e.y });
+}
+
+/** El jefe del nivel (vivo), o undefined. */
+export function bossOf(run: Run): Enemy | undefined {
+  return run.jefe ? run.enemies.find((e) => e.id === run.jefe!.id && e.vida > 0) : undefined;
 }
 
 /** Mueve el círculo (se queda donde tocó el jugador, dentro del campo). */
@@ -234,7 +283,9 @@ export function inside(e: Enemy, x: number, y: number, forma: Forma): boolean {
 
 function damage(run: Run, e: Enemy, base: number, fuente: Source, events: RunEvent[]): void {
   const tipo = DAMAGE_TYPE_OF[fuente];
-  const danio = base * damageMultiplier(e.kind, tipo);
+  // El jefe aturdido (recién caído de un brinco) recibe doble.
+  const aturdido = run.jefe?.id === e.id && run.jefe.aturdido > 0 ? JEFE.aturdidoMult : 1;
+  const danio = base * damageMultiplier(e.kind, tipo) * aturdido;
   e.vida -= danio;
   if (e.vida > 0) {
     events.push({ type: 'hit', id: e.id, x: e.x, y: e.y, danio, fuente, efecto: effectiveness(e.kind, tipo) });
@@ -269,6 +320,7 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
 
   // Pasean: cambian de rumbo de vez en cuando y rebotan en las orillas.
   for (const e of run.enemies) {
+    if (run.jefe && e.id === run.jefe.id) continue;
     e.giro -= step;
     if (e.giro <= 0) {
       const speed = ENEMIES[e.kind].velocidad * between(run.rng, 0.5, 1.4);
@@ -285,12 +337,80 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
     e.y = Math.min(bottom(run), Math.max(run.arriba, e.y));
   }
 
-  // Llega el resto de los slimes del nivel (más rápido con "Atraer slimes").
-  const resto = run.nivel.total - Math.ceil(run.nivel.total * PRIMERA_OLA);
-  run.acumulado += (resto / LLEGADA) * s.ritmo * step;
-  while (run.acumulado >= 1 && run.salieron < run.nivel.total && run.enemies.length < MAX_VIVOS) {
-    run.acumulado -= 1;
-    spawn(run, events);
+  const boss = bossOf(run);
+  if (run.jefe && boss) {
+    // El jefe: a media vida se enfurece; invoca escolta, lanza baba a la muralla y brinca a otro lado.
+    const j = run.jefe;
+    if (!j.furia && boss.vida <= boss.vidaMax / 2) {
+      j.furia = true;
+      events.push({ type: 'bossRage', id: boss.id });
+    }
+    const ritmo = j.furia ? JEFE.furia : 1;
+    j.aturdido = Math.max(0, j.aturdido - step);
+    j.invoca -= step;
+    if (j.invoca <= 0) {
+      j.invoca += JEFE.invoca * ritmo;
+      events.push({ type: 'bossSummon', id: boss.id, x: boss.x, y: boss.y });
+      const cuantos = JEFE.escolta + (j.furia ? 1 : 0);
+      for (let i = 0; i < cuantos && run.enemies.length < MAX_VIVOS; i++) spawnNear(run, boss, events);
+    }
+    j.lanza -= step;
+    if (j.lanza <= 0 && !j.salto) {
+      j.lanza += JEFE.lanza * ritmo;
+      if (!run.muro.caido) {
+        const tx = between(run.rng, 12, run.w - 12);
+        run.piedras.push({ id: run.nextId++, grande: true, sx: boss.x, sy: boss.y - 20, x: boss.x, y: boss.y - 20, tx, ty: run.h - ALLY_ROW + 14, danio: JEFE.golpe * run.nivel.ataque });
+        events.push({ type: 'bossThrow', id: boss.id, x: boss.x, y: boss.y });
+      }
+    }
+    j.brinco -= step;
+    if (j.brinco <= 0 && !j.salto) {
+      j.brinco += JEFE.brinco * ritmo;
+      const r = ENEMIES[boss.kind].radio;
+      const tx = between(run.rng, r + MARGIN, run.w - r - MARGIN);
+      const ty = between(run.rng, run.arriba + r * 0.5, bottom(run) - r * 0.5);
+      j.salto = { tx, ty, falta: 0.5 };
+      events.push({ type: 'bossJump', id: boss.id, x: boss.x, y: boss.y, tx, ty, dura: 0.5 });
+    }
+    // Esquiva tu círculo: si lo tiene cerca, camina alejándose (en furia, más rápido). Aturdido no se mueve.
+    if (!j.salto && j.aturdido <= 0) {
+      const r = ENEMIES[boss.kind].radio;
+      const dx = boss.x - run.cursor.x;
+      const dy = boss.y - run.cursor.y;
+      const d = Math.hypot(dx, dy);
+      if (d < s.radio + r + JEFE.alerta) {
+        const v = JEFE.esquiva * (j.furia ? 1.4 : 1) * step;
+        const ang = d > 0.01 ? Math.atan2(dy, dx) : run.rng() * Math.PI * 2;
+        boss.vx = Math.cos(ang) * JEFE.esquiva;
+        boss.vy = Math.sin(ang) * JEFE.esquiva;
+        // Contra la orilla se desliza por ella (se recorta cada eje por separado).
+        boss.x = Math.min(run.w - r, Math.max(r, boss.x + Math.cos(ang) * v));
+        boss.y = Math.min(bottom(run) - r * 0.3, Math.max(run.arriba + r * 0.5, boss.y + Math.sin(ang) * v));
+      } else {
+        boss.vx = 0;
+        boss.vy = 0;
+      }
+    }
+    if (j.salto) {
+      const k = Math.min(1, step / j.salto.falta);
+      boss.x += (j.salto.tx - boss.x) * k;
+      boss.y += (j.salto.ty - boss.y) * k;
+      j.salto.falta -= step;
+      if (j.salto.falta <= 0) {
+        // Cae de golpe y queda aturdido un momento: es cuando más le duele.
+        j.salto = null;
+        j.aturdido = JEFE.aturdido;
+        events.push({ type: 'bossStun', id: boss.id, x: boss.x, y: boss.y, dura: JEFE.aturdido });
+      }
+    }
+  } else if (!run.jefe) {
+    // Llega el resto de los slimes del nivel (más rápido con "Atraer slimes").
+    const resto = run.nivel.total - Math.ceil(run.nivel.total * PRIMERA_OLA);
+    run.acumulado += (resto / LLEGADA) * s.ritmo * step;
+    while (run.acumulado >= 1 && run.salieron < run.nivel.total && run.enemies.length < MAX_VIVOS) {
+      run.acumulado -= 1;
+      spawn(run, events);
+    }
   }
 
   // Tu círculo: cada intervalo empiezan a caer flechas donde está; pegan al aterrizar.
@@ -418,7 +538,18 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
   run.fires = run.fires.filter((f) => f.restante > 0);
   run.enemies = run.enemies.filter((e) => e.vida > 0);
 
-  if (run.reventados >= run.nivel.total) {
+  // Nivel de jefe: se gana al vencerlo, y su escolta revienta con él. Si no, al reventar a todos.
+  const jefeVencido = !!run.jefe && !bossOf(run);
+  if (jefeVencido) {
+    for (const e of run.enemies) {
+      const oro = ENEMIES[e.kind].oro * run.nivel.oro * run.stats.oroMult;
+      run.oro += oro;
+      run.reventados++;
+      events.push({ type: 'kill', id: e.id, kind: e.kind, x: e.x, y: e.y, oro, danio: Math.max(1, Math.round(e.vida)), fuente: 'jugador' });
+    }
+    run.enemies = [];
+  }
+  if (jefeVencido || (!run.jefe && run.reventados >= run.nivel.total)) {
     run.terminada = true;
     run.gano = true;
     events.push({ type: 'end', gano: true });
@@ -436,7 +567,7 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
  */
 export function bestSpot(run: Run): { x: number; y: number; cuantos: number } {
   const r = run.stats.radio;
-  const peso = (e: Enemy) => (e.tiro !== undefined && !run.muro.caido ? 4 : 1);
+  const peso = (e: Enemy) => (run.jefe?.id === e.id ? 12 : e.tiro !== undefined && !run.muro.caido ? 4 : 1);
   let best = { x: run.cursor.x, y: run.cursor.y, cuantos: 0 };
   const paso = Math.max(1, Math.ceil(run.enemies.length / 60));
   for (let i = 0; i < run.enemies.length; i += paso) {

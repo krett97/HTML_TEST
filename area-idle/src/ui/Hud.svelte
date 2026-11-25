@@ -10,13 +10,24 @@
   const view = juego.view;
   const prisa = $derived($view.restante <= 5);
   const avance = $derived($view.total ? Math.min(1, $view.reventados / $view.total) : 0);
+  /** En un nivel de jefe la barra de arriba es su vida. */
+  const vidaJefe = $derived($view.jefe ? Math.max(0, $view.jefe.vida / $view.jefe.max) : 0);
+  /** El letrero "¡Jefe!" en los primeros segundos. */
+  const presenta = $derived(!!$view.jefe && $view.duracion - $view.restante < 2.4);
 </script>
 
 <div class="cabecera">
-  <div class="progreso" data-testid="progreso" aria-label={$t('hud.progreso')}>
-    <span class="hecho" style:width="{avance * 100}%"></span>
-    <span class="texto cifra" data-testid="avance">{$view.reventados}/{$view.total} · {Math.floor(avance * 100)}%</span>
-  </div>
+  {#if $view.jefe}
+    <div class="progreso jefe" data-testid="vida-jefe" aria-label={$t(`enemigos.${$view.jefe.kind}.nombre`)}>
+      <span class="hecho" style:width="{vidaJefe * 100}%"></span>
+      <span class="texto cifra"><Icon name="corona" size={18} /> {$t(`enemigos.${$view.jefe.kind}.nombre`)} · {Math.ceil(vidaJefe * 100)}%</span>
+    </div>
+  {:else}
+    <div class="progreso" data-testid="progreso" aria-label={$t('hud.progreso')}>
+      <span class="hecho" style:width="{avance * 100}%"></span>
+      <span class="texto cifra" data-testid="avance">{$view.reventados}/{$view.total} · {Math.floor(avance * 100)}%</span>
+    </div>
+  {/if}
   <div class="fila">
     <div class="pill reloj" class:prisa data-testid="reloj">
       <Icon name="reloj" size={24} />
@@ -24,7 +35,7 @@
       <span class="barra"><span class="lleno" style:width="{(100 * $view.restante) / $view.duracion}%"></span></span>
     </div>
     <div class="zona" data-testid="nivel-partida">
-      <small>{$t('zonas.campo')}</small>
+      <small>{$t('zonas.campo')}{#if $view.jefe}<span class="es-jefe">&nbsp;· {$t('hud.jefe')}</span>{/if}</small>
       <strong>{$t('hud.nivel', { n: $view.nivel })}</strong>
     </div>
     <div class="pill oro" data-testid="oro-partida">
@@ -33,8 +44,22 @@
     </div>
   </div>
 </div>
-{#if $view.muro?.caido}
-  <div class="caida" data-testid="muralla-caida">{$t('hud.murallaCaida')}</div>
+<div class="avisos">
+  {#if $view.muro?.caido}
+    <div class="aviso caida" data-testid="muralla-caida">{$t('hud.murallaCaida')}</div>
+  {/if}
+  {#if $view.jefe?.aturdido}
+    <div class="aviso aturdido" data-testid="jefe-aturdido">{$t('hud.aturdido')}</div>
+  {/if}
+  {#if $view.jefe?.furia}
+    <div class="aviso furia" data-testid="jefe-furia">{$t('hud.furia')}</div>
+  {/if}
+</div>
+{#if presenta && $view.jefe}
+  <div class="presenta" data-testid="presenta-jefe">
+    <small>{$t('hud.jefe')}</small>
+    <strong>{$t(`enemigos.${$view.jefe.kind}.nombre`)}</strong>
+  </div>
 {/if}
 {#if !$view.toco && $view.meta.partidas < 3}
   <div class="pista" data-testid="pista"><Icon name="mano" size={30} /> {$t('hud.pista')}</div>
@@ -153,21 +178,97 @@
       font-size: 16px;
     }
   }
-  .caida {
+  .progreso.jefe {
+    height: 28px;
+    background: #5a1a16cc;
+  }
+  .progreso.jefe .hecho {
+    background: linear-gradient(#ffb36b, #e4572e);
+  }
+  .progreso.jefe .texto {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+  }
+  .es-jefe {
+    color: var(--danger);
+  }
+  .avisos {
     position: absolute;
-    left: 50%;
     top: calc(98px + env(safe-area-inset-top));
-    translate: -50% 0;
-    max-width: calc(100% - 32px);
-    padding: 5px 12px;
+    left: 16px;
+    right: 16px;
+    display: grid;
+    justify-items: center;
+    gap: 6px;
+    pointer-events: none;
+  }
+  .aviso {
+    max-width: 100%;
+    padding: 4px 12px;
     border: var(--borde);
     border-radius: 14px;
-    background: var(--danger);
     color: #fff;
     font-size: 14px;
     text-align: center;
-    pointer-events: none;
     animation: entra 0.3s cubic-bezier(0.3, 1.6, 0.5, 1);
+  }
+  .caida {
+    background: var(--danger);
+  }
+  .aturdido {
+    background: #ffc93c;
+    color: var(--text);
+  }
+  .furia {
+    background: #c8323f;
+  }
+  .presenta {
+    position: absolute;
+    top: 34%;
+    left: 50%;
+    translate: -50% -50%;
+    display: grid;
+    justify-items: center;
+    padding: 10px 26px 14px;
+    border: var(--borde);
+    border-radius: 20px;
+    background: var(--panel);
+    box-shadow: var(--sombra);
+    pointer-events: none;
+    animation: presenta 2.4s ease-in-out both;
+  }
+  .presenta small {
+    color: var(--danger);
+    font-size: 16px;
+    letter-spacing: 2px;
+  }
+  .presenta strong {
+    white-space: nowrap;
+    font-size: 32px;
+    color: #ffa53a;
+    -webkit-text-stroke: 1.5px var(--line);
+    paint-order: stroke fill;
+  }
+  @keyframes presenta {
+    0% {
+      scale: 0.4;
+      opacity: 0;
+    }
+    15% {
+      scale: 1.08;
+      opacity: 1;
+    }
+    25%,
+    80% {
+      scale: 1;
+      opacity: 1;
+    }
+    100% {
+      scale: 0.9;
+      opacity: 0;
+    }
   }
   @keyframes entra {
     from {

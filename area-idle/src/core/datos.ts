@@ -8,7 +8,7 @@ export const DAMAGE_TYPES_EN_JUEGO: DamageType[] = ['fisico', 'fuego'];
 /** Cuánto reciben los enemigos del tipo al que son débiles y del que son fuertes. */
 export const EFFECTIVENESS = { debil: 1.5, fuerte: 0.5 } as const;
 
-export type EnemyKind = 'verde' | 'azul' | 'rojo';
+export type EnemyKind = 'verde' | 'azul' | 'rojo' | 'rey';
 
 export interface EnemyDef {
   id: EnemyKind;
@@ -24,6 +24,8 @@ export interface EnemyDef {
   /** Tipos de daño que le hacen más (×1.5) y menos (×0.5). */
   debil: DamageType[];
   fuerte: DamageType[];
+  /** Es jefe: su vida se calcula por nivel (ver levelConfig) y se gana al vencerlo. */
+  jefe?: boolean;
 }
 
 export const ENEMIES: Record<EnemyKind, EnemyDef> = {
@@ -32,6 +34,8 @@ export const ENEMIES: Record<EnemyKind, EnemyDef> = {
   // De agua y con casco: el fuego casi no le hace; el hielo y la energía, mucho.
   azul: { id: 'azul', vida: 14, oro: 6, radio: 11, velocidad: 6, ataque: 0, debil: ['hielo', 'energia'], fuerte: ['fuego'] },
   // Con resortera: le tira piedras a la muralla. Sin casco y nervioso: las flechas le duelen.
+  // El primer jefe (nivel 10): naranja, gigante, con corona. Invoca slimes, brinca, esquiva y le tira baba a la muralla.
+  rey: { id: 'rey', vida: 0, oro: 0, radio: 30, velocidad: 4, ataque: 0, debil: ['fuego'], fuerte: [], jefe: true },
   rojo: { id: 'rojo', vida: 8, oro: 4, radio: 10, velocidad: 8, ataque: 3, tiro: 3, debil: ['fisico', 'luz'], fuerte: ['muerte'] },
 };
 export const ENEMY_KINDS = Object.keys(ENEMIES) as EnemyKind[];
@@ -84,7 +88,37 @@ export interface LevelConfig {
   ataque: number;
   /** Oro extra por superar el nivel. */
   premio: number;
+  /** En los niveles de jefe (cada 10): quién es y cuánta vida tiene. */
+  jefe: { kind: EnemyKind; vida: number } | null;
 }
+
+/**
+ * Jefes: cada 10 niveles (el primero, el Rey Slime, en el nivel 10). Su vida es la de todos los slimes
+ * de un nivel normal ×`vida`. Cada `invoca` s llama a `escolta` slimes a su alrededor; cada `brinco` s
+ * salta a otro lado y, al caer, queda **aturdido** `aturdido` s recibiendo ×`aturdidoMult`; cada `lanza` s
+ * le tira una bola de baba a la muralla (`golpe` de daño). Mientras tu círculo esté cerca, **camina para
+ * esquivarlo** (`esquiva`), salvo aturdido. A media vida se **enfurece**: todo más seguido
+ * (los tiempos ×`furia`) y una escolta más. El nivel dura `extra` s más y el premio es ×`premio`.
+ */
+export const JEFE = {
+  cada: 10,
+  vida: 6,
+  invoca: 3,
+  escolta: 3,
+  brinco: 5,
+  aturdido: 1.5,
+  aturdidoMult: 2,
+  lanza: 4,
+  golpe: 10,
+  /** Camina para salirse de tu círculo (unidades por segundo) cuando lo tiene a menos de `alerta` de su orilla. */
+  esquiva: 22,
+  alerta: 25,
+  furia: 0.65,
+  extra: 10,
+  premio: 5,
+  inicial: 6,
+} as const;
+export const isBossLevel = (nivel: number): boolean => nivel % JEFE.cada === 0;
 /** Desde qué nivel salen los slimes azules y los rojos (con resortera). */
 export const AZUL_DESDE = 4;
 export const ROJO_DESDE = 5;
@@ -103,7 +137,8 @@ export function levelConfig(nivel: number): LevelConfig {
     azules: n < AZUL_DESDE ? 0 : Math.min(0.5, 0.1 + 0.05 * (n - AZUL_DESDE)),
     rojos: n < ROJO_DESDE ? 0 : Math.min(0.12, 0.06 + 0.01 * (n - ROJO_DESDE)),
     ataque: Math.pow(1.05, Math.max(0, n - ROJO_DESDE)),
-    premio: Math.round(8 * Math.pow(1.12, n - 1)),
+    premio: Math.round(8 * Math.pow(1.12, n - 1) * (isBossLevel(n) ? JEFE.premio : 1)),
+    jefe: isBossLevel(n) ? { kind: 'rey', vida: Math.round(3 * (15 + 8 * (n - 1)) * Math.pow(1.3, n - 1) * JEFE.vida) } : null,
   };
 }
 

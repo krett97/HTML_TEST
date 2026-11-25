@@ -1,6 +1,6 @@
 # Campo de Slimes: diseño del prototipo
 
-> Versión 0.3.0. Nombre provisional. Nació de pausar el juego del gato
+> Versión 0.4.0. Nombre provisional. Nació de pausar el juego del gato
 > ([`../../gato-idle/docs/DECISIONES.md`](../../gato-idle/docs/DECISIONES.md)), tomando su base técnica y su
 > arte en código ([`../../REUSO.md`](../../REUSO.md)). Referencia de sensación: *Don't Stop The Pop!*
 > (cientos de cosas reventando en un área) y el idle del castor (rocas que caen, mundo que cambia por fase).
@@ -95,6 +95,33 @@ estabas" dice cuánto tiempo pasó y cuánto oro se juntó, con un botón para c
 - El juego guarda la hora en cada guardado (también cada 20 s y al pasar a segundo plano). El modo
   pruebas tiene "Simular 1 h fuera".
 
+## 5c. Jefes (desde 0.4.0)
+
+**Cada 10 niveles hay un jefe.** El primero, en el nivel 10, es el **Rey Slime**: naranja, gigante, con
+corona de oro, capa roja y cejas de enojo. En un nivel de jefe se gana **al vencerlo** (su escolta
+revienta con él); hay **10 s más** de tiempo y el **premio es ×5**. Su vida es la de todos los slimes de un
+nivel normal ×6 (en el nivel 10: unas 16 600). En los niveles 20, 30… vuelve, más fuerte, hasta que haya
+jefes nuevos.
+
+Lo que hace (`JEFE` en `datos.ts`):
+
+| Mecánica | Detalle |
+|---|---|
+| Invoca escolta | Sale con 6 slimes y cada 3 s llama a 3 más a su alrededor (dan oro). |
+| Brinca | Cada 5 s salta en arco a otro lado del campo (medio segundo en el aire). |
+| Esquiva tu círculo | Mientras tu círculo esté a menos de 25 unidades de su orilla, camina alejándose (22 u/s). Hay que perseguirlo tocando o arrastrando el dedo. |
+| Cae aturdido | Al caer de un brinco queda **aturdido 1.5 s**: no se mueve y **recibe ×2** (números dorados y grandes, estrellitas, aviso "¡Aturdido!"). Es el momento de pegarle. |
+| Ataca la muralla | Cada 4 s lanza una bola de baba gigante a la muralla (10 de daño). Si la tumba, el mago y los arqueros dejan de atacar. |
+| Furia | A media vida se enfurece (destello rojo, parpadea rojizo, aviso "¡Está furioso!"): invoca, brinca, esquiva y lanza más seguido, y llama un slime más. |
+
+En la partida, arriba, su **barra de vida** reemplaza la de progreso ("👑 Rey Slime · 64 %"), y al
+empezar sale el letrero "¡JEFE! Rey Slime". El selector de nivel del árbol lo marca con corona. Si se
+pierde, el fin dice cuánta vida le quedó. El glosario tiene una sección de **Jefes** (oculta hasta el
+nivel 10) con sus mecánicas. Es débil al fuego: el mago le hace ×1.5.
+
+El bot pierde el primer intento contra el Rey (le deja ~40 %), junta oro en el nivel 9 y lo vence al
+segundo con un segundo de margen.
+
 ## 6. Ritmo (`npm run simular`)
 
 Un bot que toca donde hay más slimes cada segundo (los rojos cuentan por cuatro: los busca primero),
@@ -114,7 +141,7 @@ unas 30 partidas de 45 minutos y ahí sirve Muralla reforzada. (El bot no cobra 
 
 ## 7. Técnica
 
-- `src/core/` es lógica pura y probada (40 pruebas): `run.ts` (la partida paso a paso; devuelve eventos),
+- `src/core/` es lógica pura y probada (45 pruebas): `run.ts` (la partida paso a paso; devuelve eventos),
   `stats.ts` (estadísticas desde los talentos), `meta.ts` (oro, árbol, guardado), `datos.ts`, `bot.ts`.
 - `src/game/Campo.ts` (Phaser 4) solo dibuja los eventos: sprites reciclados para cientos de slimes,
   números de daño con una **fuente de mapa de bits** hecha al arrancar (`numeros.ts`), partículas, flechas
@@ -127,7 +154,8 @@ unas 30 partidas de 45 minutos y ahí sirve Muralla reforzada. (El bot no cobra 
 
 ## 8. Pendiente (ideas, sin construir)
 
-- **Segunda zona** (bosque, desierto, nieve…): cada 10 niveles un jefe; al vencerlo cambia el mundo.
+- **Segunda zona** (bosque, desierto, nieve…): al vencer al jefe del nivel 10, 20… cambia el mundo y llega un jefe nuevo.
+- Recompensa permanente por cada jefe vencido la primera vez (un trofeo con bono).
 - Fuentes de hielo, energía, muerte y luz (nuevos aliados o ramas) y enemigos que las pidan.
 - Reparar la muralla durante el nivel (un talento o un botón con espera).
 - Anuncios recompensados: "+10 s a esta partida" y "×2 oro de esta partida".

@@ -13,8 +13,11 @@
 
 <div class="fondo" data-testid="fin">
   <div class="tarjeta" class:perdio={!$view.gano} data-testid={$view.gano ? 'gano' : 'perdio'}>
-    <h2>{$view.gano ? $t('fin.gano', { n: nivel }) : $t('fin.perdio')}</h2>
-    <div class="fila"><Icon name="slimes" size={34} /><span>{$t('fin.reventados')}</span><strong class="cifra" data-testid="fin-reventados">{$view.reventados}/{$view.total}</strong></div>
+    <h2>{$view.gano ? ($view.jefe ? $t('fin.ganoJefe', { nombre: $t(`enemigos.${$view.jefe.kind}.nombre`) }) : $t('fin.gano', { n: nivel })) : $t('fin.perdio')}</h2>
+    {#if $view.jefe && !$view.gano}
+      <div class="fila"><Icon name="corona" size={34} /><span>{$t(`enemigos.${$view.jefe.kind}.nombre`)}</span><strong class="cifra" data-testid="fin-jefe">{$t('fin.leQuedo', { pct: Math.ceil((100 * $view.jefe.vida) / $view.jefe.max) })}</strong></div>
+    {/if}
+    <div class="fila"><Icon name="slimes" size={34} /><span>{$t('fin.reventados')}</span><strong class="cifra" data-testid="fin-reventados">{$view.jefe ? $view.reventados : `${$view.reventados}/${$view.total}`}</strong></div>
     <div class="fila"><Icon name="moneda" size={34} /><span>{$t('fin.oro')}</span><strong class="cifra oro" data-testid="fin-oro">+{formatGold($view.oroPartida)}</strong></div>
     {#if $view.gano}
       <div class="fila"><Icon name="botin" size={34} /><span>{$t('fin.premio')}</span><strong class="cifra oro" data-testid="fin-premio">+{formatNum($view.premio)}</strong></div>

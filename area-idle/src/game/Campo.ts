@@ -13,14 +13,20 @@ const URLS = import.meta.glob<string>('../assets/arte/*.png', { eager: true, que
 /** Profundidades (de atrás hacia adelante). */
 const D = { pasto: 0, deco: 1, mancha: 2, fuego: 3, sombra: 3.5, slime: 4, aliado: 6, muro: 6.2, flecha: 6.5, destello: 7, particula: 8, numero: 9, cursor: 10 };
 /** Medidas de los PNG (px) y cómo se ven en el campo (unidades). */
-const SLIME_PX = 96;
 const MAGO = { px: 150, alto: 46 };
 const ARQUERO = { px: 120, alto: 34 };
 const FLECHA_PX = 72;
 /** Cuántas cosas a la vez, como máximo (con cientos de slimes no caben todas). */
 const MAX_NUMEROS = 70;
 const MAX_MANCHAS = 60;
-const COLOR: Record<EnemyKind, number> = { verde: 0x8be06a, azul: 0x5cc1f2, rojo: 0xff6b5e };
+const COLOR: Record<EnemyKind, number> = { verde: 0x8be06a, azul: 0x5cc1f2, rojo: 0xff6b5e, rey: 0xffa53a };
+/** Textura de cada enemigo y su ancho (el jefe va en un lienzo más grande, con corona). */
+const TEXTURA: Record<EnemyKind, { key: string; base: (radio: number) => number; origenY: number }> = {
+  verde: { key: 'slime_verde', base: (r) => (r * 2.3) / 96, origenY: 0.92 },
+  azul: { key: 'slime_azul', base: (r) => (r * 2.3) / 96, origenY: 0.92 },
+  rojo: { key: 'slime_rojo', base: (r) => (r * 2.3) / 96, origenY: 0.92 },
+  rey: { key: 'jefe_rey', base: (r) => (r * 3.2) / 200, origenY: 0.91 },
+};
 const AMARILLO = 0xffd23f;
 const FUEGO = 0xff8a2a;
 const CAFE = 0x3a2518;
@@ -34,6 +40,9 @@ interface SlimeVisual {
   /** 0 → 1 al aparecer. */
   nace: number;
   fase: number;
+  /** El jefe en el aire: cuánto lleva del brinco y cuánto dura (0: en el piso). */
+  salto: number;
+  saltoDura: number;
 }
 
 interface Numero {
@@ -131,6 +140,7 @@ export class Campo extends Phaser.Scene {
       verde: particulas(COLOR.verde),
       azul: particulas(COLOR.azul),
       rojo: particulas(COLOR.rojo),
+      rey: particulas(COLOR.rey, { speed: { min: 60, max: 200 }, scale: { start: 0.16, end: 0 }, lifespan: { min: 400, max: 800 } }),
       piedra: particulas(0xc9c0b2, { speed: { min: 40, max: 110 }, angle: { min: 200, max: 340 }, gravityY: 300, scale: { start: 0.07, end: 0.03 }, lifespan: 500, tint: [0xc9c0b2, 0xa89e8f, 0x8a7f70] }),
       fuego: particulas(FUEGO, { speed: { min: 50, max: 140 }, scale: { start: 0.1, end: 0 }, gravityY: -30, tint: [FUEGO, AMARILLO, 0xef5a4c] }),
       llama: particulas(FUEGO, { gravityY: -90, speed: { min: 5, max: 25 }, angle: { min: 250, max: 290 }, scale: { start: 0.07, end: 0 }, lifespan: 420, tint: [FUEGO, AMARILLO] }),
@@ -263,20 +273,25 @@ export class Campo extends Phaser.Scene {
 
   private tomar(kind: EnemyKind): SlimeVisual {
     const v = this.libres.pop();
-    const base = (ENEMIES[kind].radio * 2.3) / SLIME_PX;
+    const t = TEXTURA[kind];
+    const base = t.base(ENEMIES[kind].radio);
     if (v) {
-      v.img.setTexture(`slime_${kind}`).setVisible(true);
+      v.img.setTexture(t.key).setOrigin(0.5, t.origenY).clearTint().setVisible(true);
       v.sombra.setVisible(true);
       v.base = base;
+      v.salto = 0;
+      v.saltoDura = 0;
       return v;
     }
     return {
-      img: this.add.image(0, 0, `slime_${kind}`).setOrigin(0.5, 0.92),
+      img: this.add.image(0, 0, t.key).setOrigin(0.5, t.origenY),
       sombra: this.add.image(0, 0, 'sombra').setDepth(D.sombra),
       base,
       golpe: 0,
       nace: 0,
       fase: 0,
+      salto: 0,
+      saltoDura: 0,
     };
   }
 
@@ -292,16 +307,25 @@ export class Campo extends Phaser.Scene {
       if (!v) continue;
       v.nace = Math.min(1, v.nace + dt * 6);
       v.golpe = Math.max(0, v.golpe - dt * 7);
-      // Saltitos: cada uno a su ritmo.
-      const salto = Math.abs(Math.sin(this.tiempo * 5 + v.fase));
+      // Saltitos: cada uno a su ritmo (el jefe, más lento y pesado).
+      const jefe = run.jefe?.id === e.id;
+      const salto = Math.abs(Math.sin(this.tiempo * (jefe ? 2.5 : 5) + v.fase));
       const aplasta = 1 - salto;
       const s = v.base * (v.nace < 1 ? Phaser.Math.Easing.Back.Out(v.nace) : 1);
+      // El brinco del jefe: sube en arco y su sombra se queda en el piso.
+      let alto = 0;
+      if (v.saltoDura > 0) {
+        v.salto += dt;
+        alto = Math.sin(Math.PI * Math.min(1, v.salto / v.saltoDura)) * 46;
+        if (v.salto >= v.saltoDura) v.saltoDura = 0;
+      }
+      if (jefe) v.img.setTint(run.jefe!.furia && Math.sin(this.tiempo * 12) > 0 ? 0xff8a80 : 0xffffff);
       v.img
-        .setPosition(e.x, e.y - salto * 2.4)
+        .setPosition(e.x, e.y - salto * (jefe ? 3.5 : 2.4) - alto)
         .setScale(s * (1 + 0.08 * aplasta + 0.25 * v.golpe), s * (1 - 0.08 * aplasta - 0.2 * v.golpe))
         .setDepth(D.slime + e.y / 10000)
         .setFlipX(e.vx < 0);
-      v.sombra.setPosition(e.x, e.y + 1).setScale(((ENEMIES[e.kind].radio * 2) / 64) * (1 - 0.2 * salto), 0.3);
+      v.sombra.setPosition(e.x, e.y + 1).setScale(((ENEMIES[e.kind].radio * 2) / 64) * (1 - 0.2 * salto) * (1 - alto / 120), 0.3);
     }
   }
 
@@ -326,7 +350,11 @@ export class Campo extends Phaser.Scene {
           if (v) v.golpe = 1;
           // Contra una debilidad, número grande y rojizo; contra una fortaleza, chico y gris.
           const color = e.efecto === 'debil' ? 0xff7043 : e.efecto === 'fuerte' ? 0xa0a8b8 : e.fuente === 'fuego' ? 0xffb15c : 0xffffff;
-          if (numeros++ < 30) this.numero(e.x, e.y - 10, e.danio, color, e.efecto === 'debil' ? 10.5 : e.efecto === 'fuerte' ? 6.5 : 8);
+          // Al jefe aturdido: números dorados y grandes (le duele doble).
+          const aturdido = run.jefe?.id === e.id && run.jefe.aturdido > 0;
+          const alto = run.jefe?.id === e.id ? 30 : 10;
+          if (aturdido) this.numero(e.x, e.y - alto, e.danio, 0xffd23f, 12);
+          else if (numeros++ < 30 || run.jefe?.id === e.id) this.numero(e.x, e.y - alto, e.danio, color, e.efecto === 'debil' ? 10.5 : e.efecto === 'fuerte' ? 6.5 : 8);
           break;
         }
         case 'kill': {
@@ -335,7 +363,14 @@ export class Campo extends Phaser.Scene {
             this.soltar(v);
             this.slimes.delete(e.id);
           }
-          this.emisores[e.kind].explode(e.kind === 'azul' ? 12 : 8, e.x, e.y - 6);
+          if (ENEMIES[e.kind].jefe) {
+            // ¡Cayó el jefe! Gran explosión de baba, confeti y sacudida.
+            for (let i = 0; i < 4; i++) this.time.delayedCall(i * 80, () => this.emisores[e.kind].explode(25, e.x + Phaser.Math.Between(-20, 20), e.y - 20));
+            this.emisores.confeti.explode(40, e.x, e.y - 30);
+            this.cameras.main.shake(420, 0.01);
+            this.cameras.main.flash(300, 255, 220, 160);
+            for (let i = 0; i < 5; i++) this.mancha(e.x + Phaser.Math.Between(-25, 25), e.y + Phaser.Math.Between(-10, 10), COLOR[e.kind]);
+          } else this.emisores[e.kind].explode(e.kind === 'azul' ? 12 : 8, e.x, e.y - 6);
           this.mancha(e.x, e.y, COLOR[e.kind]);
           if (numeros++ < 30) this.numero(e.x, e.y - 12, e.danio, 0xffe27a);
           break;
@@ -379,6 +414,37 @@ export class Campo extends Phaser.Scene {
           this.cameras.main.shake(60, 0.002);
           break;
         }
+        case 'bossJump': {
+          const v = this.slimes.get(e.id);
+          if (v) {
+            v.salto = 0;
+            v.saltoDura = e.dura;
+            v.golpe = 0.8;
+          }
+          this.emisores.polvo.explode(10, e.x, e.y);
+          break;
+        }
+        case 'bossStun':
+          // Cae de golpe: polvo, anillo y sacudida. Queda aturdido (estrellitas).
+          this.emisores.polvo.explode(24, e.x, e.y);
+          this.anilloEn(e.x, e.y, 0xffffff, 0.55);
+          this.cameras.main.shake(140, 0.005);
+          break;
+        case 'bossSummon': {
+          const v = this.slimes.get(e.id);
+          if (v) v.golpe = 1;
+          this.emisores.aparece.explode(16, e.x, e.y - 20);
+          break;
+        }
+        case 'bossThrow': {
+          const v = this.slimes.get(e.id);
+          if (v) v.golpe = 0.9;
+          break;
+        }
+        case 'bossRage':
+          this.cameras.main.flash(260, 255, 90, 70);
+          this.cameras.main.shake(260, 0.007);
+          break;
         case 'wallDown':
           this.derrumbe(run);
           break;
@@ -420,11 +486,35 @@ export class Campo extends Phaser.Scene {
     for (const p of run.piedras) {
       const total = Math.hypot(p.tx - p.sx, p.ty - p.sy) || 1;
       const avance = 1 - Math.hypot(p.tx - p.x, p.ty - p.y) / total;
+      if (p.grande) {
+        // La bola de baba del jefe: grande, naranja, con brillo, en un arco alto.
+        const y = p.y - Math.sin(Math.PI * avance) * 70;
+        g.fillStyle(CAFE).fillCircle(p.x, y, 6.5);
+        g.fillStyle(COLOR.rey).fillCircle(p.x, y, 5.2);
+        g.fillStyle(0xffd59a).fillCircle(p.x - 1.6, y - 1.6, 1.8);
+        continue;
+      }
       const y = p.y - Math.sin(Math.PI * avance) * 34;
       g.fillStyle(CAFE).fillCircle(p.x, y, 2.6);
       g.fillStyle(0xa89e8f).fillCircle(p.x, y, 1.8);
       g.fillStyle(0xffffff, 0.6).fillCircle(p.x - 0.6, y - 0.6, 0.6);
     }
+    // Estrellitas girando sobre el jefe aturdido.
+    const jefe = run.jefe && run.jefe.aturdido > 0 ? run.enemies.find((e) => e.id === run.jefe!.id) : undefined;
+    if (jefe) {
+      for (let i = 0; i < 3; i++) {
+        const a = this.tiempo * 5 + (i * Math.PI * 2) / 3;
+        const x = jefe.x + Math.cos(a) * 16;
+        const y = jefe.y - 46 + Math.sin(a) * 5;
+        g.fillStyle(CAFE).fillCircle(x, y, 3.2);
+        g.fillStyle(0xffd23f).fillCircle(x, y, 2.4);
+      }
+    }
+  }
+
+  private anilloEn(x: number, y: number, tint: number, escala: number): void {
+    const anillo = this.add.image(x, y, 'anillo').setTint(tint).setAlpha(0.9).setScale(escala * 0.4).setDepth(D.destello);
+    this.tweens.add({ targets: anillo, scale: escala, alpha: 0, duration: 320, ease: 'Quad.out', onComplete: () => anillo.destroy() });
   }
 
   /** Barra de vida de la muralla (en su cara, a la derecha de la torre): sale cuando hay rojos o ya recibió daño. */

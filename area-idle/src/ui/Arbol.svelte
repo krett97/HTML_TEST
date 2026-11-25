@@ -133,7 +133,7 @@
   <!-- Qué nivel jugar: el más alto abierto, o uno anterior para juntar oro. -->
   <div class="niveles">
     <button type="button" class="flecha" aria-label={$t('arbol.nivelAnterior')} disabled={meta.jugando <= 1} onclick={() => juego.playLevel(meta.jugando - 1, false)} data-testid="nivel-menos">◀</button>
-    <span class="nivel-actual" data-testid="nivel-actual"><small class="zona">{$t('zonas.campo')}</small>{$t('hud.nivel', { n: meta.jugando })}{#if meta.jugando < meta.nivel}<small>{$t('arbol.paraOro')}</small>{/if}</span>
+    <span class="nivel-actual" data-testid="nivel-actual"><small class="zona">{$t('zonas.campo')}{#if $view.nivelDeJefe}&nbsp;· {$t('hud.jefe')}{/if}</small><span class="con-corona">{#if $view.nivelDeJefe}<Icon name="corona" size={24} />{/if}{$t('hud.nivel', { n: meta.jugando })}</span>{#if meta.jugando < meta.nivel}<small>{$t('arbol.paraOro')}</small>{/if}</span>
     <button type="button" class="flecha" aria-label={$t('arbol.nivelSiguiente')} disabled={meta.jugando >= meta.nivel} onclick={() => juego.playLevel(meta.jugando + 1, false)} data-testid="nivel-mas">▶</button>
   </div>
   <button type="button" class="btn btn--accent jugar" onclick={() => juego.play()} data-testid="jugar"><Icon name="jugar" size={26} /> {$t('arbol.jugar')}</button>
@@ -375,6 +375,11 @@
     font-size: 22px;
     -webkit-text-stroke: 1px var(--line);
     paint-order: stroke fill;
+  }
+  .con-corona {
+    display: flex;
+    align-items: center;
+    gap: 4px;
   }
   .nivel-actual small.zona {
     color: #c8f59b;

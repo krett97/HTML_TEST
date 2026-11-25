@@ -4,7 +4,8 @@ import { writable, type Readable } from 'svelte/store';
 import type { TalentId } from '../core/datos';
 import { buyTalent, chooseLevel, createMeta, finishRun, loadMeta, stats, type Meta } from '../core/meta';
 import { idleGoldPerMinute, idleReward, idleUnlocked } from '../core/inactivo';
-import { createRun, moveCursor, startRun, stepRun, type Run, type RunEvent } from '../core/run';
+import { bossOf, createRun, moveCursor, startRun, stepRun, type Run, type RunEvent } from '../core/run';
+import { levelConfig, type EnemyKind } from '../core/datos';
 import { locale, detectLocale } from '../i18n';
 import type { AudioEngine } from '../services/audio';
 import { clearRaw, loadRaw, saveRaw } from '../services/storage';
@@ -33,6 +34,10 @@ export interface Vista {
   ritmoInactivo: { porMinuto: number; horas: number } | null;
   /** Esta partida abrió el oro por inactividad (aviso en el fin). */
   abrioInactivo: boolean;
+  /** El jefe del nivel (si es de jefe): quién, su vida y si está aturdido o furioso. */
+  jefe: { kind: EnemyKind; vida: number; max: number; aturdido: boolean; furia: boolean } | null;
+  /** El nivel elegido en el árbol es de jefe (corona en el selector). */
+  nivelDeJefe: boolean;
   /** La muralla en la partida: vida, y si ya cayó (sus aliados no atacan el resto del nivel). */
   muro: { vida: number; max: number; caido: boolean } | null;
   /** Sube en cada partida nueva (la escena se reinicia al verlo cambiar). */
@@ -126,10 +131,16 @@ export class Juego {
     const events = stepRun(run, dt);
     for (const e of events) {
       if (e.type === 'spawn' && run.t > 0) this.audio.play('aparece');
+      else if (e.type === 'kill' && e.kind === 'rey') this.audio.play('jefeCae');
       else if (e.type === 'kill') this.audio.play(e.kind === 'azul' ? 'popGrande' : 'pop');
       else if (e.type === 'impact') this.audio.play(e.fuente === 'mago' ? 'magia' : 'disparo');
       else if (e.type === 'volley') this.audio.play('arco');
       else if (e.type === 'sling') this.audio.play('resortera');
+      else if (e.type === 'bossJump') this.audio.play('brinco');
+      else if (e.type === 'bossStun') this.audio.play('aturde');
+      else if (e.type === 'bossSummon') this.audio.play('invoca');
+      else if (e.type === 'bossThrow') this.audio.play('lanza');
+      else if (e.type === 'bossRage') this.audio.play('furia');
       else if (e.type === 'wallHit') this.audio.play('golpeMuro');
       else if (e.type === 'wallDown') this.audio.play('derrumbe');
       else if (e.type === 'fire') this.audio.play('fuego');
@@ -254,6 +265,13 @@ export class Juego {
       premio: this.premio,
       inactivo: this.pendiente,
       muro: run ? { ...run.muro } : null,
+      jefe: run?.nivel.jefe
+        ? (() => {
+            const b = bossOf(run);
+            return { kind: run.nivel.jefe.kind, vida: b?.vida ?? 0, max: run.nivel.jefe.vida, aturdido: (run.jefe?.aturdido ?? 0) > 0, furia: run.jefe?.furia ?? false };
+          })()
+        : null,
+      nivelDeJefe: !!levelConfig(this.meta.jugando).jefe,
       ritmoInactivo: idleUnlocked(this.meta) ? { porMinuto: idleGoldPerMinute(this.meta), horas: stats(this.meta).inactivo.horas } : null,
       abrioInactivo: this.abrioInactivo && this.fase === 'fin',
       vivos: run?.enemies.length ?? 0,

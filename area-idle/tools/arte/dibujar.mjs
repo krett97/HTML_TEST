@@ -32,6 +32,25 @@ scene('slime_azul', slime(P.agua, P.aguaS, P.aguaC, { enojado: true, casco: true
   scene('slime_rojo', svg(104, 98, g('translate(0 14)', base + pata + resortera)));
 }
 
+// ---- El Rey Slime (200 × 214): el primer jefe. Un slime naranja enorme con corona de oro, capa roja,
+// cejas de enojo y bigote. Se dibuja con el slime de siempre, más grande.
+{
+  const cuerpo = slime('#ffa53a', '#e07b1a', '#ffd59a', { enojado: true }).replace(/^<svg[^>]*>|<\/svg>$/g, '');
+  let s = '';
+  // Capa por detrás.
+  s += o('M28 120 C14 150 16 186 24 200 H176 C184 186 186 150 172 120 Z', '#c8323f', 6) + f('M40 132 C30 156 32 178 36 186 H52 C46 170 46 150 52 132 Z', '#a52633');
+  s += g('translate(18 52) scale(1.72)', cuerpo);
+  // Bigote.
+  s += o('M100 150 C88 140 72 142 66 152 C76 150 86 154 100 158 C114 154 124 150 134 152 C128 142 112 140 100 150 Z', K, 3);
+  // Corona con picos y joyas.
+  s += o('M54 66 L60 22 L80 46 L100 12 L120 46 L140 22 L146 66 Z', P.oro, 6);
+  s += f('M60 58 H140 V66 H60 Z', P.oroS);
+  s += circ(60, 22, 7, P.oro, 5) + circ(100, 12, 8, P.oro, 5) + circ(140, 22, 7, P.oro, 5);
+  s += circ(100, 46, 8, P.rojo, 4) + circ(76, 52, 5.5, P.azul, 4) + circ(124, 52, 5.5, P.azul, 4);
+  s += brillo(70, 40, 5, 9, 0.6);
+  scene('jefe_rey', svg(200, 214, s));
+}
+
 // ---- El mago (120 × 150): túnica y sombrero morados con estrellas, barba blanca, bastón con cristal ----
 {
   let s = '';
@@ -214,6 +233,7 @@ icon('inactivo', I(o('M40 6 A24 24 0 1 0 58 40 A18 18 0 1 1 40 6 Z', '#b8a6f0', 
 icon('bolsa', I(o('M22 18 C10 26 6 40 10 50 C14 58 50 58 54 50 C58 40 54 26 42 18 Z', P.maderaC, 5) + o('M22 18 l-4 -10 h28 l-4 10 Z', P.maderaC, 5) + line('M20 18 H44', P.maderaS, 5) + moneda(32, 40, 11) + line('M48 10 v10 M43 15 h10', P.pastoS, 4)));
 // Muralla reforzada: un tramo de muralla con un escudo.
 icon('muralla', I(o('M6 26 V14 h10 v6 h8 v-6 h10 v6 h8 v-6 h10 v12 Z', '#c9c0b2', 4) + o('M6 26 H52 V58 H6 Z', '#c9c0b2', 5) + line('M6 38 H52 M6 48 H52 M20 26 V38 M36 38 V48 M22 48 V58', '#8a7f70', 3) + o('M40 30 h20 v12 c0 10 -10 16 -10 16 c0 0 -10 -6 -10 -16 z', P.azul, 4) + line('M50 34 v16 M43 41 h14', P.blanco, 3)));
+icon('corona', I(o('M8 50 L12 14 L24 30 L32 8 L40 30 L52 14 L56 50 Z', P.oro, 5) + f('M12 44 H52 V50 H12 Z', P.oroS) + circ(32, 34, 5, P.rojo, 3) + circ(20, 38, 3.5, P.azul, 3) + circ(44, 38, 3.5, P.azul, 3)));
 icon('moneda', I(moneda(32, 32, 26)));
 icon('reloj', I(circ(32, 32, 26, P.blanco) + line('M32 32 v-16 M32 32 l12 8', K, 6) + circ(32, 32, 4, P.rojo, 0)));
 icon('candado', I(o('M18 28 v-8 a14 14 0 0 1 28 0 v8', 'none', 6) + rect(10, 28, 44, 30, 8, P.oro, 5) + circ(32, 41, 5, K, 0) + rect(29, 42, 6, 10, 2, K, 0)));

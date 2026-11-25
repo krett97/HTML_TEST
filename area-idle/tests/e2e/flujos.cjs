@@ -237,6 +237,34 @@ async function flow(name, browser, fn, opts) {
     check(ficha.includes('Slime rojo') && ficha.includes('a la muralla'), `el glosario no muestra al rojo: ${ficha}`);
   });
 
+  await flow('jefe del nivel 10: el Rey Slime con su barra de vida, se le vence y sale en el glosario', browser, async (page) => {
+    await page.getByTestId('terminar').click();
+    await page.getByTestId('mejorar').click();
+    await page.getByTestId('abrir-ajustes').click();
+    for (let i = 0; i < 9; i++) await page.getByTestId('mas-nivel').click();
+    await page.mouse.click(4, 4);
+    check((await page.getByTestId('nivel-actual').textContent()).includes('Nivel 10'), 'no está en el nivel 10');
+    check((await page.getByTestId('nivel-actual').textContent()).includes('JEFE'), 'el selector no marca el jefe');
+    await page.getByTestId('jugar').click();
+    await page.waitForTimeout(400);
+    check(await page.getByTestId('presenta-jefe').count(), 'no sale el letrero del jefe');
+    check((await page.getByTestId('vida-jefe').textContent()).includes('Rey Slime'), 'no está la barra del jefe');
+    check((await page.getByTestId('reloj').textContent()).includes('00:3'), 'el nivel de jefe no da 30 s');
+    // Lo dejamos casi sin vida y le tocamos encima.
+    await page.evaluate(() => { const r = window.juego.run; const b = r.enemies.find((e) => e.kind === 'rey'); b.vida = 0.5; });
+    for (let i = 0; i < 20 && !(await page.getByTestId('fin').count()); i++) {
+      const p = await page.evaluate(() => { const r = window.juego.run; const b = r.enemies.find((e) => e.kind === 'rey'); return b ? { x: b.x / 360, y: b.y / r.h } : null; });
+      if (p) await page.tap(p.x, p.y);
+      await page.waitForTimeout(250);
+    }
+    check(await page.getByTestId('gano').count(), 'no se venció al jefe');
+    check((await page.getByTestId('gano').textContent()).includes('Rey Slime'), 'el fin no dice que venciste al Rey Slime');
+    await page.getByTestId('mejorar').click();
+    await page.getByTestId('abrir-glosario').click();
+    const ficha = await page.getByTestId('enemigo-rey').textContent();
+    check(ficha.includes('Rey Slime') && ficha.includes('aturdido'), `el glosario no muestra al jefe: ${ficha}`);
+  });
+
   await flow('guardado: al recargar se queda el oro y el árbol, y se llega al árbol', browser, async (page) => {
     await page.getByTestId('terminar').click();
     await page.getByTestId('mejorar').click();

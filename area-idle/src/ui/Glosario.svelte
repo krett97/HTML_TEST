@@ -1,7 +1,7 @@
 <script lang="ts">
   // El glosario: los tipos de daño (y quién hace cuál) y cada enemigo con su vida, su velocidad, si
   // ataca y a qué es débil o fuerte. Los enemigos que aún no salen se ven como silueta.
-  import { AZUL_DESDE, ROJO_DESDE, DAMAGE_TYPES, DAMAGE_TYPES_EN_JUEGO, EFFECTIVENESS, ENEMIES, ENEMY_KINDS, type EnemyKind } from '../core/datos';
+  import { JEFE, levelConfig, AZUL_DESDE, ROJO_DESDE, DAMAGE_TYPES, DAMAGE_TYPES_EN_JUEGO, EFFECTIVENESS, ENEMIES, ENEMY_KINDS, type EnemyKind } from '../core/datos';
   import { DAMAGE_TYPE_OF } from '../core/run';
   import { t } from '../i18n';
   import { useJuego } from './context';
@@ -18,7 +18,10 @@
     { id: 'mago', icono: 'mago', tipo: DAMAGE_TYPE_OF.mago },
   ] as const;
   /** Desde qué nivel sale cada enemigo (el verde, desde el primero). */
-  const DESDE: Record<EnemyKind, number> = { verde: 1, azul: AZUL_DESDE, rojo: ROJO_DESDE };
+  const DESDE: Record<EnemyKind, number> = { verde: 1, azul: AZUL_DESDE, rojo: ROJO_DESDE, rey: JEFE.cada };
+  const COMUNES = ENEMY_KINDS.filter((k) => !ENEMIES[k].jefe);
+  const JEFES = ENEMY_KINDS.filter((k) => ENEMIES[k].jefe);
+  const IMAGEN: Record<EnemyKind, string> = { verde: 'slime_verde', azul: 'slime_azul', rojo: 'slime_rojo', rey: 'jefe_rey' };
 
   const visto = (kind: EnemyKind) => $view.meta.nivel >= DESDE[kind];
   const rapidez = (v: number) => (v < 7 ? 'lenta' : v < 12 ? 'normal' : 'rapida');
@@ -49,11 +52,11 @@
   </div>
 
   <h3>{$t('glosario.enemigos')}</h3>
-  {#each ENEMY_KINDS as kind (kind)}
+  {#each COMUNES as kind (kind)}
     {@const def = ENEMIES[kind]}
     {@const ok = visto(kind)}
     <article class="enemigo" class:oculto={!ok} data-testid="enemigo-{kind}">
-      <img src={artUrl(`slime_${kind}`)} alt="" width="72" height="63" />
+      <img src={artUrl(IMAGEN[kind])} alt="" width="72" height="63" />
       <div class="datos">
         {#if ok}
           <strong>{$t(`enemigos.${kind}.nombre`)}</strong>
@@ -70,6 +73,36 @@
           <div class="efectos">
             <span class="etiqueta">{$t('glosario.fuerte')}</span>
             {#each def.fuerte as tipo (tipo)}<span class="chip fuerte"><Icon name="tipo_{tipo}" size={20} />×{EFFECTIVENESS.fuerte}</span>{:else}<span class="nada">—</span>{/each}
+          </div>
+        {:else}
+          <strong>???</strong>
+          <span class="texto">{$t('glosario.ocultoPista', { n: DESDE[kind] })}</span>
+        {/if}
+      </div>
+    </article>
+  {/each}
+
+  <h3>{$t('glosario.jefes')}</h3>
+  {#each JEFES as kind (kind)}
+    {@const def = ENEMIES[kind]}
+    {@const ok = visto(kind)}
+    <article class="enemigo jefe" class:oculto={!ok} data-testid="enemigo-{kind}">
+      <img src={artUrl(IMAGEN[kind])} alt="" width="80" height="86" />
+      <div class="datos">
+        {#if ok}
+          <strong>{$t(`enemigos.${kind}.nombre`)} <small class="muted">{$t('hud.nivel', { n: DESDE[kind] })}</small></strong>
+          <span class="texto">{$t(`enemigos.${kind}.texto`)}</span>
+          <div class="stats">
+            <span><Icon name="vida" size={20} /> <span class="cifra">{levelConfig(DESDE[kind]).jefe?.vida ?? 0}</span></span>
+            <span><Icon name="velocidad" size={20} /> {$t('glosario.brinca')}</span>
+            <span><Icon name="ataque" size={20} /> {$t('glosario.ataca', { n: JEFE.golpe })}</span>
+          </div>
+          <ul class="mecanicas">
+            {#each ['invoca', 'esquiva', 'aturdido', 'furia'] as m (m)}<li>{$t(`glosario.mecanicas.${m}`)}</li>{/each}
+          </ul>
+          <div class="efectos">
+            <span class="etiqueta">{$t('glosario.debil')}</span>
+            {#each def.debil as tipo (tipo)}<span class="chip debil"><Icon name="tipo_{tipo}" size={20} />×{EFFECTIVENESS.debil}</span>{:else}<span class="nada">—</span>{/each}
           </div>
         {:else}
           <strong>???</strong>
@@ -210,6 +243,14 @@
   .etiqueta {
     min-width: 92px;
     color: var(--muted);
+  }
+  .enemigo.jefe {
+    background: #fff3e2;
+  }
+  .mecanicas {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 13px;
   }
   .chip {
     display: inline-flex;

@@ -7,7 +7,10 @@
     "oro": "Oro",
     "nivel": "Nivel {n}",
     "progreso": "Slimes reventados del nivel",
-    "murallaCaida": "¡Cayó la muralla! Tus aliados no atacan en este nivel."
+    "murallaCaida": "¡Cayó la muralla! Tus aliados no atacan en este nivel.",
+    "jefe": "¡JEFE!",
+    "aturdido": "¡Aturdido! ×2 de daño",
+    "furia": "¡Está furioso!"
   },
   "fin": {
     "reventados": "Reventados",
@@ -19,7 +22,9 @@
     "seQueda": "El oro que juntaste se queda.",
     "siguiente": "Siguiente",
     "reintentar": "Reintentar nivel {n}",
-    "anterior": "Nivel {n}"
+    "anterior": "Nivel {n}",
+    "ganoJefe": "¡Venciste al {nombre}!",
+    "leQuedo": "Le quedó {pct}%"
   },
   "arbol": {
     "jugar": "¡Jugar!",
@@ -153,7 +158,15 @@
       "arqueros": "Arqueros",
       "mago": "Mago"
     },
-    "ataca": "{n} a la muralla"
+    "ataca": "{n} a la muralla",
+    "jefes": "Jefes",
+    "brinca": "Brinca y esquiva",
+    "mecanicas": {
+      "invoca": "Invoca slimes a su alrededor.",
+      "esquiva": "Camina para salirse de tu círculo y brinca a otro lado.",
+      "aturdido": "Al caer de un brinco queda aturdido: recibe doble daño.",
+      "furia": "A media vida se enfurece: todo más seguido."
+    }
   },
   "tipos": {
     "fisico": "Físico",
@@ -175,6 +188,10 @@
     "rojo": {
       "nombre": "Slime rojo",
       "texto": "Trae resortera y le tira piedras a la muralla. Si la tumba, tu mago y tus arqueros dejan de atacar."
+    },
+    "rey": {
+      "nombre": "Rey Slime",
+      "texto": "El primer jefe, en el nivel 10. Gigante, naranja y con corona."
     }
   },
   "zonas": {
