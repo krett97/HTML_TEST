@@ -2,114 +2,12 @@
 import { K, P, svg, o, f, line, circ, ell, rect, g, scene, icon, eyes, nose, whiskers, grape } from './lib.mjs';
 
 // ---- Gato (16 × 20.75 unidades → 128 × 166 px) ----
-function gato({ golpe = false, saco = false, garra = false } = {}) {
-  const W = golpe ? 206 : 128;
-  const H = golpe ? 140 : 166;
-  // En el golpe el gato se inclina hacia la derecha y estira la pata.
-  const bx = golpe ? 70 : 64; // centro del cuerpo
-  const by = golpe ? 112 : 128;
-  const hx = golpe ? 92 : 64; // centro de la cabeza
-  const hy = golpe ? 52 : 62;
-  let s = '';
-  // cola
-  s += o(golpe ? `M${bx - 44} ${by + 10} c-26 -4 -36 -30 -20 -46 c6 -6 16 -4 16 4 c0 8 -8 10 -6 20 c2 10 10 14 18 14 z` : `M${bx - 46} ${by + 14} c-26 -4 -34 -34 -16 -50 c6 -6 16 -2 14 6 c-2 8 -8 10 -6 20 c2 10 10 14 18 14 z`, P.naranja);
-  // cuerpo
-  s += o(`M${bx - 48} ${by} c-4 -34 20 -52 48 -52 c28 0 52 18 48 52 c-3 22 -16 40 -48 40 c-32 0 -45 -18 -48 -40 z`, P.naranja);
-  s += f(`M${bx - 44} ${by + 14} c8 18 24 26 44 26 c20 0 36 -8 44 -26 c-8 12 -24 18 -44 18 c-20 0 -36 -6 -44 -18 z`, P.naranjaS, 'opacity=".6"');
-  s += f(`M${bx - 26} ${by + 2} c0 -18 12 -28 26 -28 c14 0 26 10 26 28 c0 18 -10 32 -26 32 c-16 0 -26 -14 -26 -32 z`, P.crema);
-  if (saco) {
-    // Saco de jefe: solapas negras, camisa y corbata roja.
-    s += o(`M${bx - 46} ${by - 6} c2 -30 20 -44 46 -44 l-18 48 l-10 30 c-12 -6 -18 -18 -18 -34 z`, '#2b2a3a', 5);
-    s += o(`M${bx + 46} ${by - 6} c-2 -30 -20 -44 -46 -44 l18 48 l10 30 c12 -6 18 -18 18 -34 z`, '#2b2a3a', 5);
-    s += f(`M${bx - 12} ${by - 46} h24 l-12 30 z`, P.blanco);
-    s += o(`M${bx - 5} ${by - 40} h10 l-2 10 l4 22 l-7 8 l-7 -8 l4 -22 z`, P.rojo, 4);
-  }
-  // patas
-  if (golpe) {
-    s += ell(bx - 18, by + 36, 18, 10, P.naranja);
-    // brazo estirado con la pata abierta
-    s += o(`M${bx + 20} ${by - 10} c30 -14 60 -22 92 -26 c10 -1 12 12 2 14 c-30 6 -58 16 -86 30 z`, P.naranja);
-    s += ell(bx + 116, by - 30, 17, 13, P.naranja);
-    s += f(`M${bx + 104} ${by - 36} a4 4 0 1 1 8 0 a4 4 0 1 1 -8 0 M${bx + 114} ${by - 40} a4 4 0 1 1 8 0 a4 4 0 1 1 -8 0 M${bx + 124} ${by - 36} a4 4 0 1 1 8 0 a4 4 0 1 1 -8 0`, P.rosa);
-    if (garra) s += o(`M${bx + 128} ${by - 38} l18 -12 l-10 16 z M${bx + 130} ${by - 30} l20 -4 l-16 10 z M${bx + 128} ${by - 22} l16 6 l-18 2 z`, '#f3f0ff', 3);
-    s += line(`M${bx + 128} ${by - 54} l10 -10 M${bx + 136} ${by - 40} l14 -4 M${bx + 134} ${by - 22} l12 6`, '#fff6cc', 5);
-  } else {
-    s += ell(bx - 24, by + 36, 18, 10, P.naranja);
-    s += ell(bx + 24, by + 36, 18, 10, P.naranja);
-    s += line(`M${bx - 32} ${by + 36} v4 M${bx - 24} ${by + 37} v4 M${bx - 16} ${by + 36} v4 M${bx + 16} ${by + 36} v4 M${bx + 24} ${by + 37} v4 M${bx + 32} ${by + 36} v4`, K, 3);
-  }
-  // orejas
-  s += o(`M${hx - 40} ${hy - 26} l6 -36 l30 24 z`, P.naranja);
-  s += o(`M${hx + 40} ${hy - 26} l-6 -36 l-30 24 z`, P.naranja);
-  s += f(`M${hx - 32} ${hy - 30} l4 -20 l16 14 z`, P.rosa);
-  s += f(`M${hx + 32} ${hy - 30} l-4 -20 l-16 14 z`, P.rosa);
-  // cabeza
-  s += o(`M${hx - 48} ${hy} c0 -30 22 -44 48 -44 c26 0 48 14 48 44 c0 28 -20 42 -48 42 c-28 0 -48 -14 -48 -42 z`, P.naranja);
-  s += line(`M${hx - 14} ${hy - 32} l-3 12 M${hx} ${hy - 36} v13 M${hx + 14} ${hy - 32} l3 12`, P.naranjaS, 6);
-  s += f(`M${hx - 36} ${hy + 14} c0 -12 10 -18 22 -14 c10 3 14 12 12 20 c-2 8 -10 12 -18 10 c-10 -2 -16 -8 -16 -16 z`, P.crema);
-  s += f(`M${hx + 36} ${hy + 14} c0 -12 -10 -18 -22 -14 c-10 3 -14 12 -12 20 c2 8 10 12 18 10 c10 -2 16 -8 16 -16 z`, P.crema);
-  // brillo de la frente, rayas de la cola y del lomo, chapitas
-  s += f(`M${hx - 30} ${hy - 22} c6 -10 20 -14 34 -10 c-12 0 -24 4 -32 14 z`, '#ffd59a', 'opacity=".8"');
-  s += line(`M${bx - 58} ${by - 10} l8 -4 M${bx - 60} ${by - 22} l8 -2`, P.naranjaS, 5);
-  s += line(`M${bx + 28} ${by - 34} l10 6 M${bx + 34} ${by - 22} l10 6`, P.naranjaS, 5);
-  s += circ(hx - 34, hy + 22, 6, P.rosa, 0);
-  s += circ(hx + 34, hy + 22, 6, P.rosa, 0);
-  s += eyes(hx, hy + 2, 19, 11, true);
-  s += nose(hx, hy + 16, 9);
-  s += ell(hx, hy + 27, 6, 4.5, P.vino, 4);
-  s += whiskers(hx, hy + 16, 22);
-  s += grape(hx + 6, hy - 44);
-  return svg(W, H, s);
-}
-scene('gato', gato());
-scene('gato_golpe', gato({ golpe: true }));
-scene('gato_garra_golpe', gato({ golpe: true, garra: true }));
-scene('gato_saco', gato({ saco: true }));
-scene('gato_saco_golpe', gato({ golpe: true, saco: true }));
-scene('gato_saco_garra_golpe', gato({ golpe: true, saco: true, garra: true }));
+// El gato vive en gato.mjs (es el protagonista y lleva más detalle).
 // Sombrero ridículo (copa morada), 12.25 × 10 → 98 × 80, apoyado por el centro de abajo.
 scene('sombrero', svg(98, 80, o('M22 70 c-2 -30 0 -50 4 -62 h46 c4 12 6 32 4 62 z', P.morado, 5) + f('M30 16 h34 c3 10 4 26 4 46 h-10 c0 -16 -2 -32 -6 -46 z', P.moradoC, 'opacity=".5"') + rect(22, 50, 54, 14, 4, P.oro, 4) + ell(49, 70, 44, 8, P.morado, 5) + f('M14 70 a35 5 0 0 0 70 0 a35 3 0 0 1 -70 0 z', '#6a3fb0')));
 
 // ---- Gatito bebé (15.5 × 21.75 → 124 × 174; en el juego se dibuja al 60 %) ----
-function gatito({ golpe = false } = {}) {
-  const W = golpe ? 162 : 124;
-  const H = golpe ? 166 : 174;
-  const bx = 58, by = golpe ? 118 : 128, hx = 60, hy = golpe ? 56 : 60;
-  let s = '';
-  s += o(`M${bx - 36} ${by + 6} c-20 -2 -26 -24 -12 -36 c6 -4 12 0 10 6 c-2 6 -6 8 -4 14 c2 8 6 10 6 16 z`, P.gris);
-  s += o(`M${bx - 36} ${by} c-2 -26 14 -40 36 -40 c22 0 38 14 36 40 c-2 18 -12 32 -36 32 c-24 0 -34 -14 -36 -32 z`, P.gris);
-  s += f(`M${bx - 20} ${by + 2} c0 -14 8 -22 20 -22 c12 0 20 8 20 22 c0 14 -8 26 -20 26 c-12 0 -20 -12 -20 -26 z`, P.blanco);
-  s += ell(bx - 18, by + 30, 14, 8, P.gris);
-  if (golpe) {
-    s += o(`M${bx + 14} ${by - 10} c22 -12 46 -18 72 -20 c8 0 10 10 2 12 c-24 4 -46 12 -68 24 z`, P.gris);
-    s += ell(bx + 94, by - 26, 13, 10, P.gris);
-  } else {
-    s += ell(bx + 18, by + 30, 14, 8, P.gris);
-    // biberón
-    s += rect(bx + 22, by - 30, 18, 44, 6, P.azulC, 5);
-    s += f(`M${bx + 25} ${by - 10} h12 v18 h-12 z`, P.blanco);
-    s += rect(bx + 26, by - 42, 10, 14, 4, P.rosa, 4);
-  }
-  // orejas y cabeza (grandes, de bebé)
-  s += o(`M${hx - 44} ${hy - 20} l4 -40 l32 26 z`, P.gris);
-  s += o(`M${hx + 44} ${hy - 20} l-4 -40 l-32 26 z`, P.gris);
-  s += f(`M${hx - 36} ${hy - 26} l2 -22 l18 16 z`, P.rosa);
-  s += f(`M${hx + 36} ${hy - 26} l-2 -22 l-18 16 z`, P.rosa);
-  s += o(`M${hx - 52} ${hy + 2} c0 -34 24 -50 52 -50 c28 0 52 16 52 50 c0 30 -22 46 -52 46 c-30 0 -52 -16 -52 -46 z`, P.gris);
-  s += f(`M${hx - 30} ${hy + 20} c0 -10 8 -16 18 -14 c8 2 12 8 12 14 c0 10 -8 16 -18 14 c-8 -2 -12 -6 -12 -14 z`, P.blanco);
-  s += f(`M${hx + 30} ${hy + 20} c0 -10 -8 -16 -18 -14 c-8 2 -12 8 -12 14 c0 10 8 16 18 14 c8 -2 12 -6 12 -14 z`, P.blanco);
-  s += line(`M${hx - 10} ${hy - 40} l-2 12 M${hx + 2} ${hy - 44} v14 M${hx + 14} ${hy - 40} l2 12`, P.grisS, 6);
-  s += f(`M${hx - 30} ${hy - 26} c6 -10 20 -14 34 -10 c-12 0 -24 4 -32 14 z`, '#e6eaf5', 'opacity=".9"');
-  s += line(`M${bx - 12} ${by - 28} l10 4 M${bx + 2} ${by - 32} l10 4`, P.grisS, 5);
-  s += eyes(hx, hy + 4, 20, 13, false);
-  s += nose(hx, hy + 22, 8);
-  s += line(`M${hx - 6} ${hy + 31} q6 5 12 0`, K, 4);
-  s += circ(hx - 34, hy + 24, 6, P.rosa, 0);
-  s += circ(hx + 34, hy + 24, 6, P.rosa, 0);
-  return svg(W, H, s);
-}
-scene('aliado_gatito', gatito());
-scene('aliado_gatito_golpe', gatito({ golpe: true }));
+// El gatito bebé también vive en gato.mjs (misma cara que el gato).
 
 // ---- Cocina ----
 // Barra: 136.25 × 23.25 unidades → 1090 × 186 px. La cubierta es el borde de arriba (ahí se paran).

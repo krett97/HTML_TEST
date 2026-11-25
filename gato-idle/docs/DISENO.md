@@ -721,7 +721,7 @@ Llega el primer arte de verdad, generado con PixelLab. **Principio: los personaj
 
 | Personaje | Inspiración |
 |---|---|
-| Gato (protagonista) | Gato crema con ojos enormes de susto y **una uva en la cabeza** |
+| Gato (protagonista) | Gato naranja atigrado con ojos enormes de susto (la uva de la cabeza se quitó en 0.34.0) |
 | Gato con saco | El mismo, con saco negro, camisa y corbata roja (editado con Pixen para que sea idéntico) |
 | Sombrero ridículo | **Sombrero de copa negro de mago**, brillante y con banda gris, para combinar con el saco (0.18.3; antes gorra de hélice) |
 | Garras afiladas | Tres uñas de metal en la pata (se ven en el cuadro del manotazo, §35) |
@@ -748,7 +748,7 @@ Pendiente de arte: fondos de los cuartos y superficies, ilustraciones propias pa
 
 ## 34. Tutorial: el gato te explica (versión 0.17.0)
 
-Un tutorial **corto y en contexto**: el gato (con su cara de susto y su uva) habla en un globito al pie de la escena, **un paso a la vez y solo cuando ya se puede hacer lo que pide**. Lo que hay que tocar brilla en dorado y una manita 👆 lo señala (si está abajo en la lista, se desplaza solo hasta verlo). Nunca bloquea: se puede seguir tocando la escena, y siempre está "Saltar tutorial".
+Un tutorial **corto y en contexto**: el gato (con su cara de susto) habla en un globito al pie de la escena, **un paso a la vez y solo cuando ya se puede hacer lo que pide**. Lo que hay que tocar brilla en dorado y una manita 👆 lo señala (si está abajo en la lista, se desplaza solo hasta verlo). Nunca bloquea: se puede seguir tocando la escena, y siempre está "Saltar tutorial".
 
 | Paso | Cuándo sale | El gato dice | Se cierra |
 |---|---|---|---|

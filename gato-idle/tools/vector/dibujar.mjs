@@ -3,6 +3,7 @@
 //   → src/assets/vector/*.png (8 px por unidad) y src/assets/vector/iconos/*.png (64 × 64)
 // Un solo módulo: node tools/vector/cocina.mjs
 import './cocina.mjs';
+import './gato.mjs';
 import './personajes.mjs';
 import './cuartos.mjs';
 import './cuartos_casa.mjs';
