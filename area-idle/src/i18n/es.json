@@ -1,0 +1,151 @@
+{
+  "app": {
+    "titulo": "Campo de Slimes"
+  },
+  "hud": {
+    "pista": "Toca donde quieras que caigan las flechas",
+    "oro": "Oro"
+  },
+  "fin": {
+    "titulo": "¡Tiempo!",
+    "reventados": "Reventados",
+    "oro": "Oro",
+    "record": "¡Récord!",
+    "mejorar": "Mejorar",
+    "otra": "Otra vez"
+  },
+  "arbol": {
+    "jugar": "¡Jugar!",
+    "comprar": "Comprar",
+    "max": "MAX",
+    "nivel": "Nivel {n}/{max}",
+    "requiere": "Sube {nombre} a {n}",
+    "cerrar": "Cerrar"
+  },
+  "talentos": {
+    "danio": {
+      "nombre": "Daño",
+      "efecto": "Daño {a} → {b}"
+    },
+    "slimes": {
+      "nombre": "Más slimes",
+      "efecto": "Hasta {a} → {b} a la vez"
+    },
+    "radio": {
+      "nombre": "Área",
+      "efecto": "Tamaño {a} → {b}"
+    },
+    "cadencia": {
+      "nombre": "Cadencia",
+      "efecto": "{a} → {b} disparos por segundo"
+    },
+    "tiempo": {
+      "nombre": "Tiempo",
+      "efecto": "{a} s → {b} s por partida"
+    },
+    "oro": {
+      "nombre": "Oro",
+      "efecto": "Oro ×{a} → ×{b}"
+    },
+    "azules": {
+      "nombre": "Slimes azules",
+      "efecto": "Más duros; dan 6 de oro"
+    },
+    "mago": {
+      "nombre": "Mago",
+      "efecto": "Lanza una bola de fuego cada {b} s"
+    },
+    "magoRapido": {
+      "nombre": "Mago veloz",
+      "efecto": "Cada {a} s → {b} s"
+    },
+    "magoArea": {
+      "nombre": "Explosión grande",
+      "efecto": "Tamaño {a} → {b}"
+    },
+    "fuego": {
+      "nombre": "Suelo en llamas",
+      "efecto": "Las explosiones del mago dejan el suelo ardiendo"
+    },
+    "fuegoFuerte": {
+      "nombre": "Fuego intenso",
+      "efecto": "Quema {a} → {b} por segundo"
+    },
+    "magoDanio": {
+      "nombre": "Fuego mágico",
+      "efecto": "Daño {a} → {b}"
+    },
+    "arqueros": {
+      "nombre": "Arquero",
+      "efecto": "Un aliado que dispara a un enemigo a la vez"
+    },
+    "masArqueros": {
+      "nombre": "Más arqueros",
+      "efecto": "Arqueros {a} → {b}"
+    },
+    "multiflecha": {
+      "nombre": "Flechas múltiples",
+      "efecto": "Objetivos a la vez {a} → {b}"
+    },
+    "arcoRapido": {
+      "nombre": "Arco veloz",
+      "efecto": "{a} → {b} tiros por segundo"
+    },
+    "arcoDanio": {
+      "nombre": "Puntas de acero",
+      "efecto": "Daño {a} → {b}"
+    }
+  },
+  "ajustes": {
+    "titulo": "Ajustes",
+    "sonido": "Sonido",
+    "idioma": "Idioma",
+    "reiniciar": "Reiniciar desde cero",
+    "reiniciarConfirmar": "¿Seguro? Toca otra vez",
+    "version": "Versión {v}",
+    "pruebas": "Pruebas",
+    "oro": "+{n} oro",
+    "terminar": "Terminar partida"
+  },
+  "secciones": {
+    "jugador": "Jugador",
+    "mago": "Mago",
+    "arqueros": "Arqueros"
+  },
+  "glosario": {
+    "titulo": "Glosario",
+    "tipos": "Tipos de daño",
+    "enemigos": "Enemigos",
+    "noAtaca": "No ataca",
+    "debil": "Débil a",
+    "fuerte": "Fuerte contra",
+    "pronto": "Pronto",
+    "lenta": "Lenta",
+    "normal": "Normal",
+    "rapida": "Rápida",
+    "ocultoPista": "Aparece con {nombre}",
+    "quien": {
+      "jugador": "Tus flechas",
+      "arqueros": "Arqueros",
+      "mago": "Mago"
+    }
+  },
+  "tipos": {
+    "fisico": "Físico",
+    "fuego": "Fuego",
+    "hielo": "Hielo",
+    "energia": "Energía",
+    "muerte": "Muerte",
+    "luz": "Luz"
+  },
+  "enemigos": {
+    "verde": {
+      "nombre": "Slime verde",
+      "texto": "Pegajoso y feliz. El fuego lo derrite."
+    },
+    "azul": {
+      "nombre": "Slime azul",
+      "texto": "De agua y con casco: el fuego casi no le hace nada."
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "name": "area-idle",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:host": "vite --host",
+    "build": "vite build",
+    "build:archivo": "vite build --mode archivo && node scripts/build-archivo.mjs",
+    "build:compartir": "PRUEBAS=no npm run build:archivo",
+    "preview": "vite preview",
+    "check": "svelte-check --tsconfig ./tsconfig.json",
+    "test": "vitest run",
+    "arte": "node tools/arte/dibujar.mjs",
+    "simular": "tsx tools/simular.ts",
+    "apk:prueba": "bash apk-prueba/build.sh",
+    "e2e": "npm run build && npm run build:compartir && node tests/e2e/flujos.cjs"
+  },
+  "dependencies": {
+    "@fontsource-variable/fredoka": "^5.3.0",
+    "phaser": "^4.2.1"
+  },
+  "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
+    "@sveltejs/vite-plugin-svelte": "^7.3.1",
+    "@tsconfig/svelte": "^5.0.8",
+    "@types/node": "^26.6.7",
+    "svelte": "^5.57.3",
+    "svelte-check": "^4.7.7",
+    "tsx": "^4.23.15",
+    "typescript": "^6.0.3",
+    "vite": "^8.3.5",
+    "vitest": "^5.0.5"
+  }
+}

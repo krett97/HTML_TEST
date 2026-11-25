@@ -1,0 +1,93 @@
+// Lo que se guarda entre partidas: el oro, los niveles del árbol y los récords.
+import { TALENT_BY_ID, TALENTS, type TalentDef, type TalentId } from './datos';
+import { computeStats, type Stats } from './stats';
+
+export const SAVE_VERSION = 1;
+
+export type Locale = 'es' | 'en';
+
+export interface Meta {
+  version: number;
+  oro: number;
+  talentos: Partial<Record<TalentId, number>>;
+  partidas: number;
+  /** Lo más que se ha juntado en una partida. */
+  mejor: number;
+  reventados: number;
+  ajustes: { sonido: boolean; idioma: Locale | null };
+  /** Avisos que ya se vieron (la primera vez que se juega, etc.). */
+  vistos: string[];
+}
+
+export function createMeta(): Meta {
+  return { version: SAVE_VERSION, oro: 0, talentos: {}, partidas: 0, mejor: 0, reventados: 0, ajustes: { sonido: true, idioma: null }, vistos: [] };
+}
+
+export const levelOf = (meta: Meta, id: TalentId): number => meta.talentos[id] ?? 0;
+
+export function stats(meta: Meta): Stats {
+  return computeStats(meta.talentos);
+}
+
+export function costOf(def: TalentDef, nivel: number): number {
+  return Math.ceil(def.costo.base * Math.pow(def.costo.crece, nivel));
+}
+
+export type TalentState = 'bloqueado' | 'disponible' | 'maximo';
+
+export function talentState(meta: Meta, def: TalentDef): TalentState {
+  if (levelOf(meta, def.id) >= def.max) return 'maximo';
+  if (def.requiere && levelOf(meta, def.requiere.id) < def.requiere.nivel) return 'bloqueado';
+  return 'disponible';
+}
+
+/**
+ * Se ve en el árbol cuando ya se invirtió en el talento del que sale. La raíz de cada sección se ve
+ * siempre (con candado mientras falte su requisito), así se sabe que el mago y los arqueros existen.
+ */
+export function talentVisible(meta: Meta, def: TalentDef): boolean {
+  return !def.requiere || !!def.raiz || levelOf(meta, def.requiere.id) > 0;
+}
+
+export function buyTalent(meta: Meta, id: TalentId): boolean {
+  const def = TALENT_BY_ID[id];
+  if (talentState(meta, def) !== 'disponible') return false;
+  const cost = costOf(def, levelOf(meta, id));
+  if (meta.oro < cost) return false;
+  meta.oro -= cost;
+  meta.talentos[id] = levelOf(meta, id) + 1;
+  return true;
+}
+
+export function finishRun(meta: Meta, oro: number, reventados: number): void {
+  meta.oro += oro;
+  meta.partidas++;
+  meta.mejor = Math.max(meta.mejor, oro);
+  meta.reventados += reventados;
+}
+
+/** Carga un guardado, tolerando datos viejos o dañados (lo que no sirve vuelve a su valor inicial). */
+export function loadMeta(raw: unknown): Meta {
+  const base = createMeta();
+  if (!raw || typeof raw !== 'object') return base;
+  const r = raw as Partial<Meta>;
+  const num = (v: unknown, d: number) => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : d);
+  const talentos: Meta['talentos'] = {};
+  for (const def of TALENTS) {
+    const n = Math.floor(num(r.talentos?.[def.id], 0));
+    if (n > 0) talentos[def.id] = Math.min(def.max, n);
+  }
+  return {
+    version: SAVE_VERSION,
+    oro: num(r.oro, 0),
+    talentos,
+    partidas: Math.floor(num(r.partidas, 0)),
+    mejor: num(r.mejor, 0),
+    reventados: Math.floor(num(r.reventados, 0)),
+    ajustes: {
+      sonido: typeof r.ajustes?.sonido === 'boolean' ? r.ajustes.sonido : true,
+      idioma: r.ajustes?.idioma === 'es' || r.ajustes?.idioma === 'en' ? r.ajustes.idioma : null,
+    },
+    vistos: Array.isArray(r.vistos) ? r.vistos.filter((v): v is string => typeof v === 'string') : [],
+  };
+}

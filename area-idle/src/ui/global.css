@@ -1,0 +1,76 @@
+/* Estilo de caricatura plana, el mismo del juego del gato: tarjetas crema con borde café grueso y
+   sombra dura, botones amarillos con relieve, letra Fredoka. */
+:root {
+  --bg: #5ec47a;
+  --panel: #fff8ea;
+  --panel-2: #ffe9c2;
+  --line: #3a2518;
+  --text: #3a2518;
+  --muted: #8a6f5a;
+  --accent: #ff9b2f;
+  --gold: #e08a12;
+  --danger: #ef5a4c;
+  --borde: 3px solid var(--line);
+  --sombra: 0 4px 0 var(--line);
+  color-scheme: light;
+}
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Fredoka Variable', 'Fredoka', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 17px;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  overscroll-behavior: none;
+}
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.cifra {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 48px;
+  padding: 6px 14px;
+  border: var(--borde);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: var(--sombra);
+  font-weight: 700;
+  transition: transform 80ms, box-shadow 80ms;
+}
+.btn:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--line);
+}
+.btn--accent {
+  background: linear-gradient(#ffe27a, #ffc93c 55%, #f5b122);
+}
+.btn--danger {
+  background: var(--danger);
+  color: #fff;
+}
+.btn:disabled {
+  background: #ded5c6;
+  color: #8a7a68;
+  border-color: #8a7a68;
+  box-shadow: 0 4px 0 #8a7a68;
+  cursor: default;
+}

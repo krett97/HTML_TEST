@@ -1,0 +1,151 @@
+{
+  "app": {
+    "titulo": "Slime Field"
+  },
+  "hud": {
+    "pista": "Tap where you want the arrows to fall",
+    "oro": "Gold"
+  },
+  "fin": {
+    "titulo": "Time!",
+    "reventados": "Popped",
+    "oro": "Gold",
+    "record": "New best!",
+    "mejorar": "Upgrade",
+    "otra": "Again"
+  },
+  "arbol": {
+    "jugar": "Play!",
+    "comprar": "Buy",
+    "max": "MAX",
+    "nivel": "Level {n}/{max}",
+    "requiere": "Raise {nombre} to {n}",
+    "cerrar": "Close"
+  },
+  "talentos": {
+    "danio": {
+      "nombre": "Damage",
+      "efecto": "Damage {a} → {b}"
+    },
+    "slimes": {
+      "nombre": "More slimes",
+      "efecto": "Up to {a} → {b} at once"
+    },
+    "radio": {
+      "nombre": "Area",
+      "efecto": "Size {a} → {b}"
+    },
+    "cadencia": {
+      "nombre": "Fire rate",
+      "efecto": "{a} → {b} shots per second"
+    },
+    "tiempo": {
+      "nombre": "Time",
+      "efecto": "{a} s → {b} s per round"
+    },
+    "oro": {
+      "nombre": "Gold",
+      "efecto": "Gold ×{a} → ×{b}"
+    },
+    "azules": {
+      "nombre": "Blue slimes",
+      "efecto": "Tougher; worth 6 gold"
+    },
+    "mago": {
+      "nombre": "Wizard",
+      "efecto": "Throws a fireball every {b} s"
+    },
+    "magoRapido": {
+      "nombre": "Swift wizard",
+      "efecto": "Every {a} s → {b} s"
+    },
+    "magoArea": {
+      "nombre": "Big blast",
+      "efecto": "Size {a} → {b}"
+    },
+    "fuego": {
+      "nombre": "Burning ground",
+      "efecto": "The wizard's blasts leave the ground burning"
+    },
+    "fuegoFuerte": {
+      "nombre": "Wildfire",
+      "efecto": "Burns {a} → {b} per second"
+    },
+    "magoDanio": {
+      "nombre": "Magic fire",
+      "efecto": "Damage {a} → {b}"
+    },
+    "arqueros": {
+      "nombre": "Archer",
+      "efecto": "An ally who shoots one enemy at a time"
+    },
+    "masArqueros": {
+      "nombre": "More archers",
+      "efecto": "Archers {a} → {b}"
+    },
+    "multiflecha": {
+      "nombre": "Multishot",
+      "efecto": "Targets at once {a} → {b}"
+    },
+    "arcoRapido": {
+      "nombre": "Quick bow",
+      "efecto": "{a} → {b} shots per second"
+    },
+    "arcoDanio": {
+      "nombre": "Steel tips",
+      "efecto": "Damage {a} → {b}"
+    }
+  },
+  "ajustes": {
+    "titulo": "Settings",
+    "sonido": "Sound",
+    "idioma": "Language",
+    "reiniciar": "Restart from scratch",
+    "reiniciarConfirmar": "Sure? Tap again",
+    "version": "Version {v}",
+    "pruebas": "Testing",
+    "oro": "+{n} gold",
+    "terminar": "End round"
+  },
+  "secciones": {
+    "jugador": "Player",
+    "mago": "Wizard",
+    "arqueros": "Archers"
+  },
+  "glosario": {
+    "titulo": "Glossary",
+    "tipos": "Damage types",
+    "enemigos": "Enemies",
+    "noAtaca": "Doesn't attack",
+    "debil": "Weak to",
+    "fuerte": "Resists",
+    "pronto": "Soon",
+    "lenta": "Slow",
+    "normal": "Normal",
+    "rapida": "Fast",
+    "ocultoPista": "Shows up with {nombre}",
+    "quien": {
+      "jugador": "Your arrows",
+      "arqueros": "Archers",
+      "mago": "Wizard"
+    }
+  },
+  "tipos": {
+    "fisico": "Physical",
+    "fuego": "Fire",
+    "hielo": "Ice",
+    "energia": "Energy",
+    "muerte": "Death",
+    "luz": "Light"
+  },
+  "enemigos": {
+    "verde": {
+      "nombre": "Green slime",
+      "texto": "Sticky and happy. Fire melts it."
+    },
+    "azul": {
+      "nombre": "Blue slime",
+      "texto": "Made of water and wearing a helmet: fire barely hurts it."
+    }
+  }
+}
