@@ -6,13 +6,14 @@ import { normalizeState } from '../src/core/normalize';
 import { num } from '../src/core/num';
 import { createInitialState } from '../src/core/state';
 import { gameData } from '../src/data';
+import { irA } from './helpers';
 
 const { segundos, multPorNivel, max } = gameData.balance.marca;
 
 function withGang() {
   const state = createInitialState(0);
   normalizeState(state, gameData);
-  state.nivelValor = 40;
+  irA(state, 8);
   state.desbloqueos.push('aliado:gatito', 'aliado:perro', 'marca');
   state.aliados = [
     { id: 'gatito', nivel: 30 },

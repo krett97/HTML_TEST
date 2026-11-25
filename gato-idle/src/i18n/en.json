@@ -10,14 +10,15 @@
     "dpsGato": "Cat",
     "dpsAliados": "Gang",
     "racha": "ON FIRE!",
-    "marcado": "MARKED!"
+    "marcado": "MARKED!",
+    "nivel": "Level {n}"
   },
   "tutorial": {
     "tocar": "Psst, human: tap the screen and I'll swat whatever's on the table.",
     "monedas": "Down it goes! [[gato]] Every broken thing gives coins. The owner puts out another. Never learns.",
     "fuerza": "Buy Strength: my swats hit harder.",
-    "valor": "Buy Value: pricier stuff = more coins. It's science.",
-    "meta": "Down here you can see what's next. Spoiler: more destruction.",
+    "valor": "Buy Value: this object pays more coins every time I knock it down. Science.",
+    "meta": "Down here you see what's next. Break {n} of each thing to level up. Spoiler: more destruction.",
     "aliado": "A kitten wants in. Adopt it in [[gatito]] Allies: it breaks stuff even when you don't tap.",
     "video": "Your video is ready! Upload it in [[canal]] Channel: you start over, but stronger.",
     "ok": "Got it!",
@@ -142,6 +143,15 @@
       "el": "the Space Vet",
       "El": "The Space Vet",
       "derrotado": "DEFEATED"
+    },
+    "mini": {
+      "nombre": "Guardian of {cuarto}",
+      "titulo": "THE GUARDIAN OF {cuarto} BLOCKS THE WAY!",
+      "frase": "Same old thing… but golden and furious. You have {s} seconds!",
+      "al": "the guardian of {cuarto}",
+      "el": "the guardian of {cuarto}",
+      "El": "The guardian of {cuarto}",
+      "derrotado": "DEFEATED"
     }
   },
   "jefe": {
@@ -152,7 +162,9 @@
     "premio": "[[trofeo]] You beat {al}! +{dinero}",
     "derrota": "{El} laughs at you… Rematch in 60 s (+{dinero})",
     "bono": "+{pct}% damage",
-    "revanchaYa": "Now!"
+    "revanchaYa": "Now!",
+    "derrotaMini": "{El} laughs at you… Challenge it again whenever you want (+{dinero})",
+    "premioMini": "You beat {al}! On to the next room. +{dinero}"
   },
   "mejoras": {
     "enLaMesa": "On the table",
@@ -166,10 +178,7 @@
     "fuerza": "Strength",
     "fuerzaEfecto": "Damage {actual} → {siguiente}",
     "valor": "Value",
-    "valorEfecto": "+${actual} → +${siguiente} per break",
-    "valorEtapa": "{n}/{total} to the next item",
-    "valorUltimo": "Ever pricier versions",
-    "valorNuevo": "The owner buys: {objeto}",
+    "valorEfecto": "+${actual} → +${siguiente} per break of this object",
     "critico": "Sharp claws",
     "criticoEfecto": "Crit {actual}% → {siguiente}%",
     "criticoMax": "Crit {actual}% (maxed)",
@@ -181,13 +190,22 @@
     "superZarpazo": "SUPER SWIPE!",
     "embestida": "RAM!",
     "comprar": "Buy",
-    "valorMudanza": "[[mudanza]] Moving day! The owner gets a new house: {objeto}",
     "esperaMudanza": "The owner has no room for more stuff… Get followers and views so they can move ([[canal]] Channel).",
     "marca": "Marking claws",
     "marcaEfecto": "A crit marks the object for {s} s: gang {actual} → {siguiente}",
     "marcaMax": "A crit marks the object for {s} s: gang {actual} (max)",
     "max": "Max",
-    "esperaJefe": "The owner won't move until you beat {al}… and get followers and views ([[canal]] Channel)."
+    "esperaJefe": "The owner won't move until you beat {al}… and get followers and views ([[canal]] Channel).",
+    "nivel_": "Level {n}",
+    "nivelDe": "Level {n} of {total}",
+    "nivelProgreso": "{roturas}/{meta} broken",
+    "nivelListo": "Level complete!",
+    "nivelAtras": "Previous level",
+    "nivelAdelante": "Next level",
+    "alFrente": "Back to the front",
+    "juntando": "Farming an earlier level: breaks here don't count toward progress.",
+    "guardianEspera": "The room's guardian blocks the way: challenge it in the scene.",
+    "jefeEspera": "The house boss blocks the way: challenge it in the scene."
   },
   "ajustes": {
     "sonido": "Sound",
@@ -264,7 +282,7 @@
     "pistaFuncion": "Something new for the cat",
     "pistaAliado": "A new ally",
     "roturas": "Knock off {n} more items",
-    "objeto": "Upgrade Value",
+    "objeto": "Advance levels",
     "nuevo": "New!",
     "todo": "You have discovered everything in this version. Get followers in the Channel to move… and beat every boss. Will the cat reach the Moon?",
     "fuerza": "Strength",
@@ -559,5 +577,21 @@
   "turbo": {
     "boton": "Turbo ×1.5",
     "aviso": "[[turbo]] TURBO! ×1.5 damage and money for 3 minutes"
+  },
+  "cuartos": {
+    "cocina": "the kitchen",
+    "sala": "the living room",
+    "bano": "the bathroom",
+    "recamara": "the bedroom",
+    "lavado": "the laundry room",
+    "jardin": "the garden",
+    "estudio": "the studio",
+    "cochera": "the garage",
+    "salon": "the hall",
+    "cine": "the cinema",
+    "alberca": "the pool",
+    "cohete": "the rocket",
+    "labluna": "the moon lab",
+    "superficie": "the moon surface"
   }
 }

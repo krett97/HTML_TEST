@@ -35,11 +35,12 @@ describe('comprar ×10', () => {
     expect(state.dinero.toNumber()).toBe(0);
   });
 
-  it('Valor ×10 pasa de objeto si toca', () => {
+  it('Valor ×10 sube diez niveles del objeto de la mesa (ya no cambia de objeto)', () => {
     const state = newState(1e12);
-    const bought = buyBulk(state, 10, (s) => valorCost(s, gameData), (s) => buyValor(s, gameData).bought);
+    const bought = buyBulk(state, 10, (s) => valorCost(s, gameData), (s) => buyValor(s, gameData));
     expect(bought).toBe(10);
-    expect(currentObject(state, gameData).id).toBe('plato');
+    expect(currentObject(state, gameData).id).toBe('vaso');
+    expect(state.valor).toEqual([{ objeto: 'vaso', nivel: 10 }]);
   });
 
   it('se detiene en el tope (la probabilidad de crítico no pasa del 50 %)', () => {

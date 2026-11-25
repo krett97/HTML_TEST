@@ -31,7 +31,7 @@ function achieved(state: GameState, data: GameData, step: TutorialStep): boolean
     case 'fuerza':
       return state.nivelFuerza >= 1;
     case 'valor':
-      return state.nivelValor >= 1;
+      return state.valor.some((v) => v.nivel >= 1);
     case 'meta':
     case 'aliado':
       return hasAlly;

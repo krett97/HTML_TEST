@@ -50,13 +50,16 @@ async function fresh(browser, opts = {}) {
     for (let i = 0; i < n; i++) { await page.mouse.click(box.x + box.width / 2, box.y + box.height * 0.6); await page.waitForTimeout(60); }
   };
   page.closeAd = async () => { await page.waitForTimeout(3500); await page.locator('.ad-mock__close').click(); await page.waitForTimeout(600); };
+  // La mudanza: junta lo del Canal (y el jefe) con el modo pruebas y pasa al primer nivel de la casa nueva.
   page.mudanza = async () => {
-    await pruebas(async () => page.getByTestId('dinero-infinito').click());
-    for (let i = 0; i < 3; i++) { await page.getByTestId('comprar-valor').click({ force: true }); await page.waitForTimeout(120); }
     await pruebas(async () => page.getByTestId('probar-mudanza').click());
-    for (let i = 0; i < 4; i++) { await page.getByTestId('comprar-valor').click({ force: true }); await page.waitForTimeout(120); }
+    const siguiente = await page.evaluate(() => {
+      const select = document.querySelector('[data-testid="objeto-meta"]');
+      return select ? Array.from(select.querySelectorAll('option')).map((o) => o.value).filter(Boolean)[0] : null;
+    }).catch(() => null);
+    // Con la mudanza abierta, el siguiente objeto alcanzable es el primero de la casa nueva.
+    await page.go(siguiente ?? 'maceta');
     await page.waitForTimeout(2500);
-    await pruebas(async () => page.getByTestId('dinero-infinito').click());
   };
   return page;
 }

@@ -52,8 +52,14 @@ export interface GameState {
   /** Dinero ganado en la partida actual; define los seguidores al mudarse (fase 4). */
   dineroPartida: Decimal;
   nivelFuerza: number;
-  /** Cada `nivelesPorObjeto` niveles el dueño compra el siguiente objeto (ver economy.ts). */
-  nivelValor: number;
+  /**
+   * Progresión por niveles (ver niveles.ts): `etapa` es el objeto más lejano alcanzado (índice de
+   * objects.json), `roturas` las que lleva hacia la meta de ese nivel y `jugando` el objeto que está en
+   * la mesa (se puede regresar a uno anterior para juntar dinero; solo cuenta el de la etapa).
+   */
+  progreso: { etapa: number; roturas: number; jugando: number };
+  /** Nivel de Valor de cada objeto (solo multiplica lo que paga ese objeto; ver economy.ts). */
+  valor: { objeto: string; nivel: number }[];
   /** Niveles de "Prob. de crítico" y "Daño crítico" (ver economy.ts). */
   nivelCritico: number;
   nivelDanioCritico: number;
@@ -123,7 +129,8 @@ export function createInitialState(now: number): GameState {
     dinero: ZERO,
     dineroPartida: ZERO,
     nivelFuerza: 0,
-    nivelValor: 0,
+    progreso: { etapa: 0, roturas: 0, jugando: 0 },
+    valor: [],
     nivelCritico: 0,
     nivelDanioCritico: 0,
     nivelSaco: 0,

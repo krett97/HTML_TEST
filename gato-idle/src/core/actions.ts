@@ -1,6 +1,8 @@
 // El manotazo: modifica el estado y devuelve qué pasó, para que la escena lo anime.
 import type { GameData } from './data';
-import { critChance, critMultiplier, currentObject, moneyPerBreak, objectIndex, objectProgress, tapDamage, viewsPerBreak } from './economy';
+import { critChance, critMultiplier, currentObject, moneyPerBreak, objectProgress, tapDamage, viewsPerBreak } from './economy';
+import { advanceLevel, atFrontier } from './niveles';
+import type { ObjectDef } from './data';
 import { rammingMultiplier, skillLevel } from './skills';
 import { ZERO, type Decimal } from './num';
 import type { GameState } from './state';
@@ -17,6 +19,8 @@ export interface HitResult {
   embestida?: boolean;
   /** Solo si se rompió. */
   reward?: { vistas: Decimal; dinero: Decimal };
+  /** Con esa rotura se pasó de nivel: el objeto nuevo en la mesa. */
+  newObject?: ObjectDef;
 }
 
 /** Aplica daño al objeto actual. Si llega a la orilla, se rompe y paga. */
@@ -35,7 +39,13 @@ export function hit(state: GameState, data: GameData, damage: Decimal): HitResul
   state.stats.roturas += 1;
   state.stats.roturasPartida += 1;
   state.danioObjeto = ZERO;
-  return { objectId: obj.id, damage, progress: 1, broke: true, reward: { vistas, dinero } };
+  // Solo las roturas en el nivel más lejano cuentan para pasar de nivel.
+  let newObject: ObjectDef | null = null;
+  if (atFrontier(state, data)) {
+    state.progreso = { ...state.progreso, roturas: state.progreso.roturas + 1 };
+    newObject = advanceLevel(state, data);
+  }
+  return { objectId: obj.id, damage, progress: 1, broke: true, reward: { vistas, dinero }, ...(newObject ? { newObject } : {}) };
 }
 
 /** Cuenta un manotazo y decide su daño: crítico (al azar) y embestida (uno de cada `embestidaCada`). */

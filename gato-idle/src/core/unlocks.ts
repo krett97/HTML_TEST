@@ -1,7 +1,7 @@
 // Descubrimientos: el juego empieza solo con el manotazo y va revelando funciones, aliados y el
 // laboratorio conforme el jugador avanza (unlocks.json, en orden). Siempre hay uno "próximo".
 import type { GameData, UnlockDef } from './data';
-import { objectIndex } from './economy';
+import { frontierIndex, levelMeta } from './niveles';
 import type { GameState } from './state';
 
 export function hasUnlock(state: GameState, id: string): boolean {
@@ -10,7 +10,7 @@ export function hasUnlock(state: GameState, id: string): boolean {
 
 export interface UnlockProgress {
   unlock: UnlockDef;
-  /** Cuánto lleva y cuánto pide (roturas, o niveles de Valor para llegar al objeto). */
+  /** Cuánto lleva y cuánto pide (roturas, o niveles para llegar al objeto). */
   current: number;
   target: number;
 }
@@ -19,13 +19,13 @@ export function unlockProgress(state: GameState, data: GameData, unlock: UnlockD
   if ('roturas' in unlock.condicion) {
     return { unlock, current: Math.min(state.stats.roturas, unlock.condicion.roturas), target: unlock.condicion.roturas };
   }
-  // Se mide en niveles de Valor (el objeto llega con el nivel índice × nivelesPorObjeto), así la
-  // barra avanza con cada compra de Valor. Al jugador no se le dice qué objeto es: solo "mejora el Valor".
+  // Se mide en niveles (objetos alcanzados), con la fracción del nivel en curso para que la barra avance
+  // con cada rotura. Al jugador no se le dice qué objeto es: solo "avanza de nivel".
   const objectId = unlock.condicion.objeto;
-  const index = data.objects.findIndex((o) => o.id === objectId);
-  const target = index * data.balance.valor.nivelesPorObjeto;
-  const reached = objectIndex(state, data) >= index;
-  return { unlock, current: reached ? target : Math.min(state.nivelValor, target), target };
+  const target = data.objects.findIndex((o) => o.id === objectId);
+  const etapa = frontierIndex(state, data);
+  const current = etapa >= target ? target : etapa + Math.min(0.99, state.progreso.roturas / levelMeta(state, data));
+  return { unlock, current, target };
 }
 
 function met(state: GameState, data: GameData, unlock: UnlockDef): boolean {

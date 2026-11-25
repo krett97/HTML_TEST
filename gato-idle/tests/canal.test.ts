@@ -14,6 +14,7 @@ import { markSeconds } from '../src/core/marca';
 import { buySkill, RESET_ADS, skillAvailable, skillBuyable, skillCost, skillCostAt, skillLevel, treeSpent, watchResetAd } from '../src/core/skills';
 import { createInitialState } from '../src/core/state';
 import { gameData } from '../src/data';
+import { irA } from './helpers';
 
 function newState() {
   const state = createInitialState(0);
@@ -33,19 +34,19 @@ describe('Canal: subir el video es el reinicio', () => {
     state.dineroPartida = num(1e12);
     expect(videoPreview(state, gameData).listo).toBe(false);
     state.desbloqueos.push('canal');
-    state.nivelValor = 100;
+    irA(state, 20);
     expect(videoPreview(state, gameData).listo).toBe(false);
-    state.nivelValor = 115; // lavadora
+    irA(state, 23); // lavadora
     expect(videoPreview(state, gameData).listo).toBe(true);
   });
 
-  it('una partida real deja ~24 seguidores al llegar al refri', () => {
+  it('una partida real deja ~13 seguidores al llegar al refri', () => {
     const state = newState();
     playUntil(state, gameData, { objeto: 'refri' });
     const preview = videoPreview(state, gameData);
     expect(preview.listo).toBe(true);
-    expect(preview.seguidores).toBeGreaterThanOrEqual(18);
-    expect(preview.seguidores).toBeLessThanOrEqual(30);
+    expect(preview.seguidores).toBeGreaterThanOrEqual(10);
+    expect(preview.seguidores).toBeLessThanOrEqual(20);
   });
 
   it('reinicia la partida y conserva canal, descubrimientos e investigaciones', () => {
@@ -62,7 +63,8 @@ describe('Canal: subir el video es el reinicio', () => {
     expect(state.canal.visualizaciones.toNumber()).toBeGreaterThan(50_000);
     expect(state.dineroPartida.eq(0)).toBe(true);
     expect(state.canal.videos).toHaveLength(1);
-    expect(state.nivelValor).toBe(0);
+    expect(state.progreso).toEqual({ etapa: 0, roturas: 0, jugando: 0 });
+    expect(state.valor).toEqual([]);
     expect(state.nivelFuerza).toBe(0);
     expect(state.nivelCritico).toBe(0);
     expect(state.aliados).toEqual([]);
@@ -83,7 +85,7 @@ describe('Canal: subir el video es el reinicio', () => {
   it('cada seguidor da +2 % de dinero', () => {
     const state = newState();
     const before = moneyPerBreak(state, gameData).toNumber();
-    state.nivelValor = 50;
+    irA(state, 10);
     const at50 = moneyPerBreak(state, gameData).toNumber();
     state.canal.seguidores = 50;
     expect(moneyPerBreak(state, gameData).toNumber()).toBeCloseTo(at50 * 2, 0);
@@ -163,12 +165,12 @@ describe('Árbol de habilidades', () => {
 
   it('cada rama hace lo suyo', () => {
     const base = newState();
-    base.nivelValor = 60;
+    irA(base, 12);
     base.desbloqueos.push('canal');
     base.dineroPartida = num(1e12);
     const withSkill = (id: string, nivel: number) => {
       const s = newState();
-      Object.assign(s, { nivelValor: base.nivelValor, dineroPartida: base.dineroPartida, desbloqueos: [...base.desbloqueos] });
+      Object.assign(s, { progreso: { ...base.progreso }, dineroPartida: base.dineroPartida, desbloqueos: [...base.desbloqueos] });
       s.habilidades = [{ id, nivel }];
       return s;
     };
@@ -203,7 +205,7 @@ describe('Árbol de habilidades', () => {
 
   it('embestida: cada 10 manotazos, uno pega ×(1 + 2 × nivel)', () => {
     const state = newState();
-    state.nivelValor = 130;
+    irA(state, 26);
     state.habilidades = [{ id: 'embestida', nivel: 2 }];
     const normal = tapDamage(state, gameData);
     const hits = Array.from({ length: 10 }, () => tap(state, gameData, () => 0.99));
@@ -224,7 +226,7 @@ describe('Árbol de habilidades', () => {
   it('express: las investigaciones tardan menos (nunca menos de la mitad)', () => {
     const state = newState();
     state.desbloqueos.push('laboratorio');
-    state.nivelValor = 60;
+    irA(state, 12);
     state.pruebas.dineroInfinito = true;
     state.habilidades = [{ id: 'express', nivel: 3 }];
     startResearch(state, gameData, 'mirada', 0);

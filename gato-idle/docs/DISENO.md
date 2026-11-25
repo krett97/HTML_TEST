@@ -55,8 +55,8 @@
 ### Mejoras principales (implementadas)
 
 - **Fuerza:** daño por manotazo = `(1 + nivel) × 2^⌊nivel / 11⌋` (se duplica cada 11 niveles). Costo: `5 × 1.28^nivel`.
-- **Valor:** **cada 10 niveles el dueño compra el siguiente objeto** (más vida, más vistas). Dentro de un objeto, cada nivel da +10 % de vistas. Costo: lo que pagan 10 roturas del objeto actual × `1.25^(nivel dentro del objeto)`.
-- **Tensión del jugador:** Fuerza contra Valor. Si subes Valor sin Fuerza, cada objeto tarda demasiado.
+- **Valor (desde 0.35.0, ver §54):** es **de cada objeto** y solo sube lo que paga ese objeto: +10 % de vistas por nivel. Costo: lo que pagan 10 roturas de ese objeto × `1.3^nivel`. Ya no avanza objetos: eso lo hacen los **niveles** (romper N veces el objeto).
+- **Tensión del jugador:** Fuerza contra niveles. Si el objeto del frente cae lento, conviene regresar a un nivel anterior a juntar dinero (◀ en la tarjeta de nivel) y volver con más Fuerza.
 - **Meta de balance:** si el jugador va al día, cada objeto pide **5–15 toques**.
 
 - **Garras afiladas** y **Sombrero ridículo:** los críticos (ver §24).
@@ -1033,3 +1033,18 @@ Integración (`src/app/estilo.ts`): el vectorial es el estilo por defecto; el pi
 - La interfaz redonda es solo CSS bajo `html[data-estilo="vector"]` (`src/ui/vector.css`: tarjetas blancas con borde grueso y sombra dura, botones amarillos con relieve, pestañas redondas, letra Fredoka); los componentes no cambian.
 
 Pendiente: retirar el pixel art y la bandera cuando ya no haga falta comparar; ícono de la app en el mismo estilo.
+
+## 54. Progresión por niveles: romper N objetos, guardianes y Valor por objeto (versión 0.35.0)
+
+Antes el dueño compraba el siguiente objeto cada 5 niveles de Valor: avanzar era gastar. Ahora **cada objeto es un nivel** que se pasa **rompiéndolo tantas veces** ("Nivel 3 de 63 · 7/14 rotos"), como en los juegos de etapas:
+
+- **Meta por nivel:** `base + porNivel × (objetos anteriores de la casa)` (`balance.niveles.roturasPorCasa`: departamento 10 + 2 por nivel, casa 15 + 3, mansión 20 + 4, Luna 25 + 5). Solo cuentan las roturas en el nivel más lejano (`progreso.etapa`).
+- **Regresar a juntar dinero:** con ◀ ▶ en la tarjeta de nivel se pone en la mesa cualquier nivel ya pasado (`progreso.jugando`); ahí las roturas pagan pero no avanzan. "Volver al frente" regresa.
+- **Guardián del cuarto (mini jefe):** al terminar el último nivel de un cuarto espera el guardián: el mismo objeto, dorado y más grande, con 5 roturas de vida y 20 segundos (`balance.niveles.miniJefe`). Ganar pasa al siguiente cuarto y paga; perder no castiga: se reintenta cuando se quiera. Se nombra por su cuarto ("Guardián de la cocina", `jefes.mini.*` + `cuartos.*`).
+- **Jefe de la casa y mudanza:** el último nivel de la casa pide además vencer al jefe de la casa (la Escoba ahora también es obligatoria para mudarse: `casas.json` lo pide) y juntar lo del Canal; mientras, el nivel queda "terminado" y la tarjeta explica qué falta.
+- **Valor por objeto:** `state.valor[{objeto, nivel}]`; multiplica solo lo que paga ese objeto. Al subir el video se borra junto con el resto de la partida.
+- **Al mudarse a media partida el gato entrena** hasta la `fuerzaInicial` de la casa nueva: sin eso llegaba a la mansión con Fuerza 120 y la Luna se atoraba (el simulador tardaba horas en un solo nivel).
+- **Guardado:** v4 → v5 (`save.ts`): el nivel de Valor se vuelve la etapa (÷5) y lo que sobra, el Valor de ese objeto.
+- **Jugador automático** (`bot.ts`, simulador y "avanzar como jugador"): las roturas de cada rato cuentan para el nivel; pelea al guardián con el daño por segundo que tiene; si el frente cae a más de 6 s por rotura, junta dinero en el nivel anterior que más deje; las compras se puntúan por lo que rinden en el frente; se detiene ante el jefe de la casa o la mudanza (los resuelve quien llama).
+
+Tiempos con `npm run simular` (5 toques/s): el departamento la primera vez en 15 min; horas de juego activo hasta cada casa: sin anuncios casa 0.7 h · mansión 1.3 h · Luna 2.6 h · último jefe 3.4 h; con los videos ×2, 2.4 h; con turbo además, 2.0 h (antes: 2.8 / 2.2 / 1.8). Los jefes de casa se vencen al llegar o tras dos minutos más.

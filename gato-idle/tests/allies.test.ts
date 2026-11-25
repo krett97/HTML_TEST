@@ -5,6 +5,7 @@ import { checkUnlocks } from '../src/core/unlocks';
 import { num } from '../src/core/num';
 import { createInitialState } from '../src/core/state';
 import { gameData } from '../src/data';
+import { irA } from './helpers';
 
 const ally = (id: string) => gameData.allies.find((a) => a.id === id)!;
 
@@ -23,7 +24,7 @@ describe('aliados', () => {
     checkUnlocks(state, gameData);
     expect(allyUnlocked(state, gameData, ally('gatito'))).toBe(true);
     expect(allyUnlocked(state, gameData, ally('perro'))).toBe(false);
-    state.nivelValor = 30; // papel de baño
+    irA(state, 6); // papel de baño
     checkUnlocks(state, gameData);
     expect(allyUnlocked(state, gameData, ally('perro'))).toBe(true);
   });

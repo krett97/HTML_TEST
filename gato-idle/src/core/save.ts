@@ -3,7 +3,7 @@
 import { Decimal, isDecimal } from './num';
 import { createInitialState, type GameState } from './state';
 
-export const SAVE_VERSION = 4;
+export const SAVE_VERSION = 5;
 
 /** Lo que se escribe en disco. */
 interface SaveFile {
@@ -54,8 +54,32 @@ function migrateV3(s: Record<string, unknown>): Record<string, unknown> {
   return { ...rest, nivelSaco: nivelLentes ?? 0, desbloqueos };
 }
 
+// v4 → v5: la progresión es por niveles (niveles.ts). El nivel de Valor (5 por objeto) se vuelve la etapa
+// (el objeto en el que iba) y los niveles sobrantes, el Valor de ese objeto. La lista queda fija aquí.
+const OBJECTS_V4 = [
+  'vaso', 'taza', 'plato', 'control', 'florero', 'celular', 'papel', 'cojin', 'tenis', 'cortinas', 'sofa', 'colchon',
+  'lampara', 'bocina', 'consola', 'tv', 'mesa', 'librero', 'tostadora', 'cafetera', 'licuadora', 'microondas', 'computadora',
+  'lavadora', 'secadora', 'estufa', 'refri', 'maceta', 'gnomo', 'flamenco', 'aro', 'microfono', 'camara', 'placa', 'silla',
+  'parrilla', 'bici', 'moto', 'coche', 'jarron', 'busto', 'placaoro', 'armadura', 'piano', 'palomitas', 'proyector', 'sillon',
+  'flotador', 'sombrilla', 'dron', 'jetski', 'casco', 'comida', 'pecera', 'traje', 'telescopio', 'roca', 'alien', 'robot',
+  'bandera', 'satelite', 'rover', 'cohete',
+];
+const VALOR_POR_OBJETO_V4 = 5;
+
+function migrateV4(s: Record<string, unknown>): Record<string, unknown> {
+  const { nivelValor, ...rest } = s;
+  const valor = typeof nivelValor === 'number' && Number.isFinite(nivelValor) ? Math.max(0, Math.floor(nivelValor)) : 0;
+  const etapa = Math.min(Math.floor(valor / VALOR_POR_OBJETO_V4), OBJECTS_V4.length - 1);
+  const sobrante = valor - etapa * VALOR_POR_OBJETO_V4;
+  return {
+    ...rest,
+    progreso: { etapa, roturas: 0, jugando: etapa },
+    valor: sobrante > 0 ? [{ objeto: OBJECTS_V4[etapa], nivel: sobrante }] : [],
+  };
+}
+
 /** MIGRATIONS[n] convierte un guardado de la versión n a la n + 1. */
-export const MIGRATIONS: Record<number, Migration> = { 1: migrateV1, 2: migrateV2, 3: migrateV3 };
+export const MIGRATIONS: Record<number, Migration> = { 1: migrateV1, 2: migrateV2, 3: migrateV3, 4: migrateV4 };
 
 export function serialize(state: GameState, now: number): string {
   const file: SaveFile = { v: SAVE_VERSION, t: now, s: state };

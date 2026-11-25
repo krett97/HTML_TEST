@@ -8,6 +8,7 @@ import { startResearch } from '../src/core/research';
 import { deserialize, serialize } from '../src/core/save';
 import { createInitialState } from '../src/core/state';
 import { gameData } from '../src/data';
+import { irA } from './helpers';
 
 function newState() {
   const state = createInitialState(0);
@@ -30,7 +31,7 @@ describe('modo pruebas', () => {
 
   it('multiplicador de daño y daño infinito', () => {
     const state = newState();
-    state.nivelValor = 130; // refri
+    irA(state, 26); // refri
     const normal = tapDamage(state, gameData).toNumber();
     state.pruebas.multDanio = 100;
     expect(tapDamage(state, gameData).toNumber()).toBe(normal * 100);
@@ -45,9 +46,9 @@ describe('modo pruebas', () => {
     const seconds = playUntil(state, gameData, { objeto: 'lampara' });
     expect(currentObject(state, gameData).id).toBe('lampara');
     expect(state.desbloqueos).toContain('laboratorio');
-    // Mismo ritmo que el simulador: la lámpara llega hacia el minuto 10.
-    expect(seconds / 60).toBeGreaterThan(8);
-    expect(seconds / 60).toBeLessThan(13);
+    // Mismo ritmo que el simulador: con niveles, la lámpara llega hacia el minuto 4.
+    expect(seconds / 60).toBeGreaterThan(2);
+    expect(seconds / 60).toBeLessThan(6);
     // Los trucos se conservan después de jugar.
     expect(state.pruebas.dineroInfinito).toBe(true);
   });
@@ -67,7 +68,7 @@ describe('modo pruebas', () => {
     expect(discoverNext(state, gameData)).toBeNull();
 
     state.pruebas.dineroInfinito = true;
-    state.nivelValor = 60; // lámpara: ya hay laboratorio
+    irA(state, 12); // lámpara: ya hay laboratorio
     expect(startResearch(state, gameData, 'mirada', 1000)).toBe(true);
     advanceClock(state, 30);
     expect(state.laboratorio.actual!.fin).toBe(1000 + 60_000 - 30_000);

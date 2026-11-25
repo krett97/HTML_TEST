@@ -6,6 +6,7 @@ import { alliesDps } from '../src/core/allies';
 import { normalizeState } from '../src/core/normalize';
 import { createInitialState } from '../src/core/state';
 import { gameData } from '../src/data';
+import { irA } from './helpers';
 
 function newState() {
   const state = createInitialState(0);
@@ -16,7 +17,7 @@ function newState() {
 describe('patrocinio (anuncio a cambio de dinero)', () => {
   it('el ejemplo: si un toque rompe un objeto de $10, paga al menos $2,500', () => {
     const state = newState();
-    state.nivelValor = 10; // plato, $3.1 por rotura
+    irA(state, 2); // plato, $3.1 por rotura
     state.nivelFuerza = 30; // lo rompe de un toque
     expect(tapsToBreak(state, gameData)).toBe(1);
     // 5 toques por segundo × 60 s = 300 roturas.
@@ -27,14 +28,14 @@ describe('patrocinio (anuncio a cambio de dinero)', () => {
 
   it('nunca paga menos que 100 roturas del objeto actual', () => {
     const state = newState();
-    state.nivelValor = 130; // refri con poca fuerza: muchos golpes por objeto
+    irA(state, 26); // refri con poca fuerza: muchos golpes por objeto
     expect(sponsorReward(state, gameData).gte(moneyPerBreak(state, gameData).mul(100))).toBe(true);
   });
 
   it('crece con lo que gana el jugador (aliados incluidos)', () => {
     const state = newState();
     state.desbloqueos = ['aliado:gatito'];
-    state.nivelValor = 25;
+    irA(state, 5);
     const before = sponsorReward(state, gameData);
     state.aliados = [{ id: 'gatito', nivel: 200 }];
     expect(incomePerSecond(state, gameData, 5).gt(0)).toBe(true);

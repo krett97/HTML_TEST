@@ -8,6 +8,7 @@ import { formatDuration } from '../src/core/time';
 import { checkUnlocks, hasUnlock, nextUnlock } from '../src/core/unlocks';
 import { tapDamage } from '../src/core/economy';
 import { gameData } from '../src/data';
+import { irA } from './helpers';
 
 function newState(dinero = 0) {
   const state = createInitialState(0);
@@ -30,7 +31,7 @@ describe('descubrimientos', () => {
     state.stats.roturas = 12;
     expect(checkUnlocks(state, gameData).map((u) => u.id)).toEqual(['valor']);
     state.stats.roturas = 30;
-    state.nivelValor = 15; // control remoto
+    irA(state, 3); // control remoto
     expect(checkUnlocks(state, gameData).map((u) => u.id)).toEqual(['patrocinios', 'aliado:gatito', 'aliado:raton']);
     expect(nextUnlock(state, gameData)?.unlock.id).toBe('critico');
     // No se repiten.
@@ -40,7 +41,7 @@ describe('descubrimientos', () => {
   it('cuando ya no quedan, no hay próximo', () => {
     const state = newState();
     state.stats.roturas = 1000;
-    state.nivelValor = 130;
+    irA(state, 26);
     checkUnlocks(state, gameData);
     expect(nextUnlock(state, gameData)).toBeNull();
     expect(hasUnlock(state, 'laboratorio')).toBe(true);
@@ -50,7 +51,7 @@ describe('descubrimientos', () => {
 describe('laboratorio', () => {
   function labState(dinero: number) {
     const state = newState(dinero);
-    state.nivelValor = 60; // lámpara
+    irA(state, 12); // lámpara
     state.stats.roturas = 100;
     checkUnlocks(state, gameData);
     return state;
@@ -112,11 +113,11 @@ describe('progreso hacia un descubrimiento por objeto', () => {
     const state = createInitialState(0);
     normalizeState(state, gameData);
     const perro = gameData.unlocks.find((u) => u.id === 'aliado:perro')!; // papel de baño, objeto 6
-    state.nivelValor = 12;
-    expect(unlockProgress(state, gameData, perro)).toMatchObject({ current: 12, target: 30 });
-    state.nivelValor = 13;
-    expect(unlockProgress(state, gameData, perro).current).toBe(13);
-    state.nivelValor = 40;
-    expect(unlockProgress(state, gameData, perro)).toMatchObject({ current: 30, target: 30 });
+    irA(state, 2);
+    expect(unlockProgress(state, gameData, perro)).toMatchObject({ current: 2, target: 6 });
+    state.progreso.roturas = 7; // a medio nivel (el plato pide 14)
+    expect(unlockProgress(state, gameData, perro).current).toBeCloseTo(2.5);
+    irA(state, 8);
+    expect(unlockProgress(state, gameData, perro)).toMatchObject({ current: 6, target: 6 });
   });
 });

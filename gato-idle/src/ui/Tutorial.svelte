@@ -36,7 +36,7 @@
     <div class="tuto" role="status" aria-label={$t('tutorial.gato')} data-testid="tutorial">
       <img class="cara" src={ART_FILES.gato} alt="" />
       <div class="globo">
-        <p data-testid="tutorial-{step}"><Rich text={$t(`tutorial.${step}`)} /></p>
+        <p data-testid="tutorial-{step}"><Rich text={$t(`tutorial.${step}`, { n: $view.nivel.meta })} /></p>
         <div class="acciones">
           <button type="button" class="saltar" onclick={() => game.skipTutorial()} data-testid="saltar-tutorial">{$t('tutorial.saltar')}</button>
           {#if INFO_STEPS.includes(step)}

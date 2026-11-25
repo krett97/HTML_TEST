@@ -8,7 +8,8 @@ import { alliesDps } from '../src/core/allies';
 import { botStep, playUntil } from '../src/core/bot';
 import { uploadVideo } from '../src/core/canal';
 import type { GameData } from '../src/core/data';
-import { currentObject, moneyPerBreak, objectIndex, tapDamage, tapsToBreak, valorStepsInObject } from '../src/core/economy';
+import { currentObject, moneyPerBreak, tapDamage, tapsToBreak, valorHere } from '../src/core/economy';
+import { frontierIndex, levelDone } from '../src/core/niveles';
 import { lastObjectIndex } from '../src/core/mudanza';
 import { bossHere, bossHp } from '../src/core/jefes';
 import { expectedMarkMultiplier } from '../src/core/marca';
@@ -48,7 +49,7 @@ export function simulate(data: GameData, maxMinutes = MAX_MINUTES): { rows: SimR
     minuto: seconds / 60,
     hito,
     fuerza: state.nivelFuerza,
-    valor: state.nivelValor,
+    valor: valorHere(state, data),
     golpes: tapsToBreak(state, data),
     pagoPorRotura: formatNum(moneyPerBreak(state, data)),
     aliadosPct,
@@ -72,8 +73,8 @@ export function simulate(data: GameData, maxMinutes = MAX_MINUTES): { rows: SimR
       rows.push(row(seconds, !firstBuy ? object : name.startsWith('aliado:') ? `🐾 ${name.slice(7)}` : `🎯 ${name}`, state, pct));
       lastObject = object;
     }
-    // Termina a media etapa del último objeto.
-    if (object === lastId && valorStepsInObject(state, data) >= 5) break;
+    // Termina al pasar el último nivel.
+    if (object === lastId && levelDone(state, data)) break;
   }
   return { rows, counts };
 }
@@ -152,7 +153,7 @@ export function simulateRuns(data: GameData, runs = 24, anuncios: AdHabit = 'nin
   for (let vuelta = 1; vuelta <= runs; vuelta++) {
     const minutos: Record<string, number> = {};
     let seconds = 0;
-    const start = objectIndex(state, data);
+    const start = frontierIndex(state, data);
     const last = lastObjectIndex(state, data);
     const marks = RUN_MARKS.filter((id) => {
       const index = data.objects.findIndex((o) => o.id === id);

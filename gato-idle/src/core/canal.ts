@@ -5,7 +5,7 @@
 // el árbol de habilidades, y su total histórico (con los seguidores) abre la mudanza.
 import { allyUnlocked } from './allies';
 import type { GameData } from './data';
-import { currentObject, objectIndex } from './economy';
+import { frontierIndex, frontierObject, setFrontier } from './niveles';
 import { runStart } from './mudanza';
 import { num, ZERO, type Decimal } from './num';
 import { skillAmount, STARTING_GANG } from './skills';
@@ -60,7 +60,7 @@ export function videoPreview(state: GameState, data: GameData): VideoPreview {
   return {
     seguidores,
     visualizaciones: viewsFor(state.dineroPartida, data).mul(1 + skillAmount(state, data, 'miniaturas')).floor(),
-    listo: hasUnlock(state, 'canal') && objectIndex(state, data) >= minimo && seguidores > 0,
+    listo: hasUnlock(state, 'canal') && frontierIndex(state, data) >= minimo && seguidores > 0,
   };
 }
 
@@ -80,7 +80,7 @@ export function uploadVideo(state: GameState, data: GameData, now: number, rng: 
   const mult = (viral ? multViral : 1) * (doble ? AD_VIDEO_MULT : 1);
   const video: VideoRecord = {
     plantilla: Math.floor(rng() * TITLE_TEMPLATES),
-    objeto: currentObject(state, data).id,
+    objeto: frontierObject(state, data).id,
     roturas: state.stats.roturasPartida,
     seguidores: preview.seguidores * mult,
     visualizaciones: preview.visualizaciones.mul(mult),
@@ -102,7 +102,8 @@ function restartRun(state: GameState, data: GameData): void {
   state.dinero = ZERO;
   state.dineroPartida = ZERO;
   state.nivelFuerza = start.nivelFuerza;
-  state.nivelValor = start.nivelValor;
+  setFrontier(state, data, start.etapa);
+  state.valor = [];
   state.nivelCritico = 0;
   state.nivelDanioCritico = 0;
   state.nivelSaco = 0;

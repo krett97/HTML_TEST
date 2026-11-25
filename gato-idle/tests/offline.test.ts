@@ -6,11 +6,12 @@ import { claimOffline, offlineEarnings } from '../src/core/offline';
 import { deserialize, serialize } from '../src/core/save';
 import { createInitialState } from '../src/core/state';
 import { gameData } from '../src/data';
+import { irA } from './helpers';
 
 function gangState() {
   const state = createInitialState(0);
   normalizeState(state, gameData);
-  state.nivelValor = 30; // papel de baño
+  irA(state, 6); // papel de baño
   state.desbloqueos = ['aliado:gatito', 'aliado:perro'];
   state.aliados = [
     { id: 'gatito', nivel: 20 },

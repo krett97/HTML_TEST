@@ -10,14 +10,15 @@
     "dpsGato": "Gato",
     "dpsAliados": "Pandilla",
     "racha": "¡EN RACHA!",
-    "marcado": "¡MARCADO!"
+    "marcado": "¡MARCADO!",
+    "nivel": "Nivel {n}"
   },
   "tutorial": {
     "tocar": "Psst, humano: toca la pantalla y le doy un manotazo a lo de la mesa.",
     "monedas": "¡Al suelo! [[gato]] Cada cosa rota da monedas. El dueño pone otra. Nunca aprende.",
     "fuerza": "Compra Fuerza: mis manotazos pegan más fuerte.",
-    "valor": "Compra Valor: cosas más caras = más monedas. Es ciencia.",
-    "meta": "Aquí abajo ves qué sigue. Spoiler: más destrucción.",
+    "valor": "Compra Valor: este objeto me deja más monedas cada vez que lo tiro. Es ciencia.",
+    "meta": "Aquí abajo ves qué sigue. Rompe {n} de cada cosa para pasar de nivel. Spoiler: más destrucción.",
     "aliado": "Un gatito quiere unirse. Adóptalo en [[gatito]] Aliados: rompe cosas aunque no toques.",
     "video": "¡Ya hay video! Súbelo en [[canal]] Canal: empiezas de cero, pero más fuerte.",
     "ok": "¡Va!",
@@ -142,6 +143,15 @@
       "el": "el Veterinario Espacial",
       "El": "El Veterinario Espacial",
       "derrotado": "DERROTADO"
+    },
+    "mini": {
+      "nombre": "Guardián de {cuarto}",
+      "titulo": "¡EL GUARDIÁN DE {cuarto} NO TE DEJA PASAR!",
+      "frase": "Es lo mismo de siempre… pero dorado y furioso. ¡Tienes {s} segundos!",
+      "al": "al guardián de {cuarto}",
+      "el": "el guardián de {cuarto}",
+      "El": "El guardián de {cuarto}",
+      "derrotado": "DERROTADO"
     }
   },
   "jefe": {
@@ -152,7 +162,9 @@
     "premio": "[[trofeo]] ¡Le ganaste {al}! +{dinero}",
     "derrota": "{El} se burla de ti… Revancha en 60 s (+{dinero})",
     "bono": "+{pct} % daño",
-    "revanchaYa": "¡Ya!"
+    "revanchaYa": "¡Ya!",
+    "derrotaMini": "{El} se burla de ti… Rétalo otra vez cuando quieras (+{dinero})",
+    "premioMini": "¡Le ganaste {al}! Sigue el siguiente cuarto. +{dinero}"
   },
   "mejoras": {
     "enLaMesa": "En la mesa",
@@ -166,10 +178,7 @@
     "fuerza": "Fuerza",
     "fuerzaEfecto": "Daño {actual} → {siguiente}",
     "valor": "Valor",
-    "valorEfecto": "+${actual} → +${siguiente} por rotura",
-    "valorEtapa": "{n}/{total} para el siguiente objeto",
-    "valorUltimo": "Versiones cada vez más caras",
-    "valorNuevo": "El dueño compra: {objeto}",
+    "valorEfecto": "+${actual} → +${siguiente} por rotura de este objeto",
     "critico": "Garras afiladas",
     "criticoEfecto": "Crítico {actual}% → {siguiente}%",
     "criticoMax": "Crítico {actual}% (al máximo)",
@@ -181,13 +190,22 @@
     "superZarpazo": "¡SÚPER ZARPAZO!",
     "embestida": "¡EMBESTIDA!",
     "comprar": "Comprar",
-    "valorMudanza": "[[mudanza]] ¡Mudanza! El dueño estrena casa: {objeto}",
     "esperaMudanza": "El dueño ya no tiene dónde poner más cosas… Junta seguidores y visualizaciones para mudarse ([[canal]] Canal).",
     "marca": "Garras marcadoras",
     "marcaEfecto": "Un crítico marca el objeto {s} s: pandilla {actual} → {siguiente}",
     "marcaMax": "Un crítico marca el objeto {s} s: pandilla {actual} (máximo)",
     "max": "Máx.",
-    "esperaJefe": "El dueño no se muda hasta que venzas {al}… y juntes seguidores y visualizaciones ([[canal]] Canal)."
+    "esperaJefe": "El dueño no se muda hasta que venzas {al}… y juntes seguidores y visualizaciones ([[canal]] Canal).",
+    "nivel_": "Nivel {n}",
+    "nivelDe": "Nivel {n} de {total}",
+    "nivelProgreso": "{roturas}/{meta} rotos",
+    "nivelListo": "¡Nivel terminado!",
+    "nivelAtras": "Nivel anterior",
+    "nivelAdelante": "Nivel siguiente",
+    "alFrente": "Volver al frente",
+    "juntando": "Juntando dinero en un nivel anterior: aquí las roturas no cuentan para avanzar.",
+    "guardianEspera": "El guardián del cuarto bloquea el paso: rétalo en la escena.",
+    "jefeEspera": "El jefe de la casa bloquea el paso: rétalo en la escena."
   },
   "ajustes": {
     "sonido": "Sonido",
@@ -264,7 +282,7 @@
     "pistaFuncion": "Algo nuevo para el gato",
     "pistaAliado": "Un nuevo aliado",
     "roturas": "Tira {n} objetos más",
-    "objeto": "Mejora el Valor",
+    "objeto": "Avanza de nivel",
     "nuevo": "¡Nuevo!",
     "todo": "Ya descubriste todo lo de esta versión. Junta seguidores en el Canal para mudarte… y vence a cada jefe. ¿Llegará el gato a la Luna?",
     "fuerza": "Fuerza",
@@ -559,5 +577,21 @@
   "turbo": {
     "boton": "Turbo ×1.5",
     "aviso": "[[turbo]] ¡TURBO! ×1.5 daño y dinero por 3 minutos"
+  },
+  "cuartos": {
+    "cocina": "la cocina",
+    "sala": "la sala",
+    "bano": "el baño",
+    "recamara": "la recámara",
+    "lavado": "el cuarto de lavado",
+    "jardin": "el jardín",
+    "estudio": "el estudio",
+    "cochera": "la cochera",
+    "salon": "el salón",
+    "cine": "el cine",
+    "alberca": "la alberca",
+    "cohete": "el cohete",
+    "labluna": "el laboratorio lunar",
+    "superficie": "la superficie lunar"
   }
 }

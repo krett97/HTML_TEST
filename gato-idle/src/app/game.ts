@@ -4,7 +4,7 @@
 import { writable, type Readable, type Writable } from 'svelte/store';
 import { hit, rollTap, tap, type HitResult } from '../core/actions';
 import { applyMark, markActive, markMultiplier, markRemaining, markSeconds } from '../core/marca';
-import { bossDef, bossHere, damageBoss, endFight, rematchIn, startFight, type BossFight } from '../core/jefes';
+import { bossDef, bossHere, damageBoss, endFight, rematchIn, startFight, type BossFight, miniBossHere, isMini } from '../core/jefes';
 import {
   allyCost,
   allyHitDamage,
@@ -66,10 +66,10 @@ import {
   tapDamage,
   tapsToBreak,
   valorCost,
-  valorNextObject,
-  valorStepsInObject,
+  valorHere,
   viewsPerBreak,
 } from '../core/economy';
+import { atFrontier, frontierIndex, gateAt, goToLevel, levelMeta, roomOf, frontierObject } from '../core/niveles';
 import { normalizeState } from '../core/normalize';
 import { formatNum } from '../core/format';
 import { RateLimiter } from '../core/limiter';
@@ -208,24 +208,26 @@ export interface ViewModel {
     danioSiguiente: string;
     golpesSiguiente: number;
   };
-  valor: {
-    nivel: number;
-    /** Niveles comprados sobre el objeto actual y cuántos hay antes del siguiente. */
-    enObjeto: number;
-    porObjeto: number;
-    ultimoObjeto: boolean;
-    /** Está en el último objeto de la casa y falta juntar lo de la mudanza (ver el Canal). */
-    esperaMudanza: boolean;
+  /** Valor del objeto de la mesa (cada objeto lleva el suyo): solo sube lo que paga. */
+  valor: { nivel: number; cantidad: number; costo: string; alcanza: boolean; gananciaSiguiente: string };
+  /** Progresión por niveles (niveles.ts). */
+  nivel: {
+    /** Nivel más lejano, contando desde 1, y cuántos hay. */
+    etapa: number;
+    total: number;
+    /** Objeto y cuarto de la etapa. */
+    objeto: string;
+    cuarto: string;
+    roturas: number;
+    meta: number;
+    /** Índice del objeto en la mesa y si es el de la etapa (si no, se está juntando dinero en uno anterior). */
+    jugando: number;
+    enEtapa: boolean;
+    /** Qué detiene el avance con el nivel terminado: el guardián del cuarto, el jefe de la casa o la mudanza. */
+    puerta: 'miniJefe' | 'jefe' | 'mudanza' | null;
+    terminado: boolean;
     /** El jefe que falta vencer para mudarse (null: no falta ninguno). */
     esperaJefe: string | null;
-    /** El siguiente nivel de Valor muda al dueño a la casa nueva. */
-    mudanza: boolean;
-    cantidad: number;
-    costo: string;
-    alcanza: boolean;
-    gananciaSiguiente: string;
-    /** El objeto que compra el dueño con la siguiente compra, si cambia. */
-    nuevoObjeto: string | null;
   };
   /** Garras afiladas: probabilidad de crítico, en %. */
   critico: { nivel: number; cantidad: number; costo: string; alcanza: boolean; prob: number; probSiguiente: number; maximo: boolean };
@@ -616,11 +618,14 @@ export class Game {
       this.hitBoss(damage, roll.critico, roll.embestida, null);
       return;
     }
+    const before = currentObject(this.state, this.data);
+    const home = this.state.casa;
     const result = tap(this.state, this.data);
     this.dpsMeter.add(performance.now(), result.damage, 'gato');
     this.haptic(result.broke ? 'media' : 'ligera');
     this.events.emit('hit', result);
     if (result.critico) this.mark();
+    if (result.newObject) this.afterObjectChange(before, home);
     this.markDirty();
   }
 
@@ -641,14 +646,15 @@ export class Game {
 
   /** "¡Retar al jefe!": empieza la pelea si el jefe espera en este objeto y no hay que esperar la revancha. */
   challengeBoss(): boolean {
-    const boss = bossHere(this.state, this.data);
-    if (this.fight || !boss || rematchIn(this.state, Date.now()) > 0) return false;
+    const boss = bossHere(this.state, this.data) ?? miniBossHere(this.state, this.data);
+    if (this.fight || !boss) return false;
+    if (!isMini(boss.id) && rematchIn(this.state, Date.now()) > 0) return false;
     this.startBoss(boss.id);
     return true;
   }
 
   private startBoss(id: string): void {
-    this.fight = startFight(this.data, bossDef(this.data, id)!, Date.now());
+    this.fight = startFight(this.data, bossDef(this.data, id)!, Date.now(), this.state);
     this.events.emit('jefe', { fase: 'inicio', id, primeraVez: this.firstTime(`jefe:${id}`) });
     this.playSound('descubrimiento');
     this.markDirty();
@@ -668,13 +674,17 @@ export class Game {
     const fight = this.fight;
     if (!fight) return;
     this.fight = null;
+    const before = currentObject(this.state, this.data);
+    const home = this.state.casa;
     const outcome = endFight(this.state, this.data, fight, Date.now());
-    const primeraVez = outcome.gano && this.firstTime(`trofeo:${outcome.id}`);
+    const primeraVez = outcome.gano && !isMini(outcome.id) && this.firstTime(`trofeo:${outcome.id}`);
     this.events.emit('jefe', { fase: 'fin', id: outcome.id, gano: outcome.gano, premio: outcome.premio, primeraVez });
     this.playSound(outcome.gano ? 'objeto-nuevo' : 'critico');
-    // Vencer al jefe puede abrir la mudanza: se resuelve ya, sin esperar al siguiente tick (si sobraba
-    // Valor, el objeto brincaba un instante a uno de la casa siguiente).
-    if (outcome.gano) {
+    if (outcome.gano && isMini(outcome.id)) {
+      // Al vencer al guardián se pasa al siguiente cuarto; el aviso espera a que termine la caída en la escena.
+      setTimeout(() => this.afterObjectChange(before, home), 1800);
+    } else if (outcome.gano) {
+      // Vencer al jefe puede abrir la mudanza: se resuelve ya, sin esperar al siguiente tick.
       awardBossTokens(this.state, this.data);
       this.checkMove();
     }
@@ -718,7 +728,7 @@ export class Game {
       case 'fuerza':
         return { cost: (s) => fuerzaCost(s, d), buy: (s) => buyFuerza(s, d) };
       case 'valor':
-        return { cost: (s) => valorCost(s, d), buy: (s) => buyValor(s, d).bought };
+        return { cost: (s) => valorCost(s, d), buy: (s) => buyValor(s, d) };
       case 'critico':
         return { cost: (s) => critChanceCost(s, d), buy: (s) => buyCritChance(s, d) };
       case 'danioCritico':
@@ -735,11 +745,24 @@ export class Game {
   }
 
   buyValor(): boolean {
+    return this.afterPurchase(this.buyUpgrade('valor') > 0);
+  }
+
+  /** Cambia el objeto de la mesa a otro nivel ya alcanzado (`delta` −1/+1) o vuelve al más lejano. */
+  goToLevel(delta: number | 'frente'): boolean {
     const before = currentObject(this.state, this.data);
-    const home = this.state.casa;
-    const bought = this.buyUpgrade('valor') > 0;
-    this.afterObjectChange(before, home);
-    return this.afterPurchase(bought);
+    const target = delta === 'frente' ? frontierIndex(this.state, this.data) : objectIndex(this.state) + delta;
+    const moved = goToLevel(this.state, this.data, target);
+    if (moved) {
+      const after = currentObject(this.state, this.data);
+      this.events.emit('objeto', { objectId: after.id, primeraVez: false });
+      this.playSound('compra');
+      void before;
+      this.markDirty();
+      this.refreshView();
+      void this.save();
+    }
+    return moved;
   }
 
   /** Avisa a la escena si cambió el objeto (y si con eso el dueño se mudó). */
@@ -1276,9 +1299,12 @@ export class Game {
       this.hitBoss(damage, false, false, ally.id, marcado);
       return;
     }
+    const before = currentObject(this.state, this.data);
+    const home = this.state.casa;
     const result = hit(this.state, this.data, damage);
     this.dpsMeter.add(performance.now(), result.damage, 'aliados');
     this.events.emit('aliado', { allyId: ally.id, result, marcado });
+    if (result.newObject) this.afterObjectChange(before, home);
     this.markDirty();
   }
 
@@ -1394,7 +1420,7 @@ export class Game {
     const fight = this.fight;
     const now = Date.now();
     return {
-      aqui: bossHere(s, this.data)?.id ?? null,
+      aqui: (bossHere(s, this.data) ?? miniBossHere(s, this.data))?.id ?? null,
       revancha: rematchIn(s, now),
       pelea: fight && {
         id: fight.id,
@@ -1480,7 +1506,6 @@ export class Game {
     const saco = plan('saco');
     const marca = plan('marca');
     const object = currentObject(s, d);
-    const nuevoObjeto = currentObject(valor.after, d);
     const pct = (p: number) => Math.round(p * 1000) / 10;
     const mult = (m: number) => `×${Math.round(m * 100) / 100}`;
 
@@ -1516,21 +1541,27 @@ export class Game {
         golpesSiguiente: tapsToBreak(fuerza.after, d),
       },
       valor: {
-        nivel: s.nivelValor,
-        enObjeto: valorStepsInObject(s, d),
-        porObjeto: d.balance.valor.nivelesPorObjeto,
-        ultimoObjeto: objectIndex(s, d) === lastObjectIndex(s, d),
-        esperaMudanza: objectIndex(s, d) === lastObjectIndex(s, d) && nextHome(s, d) !== null && !moveUnlocked(s, d),
-        esperaJefe: (() => {
-          const jefe = nextHome(s, d)?.requisito?.jefe;
-          return jefe && !s.jefes.derrotados.includes(jefe) ? jefe : null;
-        })(),
-        mudanza: nuevoObjeto !== object && nextHome(s, d) !== null && nuevoObjeto.casa === nextHome(s, d)!.id,
+        nivel: valorHere(s, d),
         cantidad: valor.cantidad,
         costo: valor.costo,
         alcanza: puedeValor,
         gananciaSiguiente: fmt(moneyPerBreak(valor.after, d)),
-        nuevoObjeto: nuevoObjeto !== object ? nuevoObjeto.id : null,
+      },
+      nivel: {
+        etapa: frontierIndex(s, d) + 1,
+        total: d.objects.length,
+        objeto: frontierObject(s, d).id,
+        cuarto: roomOf(frontierObject(s, d)),
+        roturas: Math.min(s.progreso.roturas, levelMeta(s, d)),
+        meta: levelMeta(s, d),
+        jugando: objectIndex(s),
+        enEtapa: atFrontier(s, d),
+        puerta: s.progreso.roturas >= levelMeta(s, d) ? gateAt(s, d) : null,
+        terminado: s.progreso.roturas >= levelMeta(s, d),
+        esperaJefe: (() => {
+          const jefe = nextHome(s, d)?.requisito?.jefe;
+          return jefe && !s.jefes.derrotados.includes(jefe) ? jefe : null;
+        })(),
       },
       critico: {
         nivel: s.nivelCritico,

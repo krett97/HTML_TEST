@@ -5,6 +5,7 @@ import { deserialize, serialize } from '../src/core/save';
 import { createInitialState } from '../src/core/state';
 import { adSpinsLeft, awardBossTokens, doubleOrNothing, doublePrize, expectedMinutes, judge, minuteValue, refillTokens, spin } from '../src/core/suerte';
 import { gameData } from '../src/data';
+import { irA } from './helpers';
 
 const HOUR = 3_600_000;
 const b = gameData.balance.suerte;
@@ -12,7 +13,7 @@ const b = gameData.balance.suerte;
 function newState() {
   const state = createInitialState(0);
   normalizeState(state, gameData);
-  state.nivelValor = 60;
+  irA(state, 12);
   state.nivelFuerza = 20;
   return state;
 }

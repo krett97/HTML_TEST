@@ -15,12 +15,14 @@ import {
   tapDamage,
   tapsToBreak,
   valorCost,
-  valorNextObject,
+  valorHere,
+  valorLevel,
 } from '../src/core/economy';
 import { normalizeState } from '../src/core/normalize';
 import { num } from '../src/core/num';
 import { createInitialState } from '../src/core/state';
 import { gameData } from '../src/data';
+import { irA } from './helpers';
 
 function newState(dinero = 0) {
   const state = createInitialState(0);
@@ -57,45 +59,32 @@ describe('Fuerza', () => {
 });
 
 describe('Valor', () => {
-  it('cada nivel paga más por rotura', () => {
+  it('cada nivel paga más por rotura, solo en ese objeto', () => {
     const state = newState(1e6);
     const before = moneyPerBreak(state, gameData);
-    expect(buyValor(state, gameData)).toEqual({ bought: true, newObject: null, home: null });
+    expect(buyValor(state, gameData)).toBe(true);
     expect(moneyPerBreak(state, gameData).gt(before)).toBe(true);
+    expect(valorLevel(state, 'vaso')).toBe(1);
+    expect(currentObject(state, gameData).id).toBe('vaso');
+    // En otro objeto el Valor empieza de cero.
+    irA(state, 'taza');
+    expect(valorHere(state, gameData)).toBe(0);
   });
 
-  it('al quinto nivel el dueño compra el siguiente objeto y empieza al centro de la mesa', () => {
-    const state = newState(1e9);
-    state.nivelValor = 4;
-    state.danioObjeto = num(3);
-    expect(valorNextObject(state, gameData)?.id).toBe('taza');
-
-    const result = buyValor(state, gameData);
-    expect(result.newObject?.id).toBe('taza');
-    expect(currentObject(state, gameData).id).toBe('taza');
-    expect(state.danioObjeto.eq(0)).toBe(true);
-  });
-
-  it('el siguiente objeto vale más que el último nivel del anterior', () => {
-    const state = newState();
-    state.nivelValor = 4;
-    const lastOfVaso = moneyPerBreak(state, gameData);
-    state.nivelValor = 5;
-    expect(moneyPerBreak(state, gameData).gt(lastOfVaso)).toBe(true);
-  });
-
-  it('Valor pasa de una familia de objetos a la siguiente sin comprar nada más', () => {
+  it('el siguiente objeto paga más que el anterior con varios niveles de Valor', () => {
     const state = newState(1e12);
-    state.nivelValor = 29; // último nivel del celular; sigue el papel de baño
-    expect(buyValor(state, gameData).newObject?.id).toBe('papel');
-    state.nivelValor = 59;
-    expect(buyValor(state, gameData).newObject?.herramienta).toBe('carrito');
+    for (let i = 0; i < 4; i++) buyValor(state, gameData);
+    const vasoConValor = moneyPerBreak(state, gameData);
+    irA(state, 'taza');
+    expect(moneyPerBreak(state, gameData).gt(vasoConValor)).toBe(true);
   });
 
-  it('el costo depende del objeto actual', () => {
-    const state = newState();
+  it('el costo depende del objeto de la mesa y de su nivel', () => {
+    const state = newState(1e12);
     const vaso = valorCost(state, gameData);
-    state.nivelValor = 20;
+    buyValor(state, gameData);
+    expect(valorCost(state, gameData).gt(vaso)).toBe(true);
+    irA(state, 'control');
     expect(valorCost(state, gameData).gt(vaso)).toBe(true);
   });
 });
@@ -129,7 +118,7 @@ describe('críticos', () => {
 
   it('el manotazo crítico multiplica el daño y lo marca', () => {
     const state = newState();
-    state.nivelValor = 130; // refri: no se rompe de un golpe
+    irA(state, 26); // refri: no se rompe de un golpe
     state.nivelCritico = 20;
     const normal = tap(state, gameData, () => 0.5);
     expect(normal.critico).toBe(false);
@@ -142,11 +131,11 @@ describe('críticos', () => {
 describe('normalizeState', () => {
   it('corrige niveles rotos y la probabilidad de crítico por encima del tope', () => {
     const state = newState();
-    state.nivelValor = 75.5;
+    state.progreso.etapa = 15.5;
     state.nivelFuerza = 2.7;
     state.nivelCritico = 400;
     normalizeState(state, gameData);
-    expect(state.nivelValor).toBe(75);
+    expect(state.progreso.etapa).toBe(15);
     expect(state.nivelFuerza).toBe(2);
     expect(state.nivelCritico).toBe(50);
   });

@@ -25,6 +25,13 @@
     <div class="visor" aria-hidden="true"></div>
     <div class="rec" data-testid="rec"><span class="rec-dot"></span> REC</div>
   {/if}
+  {#if $view.roturas > 0 && !$view.jefe.pelea}
+    <!-- Nivel en curso: cuántos van rotos de los que pide (arriba al centro, debajo del REC). -->
+    <div class="nivel-chip" class:atras={!$view.nivel.enEtapa} data-testid="nivel-chip">
+      <strong>{$t('hud.nivel', { n: $view.nivel.jugando + 1 })}</strong>
+      {#if $view.nivel.enEtapa}<span class="cifra">{$view.nivel.roturas}/{$view.nivel.meta}</span>{/if}
+    </div>
+  {/if}
   <!-- Columna de arriba a la izquierda: el medidor y el turbo, uno abajo del otro, sin tapar el cuarto. -->
   <div class="hud-izq">
   {#if $view.roturas > 0}
@@ -73,7 +80,7 @@
     <!-- Pelea contra el jefe: nombre, vida que le queda y reloj. -->
     <div class="boss" class:apurado={pelea.restante <= 5} data-testid="pelea-jefe">
       <div class="boss-top">
-        <strong><Icon name={pelea.id} /> {$t(`jefes.${pelea.id}.nombre`)}</strong>
+        <strong><Icon name={pelea.id.startsWith('mini:') ? 'corona' : pelea.id} /> {bossText($t, pelea.id).jefe}</strong>
         <span class="boss-time cifra" data-testid="reloj-jefe"><Icon name="reloj" /> {pelea.restante.toFixed(1)}</span>
       </div>
       <div class="boss-bar"><span class="boss-fill" style:width="{(1 - pelea.progreso) * 100}%"></span></div>
@@ -87,7 +94,7 @@
       </div>
     {:else}
       <button type="button" class="boss-call" onclick={() => game.challengeBoss()} data-testid="retar-jefe">
-        <Icon name={$view.jefe.aqui} /> {$t('jefe.retar', bossText($t, $view.jefe.aqui))}
+        <Icon name={$view.jefe.aqui.startsWith('mini:') ? 'corona' : $view.jefe.aqui} /> {$t('jefe.retar', bossText($t, $view.jefe.aqui))}
       </button>
     {/if}
   {/if}
@@ -361,6 +368,26 @@
       linear-gradient(var(--c), var(--c)) bottom right / 14px 2px,
       linear-gradient(var(--c), var(--c)) bottom right / 2px 14px;
     background-repeat: no-repeat;
+  }
+  .nivel-chip {
+    position: absolute;
+    z-index: 2;
+    top: 30px;
+    left: 50%;
+    translate: -50% 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 1px 8px;
+    border: 2px solid var(--line);
+    border-radius: 999px;
+    background: rgba(18, 11, 22, 0.75);
+    color: var(--text);
+    font-size: 12px;
+    pointer-events: none;
+  }
+  .nivel-chip.atras {
+    opacity: 0.75;
   }
   .rec {
     position: absolute;

@@ -1,22 +1,26 @@
 import { describe, expect, it } from 'vitest';
 import { uploadVideo } from '../src/core/canal';
-import { buyValor, currentObject, valorNextObject } from '../src/core/economy';
-import { homeStartLevel, lastObjectIndex, moveIfReady, moveUnlocked, nextHome } from '../src/core/mudanza';
+import { currentObject } from '../src/core/economy';
+import { homeStartIndex, lastObjectIndex, moveIfReady, moveUnlocked, nextHome } from '../src/core/mudanza';
+import { advanceLevel, gateAt, levelMeta } from '../src/core/niveles';
 import { normalizeState } from '../src/core/normalize';
 import { num } from '../src/core/num';
 import { deserialize, serialize } from '../src/core/save';
 import { createInitialState } from '../src/core/state';
 import { gameData } from '../src/data';
+import { irA } from './helpers';
 
 const REFRI = gameData.objects.findIndex((o) => o.id === 'refri');
-const PER_OBJECT = gameData.balance.valor.nivelesPorObjeto;
 const casa = gameData.homes[1]!;
 
+/** En el refri, con el nivel terminado y la Escoba vencida: solo falta la mudanza. */
 function atRefri() {
   const state = createInitialState(0);
   normalizeState(state, gameData);
   state.desbloqueos.push('valor', 'canal');
-  state.nivelValor = REFRI * PER_OBJECT;
+  irA(state, REFRI);
+  state.progreso.roturas = levelMeta(state, gameData);
+  state.jefes.derrotados.push('escoba');
   state.dinero = num(1e30);
   return state;
 }
@@ -27,33 +31,40 @@ function famous(state: ReturnType<typeof atRefri>) {
 }
 
 describe('mudanza', () => {
-  it('sin los seguidores y visualizaciones del Canal, el refri es el último objeto', () => {
+  it('sin los seguidores y visualizaciones del Canal, el refri es el último nivel', () => {
     const state = atRefri();
     expect(moveUnlocked(state, gameData)).toBe(false);
     expect(lastObjectIndex(state, gameData)).toBe(REFRI);
-    for (let i = 0; i < 20; i++) buyValor(state, gameData);
+    expect(gateAt(state, gameData)).toBe('mudanza');
+    expect(advanceLevel(state, gameData)).toBe(null);
     expect(currentObject(state, gameData).id).toBe('refri');
     expect(state.casa).toBe(0);
   });
 
-  it('con la meta del Canal, el Valor sigue después del refri y el dueño se muda', () => {
+  it('con la meta del Canal, el nivel sigue después del refri y el dueño se muda', () => {
     const state = atRefri();
     famous(state);
     expect(moveUnlocked(state, gameData)).toBe(true);
-    for (let i = 0; i < PER_OBJECT - 1; i++) expect(buyValor(state, gameData).home).toBe(null);
-    expect(valorNextObject(state, gameData)?.id).toBe('maceta');
-    const purchase = buyValor(state, gameData);
-    expect(purchase.newObject?.id).toBe('maceta');
-    expect(purchase.home?.id).toBe('casa');
+    expect(gateAt(state, gameData)).toBe(null);
+    expect(advanceLevel(state, gameData)?.id).toBe('maceta');
     expect(state.casa).toBe(1);
     expect(currentObject(state, gameData).id).toBe('maceta');
     expect(nextHome(state, gameData)?.id).toBe('mansion');
   });
 
+  it('sin vencer a la Escoba no se pasa del refri aunque el Canal ya alcance', () => {
+    const state = atRefri();
+    famous(state);
+    state.jefes.derrotados = [];
+    expect(gateAt(state, gameData)).toBe('jefe');
+    expect(advanceLevel(state, gameData)).toBe(null);
+  });
+
   it('a la mansión solo se muda tras vencer al Pepino Gigante', () => {
     const state = atRefri();
     state.casa = 1;
-    state.nivelValor = (gameData.objects.findIndex((o) => o.id === 'coche')) * PER_OBJECT;
+    irA(state, 'coche');
+    state.progreso.roturas = levelMeta(state, gameData);
     const req = gameData.homes[2]!.requisito!;
     state.canal.seguidores = req.seguidores;
     state.canal.visualizacionesTotales = req.visualizaciones;
@@ -61,9 +72,8 @@ describe('mudanza', () => {
     expect(moveUnlocked(state, gameData)).toBe(false);
     state.jefes.derrotados.push('pepino');
     expect(moveUnlocked(state, gameData)).toBe(true);
-    state.nivelValor = homeStartLevel(gameData, 2);
-    expect(moveIfReady(state, gameData)?.id).toBe('mansion');
-    expect(currentObject(state, gameData).id).toBe('jarron');
+    expect(advanceLevel(state, gameData)?.id).toBe('jarron');
+    expect(state.casa).toBe(2);
     expect(nextHome(state, gameData)?.id).toBe('luna');
     // A la Luna, tras vencer a la Aspiradora Industrial.
     const luna = gameData.homes[3]!.requisito!;
@@ -75,23 +85,20 @@ describe('mudanza', () => {
     expect(moveUnlocked(state, gameData)).toBe(true);
   });
 
-  it('si sobraba Valor en el refri, se muda a la maceta (no se salta objetos)', () => {
+  it('un guardado que ya pasó el refri con la mudanza abierta se muda al cargar', () => {
     const state = atRefri();
-    state.nivelValor += 12;
-    state.danioObjeto = num(500);
     famous(state);
+    irA(state, REFRI + 1);
     expect(moveIfReady(state, gameData)?.id).toBe('casa');
-    expect(state.nivelValor).toBe(homeStartLevel(gameData, 1));
-    expect(currentObject(state, gameData).id).toBe('maceta');
-    expect(state.danioObjeto.eq(0)).toBe(true);
+    expect(state.casa).toBe(1);
+    expect(homeStartIndex(gameData, 1)).toBe(REFRI + 1);
   });
 
   it('ya mudado, cada video empieza en la casa con el gato entrenado', () => {
     const state = atRefri();
     famous(state);
-    state.nivelValor = homeStartLevel(gameData, 1);
-    expect(moveIfReady(state, gameData)?.id).toBe('casa');
-    state.nivelValor += 10;
+    advanceLevel(state, gameData);
+    irA(state, REFRI + 3);
     state.dineroPartida = num(1e12);
     expect(uploadVideo(state, gameData, 0, () => 0.5)).not.toBe(null);
     expect(currentObject(state, gameData).id).toBe('maceta');
@@ -111,8 +118,7 @@ describe('mudanza', () => {
   it('la casa se guarda', () => {
     const state = atRefri();
     famous(state);
-    state.nivelValor = homeStartLevel(gameData, 1);
-    expect(moveIfReady(state, gameData)?.id).toBe('casa');
+    advanceLevel(state, gameData);
     const loaded = deserialize(serialize(state, 0), 0);
     expect(loaded.ok && loaded.state.casa).toBe(1);
   });

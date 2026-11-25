@@ -189,13 +189,18 @@ export interface Balance {
     multHito: number;
   };
   valor: {
-    /** Niveles de Valor que se compran antes de que el dueño cambie de objeto. */
-    nivelesPorObjeto: number;
-    /** +12 % de vistas por nivel (compuesto). */
+    /** +10 % de vistas por nivel (compuesto). El Valor es de cada objeto: solo sube lo que paga ese objeto. */
     vistasPorNivel: number;
     /** El primer nivel de cada objeto cuesta lo que pagan tantas roturas de ese objeto. */
     costoEnRoturas: number;
     crecimiento: number;
+  };
+  /** Progresión por niveles: cada objeto es un nivel que se pasa rompiéndolo tantas veces (ver niveles.ts). */
+  niveles: {
+    /** Roturas que pide cada nivel, por casa (id de casas.json): `base` en el primer objeto de la casa y `porNivel` más en cada uno que sigue. */
+    roturasPorCasa: Record<string, { base: number; porNivel: number }>;
+    /** El guardián de cada cuarto (mini jefe): segundos de pelea, vida y premio en roturas del objeto. */
+    miniJefe: { segundos: number; vidaEnRoturas: number; premioEnRoturas: number };
   };
   critico: {
     /** Probabilidad de crítico que da cada nivel (0.01 = 1 %), hasta `probMax`. */
@@ -559,6 +564,8 @@ export function parseGameData(raw: RawGameData): GameData {
   const offline = section(file, b, 'offline');
   const objetoMinimo = str(file, canal, 'objetoMinimo');
   if (!objectIds.has(objetoMinimo)) throw new DataError(file, `canal.objetoMinimo "${objetoMinimo}" no existe en objects.json`);
+  const niveles = section(file, b, 'niveles');
+  const miniJefe = section(file, niveles, 'miniJefe');
   const critico = section(file, b, 'critico');
   const danioCritico = section(file, b, 'danioCritico');
   const saco = section(file, b, 'saco');
@@ -575,10 +582,24 @@ export function parseGameData(raw: RawGameData): GameData {
       multHito: n(fuerza, 'multHito'),
     },
     valor: {
-      nivelesPorObjeto: Math.max(1, Math.floor(n(valor, 'nivelesPorObjeto'))),
       vistasPorNivel: n(valor, 'vistasPorNivel'),
       costoEnRoturas: n(valor, 'costoEnRoturas'),
       crecimiento: n(valor, 'crecimiento'),
+    },
+    niveles: {
+      roturasPorCasa: Object.fromEntries(
+        Object.entries(section(file, niveles, 'roturasPorCasa'))
+          .filter(([casa]) => casa !== 'id')
+          .map(([casa, v]) => {
+            const r = v as Raw;
+            return [casa, { base: Math.max(1, Math.floor(Number(r.base) || 1)), porNivel: Math.max(0, Number(r.porNivel) || 0) }];
+          }),
+      ),
+      miniJefe: {
+        segundos: n(miniJefe, 'segundos'),
+        vidaEnRoturas: n(miniJefe, 'vidaEnRoturas'),
+        premioEnRoturas: n(miniJefe, 'premioEnRoturas'),
+      },
     },
     critico: {
       probPorNivel: n(critico, 'probPorNivel'),

@@ -1,14 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { tapDamage } from '../src/core/economy';
 import { bossHere, bossHp, bossPrize, CONSOLATION, damageBoss, endFight, rematchIn, startFight } from '../src/core/jefes';
-import { homeStartLevel } from '../src/core/mudanza';
 import { normalizeState } from '../src/core/normalize';
 import { num } from '../src/core/num';
 import { deserialize, serialize } from '../src/core/save';
 import { createInitialState } from '../src/core/state';
 import { gameData } from '../src/data';
+import { irA } from './helpers';
 
-const PER_OBJECT = gameData.balance.valor.nivelesPorObjeto;
 const pepino = gameData.bosses.find((b) => b.id === 'pepino')!;
 
 /** Partida ya mudada a la casa, en el objeto `id`. */
@@ -16,7 +15,7 @@ function inHouse(id: string) {
   const state = createInitialState(0);
   normalizeState(state, gameData);
   state.casa = 1;
-  state.nivelValor = gameData.objects.findIndex((o) => o.id === id) * PER_OBJECT;
+  irA(state, id);
   return state;
 }
 
@@ -26,7 +25,7 @@ describe('jefes', () => {
     expect(bossHere(inHouse('coche'), gameData)?.id).toBe('pepino');
     const refri = createInitialState(0);
     normalizeState(refri, gameData);
-    refri.nivelValor = homeStartLevel(gameData, 1) - 1;
+    irA(refri, 'refri');
     // En el refri, el último objeto del departamento, espera la Escoba Furiosa.
     expect(bossHere(refri, gameData)?.id).toBe('escoba');
     refri.jefes.derrotados.push('escoba');

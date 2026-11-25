@@ -1,9 +1,8 @@
 // La mudanza: el dueño se va a la siguiente casa (casas.json: departamento → casa → mansión) cuando
 // el Canal junta los seguidores y visualizaciones que pide (totales que nunca bajan) y, si lo pide,
-// tras vencer al jefe de la casa anterior. La partida sigue después del último objeto con los de la
-// casa nueva; desde entonces cada video reinicia en ella.
+// tras vencer al jefe de la casa anterior. Al pasar el último nivel de la casa (niveles.ts) sigue el
+// primero de la casa nueva; desde entonces cada video reinicia en ella.
 import type { GameData, HomeDef } from './data';
-import { ZERO } from './num';
 import type { GameState } from './state';
 
 /** La siguiente casa, si queda alguna. */
@@ -11,7 +10,7 @@ export function nextHome(state: GameState, data: GameData): HomeDef | null {
   return data.homes[state.casa + 1] ?? null;
 }
 
-/** Ya se juntó lo que pide la siguiente casa: el Valor puede seguir más allá del último objeto. */
+/** Ya se juntó lo que pide la siguiente casa: los niveles pueden seguir más allá del último objeto. */
 export function moveUnlocked(state: GameState, data: GameData): boolean {
   const req = nextHome(state, data)?.requisito;
   if (!req) return false;
@@ -24,9 +23,9 @@ export function firstObjectOf(data: GameData, home: number): number {
   return data.objects.findIndex((o) => o.casa === data.homes[home]?.id);
 }
 
-/** Nivel de Valor con el que llega el primer objeto de una casa. */
-export function homeStartLevel(data: GameData, home: number): number {
-  return Math.max(0, firstObjectOf(data, home)) * data.balance.valor.nivelesPorObjeto;
+/** Índice del primer objeto de una casa (0 si no tiene). */
+export function homeStartIndex(data: GameData, home: number): number {
+  return Math.max(0, firstObjectOf(data, home));
 }
 
 /** Hasta qué objeto se puede llegar: el último de la casa actual, o de la siguiente si ya se desbloqueó. */
@@ -37,24 +36,24 @@ export function lastObjectIndex(state: GameState, data: GameData): number {
 }
 
 /**
- * Si ya se desbloqueó la siguiente casa y el Valor llegó a su primer objeto, el dueño se muda:
- * se queda en ese primer objeto (aunque sobraran niveles de Valor en el último) y la casa queda
- * para siempre. Devuelve la casa nueva o null.
+ * Si ya se desbloqueó la siguiente casa y la etapa llegó a su primer objeto, el dueño se muda y la casa
+ * queda para siempre. Devuelve la casa nueva o null.
  */
 export function moveIfReady(state: GameState, data: GameData): HomeDef | null {
   const home = nextHome(state, data);
   if (!home || !moveUnlocked(state, data)) return null;
-  const start = homeStartLevel(data, state.casa + 1);
-  if (state.nivelValor < start) return null;
+  const start = homeStartIndex(data, state.casa + 1);
+  if (state.progreso.etapa < start) return null;
   state.casa += 1;
-  if (state.nivelValor > start) state.danioObjeto = ZERO;
-  state.nivelValor = start;
+  // El gato entrena en la mudanza: llega con al menos la Fuerza inicial de la casa (si no, los objetos
+  // nuevos le quedan enormes y la partida se atora).
+  state.nivelFuerza = Math.max(state.nivelFuerza, home.fuerzaInicial ?? 0);
   return home;
 }
 
 /** Al subir un video, la partida empieza en la casa actual: su primer objeto y su Fuerza inicial. */
-export function runStart(state: GameState, data: GameData): { nivelValor: number; nivelFuerza: number } {
-  return { nivelValor: homeStartLevel(data, state.casa), nivelFuerza: data.homes[state.casa]?.fuerzaInicial ?? 0 };
+export function runStart(state: GameState, data: GameData): { etapa: number; nivelFuerza: number } {
+  return { etapa: homeStartIndex(data, state.casa), nivelFuerza: data.homes[state.casa]?.fuerzaInicial ?? 0 };
 }
 
 export function normalizeHome(state: GameState, data: GameData): void {

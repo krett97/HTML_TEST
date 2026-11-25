@@ -1,7 +1,7 @@
 // Ranking de gatos: se abre al mudarse a la segunda casa. El "nivel" de cada jugador es el objeto
-// más lejano al que ha llegado con Valor (el vaso es el nivel 1), su récord de todas las partidas.
+// más lejano al que ha llegado (el vaso es el nivel 1), su récord de todas las partidas.
 import type { GameData } from './data';
-import { objectIndex } from './economy';
+import { frontierIndex } from './niveles';
 import type { GameState } from './state';
 
 /** Largo máximo del nombre del gato. */
@@ -13,7 +13,7 @@ export function rankingUnlocked(state: GameState): boolean {
 
 /** Sube el récord si el objeto actual es el más lejano hasta ahora. Devuelve true si subió. */
 export function updateRecord(state: GameState, data: GameData): boolean {
-  const nivel = objectIndex(state, data) + 1;
+  const nivel = frontierIndex(state, data) + 1;
   if (nivel <= state.ranking.nivel) return false;
   state.ranking.nivel = nivel;
   return true;

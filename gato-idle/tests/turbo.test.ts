@@ -4,6 +4,7 @@ import { startTurbo, turboActive, turboCooldown } from '../src/core/modifiers';
 import { normalizeState } from '../src/core/normalize';
 import { createInitialState } from '../src/core/state';
 import { gameData } from '../src/data';
+import { irA } from './helpers';
 
 afterEach(() => vi.useRealTimers());
 
@@ -14,7 +15,7 @@ describe('turbo (anuncio)', () => {
     const state = createInitialState(0);
     normalizeState(state, gameData);
     state.nivelFuerza = 10;
-    state.nivelValor = 20;
+    irA(state, 4);
     const damage = tapDamage(state, gameData);
     const money = moneyPerBreak(state, gameData);
     startTurbo(state, gameData, Date.now());

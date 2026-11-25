@@ -5,6 +5,7 @@ import { normalizeBosses } from './jefes';
 import { normalizeRanking } from './ranking';
 import { normalizeLuck } from './suerte';
 import { moveIfReady, normalizeHome } from './mudanza';
+import { normalizeProgress } from './niveles';
 import { normalizeSkills } from './skills';
 import type { GameData } from './data';
 import { isDecimal, ZERO } from './num';
@@ -18,7 +19,6 @@ import type { GameState } from './state';
  */
 export function normalizeState(state: GameState, data: GameData): void {
   state.nivelFuerza = Math.max(0, Math.floor(state.nivelFuerza));
-  state.nivelValor = Math.max(0, Math.floor(state.nivelValor));
   state.nivelDanioCritico = Math.max(0, Math.floor(state.nivelDanioCritico));
   state.nivelSaco = Math.max(0, Math.floor(state.nivelSaco));
   state.nivelMarca = Math.min(Math.max(0, Math.floor(state.nivelMarca)), data.balance.marca.max);
@@ -27,14 +27,14 @@ export function normalizeState(state: GameState, data: GameData): void {
   const { probPorNivel, probMax } = data.balance.critico;
   state.nivelCritico = Math.min(Math.max(0, Math.floor(state.nivelCritico)), Math.ceil(probMax / probPorNivel));
   if (state.danioObjeto.lt(0)) state.danioObjeto = ZERO;
+  normalizeProgress(state, data);
   normalizeAllies(state, data);
   if (!BUY_AMOUNTS.includes(state.ajustes.compra)) state.ajustes.compra = 1;
   normalizeSkills(state, data);
   normalizeCanal(state);
   normalizeHome(state, data);
   normalizeBosses(state, data);
-  // Un guardado que ya juntó lo de la mudanza y tenía Valor de sobra en el último objeto se muda ya
-  // (antes del récord del ranking: si no, contaría el Valor de sobra como objetos de la casa nueva).
+  // Un guardado que ya juntó lo de la mudanza y pasó el último nivel de su casa se muda ya.
   moveIfReady(state, data);
   normalizeRanking(state, data);
   normalizeLuck(state);

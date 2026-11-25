@@ -6,6 +6,7 @@ import { num } from '../src/core/num';
 import { createInitialState } from '../src/core/state';
 import { completeTutorialStep, skipTutorial, TUTORIAL_STEPS, updateTutorial } from '../src/core/tutorial';
 import { gameData } from '../src/data';
+import { irA } from './helpers';
 
 function fresh() {
   const state = createInitialState(0);
@@ -59,7 +60,7 @@ describe('tutorial', () => {
     for (const step of TUTORIAL_STEPS) if (step !== 'video') completeTutorialStep(state, step);
     state.desbloqueos.push('canal');
     expect(updateTutorial(state, gameData)).toBe(null);
-    while (currentObject(state, gameData).id !== gameData.balance.canal.objetoMinimo) state.nivelValor += 1;
+    irA(state, gameData.balance.canal.objetoMinimo);
     state.dineroPartida = num(1e9);
     expect(updateTutorial(state, gameData)).toBe('video');
   });

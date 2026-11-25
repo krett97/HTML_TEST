@@ -6,8 +6,8 @@ import { cleanName, MAX_NAME, rankingUnlocked, recordObject, updateRecord } from
 import { deserialize, serialize } from '../src/core/save';
 import { createInitialState } from '../src/core/state';
 import { gameData } from '../src/data';
+import { irA } from './helpers';
 
-const PER_OBJECT = gameData.balance.valor.nivelesPorObjeto;
 
 function newState() {
   const state = createInitialState(0);
@@ -27,23 +27,22 @@ describe('ranking', () => {
     const state = newState();
     expect(state.ranking.nivel).toBe(1);
     expect(recordObject(state, gameData)).toBe('vaso');
-    state.desbloqueos.push('valor');
-    state.dinero = num(1e9);
-    for (let i = 0; i < PER_OBJECT; i++) buyValor(state, gameData);
+    irA(state, 'taza');
     expect(updateRecord(state, gameData)).toBe(true);
     expect(state.ranking.nivel).toBe(2);
     expect(recordObject(state, gameData)).toBe('taza');
     // Al reiniciar (subir el video) se vuelve al vaso, pero el récord se queda.
-    state.nivelValor = 0;
+    irA(state, 0);
     expect(updateRecord(state, gameData)).toBe(false);
     expect(state.ranking.nivel).toBe(2);
   });
 
-  it('al cargar, la mudanza pendiente va antes del récord (no cuenta el Valor de sobra)', () => {
+  it('al cargar, la mudanza pendiente va antes del récord', () => {
     const state = newState();
     state.desbloqueos.push('valor', 'canal');
     const refri = gameData.objects.findIndex((o) => o.id === 'refri');
-    state.nivelValor = refri * PER_OBJECT + 20;
+    irA(state, refri + 1); // ya pasó el refri (la maceta), pero el guardado aún dice casa 0
+    state.jefes.derrotados.push('escoba');
     const req = gameData.homes[1]!.requisito!;
     state.canal.seguidores = req.seguidores;
     state.canal.visualizacionesTotales = req.visualizaciones;

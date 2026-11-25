@@ -327,3 +327,17 @@ html[data-estilo='vector'] .open {
 html[data-estilo='vector'] .scene * {
   font-family: var(--font);
 }
+
+/* Nivel: el chip de la escena y las flechas de la tarjeta. */
+html[data-estilo='vector'] .nivel-chip {
+  border: var(--borde);
+  background: rgba(255, 248, 234, 0.96);
+  box-shadow: 0 3px 0 var(--line);
+  font-weight: 700;
+}
+html[data-estilo='vector'] .nav {
+  border: var(--borde);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 3px 0 var(--line);
+}

@@ -15,6 +15,7 @@ import { drawRoom, drawShading, drawSurface, furnitureArt, GARDEN_STRIP_H, perch
 import { catPortrait } from './catPortrait';
 import { ALLY_NUMBER_COLORS } from '../ui/allyIcons';
 import { bossText } from '../ui/bossText';
+import { isMini } from '../core/jefes';
 import { iconImage, setRichText } from '../ui/icons';
 import { COIN_URL } from '../ui/coin';
 import type { Decimal } from '../core/num';
@@ -102,8 +103,9 @@ export class MainScene extends Phaser.Scene {
     /** El sol del jardín. */
     sol: Phaser.GameObjects.Image;
   };
-  /** Último parpadeo blanco del jefe (ms de la escena). */
+  /** Último parpadeo blanco del jefe (ms de la escena) y el tinte del guardián (dorado) mientras pelea. */
   private lastBossFlash = -1000;
+  private bossTint: number | null = null;
   private scratches!: Phaser.GameObjects.Graphics;
   /** Rasguños brillantes de las Garras marcadoras (se dibujan cada cuadro mientras dura la marca). */
   private markScratches!: Phaser.GameObjects.Graphics;
@@ -443,9 +445,13 @@ export class MainScene extends Phaser.Scene {
   /** El jefe toma el lugar del objeto (al centro de la superficie) y el gato se le pone enfrente. */
   private placeBoss(id: string): void {
     this.scratches.clear();
-    this.object.setTexture(`jefe_${id}`).setScale(S).setAlpha(1).setAngle(0).setVisible(true);
+    const mini = isMini(id);
+    // El guardián del cuarto es el objeto de la mesa, dorado y más grande.
+    this.object.setTexture(mini ? this.objectDef.sprite : `jefe_${id}`).setScale(S).setAlpha(1).setAngle(0).setVisible(true);
+    this.bossTint = mini ? 0xffc93c : null;
+    this.restoreBossTint();
     const room = this.surfaceTop - MainScene.BOSS_HEADROOM;
-    this.objectScale = S * Math.min(1, room / (this.object.height * S));
+    this.objectScale = mini ? S * Math.min(1.6, room / (this.object.height * S)) : S * Math.min(1, room / (this.object.height * S));
     this.object.setScale(this.objectScale);
     const x = Math.max(START_X, this.place.surface.left + CAT_W + 6 + this.widthOf(this.object) / 2);
     this.object.setPosition(x, this.surfaceTop);
@@ -459,7 +465,12 @@ export class MainScene extends Phaser.Scene {
     this.popIn();
     this.shake('viral');
     this.cameras.main.flash(180, 120, 220, 90);
-    if (primeraVez) this.comicPanel('jefe', this.textures.getBase64(`jefe_${id}`), tr(`jefes.${id}.titulo`), tr(`jefes.${id}.frase`));
+    if (isMini(id)) {
+      const names = bossText(tr, id);
+      const segundos = this.controller.data.balance.niveles.miniJefe.segundos;
+      if (primeraVez) this.comicPanel('jefe', this.textures.getBase64(this.objectDef.sprite), tr('jefes.mini.titulo', names), tr('jefes.mini.frase', { ...names, s: segundos }));
+      else this.toast(tr('jefe.aparece', names));
+    } else if (primeraVez) this.comicPanel('jefe', this.textures.getBase64(`jefe_${id}`), tr(`jefes.${id}.titulo`), tr(`jefes.${id}.frase`));
     else this.toast(tr('jefe.aparece', bossText(tr, id)));
   }
 
@@ -485,7 +496,15 @@ export class MainScene extends Phaser.Scene {
     this.object.setScale(this.objectScale);
     this.tweens.add({ targets: this.object, scaleY: 0.93 * this.objectScale, scaleX: 1.05 * this.objectScale, duration: 50, yoyo: true });
     this.object.setTint(0xffffff).setTintMode(Phaser.TintModes.FILL);
-    this.time.delayedCall(45, () => this.object.clearTint().setTintMode(Phaser.TintModes.MULTIPLY));
+    this.time.delayedCall(45, () => {
+      this.object.clearTint().setTintMode(Phaser.TintModes.MULTIPLY);
+      this.restoreBossTint();
+    });
+  }
+
+  /** El guardián del cuarto va teñido de dorado (el tinte se quita con cada parpadeo del golpe). */
+  private restoreBossTint(): void {
+    if (this.bossTint !== null && this.controller.bossFightId()) this.object.setTint(this.bossTint);
   }
 
   /** Ganó: el jefe se marea y cae, confeti y trofeo. Perdió: el jefe se burla y se va. Después vuelve el objeto. */
@@ -494,8 +513,11 @@ export class MainScene extends Phaser.Scene {
     const dinero = this.controller.formatMoney(premio);
     this.tweens.killTweensOf(this.object);
     this.object.clearTint().setScale(this.objectScale);
+    const mini = isMini(id);
+    this.bossTint = null;
     if (gano) {
-      this.object.setTexture(`jefe_${id}_derrotado`);
+      if (mini) this.object.setTint(0x9a9a9a);
+      else this.object.setTexture(`jefe_${id}_derrotado`);
       this.tweens.chain({
         targets: this.object,
         tweens: [
@@ -505,21 +527,22 @@ export class MainScene extends Phaser.Scene {
       });
       const colors = [0xe5534b, 0xffd36e, 0x5ec4a8, 0x8e5bd1];
       colors.forEach((color, i) => this.time.delayedCall(i * 120, () => this.shatter(40 + i * 35, this.surfaceTop - 40, color, 24, 200)));
-      if (primeraVez) {
+      if (primeraVez && !mini) {
         this.comicPanel('trofeo', this.textures.getBase64(`jefe_${id}_derrotado`), tr('jefe.victoria', bossText(tr, id)), tr(`jefes.${id}.trofeo`));
         // El último jefe: el final del juego (por ahora). "Swat to the Moon" cumplido.
         const lastBoss = this.controller.data.bosses.at(-1)?.id;
         if (id === lastBoss) this.time.delayedCall(4200, () => this.comicPanel('final', this.textures.getBase64('gato'), tr('vineta.final.titulo'), tr('vineta.final.texto')));
       }
-      this.toast(tr('jefe.premio', { ...bossText(tr, id), dinero }));
+      this.toast(tr(mini ? 'jefe.premioMini' : 'jefe.premio', { ...bossText(tr, id), dinero }));
     } else {
       // Se ríe: tres brinquitos.
       this.tweens.add({ targets: this.object, y: this.object.y - 8, duration: 110, yoyo: true, repeat: 2, ease: 'Quad.out' });
-      this.toast(tr('jefe.derrota', { ...bossText(tr, id), dinero }));
+      this.toast(tr(mini ? 'jefe.derrotaMini' : 'jefe.derrota', { ...bossText(tr, id), dinero }));
     }
     if (premio.gt(0)) this.popNumber(this.object.x, this.object.y - this.heightOf(this.object) - 10, 'dinero grande', `+${dinero}`, { coin: true });
     this.time.delayedCall(gano ? 1700 : 1200, () => {
       if (this.controller.bossFightId()) return;
+      this.object.clearTint();
       this.placeObject();
       this.popIn();
     });

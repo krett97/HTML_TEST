@@ -15,11 +15,34 @@
 
 <div class="stack">
   {#if $view.funciones.fuerza}<BuyAmount />{/if}
-  <div class="card current">
-    <div class="row">
-      <span class="muted">{$t('mejoras.enLaMesa')}</span>
-      <strong data-testid="objeto">{$t(`objetos.${$view.objetoId}`)}</strong>
+  <div class="card current" data-testid="nivel">
+    <!-- El nivel: cuántos objetos van rotos de los que pide; ◀ ▶ cambian el objeto de la mesa a un nivel ya pasado. -->
+    <div class="row nivel-row">
+      <button type="button" class="nav" aria-label={$t('mejoras.nivelAtras')} disabled={$view.nivel.jugando <= 0} onclick={() => game.goToLevel(-1)} data-testid="nivel-atras">◀</button>
+      <div class="nivel-centro">
+        <span class="muted">{$t('mejoras.nivelDe', { n: $view.nivel.jugando + 1, total: $view.nivel.total })}</span>
+        <strong data-testid="objeto">{$t(`objetos.${$view.objetoId}`)}</strong>
+      </div>
+      <button type="button" class="nav" aria-label={$t('mejoras.nivelAdelante')} disabled={$view.nivel.enEtapa} onclick={() => game.goToLevel(1)} data-testid="nivel-adelante">▶</button>
     </div>
+    {#if $view.nivel.enEtapa}
+      <div class="row small">
+        <span class="gold" data-testid="nivel-progreso">{$view.nivel.terminado ? $t('mejoras.nivelListo') : $t('mejoras.nivelProgreso', { roturas: $view.nivel.roturas, meta: $view.nivel.meta })}</span>
+        <span class="pips">{#each { length: Math.min(10, $view.nivel.meta) } as _, i (i)}<span class="pip" class:on={i < Math.floor(($view.nivel.roturas / $view.nivel.meta) * Math.min(10, $view.nivel.meta))}></span>{/each}</span>
+      </div>
+      {#if $view.nivel.terminado && $view.nivel.puerta === 'miniJefe'}
+        <div class="steps muted" data-testid="espera-guardian"><Icon name="corona" /> {$t('mejoras.guardianEspera')}</div>
+      {:else if $view.nivel.terminado && $view.nivel.puerta === 'jefe'}
+        <div class="steps muted" data-testid="espera-jefe"><Icon name="calavera" /> {$t('mejoras.jefeEspera')}</div>
+      {:else if $view.nivel.terminado && $view.nivel.puerta === 'mudanza'}
+        <div class="steps muted" data-testid="espera-mudanza"><Icon name="candado" /> <Rich text={$view.nivel.esperaJefe ? $t('mejoras.esperaJefe', bossText($t, $view.nivel.esperaJefe)) : $t('mejoras.esperaMudanza')} /></div>
+      {/if}
+    {:else}
+      <div class="row small">
+        <span class="muted">{$t('mejoras.juntando')}</span>
+        <button type="button" class="btn frente" onclick={() => game.goToLevel('frente')} data-testid="nivel-frente">{$t('mejoras.alFrente')}</button>
+      </div>
+    {/if}
     <div
       class="bar"
       role="progressbar"
@@ -74,25 +97,7 @@
         {$t('mejoras.valor')} <span class="level">{$t('mejoras.nivel', { n: $view.valor.nivel })}</span>
         {#if $view.nuevos.includes('valor')}<NewBadge />{/if}
       </div>
-      {#if $view.valor.mudanza && $view.valor.nuevoObjeto}
-        <div class="effect gold" data-testid="valor-mudanza"><Rich text={$t('mejoras.valorMudanza', { objeto: $t(`objetos.${$view.valor.nuevoObjeto}`) })} /></div>
-      {:else if $view.valor.nuevoObjeto}
-        <div class="effect gold">{$t('mejoras.valorNuevo', { objeto: $t(`objetos.${$view.valor.nuevoObjeto}`) })}</div>
-      {:else}
-        <div class="effect">{$t('mejoras.valorEfecto', { actual: $view.ganancia, siguiente: $view.valor.gananciaSiguiente })}</div>
-      {/if}
-      {#if $view.valor.ultimoObjeto}
-        <div class="steps muted">{$t('mejoras.valorUltimo')}</div>
-        {#if $view.valor.esperaMudanza}
-          <div class="steps muted" data-testid="espera-mudanza"><Icon name="candado" /> <Rich text={$view.valor.esperaJefe ? $t('mejoras.esperaJefe', bossText($t, $view.valor.esperaJefe)) : $t('mejoras.esperaMudanza')} /></div>
-        {/if}
-      {:else}
-        <div class="steps" title={$t('mejoras.valorEtapa', { n: $view.valor.enObjeto, total: $view.valor.porObjeto })}>
-          {#each { length: $view.valor.porObjeto } as _, i (i)}
-            <span class="pip" class:on={i < $view.valor.enObjeto}></span>
-          {/each}
-        </div>
-      {/if}
+      <div class="effect">{$t('mejoras.valorEfecto', { actual: $view.ganancia, siguiente: $view.valor.gananciaSiguiente })}</div>
     </div>
     <button
       type="button"
@@ -289,6 +294,42 @@
   }
   .qty {
     font-size: 12px;
+  }
+  .nivel-row {
+    align-items: center;
+    gap: 6px;
+  }
+  .nivel-centro {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    min-width: 0;
+  }
+  .nav {
+    flex: none;
+    width: 34px;
+    height: 34px;
+    border: 2px solid var(--line);
+    border-radius: 10px;
+    background: var(--panel-2);
+    color: var(--text);
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .nav:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+  .pips {
+    display: inline-flex;
+    gap: 3px;
+  }
+  .frente {
+    min-height: 32px;
+    padding: 0 10px;
+    font-size: 13px;
   }
   .fresh {
     border-color: var(--gold);
