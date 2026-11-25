@@ -4,23 +4,31 @@
   },
   "hud": {
     "pista": "Toca donde quieras que caigan las flechas",
-    "oro": "Oro"
+    "oro": "Oro",
+    "nivel": "Nivel {n}",
+    "progreso": "Slimes reventados del nivel"
   },
   "fin": {
-    "titulo": "¡Tiempo!",
     "reventados": "Reventados",
     "oro": "Oro",
-    "record": "¡Récord!",
     "mejorar": "Mejorar",
-    "otra": "Otra vez"
+    "gano": "¡Nivel {n} superado!",
+    "perdio": "¡Se acabó el tiempo!",
+    "premio": "Premio",
+    "seQueda": "El oro que juntaste se queda.",
+    "siguiente": "Siguiente",
+    "reintentar": "Reintentar nivel {n}",
+    "anterior": "Nivel {n}"
   },
   "arbol": {
     "jugar": "¡Jugar!",
     "comprar": "Comprar",
     "max": "MAX",
-    "nivel": "Nivel {n}/{max}",
     "requiere": "Sube {nombre} a {n}",
-    "cerrar": "Cerrar"
+    "cerrar": "Cerrar",
+    "paraOro": "para juntar oro",
+    "nivelAnterior": "Nivel anterior",
+    "nivelSiguiente": "Nivel siguiente"
   },
   "talentos": {
     "danio": {
@@ -28,8 +36,8 @@
       "efecto": "Daño {a} → {b}"
     },
     "slimes": {
-      "nombre": "Más slimes",
-      "efecto": "Hasta {a} → {b} a la vez"
+      "nombre": "Atraer slimes",
+      "efecto": "Llegan ×{a} → ×{b} más rápido"
     },
     "radio": {
       "nombre": "Área",
@@ -46,10 +54,6 @@
     "oro": {
       "nombre": "Oro",
       "efecto": "Oro ×{a} → ×{b}"
-    },
-    "azules": {
-      "nombre": "Slimes azules",
-      "efecto": "Más duros; dan 6 de oro"
     },
     "mago": {
       "nombre": "Mago",
@@ -94,6 +98,10 @@
     "arcoDanio": {
       "nombre": "Puntas de acero",
       "efecto": "Daño {a} → {b}"
+    },
+    "botin": {
+      "nombre": "Botín",
+      "efecto": "Premio por nivel ×{a} → ×{b}"
     }
   },
   "ajustes": {
@@ -105,7 +113,8 @@
     "version": "Versión {v}",
     "pruebas": "Pruebas",
     "oro": "+{n} oro",
-    "terminar": "Terminar partida"
+    "terminar": "Terminar partida",
+    "masNivel": "+1 nivel"
   },
   "secciones": {
     "jugador": "Jugador",
@@ -123,7 +132,7 @@
     "lenta": "Lenta",
     "normal": "Normal",
     "rapida": "Rápida",
-    "ocultoPista": "Aparece con {nombre}",
+    "ocultoPista": "Aparece desde el nivel {n}",
     "quien": {
       "jugador": "Tus flechas",
       "arqueros": "Arqueros",
@@ -147,5 +156,8 @@
       "nombre": "Slime azul",
       "texto": "De agua y con casco: el fuego casi no le hace nada."
     }
+  },
+  "zonas": {
+    "campo": "Campo verde"
   }
 }

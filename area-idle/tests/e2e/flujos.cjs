@@ -32,7 +32,7 @@ async function fresh(browser, opts = {}) {
   page.tap = async (x = 0.5, y = 0.45) => { const box = await page.getByTestId('campo').boundingBox(); await page.mouse.click(box.x + box.width * x, box.y + box.height * y); };
   page.oro = async (n) => { await page.getByTestId('abrir-ajustes').click(); await page.getByTestId(`oro-${n}`).click(); await page.mouse.click(4, 4); await page.waitForTimeout(150); };
   page.comprar = async (id, veces = 1) => {
-    const seccion = await page.evaluate((id) => ({ danio: 'jugador', radio: 'jugador', slimes: 'jugador', cadencia: 'jugador', azules: 'jugador', mago: 'mago', arqueros: 'arqueros', multiflecha: 'arqueros' })[id], id);
+    const seccion = await page.evaluate((id) => ({ danio: 'jugador', radio: 'jugador', slimes: 'jugador', cadencia: 'jugador', botin: 'jugador', tiempo: 'jugador', mago: 'mago', arqueros: 'arqueros', multiflecha: 'arqueros' })[id], id);
     await page.getByTestId(`seccion-${seccion}`).click();
     await page.getByTestId(`talento-${id}`).click();
     for (let i = 0; i < veces; i++) await page.getByTestId('comprar').click();
@@ -73,8 +73,9 @@ async function flow(name, browser, fn, opts) {
     check(reventados > 0, 'en 2.5 s no reventó ningún slime');
     await page.getByTestId('terminar').click();
     await page.waitForTimeout(500);
-    check(await page.getByTestId('fin').count(), 'no salió la pantalla de fin');
-    check((await page.getByTestId('fin-reventados').textContent()).trim() === String(reventados) || reventados > 0, 'reventados no cuadra');
+    check(await page.getByTestId('perdio').count(), 'no salió "se acabó el tiempo"');
+    check((await page.getByTestId('fin-reventados').textContent()).trim() === `${reventados}/15`, 'reventados no cuadra');
+    check(await page.getByTestId('reintentar').count() && !(await page.getByTestId('anterior').count()), 'en el nivel 1 debe ofrecer reintentar y no el anterior');
     await page.getByTestId('mejorar').click();
     check(await page.getByTestId('arbol').count(), 'no abrió el árbol');
     check(await page.getByTestId('talento-danio').count(), 'no se ve Daño');
@@ -123,6 +124,38 @@ async function flow(name, browser, fn, opts) {
     check(magia > 0, 'el mago no reventó ningún rectángulo');
   });
 
+  await flow('niveles: ganar abre el siguiente; perder ofrece reintentar o el anterior para juntar oro', browser, async (page) => {
+    check((await page.getByTestId('nivel-partida').textContent()).includes('Nivel 1'), 'no dice Nivel 1');
+    await page.getByTestId('terminar').click();
+    await page.getByTestId('mejorar').click();
+    await page.oro(1000000);
+    for (const [id, n] of [['danio', 5], ['radio', 3], ['cadencia', 4], ['slimes', 3], ['tiempo', 3], ['arqueros', 1], ['multiflecha', 2]]) await page.comprar(id, n);
+    await page.getByTestId('jugar').click();
+    for (let i = 0; i < 60 && !(await page.getByTestId('fin').count()); i++) {
+      // Toca donde haya un slime, como alguien que juega.
+      const b = await page.evaluate(() => { const r = window.juego.run; const e = r && r.enemies[0]; return e ? { x: e.x / 360, y: e.y / r.h } : null; });
+      if (b) await page.tap(b.x, b.y);
+      await page.waitForTimeout(500);
+    }
+    check(await page.getByTestId('gano').count(), 'no ganó el nivel 1 con todo comprado');
+    check(Number((await page.getByTestId('fin-premio').textContent()).replace(/\D/g, '')) > 0, 'sin premio');
+    await page.getByTestId('siguiente').click();
+    await page.waitForTimeout(300);
+    check((await page.getByTestId('nivel-partida').textContent()).includes('Nivel 2'), 'no pasó al nivel 2');
+    await page.getByTestId('terminar').click();
+    await page.waitForTimeout(300);
+    check(await page.getByTestId('perdio').count(), 'terminar antes de tiempo debe perder');
+    await page.getByTestId('anterior').click();
+    await page.waitForTimeout(300);
+    check((await page.getByTestId('nivel-partida').textContent()).includes('Nivel 1'), 'el anterior no es el nivel 1');
+    await page.getByTestId('terminar').click();
+    await page.getByTestId('mejorar').click();
+    check((await page.getByTestId('nivel-actual').textContent()).includes('Nivel 1'), 'el árbol no recuerda el nivel elegido');
+    await page.getByTestId('nivel-mas').click();
+    check((await page.getByTestId('nivel-actual').textContent()).includes('Nivel 2'), 'no deja volver al nivel 2');
+    check(await page.getByTestId('nivel-mas').isDisabled(), 'deja ir más allá del nivel abierto');
+  });
+
   await flow('glosario: tipos de daño y enemigos (el azul, oculto hasta abrirlo)', browser, async (page) => {
     await page.getByTestId('terminar').click();
     await page.getByTestId('mejorar').click();
@@ -132,11 +165,10 @@ async function flow(name, browser, fn, opts) {
     check(verde.includes('Slime verde') && verde.includes('No ataca') && verde.includes('×1.5'), `el verde no muestra sus datos: ${verde}`);
     check((await page.getByTestId('enemigo-azul').textContent()).includes('???'), 'el azul se ve antes de abrirlo');
     await page.mouse.click(4, 4);
-    await page.oro(1000000);
-    await page.comprar('danio', 1);
-    await page.comprar('slimes', 3);
-    await page.getByTestId('talento-azules').click();
-    await page.getByTestId('comprar').click();
+    // Los azules salen desde el nivel 4.
+    await page.getByTestId('abrir-ajustes').click();
+    for (let i = 0; i < 3; i++) await page.getByTestId('mas-nivel').click();
+    await page.mouse.click(4, 4);
     await page.getByTestId('abrir-glosario').click();
     const azul = await page.getByTestId('enemigo-azul').textContent();
     check(azul.includes('Slime azul') && azul.includes('×0.5'), `el azul no se reveló: ${azul}`);

@@ -1,5 +1,5 @@
 // Lo que se guarda entre partidas: el oro, los niveles del árbol y los récords.
-import { TALENT_BY_ID, TALENTS, type TalentDef, type TalentId } from './datos';
+import { levelConfig, TALENT_BY_ID, TALENTS, type TalentDef, type TalentId } from './datos';
 import { computeStats, type Stats } from './stats';
 
 export const SAVE_VERSION = 1;
@@ -11,6 +11,9 @@ export interface Meta {
   oro: number;
   talentos: Partial<Record<TalentId, number>>;
   partidas: number;
+  /** El nivel más alto abierto y el que se va a jugar (puede ser uno anterior, para juntar oro). */
+  nivel: number;
+  jugando: number;
   /** Lo más que se ha juntado en una partida. */
   mejor: number;
   reventados: number;
@@ -20,7 +23,7 @@ export interface Meta {
 }
 
 export function createMeta(): Meta {
-  return { version: SAVE_VERSION, oro: 0, talentos: {}, partidas: 0, mejor: 0, reventados: 0, ajustes: { sonido: true, idioma: null }, vistos: [] };
+  return { version: SAVE_VERSION, oro: 0, talentos: {}, partidas: 0, nivel: 1, jugando: 1, mejor: 0, reventados: 0, ajustes: { sonido: true, idioma: null }, vistos: [] };
 }
 
 export const levelOf = (meta: Meta, id: TalentId): number => meta.talentos[id] ?? 0;
@@ -59,11 +62,26 @@ export function buyTalent(meta: Meta, id: TalentId): boolean {
   return true;
 }
 
-export function finishRun(meta: Meta, oro: number, reventados: number): void {
-  meta.oro += oro;
+/**
+ * Termina una partida: se queda el oro juntado (gane o pierda) y, si ganó, el premio del nivel. Al
+ * superar el nivel más alto se abre el siguiente y queda elegido. Devuelve el premio.
+ */
+export function finishRun(meta: Meta, r: { oro: number; reventados: number; gano: boolean; nivel: number }): number {
+  const premio = r.gano ? Math.round(levelConfig(r.nivel).premio * stats(meta).premioMult) : 0;
+  meta.oro += r.oro + premio;
   meta.partidas++;
-  meta.mejor = Math.max(meta.mejor, oro);
-  meta.reventados += reventados;
+  meta.mejor = Math.max(meta.mejor, r.oro);
+  meta.reventados += r.reventados;
+  if (r.gano && r.nivel >= meta.nivel) {
+    meta.nivel = r.nivel + 1;
+    meta.jugando = meta.nivel;
+  }
+  return premio;
+}
+
+/** Elige qué nivel jugar (de 1 al más alto abierto). */
+export function chooseLevel(meta: Meta, nivel: number): void {
+  meta.jugando = Math.min(meta.nivel, Math.max(1, Math.floor(nivel)));
 }
 
 /** Carga un guardado, tolerando datos viejos o dañados (lo que no sirve vuelve a su valor inicial). */
@@ -82,6 +100,8 @@ export function loadMeta(raw: unknown): Meta {
     oro: num(r.oro, 0),
     talentos,
     partidas: Math.floor(num(r.partidas, 0)),
+    nivel: Math.max(1, Math.floor(num(r.nivel, 1))),
+    jugando: Math.min(Math.max(1, Math.floor(num(r.nivel, 1))), Math.max(1, Math.floor(num(r.jugando, 1)))),
     mejor: num(r.mejor, 0),
     reventados: Math.floor(num(r.reventados, 0)),
     ajustes: {

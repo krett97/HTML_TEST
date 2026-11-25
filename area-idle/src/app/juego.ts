@@ -2,7 +2,7 @@
 // escena (eventos de la partida) y a la interfaz (la vista, un store de Svelte).
 import { writable, type Readable } from 'svelte/store';
 import type { TalentId } from '../core/datos';
-import { buyTalent, createMeta, finishRun, loadMeta, stats, type Meta } from '../core/meta';
+import { buyTalent, chooseLevel, createMeta, finishRun, loadMeta, stats, type Meta } from '../core/meta';
 import { createRun, moveCursor, startRun, stepRun, type Run, type RunEvent } from '../core/run';
 import { locale, detectLocale } from '../i18n';
 import type { AudioEngine } from '../services/audio';
@@ -17,6 +17,11 @@ export interface Vista {
   duracion: number;
   oroPartida: number;
   reventados: number;
+  /** El nivel que se juega, cuántos slimes trae y si se ganó (al terminar) y con qué premio. */
+  nivel: number;
+  total: number;
+  gano: boolean;
+  premio: number;
   vivos: number;
   /** El jugador ya tocó en esta partida (para esconder la pista). */
   toco: boolean;
@@ -36,6 +41,7 @@ export class Juego {
   private playListeners: (() => void)[] = [];
   private toco = false;
   private partida = 0;
+  private premio = 0;
   /** Al abrir: quien ya jugó llega al árbol; quien es nuevo, directo a jugar. */
   fase: Fase = 'jugando';
   private ultimaVista = 0;
@@ -64,8 +70,9 @@ export class Juego {
   }
 
   /** Empieza una partida en un campo de `alto` unidades (lo decide la escena según la pantalla). */
-  start(alto: number): RunEvent[] {
-    this.run = createRun(stats(this.meta), alto);
+  start(alto: number, arriba?: number): RunEvent[] {
+    this.run = createRun(stats(this.meta), alto, this.meta.jugando, Date.now(), arriba);
+    this.premio = 0;
     this.toco = false;
     this.partida++;
     this.fase = 'jugando';
@@ -80,11 +87,12 @@ export class Juego {
     if (!run || this.fase !== 'jugando') return [];
     const events = stepRun(run, dt);
     for (const e of events) {
-      if (e.type === 'kill') this.audio.play(e.kind === 'azul' ? 'popGrande' : 'pop');
+      if (e.type === 'spawn' && run.t > 0) this.audio.play('aparece');
+      else if (e.type === 'kill') this.audio.play(e.kind === 'azul' ? 'popGrande' : 'pop');
       else if (e.type === 'impact') this.audio.play(e.fuente === 'mago' ? 'magia' : 'disparo');
       else if (e.type === 'volley') this.audio.play('arco');
       else if (e.type === 'fire') this.audio.play('fuego');
-      else if (e.type === 'end') this.end();
+      else if (e.type === 'end') this.end(e.gano);
     }
     for (const fn of this.listeners) fn(events, run);
     const now = performance.now();
@@ -105,12 +113,28 @@ export class Juego {
     }
   }
 
-  private end(): void {
+  private end(gano: boolean): void {
     const run = this.run!;
-    finishRun(this.meta, run.oro, run.reventados);
+    this.premio = finishRun(this.meta, { oro: run.oro, reventados: run.reventados, gano, nivel: run.nivel.nivel });
     if (!this.meta.vistos.includes('primera')) this.meta.vistos.push('primera');
     this.fase = 'fin';
-    this.audio.play('fin');
+    this.audio.play(gano ? 'fin' : 'pierde');
+    this.save();
+    this.publish();
+  }
+
+  /** Elige el nivel (de 1 al más alto abierto) y, si `jugar`, empieza la partida. */
+  playLevel(nivel: number, jugar = true): void {
+    chooseLevel(this.meta, nivel);
+    this.save();
+    this.publish();
+    if (jugar) this.play();
+  }
+
+  /** Modo pruebas: abre el siguiente nivel sin jugarlo. */
+  unlockNext(): void {
+    this.meta.nivel++;
+    this.meta.jugando = this.meta.nivel;
     this.save();
     this.publish();
   }
@@ -180,6 +204,10 @@ export class Juego {
       duracion: run?.stats.duracion ?? stats(this.meta).duracion,
       oroPartida: run?.oro ?? 0,
       reventados: run?.reventados ?? 0,
+      nivel: run && this.fase !== 'arbol' ? run.nivel.nivel : this.meta.jugando,
+      total: run?.nivel.total ?? 0,
+      gano: run?.gano ?? false,
+      premio: this.premio,
       vivos: run?.enemies.length ?? 0,
       toco: this.toco,
       // Una copia: la interfaz solo se entera de un cambio si recibe un objeto nuevo.

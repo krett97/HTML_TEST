@@ -1,6 +1,6 @@
 # Campo de Slimes: diseño del prototipo
 
-> Versión 0.1.0. Nombre provisional. Nació de pausar el juego del gato
+> Versión 0.2.0. Nombre provisional. Nació de pausar el juego del gato
 > ([`../../gato-idle/docs/DECISIONES.md`](../../gato-idle/docs/DECISIONES.md)), tomando su base técnica y su
 > arte en código ([`../../REUSO.md`](../../REUSO.md)). Referencia de sensación: *Don't Stop The Pop!*
 > (cientos de cosas reventando en un área) y el idle del castor (rocas que caen, mundo que cambia por fase).
@@ -15,21 +15,32 @@ slimes, números de daño y manchas de colores.
 **Lección del gato aplicada:** primero el momento de 10 segundos; ningún sistema nuevo hasta que ese se
 sienta bien. Poco texto: lo que sigue se descubre jugando.
 
-## 2. El ciclo
+## 2. El ciclo: niveles con tiempo límite (desde 0.2.0)
 
-1. **Partida de 20 s** (sube con el talento Tiempo hasta 40 s). Los slimes aparecen cada vez más rápido:
-   al final, el triple que al principio.
-2. **Fin:** reventados y oro ganado. "Mejorar" abre el árbol; "Otra vez", otra partida.
-3. **Árbol** en tres secciones (pestañas): se gasta el oro y se vuelve a jugar.
+1. **Cada nivel trae una cantidad fija de slimes** (15 en el nivel 1, 8 más por nivel): el 30 % sale al
+   empezar y el resto llega en los siguientes 8 segundos (más rápido con "Atraer slimes"). Cada slime
+   aparece con una **chispa** de estrellitas y un anillo blanco.
+2. **Hay que reventarlos todos antes de que se acabe el tiempo** (20 s; el talento Tiempo suma hasta 20 más).
+   - **Lo logras:** "¡Nivel N superado!", con el oro juntado y un **premio** por el nivel. Se abre el
+     siguiente. Botones: Siguiente y Mejorar.
+   - **No lo logras:** "¡Se acabó el tiempo!". **El oro juntado se queda.** Botones: Reintentar el nivel,
+     jugar el **nivel anterior para juntar oro** y Mejorar.
+3. **Árbol** en tres secciones (pestañas): se gasta el oro. Abajo se elige el nivel (◀ Nivel 5 ▶; uno
+   anterior dice "para juntar oro") y ¡Jugar!.
 
-Nunca se pierde: el límite de tiempo es la partida misma. Quien ya jugó, al abrir llega al árbol; quien es
-nuevo, directo a jugar (con una pista: "Toca donde quieras que caigan las flechas").
+Cada nivel tiene más slimes, con más vida (×1.3 por nivel) y algo más de oro (×1.05); los azules salen
+desde el nivel 4 y cada vez son más (hasta la mitad). Quien ya jugó, al abrir llega al árbol; quien es
+nuevo, directo al nivel 1 con una pista.
+
+**Arriba, durante la partida:** la barra del nivel a todo lo ancho ("12/15 · 80 %"), y debajo el tiempo
+que queda (con su barrita, que se pone roja en los últimos 5 s), la zona y el nivel ("Campo verde ·
+Nivel 5") y el oro. Ahí arriba no aparecen ni pasean slimes, para que nada quede tapado.
 
 ## 3. Los tres árboles (`src/core/datos.ts`)
 
 | Sección | Ataque | Tipo de daño | Talentos |
 |---|---|---|---|
-| **Jugador** | Tu círculo: lluvia de flechas en el área | Físico | Daño (raíz), Área, Más slimes, Cadencia, Tiempo, Slimes azules, Oro |
+| **Jugador** | Tu círculo: lluvia de flechas en el área | Físico | Daño (raíz), Área, Atraer slimes (llegan más rápido), Cadencia, Tiempo, Botín (premio por nivel), Oro |
 | **Mago** | Bola de fuego que revienta en un **rectángulo** (a lo ancho o a lo alto) donde hay alguien | Fuego | Mago (raíz), Mago veloz, Fuego mágico, Explosión grande, Suelo en llamas, Fuego intenso |
 | **Arqueros** | Flechas a **un objetivo a la vez**; con Flechas múltiples, a 2, 3… 5 | Físico | Arquero (raíz), Más arqueros (hasta 6), Flechas múltiples, Arco veloz, Puntas de acero |
 
@@ -51,10 +62,11 @@ el golpe a una debilidad sale con número grande y rojizo, y el que choca con un
 | Enemigo | Vida | Velocidad | Ataca | Débil a | Fuerte contra | Oro |
 |---|---|---|---|---|---|---|
 | Slime verde | 3 | Normal | No | Fuego | — | 1 |
-| Slime azul (sale con el talento) | 14 | Lenta | No | Hielo, Energía | Fuego | 6 |
+| Slime azul (desde el nivel 4) | 14 | Lenta | No | Hielo, Energía | Fuego | 6 |
 
 **Glosario** (botón del libro en el árbol): los tipos de daño, quién hace cuál y cada enemigo con su vida,
-velocidad, si ataca y sus debilidades y fortalezas. Los que aún no salen se ven como silueta con "???".
+velocidad, si ataca y sus debilidades y fortalezas. Los que aún no salen se ven como silueta con "???"
+("Aparece desde el nivel 4"). La vida y el oro de la tabla son los del nivel 1; crecen con el nivel.
 
 ## 5. La muralla
 
@@ -65,23 +77,25 @@ Los slimes no bajan hasta ella. Queda espacio para que en el futuro haya enemigo
 
 ## 6. Ritmo (`npm run simular`)
 
-Un bot que toca donde hay más slimes cada segundo y compra lo más barato:
+Un bot que toca donde hay más slimes cada segundo, compra lo más barato y, si pierde un nivel, juega
+una vez el anterior para juntar oro y reintenta:
 
-| Hito | Minuto |
+| Minuto | Nivel superado |
 |---|---|
-| Primer arquero | 2.4 |
-| Slimes azules | 4.1 |
-| Mago | 4.7 |
-| Suelo en llamas | 6.6 |
-| Partidas de 40 s y cientos de slimes | ~12 |
-| Se estanca (falta una segunda zona) | ~15 |
+| 5 | 4 |
+| 10 | 15 |
+| 15 | 22 |
+| 20 | 27 |
+| 30 | 30 (pared: falta la segunda zona) |
 
-La densidad de slimes se ajusta a la pantalla: en un celular más alto salen proporcionalmente más, para
-que se vea igual de lleno (`REF_FIELD_H` en `run.ts`).
+Al principio pierde los niveles 3, 4 y 7 alguna vez, junta oro en el anterior y pasa. Del 11 al 20 casi
+no pierde (llegan el mago y los arqueros: el pico de poder se siente bien), y del 21 en adelante los
+niveles se pasan con poco margen (18 a 28 s de 20 a 40) hasta la pared del 31–40, que es donde
+entraría la segunda zona.
 
 ## 7. Técnica
 
-- `src/core/` es lógica pura y probada (26 pruebas): `run.ts` (la partida paso a paso; devuelve eventos),
+- `src/core/` es lógica pura y probada (30 pruebas): `run.ts` (la partida paso a paso; devuelve eventos),
   `stats.ts` (estadísticas desde los talentos), `meta.ts` (oro, árbol, guardado), `datos.ts`, `bot.ts`.
 - `src/game/Campo.ts` (Phaser 4) solo dibuja los eventos: sprites reciclados para cientos de slimes,
   números de daño con una **fuente de mapa de bits** hecha al arrancar (`numeros.ts`), partículas, flechas
@@ -94,7 +108,7 @@ que se vea igual de lleno (`REF_FIELD_H` en `run.ts`).
 
 ## 8. Pendiente (ideas, sin construir)
 
-- **Segunda zona** (bosque, desierto, nieve…) con su jefe al final de una partida; el mundo cambia al pasarla.
+- **Segunda zona** (bosque, desierto, nieve…): cada 10 niveles un jefe; al vencerlo cambia el mundo.
 - Fuentes de hielo, energía, muerte y luz (nuevos aliados o ramas) y enemigos que las pidan.
 - Enemigos que atacan la muralla (y una razón para defenderla).
 - Anuncios recompensados: "+10 s a esta partida" y "×2 oro de esta partida".

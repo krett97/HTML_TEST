@@ -161,7 +161,7 @@ icon('radio', I(circ(32, 32, 26, 'none') + `<circle cx="32" cy="32" r="26" fill=
 icon('cadencia', I(rayo(-4, 2, 0.9) + rayo(20, 6, 0.9)));
 icon('tiempo', I(circ(32, 34, 24, P.blanco) + line('M32 34 v-14 M32 34 l10 6', K, 5) + circ(32, 34, 3.5, P.rojo, 0) + rect(26, 2, 12, 8, 3, P.grisS, 4) + o('M46 6 h12 M52 0 v12', 'none', 0) + line('M48 8 h12 M54 2 v12', P.pastoS, 6)));
 icon('oro', I(moneda(22, 38, 16) + moneda(42, 30, 16) + moneda(30, 20, 14)));
-icon('azules', I(mini(4, 6, 0.6, P.agua, P.aguaS)));
+icon('botin', I(o('M6 30 C6 14 58 14 58 30 Z', P.maderaS, 5) + o('M6 30 H58 V56 H6 Z', P.madera, 5) + rect(4, 28, 56, 8, 3, P.oroS, 4) + rect(26, 30, 12, 14, 3, P.oro, 4) + circ(32, 38, 2.5, K, 0) + moneda(16, 18, 7) + moneda(44, 16, 7) + moneda(30, 12, 7)));
 icon('mago', I(sombrero(0, 0, 1)));
 icon('magoRapido', I(sombrero(-2, 4, 0.8) + rayo(28, 22, 0.7)));
 icon('magoArea', I(`<rect x="4" y="30" width="56" height="26" rx="5" fill="${P.fuego}" fill-opacity=".45" stroke="${K}" stroke-width="5"/>` + sombrero(6, -6, 0.75)));

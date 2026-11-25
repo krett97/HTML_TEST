@@ -73,7 +73,7 @@ export class Campo extends Phaser.Scene {
   private readonly fuegos: FuegoVisual[] = [];
   private readonly lluviaLibre: Phaser.GameObjects.Image[] = [];
   private decoraciones: Phaser.GameObjects.Image[] = [];
-  private emisores!: Record<'verde' | 'azul' | 'fuego' | 'llama' | 'polvo', Phaser.GameObjects.Particles.ParticleEmitter>;
+  private emisores!: Record<'verde' | 'azul' | 'fuego' | 'llama' | 'polvo' | 'aparece' | 'confeti', Phaser.GameObjects.Particles.ParticleEmitter>;
   private zoom = 1;
   private tiempo = 0;
   private unsub: (() => void)[] = [];
@@ -126,7 +126,21 @@ export class Campo extends Phaser.Scene {
       fuego: particulas(FUEGO, { speed: { min: 50, max: 140 }, scale: { start: 0.1, end: 0 }, gravityY: -30, tint: [FUEGO, AMARILLO, 0xef5a4c] }),
       llama: particulas(FUEGO, { gravityY: -90, speed: { min: 5, max: 25 }, angle: { min: 250, max: 290 }, scale: { start: 0.07, end: 0 }, lifespan: 420, tint: [FUEGO, AMARILLO] }),
       polvo: particulas(0xf3ead2, { speed: { min: 15, max: 50 }, angle: { min: 200, max: 340 }, scale: { start: 0.06, end: 0 }, lifespan: 300, gravityY: 60 }),
+      // La chispa de aparición: estrellitas que giran y se apagan.
+      aparece: this.add
+        .particles(0, 0, 'chispa', {
+          speed: { min: 18, max: 45 },
+          angle: { min: 0, max: 360 },
+          rotate: { start: 0, end: 180 },
+          scale: { start: 0.14, end: 0 },
+          lifespan: 380,
+          tint: [0xffffff, 0xfff3a0, 0xffd23f],
+          emitting: false,
+        })
+        .setDepth(D.particula),
+      confeti: particulas(0xffffff, { speed: { min: 80, max: 220 }, angle: { min: 220, max: 320 }, gravityY: 260, scale: { start: 0.08, end: 0.04 }, lifespan: 1400, tint: [0xef5a4c, 0xffd23f, 0x5ec47a, 0x5cc1f2, 0xa46cf0] }),
     };
+
 
     // Se toca para mover el círculo; si se arrastra, el círculo sigue al dedo.
     this.input.on(Phaser.Input.Events.POINTER_DOWN, (p: Phaser.Input.Pointer) => this.juego.tap(p.worldX, p.worldY));
@@ -153,6 +167,8 @@ export class Campo extends Phaser.Scene {
     g.fillStyle(0xffffff).fillRoundedRect(0, 0, 128, 48, 14).generateTexture('rectangulo', 128, 48).clear();
     g.lineStyle(6, 0xffffff).strokeRoundedRect(3, 3, 122, 42, 12).generateTexture('marco', 128, 48).clear();
     g.fillStyle(0xef5a4c).fillCircle(32, 32, 30).fillStyle(FUEGO).fillCircle(30, 30, 22).fillStyle(AMARILLO).fillCircle(27, 27, 12).generateTexture('bola', 64, 64).clear();
+    // Estrellita de cuatro puntas: la chispa con que aparecen los slimes.
+    g.fillStyle(0xffffff).fillPoints([0, -32, 7, -7, 32, 0, 7, 7, 0, 32, -7, 7, -32, 0, -7, -7].reduce<Phaser.Math.Vector2[]>((acc, v, i, arr) => (i % 2 ? acc : [...acc, new Phaser.Math.Vector2(arr[i]! + 32, arr[i + 1]! + 32)]), []), true).generateTexture('chispa', 64, 64).clear();
     g.fillStyle(0x1e4a2a, 0.28).fillEllipse(32, 12, 64, 24).generateTexture('sombra', 64, 24).destroy();
   }
 
@@ -170,6 +186,12 @@ export class Campo extends Phaser.Scene {
     this.torre.setPosition(0, this.alto);
   }
 
+  /** Arriba van la barra del nivel, el reloj y el oro (unos 92 px de pantalla): ahí no salen slimes ni adornos. */
+  private libreArriba(): number {
+    const pxPorUnidad = this.game.canvas.getBoundingClientRect().width / FIELD_W || 1;
+    return 92 / pxPorUnidad;
+  }
+
   /** Flores, piedras y arbustos al azar sobre el pasto. */
   private decorar(): void {
     this.decoraciones.forEach((d) => d.destroy());
@@ -178,7 +200,7 @@ export class Campo extends Phaser.Scene {
     for (let i = 0; i < 16; i++) {
       const [key, scale] = tipos[i % tipos.length]!;
       const img = this.add
-        .image(Phaser.Math.Between(10, FIELD_W - 10), Phaser.Math.Between(20, Math.max(40, Math.floor(this.alto - ALLY_ROW) - 6)), key)
+        .image(Phaser.Math.Between(10, FIELD_W - 10), Phaser.Math.Between(Math.ceil(this.libreArriba()), Math.max(Math.ceil(this.libreArriba()) + 20, Math.floor(this.alto - ALLY_ROW) - 6)), key)
         .setOrigin(0.5, 1)
         .setScale(scale * Phaser.Math.FloatBetween(0.8, 1.2))
         .setDepth(D.deco)
@@ -197,7 +219,7 @@ export class Campo extends Phaser.Scene {
     this.fuegos.forEach((f) => f.img.destroy());
     this.fuegos.length = 0;
     this.decorar();
-    const events = this.juego.start(this.alto);
+    const events = this.juego.start(this.alto, this.libreArriba());
     const run = this.juego.run!;
     this.cursorPos.x = run.cursor.x;
     this.cursorPos.y = run.cursor.y;
@@ -281,6 +303,7 @@ export class Campo extends Phaser.Scene {
           v.fase = Math.random() * Math.PI * 2;
           v.img.setPosition(e.x, e.y);
           this.slimes.set(e.id, v);
+          this.aparicion(e.x, e.y);
           break;
         }
         case 'hit': {
@@ -325,10 +348,25 @@ export class Campo extends Phaser.Scene {
           break;
         }
         case 'end':
-          this.cameras.main.flash(220, 255, 240, 200);
+          if (e.gano) {
+            // ¡Nivel superado! Destello y confeti desde abajo.
+            this.cameras.main.flash(260, 255, 250, 210);
+            for (let i = 0; i < 5; i++) this.time.delayedCall(i * 90, () => this.emisores.confeti.explode(14, 40 + i * 70, this.alto - 60));
+          } else {
+            // Se acabó el tiempo: un destello rojizo y los slimes que quedan se quedan saltando.
+            this.cameras.main.flash(260, 255, 120, 100);
+            this.cameras.main.shake(160, 0.004);
+          }
           break;
       }
     }
+  }
+
+  /** Un slime aparece: chispa de estrellitas y un anillo blanco que se abre (lo demás lo hace el rebote al nacer). */
+  private aparicion(x: number, y: number): void {
+    this.emisores.aparece.explode(5, x, y - 6);
+    const anillo = this.add.image(x, y - 6, 'anillo').setAlpha(0.85).setScale(0.05).setDepth(D.destello);
+    this.tweens.add({ targets: anillo, scale: 0.2, alpha: 0, duration: 260, ease: 'Quad.out', onComplete: () => anillo.destroy() });
   }
 
   /** Tu disparo: caen flechas del cielo a puntos al azar dentro del círculo. */

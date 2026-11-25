@@ -1,8 +1,7 @@
 <script lang="ts">
   // El glosario: los tipos de daño (y quién hace cuál) y cada enemigo con su vida, su velocidad, si
   // ataca y a qué es débil o fuerte. Los enemigos que aún no salen se ven como silueta.
-  import { DAMAGE_TYPES, DAMAGE_TYPES_EN_JUEGO, EFFECTIVENESS, ENEMIES, ENEMY_KINDS, type EnemyKind } from '../core/datos';
-  import { levelOf } from '../core/meta';
+  import { AZUL_DESDE, DAMAGE_TYPES, DAMAGE_TYPES_EN_JUEGO, EFFECTIVENESS, ENEMIES, ENEMY_KINDS, type EnemyKind } from '../core/datos';
   import { DAMAGE_TYPE_OF } from '../core/run';
   import { t } from '../i18n';
   import { useJuego } from './context';
@@ -18,13 +17,10 @@
     { id: 'arqueros', icono: 'arquero', tipo: DAMAGE_TYPE_OF.arquero },
     { id: 'mago', icono: 'mago', tipo: DAMAGE_TYPE_OF.mago },
   ] as const;
-  /** Lo que hace falta para que salga cada enemigo (el verde sale desde el principio). */
-  const SALE_CON: Partial<Record<EnemyKind, 'azules'>> = { azul: 'azules' };
+  /** Desde qué nivel sale cada enemigo (el verde, desde el primero). */
+  const DESDE: Record<EnemyKind, number> = { verde: 1, azul: AZUL_DESDE };
 
-  const visto = (kind: EnemyKind) => {
-    const req = SALE_CON[kind];
-    return !req || levelOf($view.meta, req) > 0;
-  };
+  const visto = (kind: EnemyKind) => $view.meta.nivel >= DESDE[kind];
   const rapidez = (v: number) => (v < 7 ? 'lenta' : v < 12 ? 'normal' : 'rapida');
 </script>
 
@@ -77,7 +73,7 @@
           </div>
         {:else}
           <strong>???</strong>
-          <span class="texto">{$t('glosario.ocultoPista', { nombre: $t(`talentos.${SALE_CON[kind]}.nombre`) })}</span>
+          <span class="texto">{$t('glosario.ocultoPista', { n: DESDE[kind] })}</span>
         {/if}
       </div>
     </article>

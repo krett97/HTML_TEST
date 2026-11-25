@@ -4,23 +4,31 @@
   },
   "hud": {
     "pista": "Tap where you want the arrows to fall",
-    "oro": "Gold"
+    "oro": "Gold",
+    "nivel": "Level {n}",
+    "progreso": "Slimes popped this level"
   },
   "fin": {
-    "titulo": "Time!",
     "reventados": "Popped",
     "oro": "Gold",
-    "record": "New best!",
     "mejorar": "Upgrade",
-    "otra": "Again"
+    "gano": "Level {n} cleared!",
+    "perdio": "Time's up!",
+    "premio": "Reward",
+    "seQueda": "You keep the gold you collected.",
+    "siguiente": "Next",
+    "reintentar": "Retry level {n}",
+    "anterior": "Level {n}"
   },
   "arbol": {
     "jugar": "Play!",
     "comprar": "Buy",
     "max": "MAX",
-    "nivel": "Level {n}/{max}",
     "requiere": "Raise {nombre} to {n}",
-    "cerrar": "Close"
+    "cerrar": "Close",
+    "paraOro": "to farm gold",
+    "nivelAnterior": "Previous level",
+    "nivelSiguiente": "Next level"
   },
   "talentos": {
     "danio": {
@@ -28,8 +36,8 @@
       "efecto": "Damage {a} → {b}"
     },
     "slimes": {
-      "nombre": "More slimes",
-      "efecto": "Up to {a} → {b} at once"
+      "nombre": "Lure slimes",
+      "efecto": "They arrive ×{a} → ×{b} faster"
     },
     "radio": {
       "nombre": "Area",
@@ -46,10 +54,6 @@
     "oro": {
       "nombre": "Gold",
       "efecto": "Gold ×{a} → ×{b}"
-    },
-    "azules": {
-      "nombre": "Blue slimes",
-      "efecto": "Tougher; worth 6 gold"
     },
     "mago": {
       "nombre": "Wizard",
@@ -94,6 +98,10 @@
     "arcoDanio": {
       "nombre": "Steel tips",
       "efecto": "Damage {a} → {b}"
+    },
+    "botin": {
+      "nombre": "Loot",
+      "efecto": "Level reward ×{a} → ×{b}"
     }
   },
   "ajustes": {
@@ -105,7 +113,8 @@
     "version": "Version {v}",
     "pruebas": "Testing",
     "oro": "+{n} gold",
-    "terminar": "End round"
+    "terminar": "End round",
+    "masNivel": "+1 level"
   },
   "secciones": {
     "jugador": "Player",
@@ -123,7 +132,7 @@
     "lenta": "Slow",
     "normal": "Normal",
     "rapida": "Fast",
-    "ocultoPista": "Shows up with {nombre}",
+    "ocultoPista": "Shows up from level {n}",
     "quien": {
       "jugador": "Your arrows",
       "arqueros": "Archers",
@@ -147,5 +156,8 @@
       "nombre": "Blue slime",
       "texto": "Made of water and wearing a helmet: fire barely hurts it."
     }
+  },
+  "zonas": {
+    "campo": "Green field"
   }
 }

@@ -12,14 +12,11 @@ export interface Stats {
   intervalo: number;
   /** Segundos que dura la partida. */
   duracion: number;
-  /** Enemigos al empezar, cuántos aparecen por segundo y cuántos puede haber a la vez. */
-  inicial: number;
-  aparicion: number;
-  maximo: number;
-  /** Multiplica el oro de cada enemigo. */
+  /** Multiplica la rapidez con que llegan los slimes del nivel. */
+  ritmo: number;
+  /** Multiplica el oro de cada enemigo y el premio por superar un nivel. */
   oroMult: number;
-  /** Fracción de los que aparecen que son azules (0 si no se han abierto). */
-  azules: number;
+  premioMult: number;
   /** El mago: un rectángulo de `ancho` × `alto` cada `intervalo` s. */
   mago: { activo: boolean; intervalo: number; ancho: number; alto: number; danio: number };
   /** El suelo en llamas que dejan los rectángulos del mago. */
@@ -41,11 +38,9 @@ export function computeStats(levels: Levels): Stats {
     radio: BASE.radio * (1 + 0.1 * lv(levels, 'radio')),
     intervalo: BASE.intervalo * Math.pow(0.9, lv(levels, 'cadencia')),
     duracion: BASE.duracion + 2 * lv(levels, 'tiempo'),
-    inicial: BASE.inicial + 10 * slimes,
-    aparicion: BASE.aparicion * Math.pow(1.3, slimes),
-    maximo: BASE.maximo + 40 * slimes,
+    ritmo: BASE.ritmo * Math.pow(1.2, slimes),
     oroMult: 1 + 0.3 * lv(levels, 'oro'),
-    azules: lv(levels, 'azules') > 0 ? 0.3 : 0,
+    premioMult: 1 + 0.25 * lv(levels, 'botin'),
     mago: {
       activo: lv(levels, 'mago') > 0,
       intervalo: BASE.mago.intervalo * Math.pow(0.88, lv(levels, 'magoRapido')),

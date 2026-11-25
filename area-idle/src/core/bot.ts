@@ -1,20 +1,30 @@
-// Un jugador simulado: juega partidas tocando donde hay más enemigos y entre partidas compra en el
-// árbol. Lo usan el simulador de balance (tools/simular.ts) y las pruebas.
+// Un jugador simulado: juega el nivel elegido tocando donde hay más slimes y entre partidas compra en
+// el árbol. Si pierde, juega una vez el nivel anterior para juntar oro y vuelve a intentarlo. Lo usan
+// el simulador de balance (tools/simular.ts) y las pruebas.
 import { TALENTS } from './datos';
-import { buyTalent, costOf, finishRun, levelOf, stats, talentState, type Meta } from './meta';
+import { buyTalent, chooseLevel, costOf, finishRun, levelOf, stats, talentState, type Meta } from './meta';
 import { bestSpot, createRun, moveCursor, startRun, stepRun } from './run';
 
 /** Alto típico del campo en un celular vertical (unidades). */
-export const BOT_FIELD_H = 560;
-// (Con 560 la densidad de enemigos es la de referencia; ver REF_FIELD_H en run.ts.)
+export const BOT_FIELD_H = 700;
 
-/** Juega una partida completa; el bot mueve el círculo cada `cadaCuanto` segundos. Devuelve oro y reventados. */
-export function playRun(meta: Meta, seed: number, cadaCuanto = 1): { oro: number; reventados: number; maxVivos: number } {
-  const run = createRun(stats(meta), BOT_FIELD_H, seed);
+export interface BotRun {
+  nivel: number;
+  gano: boolean;
+  oro: number;
+  premio: number;
+  reventados: number;
+  total: number;
+  segundos: number;
+  compras: string[];
+}
+
+/** Juega una partida completa del nivel elegido; el bot mueve el círculo cada `cadaCuanto` segundos. */
+export function playRun(meta: Meta, seed: number, cadaCuanto = 1): { oro: number; reventados: number; gano: boolean; total: number; segundos: number } {
+  const run = createRun(stats(meta), BOT_FIELD_H, meta.jugando, seed);
   startRun(run);
   const dt = 1 / 30;
   let next = 0;
-  let maxVivos = 0;
   while (!run.terminada) {
     if (run.t >= next) {
       const spot = bestSpot(run);
@@ -22,9 +32,8 @@ export function playRun(meta: Meta, seed: number, cadaCuanto = 1): { oro: number
       next += cadaCuanto;
     }
     stepRun(run, dt);
-    maxVivos = Math.max(maxVivos, run.enemies.length);
   }
-  return { oro: run.oro, reventados: run.reventados, maxVivos };
+  return { oro: run.oro, reventados: run.reventados, gano: run.gano, total: run.nivel.total, segundos: run.t };
 }
 
 /** Compra mientras alcance: siempre lo más barato que esté disponible. Devuelve qué compró. */
@@ -40,8 +49,13 @@ export function shop(meta: Meta): string[] {
   }
 }
 
-export function playAndShop(meta: Meta, seed: number): { oro: number; reventados: number; maxVivos: number; compras: string[] } {
-  const result = playRun(meta, seed);
-  finishRun(meta, result.oro, result.reventados);
-  return { ...result, compras: shop(meta) };
+/** Una vuelta: juega, cobra, compra y elige el siguiente nivel (el más alto, o el anterior si perdió ahí). */
+export function playAndShop(meta: Meta, seed: number): BotRun {
+  const nivel = meta.jugando;
+  const r = playRun(meta, seed);
+  const premio = finishRun(meta, { ...r, nivel });
+  const compras = shop(meta);
+  if (r.gano || nivel < meta.nivel) chooseLevel(meta, meta.nivel);
+  else chooseLevel(meta, nivel - 1);
+  return { nivel, gano: r.gano, oro: r.oro, premio, reventados: r.reventados, total: r.total, segundos: r.segundos, compras };
 }

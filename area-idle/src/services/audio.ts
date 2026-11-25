@@ -1,9 +1,9 @@
 // Sonidos sintetizados con Web Audio (sin archivos), como en el juego del gato: cada sonido es una
 // receta de osciladores y ruido. Con cientos de slimes reventando, cada sonido tiene un tope de
 // veces por segundo para no saturar.
-export type SoundId = 'pop' | 'popGrande' | 'disparo' | 'magia' | 'fuego' | 'arco' | 'compra' | 'fin' | 'error';
+export type SoundId = 'pop' | 'popGrande' | 'disparo' | 'magia' | 'fuego' | 'arco' | 'compra' | 'fin' | 'pierde' | 'aparece' | 'error';
 
-const MIN_GAP: Record<SoundId, number> = { pop: 0.035, popGrande: 0.06, disparo: 0.05, magia: 0.08, fuego: 0.25, arco: 0.07, compra: 0, fin: 0, error: 0 };
+const MIN_GAP: Record<SoundId, number> = { pop: 0.035, popGrande: 0.06, disparo: 0.05, magia: 0.08, fuego: 0.25, arco: 0.07, pierde: 0, aparece: 0.09, compra: 0, fin: 0, error: 0 };
 
 export class AudioEngine {
   private ctx: AudioContext | null = null;
@@ -111,6 +111,14 @@ export class AudioEngine {
         break;
       case 'fin':
         for (const [i, f] of [523, 659, 784, 1046].entries()) this.tone('triangle', f, f, i * 0.09, 0.16, 0.14);
+        break;
+      case 'pierde':
+        // Tres notas que bajan: "uy".
+        for (const [i, f] of [392, 330, 262].entries()) this.tone('triangle', f, f * 0.97, i * 0.14, 0.2, 0.13);
+        break;
+      case 'aparece':
+        // Un brillito muy bajito (salen muchos).
+        this.tone('sine', 1800 * p, 2400 * p, 0, 0.05, 0.025);
         break;
       case 'error':
         this.tone('square', 180, 140, 0, 0.12, 0.06);

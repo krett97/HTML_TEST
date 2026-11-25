@@ -49,6 +49,7 @@
       {#each [100, 10_000, 1_000_000] as n (n)}
         <button type="button" class="btn" onclick={() => juego.addGold(n)} data-testid="oro-{n}">{$t('ajustes.oro', { n: n.toLocaleString('es') })}</button>
       {/each}
+      <button type="button" class="btn" onclick={() => juego.unlockNext()} data-testid="mas-nivel">{$t('ajustes.masNivel')}</button>
     </div>
   {/if}
   <p class="version">{$t('ajustes.version', { v: __APP_VERSION__ })}</p>

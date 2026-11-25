@@ -51,9 +51,8 @@ export const BASE = {
   radio: 30,
   intervalo: 0.6,
   duracion: 20,
-  inicial: 15,
-  aparicion: 2,
-  maximo: 40,
+  /** Multiplica la rapidez con que llegan los slimes del nivel (el talento "Atraer slimes" la sube). */
+  ritmo: 1,
   /** El mago: un rectángulo de fuego (ancho × alto) cada `intervalo` s, con `danio` veces tu daño. */
   mago: { intervalo: 2.2, ancho: 64, alto: 24, danio: 1.5 },
   /** El suelo que deja ardiendo el mago: dura `duracion` s y quema `dps` veces tu daño por segundo. */
@@ -61,6 +60,42 @@ export const BASE = {
   /** Cada arquero: una flecha a cada uno de sus `objetivos` cada `intervalo` s, con `danio` veces tu daño. */
   arqueros: { intervalo: 1.2, objetivos: 1, danio: 2 },
 } as const;
+
+/**
+ * Los niveles: cada uno trae una cantidad fija de slimes y hay que reventarlos todos antes de que se
+ * acabe el tiempo. Una parte sale al empezar y el resto llega en los siguientes `llegada` segundos.
+ * Si se acaba el tiempo, el nivel se pierde (el oro juntado se queda) y se puede reintentar o jugar
+ * el anterior para juntar oro.
+ */
+export interface LevelConfig {
+  nivel: number;
+  total: number;
+  /** Multiplican la vida y el oro de cada slime. */
+  vida: number;
+  oro: number;
+  /** Fracción de los slimes que son azules. */
+  azules: number;
+  /** Oro extra por superar el nivel. */
+  premio: number;
+}
+/** Desde qué nivel salen los slimes azules. */
+export const AZUL_DESDE = 4;
+export const PRIMERA_OLA = 0.3;
+export const LLEGADA = 8;
+/** Lo más que puede haber vivos a la vez (por rendimiento; el resto espera su turno). */
+export const MAX_VIVOS = 450;
+
+export function levelConfig(nivel: number): LevelConfig {
+  const n = Math.max(1, Math.floor(nivel));
+  return {
+    nivel: n,
+    total: 15 + 8 * (n - 1),
+    vida: Math.pow(1.3, n - 1),
+    oro: Math.pow(1.05, n - 1),
+    azules: n < AZUL_DESDE ? 0 : Math.min(0.5, 0.1 + 0.05 * (n - AZUL_DESDE)),
+    premio: Math.round(8 * Math.pow(1.12, n - 1)),
+  };
+}
 
 export type Seccion = 'jugador' | 'mago' | 'arqueros';
 export const SECCIONES: Seccion[] = ['jugador', 'mago', 'arqueros'];
@@ -73,7 +108,7 @@ export type TalentId =
   | 'tiempo'
   | 'slimes'
   | 'oro'
-  | 'azules'
+  | 'botin'
   // Mago
   | 'mago'
   | 'magoRapido'
@@ -107,10 +142,10 @@ export const TALENTS: TalentDef[] = [
   // ---- Jugador: tu área, donde caen las flechas ----
   { id: 'danio', seccion: 'jugador', icono: 'danio', max: 40, costo: { base: 4, crece: 1.4 }, requiere: null, raiz: true, pos: [0, 0] },
   { id: 'radio', seccion: 'jugador', icono: 'radio', max: 10, costo: { base: 8, crece: 2 }, requiere: { id: 'danio', nivel: 1 }, pos: [-1, 1] },
-  { id: 'slimes', seccion: 'jugador', icono: 'slimes', max: 12, costo: { base: 6, crece: 1.9 }, requiere: { id: 'danio', nivel: 1 }, pos: [0, 1] },
+  { id: 'slimes', seccion: 'jugador', icono: 'slimes', max: 10, costo: { base: 6, crece: 1.9 }, requiere: { id: 'danio', nivel: 1 }, pos: [0, 1] },
   { id: 'cadencia', seccion: 'jugador', icono: 'cadencia', max: 10, costo: { base: 8, crece: 2 }, requiere: { id: 'danio', nivel: 1 }, pos: [1, 1] },
   { id: 'tiempo', seccion: 'jugador', icono: 'tiempo', max: 10, costo: { base: 12, crece: 2.1 }, requiere: { id: 'radio', nivel: 2 }, pos: [-1, 2] },
-  { id: 'azules', seccion: 'jugador', icono: 'azules', max: 1, costo: { base: 120, crece: 1 }, requiere: { id: 'slimes', nivel: 3 }, pos: [0, 2] },
+  { id: 'botin', seccion: 'jugador', icono: 'botin', max: 15, costo: { base: 20, crece: 1.8 }, requiere: { id: 'slimes', nivel: 2 }, pos: [0, 2] },
   { id: 'oro', seccion: 'jugador', icono: 'oro', max: 15, costo: { base: 15, crece: 1.9 }, requiere: { id: 'slimes', nivel: 2 }, pos: [1, 2] },
 
   // ---- Mago: rectángulos de fuego ----

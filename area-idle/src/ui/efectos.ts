@@ -7,7 +7,8 @@ import { computeStats, type Levels, type Stats } from '../core/stats';
 const uno = (n: number) => (Math.round(n * 10) / 10).toString();
 const VALOR: Partial<Record<TalentId, (s: Stats) => string>> = {
   danio: (s) => formatNum(s.danio),
-  slimes: (s) => formatNum(s.maximo),
+  slimes: (s) => `×${uno(s.ritmo)}`,
+  botin: (s) => `×${uno(s.premioMult)}`,
   radio: (s) => uno(s.radio),
   cadencia: (s) => uno(1 / s.intervalo),
   tiempo: (s) => String(s.duracion),

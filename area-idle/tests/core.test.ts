@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { playAndShop } from '../src/core/bot';
-import { DAMAGE_TYPES, damageMultiplier, ENEMIES, SECCIONES, TALENT_BY_ID, TALENTS } from '../src/core/datos';
+import { AZUL_DESDE, DAMAGE_TYPES, damageMultiplier, ENEMIES, levelConfig, PRIMERA_OLA, SECCIONES, TALENT_BY_ID, TALENTS } from '../src/core/datos';
 import { formatClock, formatNum } from '../src/core/format';
-import { buyTalent, costOf, createMeta, finishRun, levelOf, loadMeta, stats, talentState, talentVisible } from '../src/core/meta';
+import { buyTalent, chooseLevel, costOf, createMeta, finishRun, levelOf, loadMeta, talentState, talentVisible } from '../src/core/meta';
 import { ALLY_ROW, archerSpots, createRun, DAMAGE_TYPE_OF, FIELD_W, moveCursor, startRun, stepRun, type Run, type RunEvent } from '../src/core/run';
 import { computeStats } from '../src/core/stats';
 
@@ -32,7 +32,8 @@ describe('estadísticas', () => {
     expect(s.duracion).toBe(20);
     expect(s.mago.activo).toBe(false);
     expect(s.fuego.activo).toBe(false);
-    expect(s.azules).toBe(0);
+    expect(s.ritmo).toBe(1);
+    expect(s.premioMult).toBe(1);
   });
   it('el daño se duplica cada 10 niveles', () => {
     expect(computeStats({ danio: 9 }).danio).toBe(10);
@@ -45,8 +46,8 @@ describe('estadísticas', () => {
 
 describe('partida', () => {
   it('el disparo daña a todos los del círculo y a nadie fuera', () => {
-    const run = createRun(computeStats({}), 560, 1);
-    run.stats = { ...run.stats, aparicion: 0 };
+    const run = createRun(computeStats({}), 560, 1, 1);
+    run.stats = { ...run.stats, ritmo: 0 };
     moveCursor(run, 100, 100);
     withEnemy(run, 110, 100);
     withEnemy(run, 300, 400);
@@ -61,8 +62,8 @@ describe('partida', () => {
     expect(run.enemies.find((e) => e.id === 1000)!.vida).toBe(3);
   });
   it('al reventar da oro y cuenta', () => {
-    const run = createRun(computeStats({ oro: 2 }), 560, 1);
-    run.stats = { ...run.stats, aparicion: 0 };
+    const run = createRun(computeStats({ oro: 2 }), 560, 1, 1);
+    run.stats = { ...run.stats, ritmo: 0 };
     moveCursor(run, 100, 100);
     withEnemy(run, 100, 100, 1);
     const events = stepRun(run, 0.4);
@@ -73,39 +74,46 @@ describe('partida', () => {
     expect(run.enemies).toHaveLength(0);
   });
   it('dispara solo, cada intervalo', () => {
-    const run = createRun(computeStats({}), 560, 1);
+    const run = createRun(computeStats({}), 560, 1, 1);
     let shots = 0;
     for (let i = 0; i < 60; i++) shots += stepRun(run, 0.05).filter((e) => e.type === 'shot').length;
     // 3 s con un disparo cada 0.6 s (el primero a los 0.15 s): 5.
     expect(shots).toBe(5);
   });
   it('el círculo no sale del campo', () => {
-    const run = createRun(computeStats({}), 500, 1);
+    const run = createRun(computeStats({}), 500, 1, 1);
     moveCursor(run, -50, 9999);
     expect(run.cursor).toEqual({ x: 0, y: 500 });
   });
-  it('aparecen enemigos sin pasar del máximo', () => {
-    const run = createRun(computeStats({}), 560, 3);
+  it('cada nivel trae su cantidad fija de slimes: una parte al empezar y el resto después', () => {
+    const run = createRun(computeStats({}), 560, 1, 3);
+    expect(run.nivel.total).toBe(15);
     startRun(run);
-    expect(run.enemies).toHaveLength(15);
-    moveCursor(run, -999, -999);
+    expect(run.enemies).toHaveLength(Math.ceil(15 * PRIMERA_OLA));
     run.cursor = { x: -999, y: -999 };
-    for (let i = 0; i < 200; i++) stepRun(run, 0.1);
-    expect(run.enemies.length).toBeLessThanOrEqual(run.stats.maximo);
-    // Nadie se mete en la fila de abajo, donde están el mago y los arqueros.
+    for (let i = 0; i < 150; i++) stepRun(run, 0.1);
+    expect(run.salieron).toBe(15);
+    expect(run.enemies).toHaveLength(15);
+    // Nadie se mete en la fila de abajo, donde están el mago y los arqueros, ni bajo lo de arriba.
+    const conArriba = createRun(computeStats({}), 560, 1, 3, 80);
+    startRun(conArriba);
+    for (let i = 0; i < 100; i++) stepRun(conArriba, 0.1);
+    expect(conArriba.enemies.every((e) => e.y >= 80)).toBe(true);
     expect(run.enemies.every((e) => e.x >= 0 && e.x <= FIELD_W && e.y >= 0 && e.y <= run.h - ALLY_ROW)).toBe(true);
   });
-  it('termina al acabarse el tiempo', () => {
-    const run = createRun(computeStats({}), 560, 1);
-    let end = false;
-    for (let i = 0; i < 500 && !end; i++) end = stepRun(run, 0.1).some((e) => e.type === 'end');
-    expect(end).toBe(true);
+  it('si se acaba el tiempo, se pierde el nivel', () => {
+    const run = createRun(computeStats({}), 560, 1, 1);
+    run.cursor = { x: -999, y: -999 };
+    let end: RunEvent | undefined;
+    for (let i = 0; i < 500 && !end; i++) end = stepRun(run, 0.1).find((e) => e.type === 'end');
+    expect(end).toEqual({ type: 'end', gano: false });
+    expect(run.gano).toBe(false);
     expect(run.t).toBeCloseTo(20);
     expect(stepRun(run, 1)).toEqual([]);
   });
   it('el mago revienta un rectángulo donde hay alguien', () => {
-    const run = createRun(computeStats({ mago: 1 }), 560, 1);
-    run.stats = { ...run.stats, aparicion: 0 };
+    const run = createRun(computeStats({ mago: 1 }), 560, 1, 1);
+    run.stats = { ...run.stats, ritmo: 0 };
     run.cursor = { x: -999, y: -999 };
     withEnemy(run, 200, 300, 100);
     const events: RunEvent[] = [];
@@ -116,8 +124,8 @@ describe('partida', () => {
     expect(events.some((e) => e.type === 'hit' && e.fuente === 'mago')).toBe(true);
   });
   it('el fuego del mago sigue quemando', () => {
-    const run = createRun(computeStats({ mago: 1, fuego: 1 }), 560, 1);
-    run.stats = { ...run.stats, aparicion: 0, intervalo: 100 };
+    const run = createRun(computeStats({ mago: 1, fuego: 1 }), 560, 1, 1);
+    run.stats = { ...run.stats, ritmo: 0, intervalo: 100 };
     run.cursor = { x: -999, y: -999 };
     withEnemy(run, 100, 100, 500);
     const events: RunEvent[] = [];
@@ -134,9 +142,9 @@ describe('partida', () => {
     expect(computeStats({ arqueros: 1, multiflecha: 2, masArqueros: 1 }).arqueros).toMatchObject({ cantidad: 2, objetivos: 3 });
     expect(computeStats({}).arqueros.cantidad).toBe(0);
 
-    const run = createRun(computeStats({ arqueros: 1, multiflecha: 1 }), 560, 1);
+    const run = createRun(computeStats({ arqueros: 1, multiflecha: 1 }), 560, 1, 1);
     // Una sola tanda (el primer tiro sale a los 0.3 s).
-    run.stats = { ...run.stats, aparicion: 0, arqueros: { ...run.stats.arqueros, intervalo: 100 } };
+    run.stats = { ...run.stats, ritmo: 0, arqueros: { ...run.stats.arqueros, intervalo: 100 } };
     run.cursor = { x: -999, y: -999 };
     withEnemy(run, 100, 100, 100);
     withEnemy(run, 250, 200, 100);
@@ -152,10 +160,55 @@ describe('partida', () => {
   });
 });
 
+describe('niveles', () => {
+  it('se gana al reventar todos los slimes del nivel antes de tiempo', () => {
+    const run = createRun({ ...computeStats({ danio: 9 }), radio: 999, intervalo: 0.2, ritmo: 5 }, 560, 1, 1);
+    startRun(run);
+    let end: RunEvent | undefined;
+    for (let i = 0; i < 400 && !end; i++) end = stepRun(run, 0.05).find((e) => e.type === 'end');
+    expect(end).toEqual({ type: 'end', gano: true });
+    expect(run.reventados).toBe(run.nivel.total);
+    expect(run.t).toBeLessThan(20);
+  });
+  it('cada nivel trae más slimes, con más vida y más oro; los azules salen desde el nivel 4', () => {
+    const [uno, dos, diez] = [levelConfig(1), levelConfig(2), levelConfig(10)];
+    expect(dos.total).toBeGreaterThan(uno.total);
+    expect(diez.vida).toBeGreaterThan(dos.vida);
+    expect(diez.oro).toBeGreaterThan(uno.oro);
+    expect(diez.premio).toBeGreaterThan(uno.premio);
+    expect(levelConfig(AZUL_DESDE - 1).azules).toBe(0);
+    expect(levelConfig(AZUL_DESDE).azules).toBeGreaterThan(0);
+    const run = createRun(computeStats({}), 560, 5, 1);
+    startRun(run);
+    expect(run.enemies[0]!.vidaMax).toBeCloseTo(ENEMIES[run.enemies[0]!.kind].vida * levelConfig(5).vida);
+  });
+  it('ganar abre el siguiente nivel y da premio; perder deja el oro juntado', () => {
+    const meta = createMeta();
+    const premio = finishRun(meta, { oro: 10, reventados: 15, gano: true, nivel: 1 });
+    expect(premio).toBe(levelConfig(1).premio);
+    expect(meta.oro).toBe(10 + premio);
+    expect(meta).toMatchObject({ nivel: 2, jugando: 2 });
+    expect(finishRun(meta, { oro: 7, reventados: 5, gano: false, nivel: 2 })).toBe(0);
+    expect(meta.oro).toBe(17 + premio);
+    expect(meta).toMatchObject({ nivel: 2, jugando: 2 });
+    // Volver a un nivel anterior para juntar oro no cambia el más alto.
+    chooseLevel(meta, 1);
+    finishRun(meta, { oro: 5, reventados: 15, gano: true, nivel: 1 });
+    expect(meta).toMatchObject({ nivel: 2, jugando: 1 });
+    chooseLevel(meta, 9);
+    expect(meta.jugando).toBe(2);
+  });
+  it('el Botín sube el premio', () => {
+    const meta = createMeta();
+    meta.talentos.botin = 4;
+    expect(finishRun(meta, { oro: 0, reventados: 15, gano: true, nivel: 1 })).toBe(Math.round(levelConfig(1).premio * 2));
+  });
+});
+
 describe('tipos de daño', () => {
   it('el verde es débil al fuego y el azul fuerte contra él', () => {
-    const run = createRun(computeStats({ mago: 1 }), 560, 1);
-    run.stats = { ...run.stats, aparicion: 0, mago: { ...run.stats.mago, intervalo: 100, ancho: 400, alto: 400 } };
+    const run = createRun(computeStats({ mago: 1 }), 560, 1, 1);
+    run.stats = { ...run.stats, ritmo: 0, mago: { ...run.stats.mago, intervalo: 100, ancho: 400, alto: 400 } };
     run.mago = 0.01;
     run.cursor = { x: -999, y: -999 };
     withEnemy(run, 100, 100, 1000);
@@ -200,8 +253,8 @@ describe('árbol', () => {
     meta.oro = 1e9;
     expect(talentState(meta, TALENT_BY_ID.mago)).toBe('bloqueado');
     expect(buyTalent(meta, 'mago')).toBe(false);
-    meta.talentos.azules = 1;
-    expect(talentState(meta, TALENT_BY_ID.azules)).toBe('maximo');
+    meta.talentos.mago = 1;
+    expect(talentState(meta, TALENT_BY_ID.mago)).toBe('maximo');
   });
   it('al principio solo se ve Daño; cada compra muestra lo que sale de ahí', () => {
     const meta = createMeta();
@@ -225,8 +278,8 @@ describe('árbol', () => {
   });
   it('terminar una partida guarda oro y récord', () => {
     const meta = createMeta();
-    finishRun(meta, 50, 20);
-    finishRun(meta, 30, 10);
+    finishRun(meta, { oro: 50, reventados: 20, gano: false, nivel: 1 });
+    finishRun(meta, { oro: 30, reventados: 10, gano: false, nivel: 1 });
     expect(meta.oro).toBe(80);
     expect(meta.mejor).toBe(50);
     expect(meta.partidas).toBe(2);
@@ -251,14 +304,14 @@ describe('guardado', () => {
 });
 
 describe('ritmo (bot)', () => {
-  it('cada vez junta más y abre arqueros y mago antes de la partida 12', () => {
+  it('pierde a veces al principio, junta oro en el nivel anterior y avanza; abre arqueros y mago', () => {
     const meta = createMeta();
-    const oros: number[] = [];
-    for (let i = 1; i <= 12; i++) oros.push(playAndShop(meta, i * 7919).oro);
-    expect(oros[0]).toBeGreaterThan(5);
-    expect(oros[11]!).toBeGreaterThan(oros[0]! * 20);
+    const partidas = Array.from({ length: 20 }, (_, i) => playAndShop(meta, (i + 1) * 7919));
+    expect(partidas.some((p) => !p.gano)).toBe(true);
+    const perdida = partidas.findIndex((p) => !p.gano && p.nivel > 1);
+    expect(partidas[perdida + 1]!.nivel).toBe(partidas[perdida]!.nivel - 1);
+    expect(meta.nivel).toBeGreaterThan(8);
     expect(levelOf(meta, 'mago')).toBe(1);
     expect(levelOf(meta, 'arqueros')).toBe(1);
-    expect(stats(meta).maximo).toBeGreaterThan(100);
   });
 });

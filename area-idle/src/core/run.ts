@@ -1,7 +1,7 @@
 // Una partida: el campo, los enemigos que aparecen y pasean, tu círculo donde caen flechas, el mago
 // con sus rectángulos de fuego y los arqueros que tiran a un objetivo a la vez. Lógica pura: la escena
 // llama a stepRun cada cuadro (a través del controlador) y dibuja los eventos.
-import { damageMultiplier, effectiveness, ENEMIES, type DamageType, type EnemyKind } from './datos';
+import { damageMultiplier, effectiveness, ENEMIES, levelConfig, LLEGADA, MAX_VIVOS, PRIMERA_OLA, type DamageType, type EnemyKind, type LevelConfig } from './datos';
 import { between, createRng, type Rng } from './rng';
 import type { Stats } from './stats';
 
@@ -20,11 +20,6 @@ const ARROW_SPEED = 330;
 export const ALLY_ROW = 50;
 /** Lo que sube la torre del mago desde abajo (unidades). */
 export const TOWER_H = 80;
-/**
- * Alto de campo (sin la muralla) para el que están pensados los números de enemigos (un celular de
- * 9:16). En una pantalla más alta aparecen proporcionalmente más, para que se vea igual de lleno.
- */
-const REF_FIELD_H = 510;
 
 export interface Enemy {
   id: number;
@@ -85,10 +80,17 @@ export type RunEvent =
   | { type: 'kill'; id: number; kind: EnemyKind; x: number; y: number; oro: number; danio: number; fuente: Source }
   | { type: 'fire'; x: number; y: number; w: number; h: number; duracion: number }
   | { type: 'volley'; arquero: number }
-  | { type: 'end' };
+  /** Se acabó: `gano` si se reventaron todos los slimes del nivel antes de que se acabara el tiempo. */
+  | { type: 'end'; gano: boolean };
 
 export interface Run {
   stats: Stats;
+  /** Lo que queda libre arriba (bajo la barra del nivel y el reloj): ahí no aparecen ni pasean slimes. */
+  arriba: number;
+  nivel: LevelConfig;
+  /** Cuántos slimes del nivel ya salieron. */
+  salieron: number;
+  gano: boolean;
   w: number;
   h: number;
   t: number;
@@ -109,12 +111,14 @@ export interface Run {
   rng: Rng;
 }
 
-export function createRun(base: Stats, h: number, seed = Date.now()): Run {
+export function createRun(stats: Stats, h: number, nivel = 1, seed = Date.now(), arriba = MARGIN): Run {
   const alto = Math.max(240, h);
-  const densidad = Math.min(2.5, Math.max(0.6, (alto - ALLY_ROW) / REF_FIELD_H));
-  const stats: Stats = { ...base, inicial: Math.round(base.inicial * densidad), aparicion: base.aparicion * densidad, maximo: Math.round(base.maximo * densidad) };
   return {
     stats,
+    arriba: Math.min(alto / 3, Math.max(MARGIN, arriba)),
+    nivel: levelConfig(nivel),
+    salieron: 0,
+    gano: false,
     w: FIELD_W,
     h: alto,
     t: 0,
@@ -155,7 +159,8 @@ export function archerSpots(run: Run): { x: number; y: number }[] {
 /** Los enemigos del principio. Devuelve sus eventos para que la escena los dibuje. */
 export function startRun(run: Run): RunEvent[] {
   const events: RunEvent[] = [];
-  for (let i = 0; i < run.stats.inicial; i++) spawn(run, events);
+  const primeros = Math.ceil(run.nivel.total * PRIMERA_OLA);
+  for (let i = 0; i < primeros; i++) spawn(run, events);
   return events;
 }
 
@@ -168,18 +173,20 @@ export function moveCursor(run: Run, x: number, y: number): void {
 const bottom = (run: Run) => run.h - ALLY_ROW - MARGIN;
 
 function spawn(run: Run, events: RunEvent[]): void {
-  const kind: EnemyKind = run.rng() < run.stats.azules ? 'azul' : 'verde';
+  const kind: EnemyKind = run.rng() < run.nivel.azules ? 'azul' : 'verde';
   const def = ENEMIES[kind];
+  const vida = def.vida * run.nivel.vida;
+  run.salieron++;
   const angle = run.rng() * Math.PI * 2;
   const enemy: Enemy = {
     id: run.nextId++,
     kind,
     x: between(run.rng, MARGIN, run.w - MARGIN),
-    y: between(run.rng, MARGIN, bottom(run)),
+    y: between(run.rng, run.arriba, bottom(run)),
     vx: Math.cos(angle) * def.velocidad,
     vy: Math.sin(angle) * def.velocidad,
-    vida: def.vida,
-    vidaMax: def.vida,
+    vida,
+    vidaMax: vida,
     giro: between(run.rng, 1, 3),
   };
   run.enemies.push(enemy);
@@ -206,7 +213,7 @@ function damage(run: Run, e: Enemy, base: number, fuente: Source, events: RunEve
     events.push({ type: 'hit', id: e.id, x: e.x, y: e.y, danio, fuente, efecto: effectiveness(e.kind, tipo) });
     return;
   }
-  const oro = ENEMIES[e.kind].oro * run.stats.oroMult;
+  const oro = ENEMIES[e.kind].oro * run.nivel.oro * run.stats.oroMult;
   run.oro += oro;
   run.reventados++;
   events.push({ type: 'kill', id: e.id, kind: e.kind, x: e.x, y: e.y, oro, danio, fuente });
@@ -246,16 +253,17 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
     e.x += e.vx * step;
     e.y += e.vy * step;
     if (e.x < MARGIN || e.x > run.w - MARGIN) e.vx = -e.vx;
-    if (e.y < MARGIN || e.y > bottom(run)) e.vy = -e.vy;
+    if (e.y < run.arriba || e.y > bottom(run)) e.vy = -e.vy;
     e.x = Math.min(run.w - MARGIN, Math.max(MARGIN, e.x));
-    e.y = Math.min(bottom(run), Math.max(MARGIN, e.y));
+    e.y = Math.min(bottom(run), Math.max(run.arriba, e.y));
   }
 
-  // Aparecen más, hasta el máximo, y cada vez más rápido: al final de la partida, el triple.
-  run.acumulado += s.aparicion * (1 + 2 * (run.t / s.duracion)) * step;
-  while (run.acumulado >= 1) {
+  // Llega el resto de los slimes del nivel (más rápido con "Atraer slimes").
+  const resto = run.nivel.total - Math.ceil(run.nivel.total * PRIMERA_OLA);
+  run.acumulado += (resto / LLEGADA) * s.ritmo * step;
+  while (run.acumulado >= 1 && run.salieron < run.nivel.total && run.enemies.length < MAX_VIVOS) {
     run.acumulado -= 1;
-    if (run.enemies.length < s.maximo) spawn(run, events);
+    spawn(run, events);
   }
 
   // Tu círculo: cada intervalo empiezan a caer flechas donde está; pegan al aterrizar.
@@ -348,9 +356,13 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
   run.fires = run.fires.filter((f) => f.restante > 0);
   run.enemies = run.enemies.filter((e) => e.vida > 0);
 
-  if (run.t >= s.duracion) {
+  if (run.reventados >= run.nivel.total) {
     run.terminada = true;
-    events.push({ type: 'end' });
+    run.gano = true;
+    events.push({ type: 'end', gano: true });
+  } else if (run.t >= s.duracion) {
+    run.terminada = true;
+    events.push({ type: 'end', gano: false });
   }
   return events;
 }

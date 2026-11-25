@@ -121,6 +121,12 @@
     </div>
   {/if}
 
+  <!-- Qué nivel jugar: el más alto abierto, o uno anterior para juntar oro. -->
+  <div class="niveles">
+    <button type="button" class="flecha" aria-label={$t('arbol.nivelAnterior')} disabled={meta.jugando <= 1} onclick={() => juego.playLevel(meta.jugando - 1, false)} data-testid="nivel-menos">◀</button>
+    <span class="nivel-actual" data-testid="nivel-actual"><small class="zona">{$t('zonas.campo')}</small>{$t('hud.nivel', { n: meta.jugando })}{#if meta.jugando < meta.nivel}<small>{$t('arbol.paraOro')}</small>{/if}</span>
+    <button type="button" class="flecha" aria-label={$t('arbol.nivelSiguiente')} disabled={meta.jugando >= meta.nivel} onclick={() => juego.playLevel(meta.jugando + 1, false)} data-testid="nivel-mas">▶</button>
+  </div>
   <button type="button" class="btn btn--accent jugar" onclick={() => juego.play()} data-testid="jugar"><Icon name="jugar" size={26} /> {$t('arbol.jugar')}</button>
 </div>
 
@@ -136,7 +142,7 @@
     position: absolute;
     inset: 0;
     display: grid;
-    grid-template-rows: auto auto 1fr auto auto;
+    grid-template-rows: auto auto 1fr auto auto auto;
     gap: 10px;
     padding: calc(10px + env(safe-area-inset-top)) 12px calc(12px + env(safe-area-inset-bottom));
     background: rgba(30, 70, 50, 0.88);
@@ -325,6 +331,38 @@
     border: 2px solid var(--line);
     border-radius: 999px;
     background: #c9f0b8;
+  }
+  .niveles {
+    display: grid;
+    grid-template-columns: 46px 1fr 46px;
+    align-items: center;
+    gap: 8px;
+  }
+  .flecha {
+    height: 42px;
+    border: var(--borde);
+    border-radius: 12px;
+    background: var(--panel);
+    box-shadow: 0 3px 0 var(--line);
+  }
+  .flecha:disabled {
+    opacity: 0.4;
+  }
+  .nivel-actual {
+    display: grid;
+    justify-items: center;
+    color: #fff;
+    font-size: 22px;
+    -webkit-text-stroke: 1px var(--line);
+    paint-order: stroke fill;
+  }
+  .nivel-actual small.zona {
+    color: #c8f59b;
+  }
+  .nivel-actual small {
+    font-size: 12px;
+    -webkit-text-stroke: 0;
+    color: #ffe27a;
   }
   .jugar {
     min-height: 58px;
