@@ -50,6 +50,7 @@
         <button type="button" class="btn" onclick={() => juego.addGold(n)} data-testid="oro-{n}">{$t('ajustes.oro', { n: n.toLocaleString('es') })}</button>
       {/each}
       <button type="button" class="btn" onclick={() => juego.unlockNext()} data-testid="mas-nivel">{$t('ajustes.masNivel')}</button>
+      <button type="button" class="btn" onclick={() => (juego.simulateAway(3600), cerrar())} data-testid="simular-hora">{$t('ajustes.simular')}</button>
     </div>
   {/if}
   <p class="version">{$t('ajustes.version', { v: __APP_VERSION__ })}</p>

@@ -3,6 +3,7 @@
   import { onMount } from 'svelte';
   import { mountScene } from '../game/boot';
   import Arbol from './Arbol.svelte';
+  import Bienvenida from './Bienvenida.svelte';
   import Fin from './Fin.svelte';
   import Hud from './Hud.svelte';
 
@@ -23,6 +24,7 @@
   {:else}
     <Arbol />
   {/if}
+  <Bienvenida />
 </main>
 
 <style>

@@ -20,7 +20,7 @@ const FLECHA_PX = 72;
 /** Cuántas cosas a la vez, como máximo (con cientos de slimes no caben todas). */
 const MAX_NUMEROS = 70;
 const MAX_MANCHAS = 60;
-const COLOR: Record<EnemyKind, number> = { verde: 0x8be06a, azul: 0x5cc1f2 };
+const COLOR: Record<EnemyKind, number> = { verde: 0x8be06a, azul: 0x5cc1f2, rojo: 0xff6b5e };
 const AMARILLO = 0xffd23f;
 const FUEGO = 0xff8a2a;
 const CAFE = 0x3a2518;
@@ -44,7 +44,9 @@ interface Numero {
 }
 
 interface FuegoVisual {
+  /** Tierra quemada (oscura) y el borde de brasas (brilla y titila). */
   img: Phaser.GameObjects.Image;
+  borde: Phaser.GameObjects.Image;
   restante: number;
   total: number;
   x: number;
@@ -73,7 +75,10 @@ export class Campo extends Phaser.Scene {
   private readonly fuegos: FuegoVisual[] = [];
   private readonly lluviaLibre: Phaser.GameObjects.Image[] = [];
   private decoraciones: Phaser.GameObjects.Image[] = [];
-  private emisores!: Record<'verde' | 'azul' | 'fuego' | 'llama' | 'polvo' | 'aparece' | 'confeti', Phaser.GameObjects.Particles.ParticleEmitter>;
+  private emisores!: Record<EnemyKind | 'fuego' | 'llama' | 'polvo' | 'aparece' | 'confeti' | 'piedra', Phaser.GameObjects.Particles.ParticleEmitter>;
+  /** Las piedras de los rojos en el aire y la barra de vida de la muralla. */
+  private piedrasG!: Phaser.GameObjects.Graphics;
+  private barraMuro!: Phaser.GameObjects.Graphics;
   private zoom = 1;
   private tiempo = 0;
   private unsub: (() => void)[] = [];
@@ -105,6 +110,8 @@ export class Campo extends Phaser.Scene {
     this.colocarMuralla();
     this.cursor = this.add.graphics().setDepth(D.cursor);
     this.flechas = this.add.graphics().setDepth(D.flecha);
+    this.piedrasG = this.add.graphics().setDepth(D.flecha);
+    this.barraMuro = this.add.graphics().setDepth(D.muro + 0.1);
     this.mago = this.add.image(0, 0, 'mago').setOrigin(0.5, 1).setScale(MAGO.alto / MAGO.px).setDepth(D.aliado).setVisible(false);
 
     const particulas = (tint: number, extra: Phaser.Types.GameObjects.Particles.ParticleEmitterConfig = {}) =>
@@ -123,6 +130,8 @@ export class Campo extends Phaser.Scene {
     this.emisores = {
       verde: particulas(COLOR.verde),
       azul: particulas(COLOR.azul),
+      rojo: particulas(COLOR.rojo),
+      piedra: particulas(0xc9c0b2, { speed: { min: 40, max: 110 }, angle: { min: 200, max: 340 }, gravityY: 300, scale: { start: 0.07, end: 0.03 }, lifespan: 500, tint: [0xc9c0b2, 0xa89e8f, 0x8a7f70] }),
       fuego: particulas(FUEGO, { speed: { min: 50, max: 140 }, scale: { start: 0.1, end: 0 }, gravityY: -30, tint: [FUEGO, AMARILLO, 0xef5a4c] }),
       llama: particulas(FUEGO, { gravityY: -90, speed: { min: 5, max: 25 }, angle: { min: 250, max: 290 }, scale: { start: 0.07, end: 0 }, lifespan: 420, tint: [FUEGO, AMARILLO] }),
       polvo: particulas(0xf3ead2, { speed: { min: 15, max: 50 }, angle: { min: 200, max: 340 }, scale: { start: 0.06, end: 0 }, lifespan: 300, gravityY: 60 }),
@@ -165,7 +174,9 @@ export class Campo extends Phaser.Scene {
     g.fillStyle(0xffffff).fillCircle(64, 64, 64).generateTexture('disco', 128, 128).clear();
     g.lineStyle(10, 0xffffff).strokeCircle(64, 64, 58).generateTexture('anillo', 128, 128).clear();
     g.fillStyle(0xffffff).fillRoundedRect(0, 0, 128, 48, 14).generateTexture('rectangulo', 128, 48).clear();
-    g.lineStyle(6, 0xffffff).strokeRoundedRect(3, 3, 122, 42, 12).generateTexture('marco', 128, 48).clear();
+    // El cuadrado de la explosión del mago (y del suelo en llamas) y su borde.
+    g.fillStyle(0xffffff).fillRoundedRect(0, 0, 128, 128, 18).generateTexture('cuadro', 128, 128).clear();
+    g.lineStyle(7, 0xffffff).strokeRoundedRect(4, 4, 120, 120, 16).generateTexture('marco', 128, 128).clear();
     g.fillStyle(0xef5a4c).fillCircle(32, 32, 30).fillStyle(FUEGO).fillCircle(30, 30, 22).fillStyle(AMARILLO).fillCircle(27, 27, 12).generateTexture('bola', 64, 64).clear();
     // Estrellita de cuatro puntas: la chispa con que aparecen los slimes.
     g.fillStyle(0xffffff).fillPoints([0, -32, 7, -7, 32, 0, 7, 7, 0, 32, -7, 7, -32, 0, -7, -7].reduce<Phaser.Math.Vector2[]>((acc, v, i, arr) => (i % 2 ? acc : [...acc, new Phaser.Math.Vector2(arr[i]! + 32, arr[i + 1]! + 32)]), []), true).generateTexture('chispa', 64, 64).clear();
@@ -216,7 +227,7 @@ export class Campo extends Phaser.Scene {
     this.numeros.length = 0;
     this.manchas.forEach((m) => m.destroy());
     this.manchas.length = 0;
-    this.fuegos.forEach((f) => f.img.destroy());
+    this.fuegos.forEach((f) => (f.img.destroy(), f.borde.destroy()));
     this.fuegos.length = 0;
     this.decorar();
     const events = this.juego.start(this.alto, this.libreArriba());
@@ -224,7 +235,9 @@ export class Campo extends Phaser.Scene {
     this.cursorPos.x = run.cursor.x;
     this.cursorPos.y = run.cursor.y;
     const m = wizardSpot(run);
-    this.mago.setVisible(run.stats.mago.activo).setPosition(m.x, m.y);
+    this.mago.setVisible(run.stats.mago.activo).setPosition(m.x, m.y).clearTint().setAngle(0).setAlpha(1);
+    this.muralla.clearTint();
+    this.torre.clearTint();
     this.arqueros.forEach((a) => a.destroy());
     this.arqueros = archerSpots(run).map((p) => this.add.image(p.x, p.y, 'arquero').setOrigin(0.5, 1).setScale(ARQUERO.alto / ARQUERO.px).setDepth(D.aliado));
     this.dibujar(events, run);
@@ -239,6 +252,8 @@ export class Campo extends Phaser.Scene {
       this.moverSlimes(run, dt);
       this.dibujarCursor(run, dt);
       this.dibujarFlechas(run);
+      this.dibujarPiedras(run);
+      this.dibujarBarraMuro(run);
     }
     this.moverNumeros(dt);
     this.moverFuegos(dt);
@@ -333,8 +348,9 @@ export class Campo extends Phaser.Scene {
           this.impacto(e.x, e.y, e.forma, e.fuente === 'mago');
           break;
         case 'fire': {
-          const img = this.add.image(e.x, e.y, 'rectangulo').setTint(0xff6a1a).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0.45).setScale(e.w / 128, e.h / 48).setDepth(D.fuego);
-          this.fuegos.push({ img, restante: e.duracion, total: e.duracion, x: e.x, y: e.y, w: e.w, h: e.h });
+          const img = this.add.image(e.x, e.y, 'cuadro').setTint(0x5a240c).setAlpha(0.4).setScale(e.w / 128, e.h / 128).setDepth(D.fuego);
+          const borde = this.add.image(e.x, e.y, 'marco').setTint(0xff7a1a).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0.9).setScale(e.w / 128, e.h / 128).setDepth(D.fuego);
+          this.fuegos.push({ img, borde, restante: e.duracion, total: e.duracion, x: e.x, y: e.y, w: e.w, h: e.h });
           break;
         }
         case 'volley': {
@@ -347,6 +363,25 @@ export class Campo extends Phaser.Scene {
           }
           break;
         }
+        case 'sling': {
+          // El rojo jala la resortera: se encoge y suelta un poco de polvo.
+          const v = this.slimes.get(e.id);
+          if (v) v.golpe = 0.7;
+          this.emisores.polvo.explode(3, e.x, e.y - 4);
+          break;
+        }
+        case 'wallHit': {
+          this.emisores.piedra.explode(7, e.x, e.y);
+          for (const img of [this.muralla, this.torre]) img.setTint(0xffa090);
+          this.time.delayedCall(90, () => {
+            if (!this.juego.run?.muro.caido) for (const img of [this.muralla, this.torre]) img.clearTint();
+          });
+          this.cameras.main.shake(60, 0.002);
+          break;
+        }
+        case 'wallDown':
+          this.derrumbe(run);
+          break;
         case 'end':
           if (e.gano) {
             // ¡Nivel superado! Destello y confeti desde abajo.
@@ -360,6 +395,50 @@ export class Campo extends Phaser.Scene {
           break;
       }
     }
+  }
+
+  /** Cayó la muralla: se pone gris, sale polvo, y el mago y los arqueros quedan fuera de combate. */
+  private derrumbe(run: Run): void {
+    for (const img of [this.muralla, this.torre]) img.setTint(0x8a8378);
+    const y = this.alto - ALLY_ROW + 16;
+    for (let i = 0; i < 8; i++) this.time.delayedCall(i * 50, () => this.emisores.piedra.explode(10, 20 + i * 45, y));
+    for (let i = 0; i < 6; i++) this.emisores.polvo.explode(10, 30 + i * 60, y);
+    this.cameras.main.shake(320, 0.006);
+    const caer = (img: Phaser.GameObjects.Image, lado: number) => {
+      this.tweens.killTweensOf(img);
+      img.setTint(0x8a8a8a);
+      this.tweens.add({ targets: img, angle: 24 * lado, y: img.y + 6, alpha: 0.75, duration: 280, ease: 'Quad.in' });
+    };
+    if (this.mago.visible) caer(this.mago, -1);
+    this.arqueros.forEach((a, i) => caer(a, i % 2 ? 1 : -1));
+    void run;
+  }
+
+  /** Las piedras de los rojos: vuelan en arco hasta la muralla. */
+  private dibujarPiedras(run: Run): void {
+    const g = this.piedrasG.clear();
+    for (const p of run.piedras) {
+      const total = Math.hypot(p.tx - p.sx, p.ty - p.sy) || 1;
+      const avance = 1 - Math.hypot(p.tx - p.x, p.ty - p.y) / total;
+      const y = p.y - Math.sin(Math.PI * avance) * 34;
+      g.fillStyle(CAFE).fillCircle(p.x, y, 2.6);
+      g.fillStyle(0xa89e8f).fillCircle(p.x, y, 1.8);
+      g.fillStyle(0xffffff, 0.6).fillCircle(p.x - 0.6, y - 0.6, 0.6);
+    }
+  }
+
+  /** Barra de vida de la muralla (en su cara, a la derecha de la torre): sale cuando hay rojos o ya recibió daño. */
+  private dibujarBarraMuro(run: Run): void {
+    const g = this.barraMuro.clear();
+    const m = run.muro;
+    if (run.nivel.rojos <= 0 && m.vida >= m.max) return;
+    const x = 56;
+    const w = FIELD_W - x - 10;
+    const y = this.alto - 11;
+    const parte = m.max > 0 ? m.vida / m.max : 0;
+    g.fillStyle(CAFE).fillRoundedRect(x - 1.2, y - 1.2, w + 2.4, 7.4, 3.5);
+    g.fillStyle(0x5a3a2a).fillRoundedRect(x, y, w, 5, 2.5);
+    if (parte > 0) g.fillStyle(parte > 0.5 ? 0x7fd36a : parte > 0.25 ? 0xffd23f : 0xef5a4c).fillRoundedRect(x, y, Math.max(5, w * parte), 5, 2.5);
   }
 
   /** Un slime aparece: chispa de estrellitas y un anillo blanco que se abre (lo demás lo hace el rebote al nacer). */
@@ -433,9 +512,9 @@ export class Campo extends Phaser.Scene {
       return;
     }
     const sx = forma.w / 128;
-    const sy = forma.h / 48;
+    const sy = forma.h / 128;
     const tint = mago ? FUEGO : AMARILLO;
-    const relleno = this.add.image(x, y, 'rectangulo').setTint(tint).setAlpha(0.6).setScale(sx, sy).setDepth(D.destello);
+    const relleno = this.add.image(x, y, 'cuadro').setTint(tint).setAlpha(0.6).setScale(sx, sy).setDepth(D.destello);
     const marco = this.add.image(x, y, 'marco').setTint(0xef5a4c).setAlpha(1).setScale(sx, sy).setDepth(D.destello);
     this.tweens.add({ targets: [relleno, marco], alpha: 0, scaleX: sx * 1.08, scaleY: sy * 1.15, duration: 260, ease: 'Quad.out', onComplete: () => (relleno.destroy(), marco.destroy()) });
     for (let i = 0; i < 14; i++) this.emisores.fuego.explode(1, x + (Math.random() - 0.5) * forma.w, y + (Math.random() - 0.5) * forma.h);
@@ -472,12 +551,16 @@ export class Campo extends Phaser.Scene {
       f.restante -= dt;
       if (f.restante <= 0) {
         f.img.destroy();
+        f.borde.destroy();
         this.fuegos.splice(i, 1);
         continue;
       }
       const vida = f.restante / f.total;
-      f.img.setAlpha(0.22 + 0.22 * vida + 0.06 * Math.sin(this.tiempo * 30 + i));
-      if (Math.random() < 0.7) this.emisores.llama.explode(1, f.x + (Math.random() - 0.5) * f.w, f.y + (Math.random() - 0.5) * f.h);
+      f.img.setAlpha(0.15 + 0.25 * vida);
+      f.borde.setAlpha((0.5 + 0.4 * vida) * (0.8 + 0.2 * Math.sin(this.tiempo * 30 + i)));
+      // Llamitas por todo el cuadro (más al principio).
+      const n = vida > 0.5 ? 2 : 1;
+      for (let k = 0; k < n; k++) this.emisores.llama.explode(1, f.x + (Math.random() - 0.5) * f.w, f.y + (Math.random() - 0.5) * f.h);
     }
   }
 

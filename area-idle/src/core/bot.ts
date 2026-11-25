@@ -16,11 +16,12 @@ export interface BotRun {
   reventados: number;
   total: number;
   segundos: number;
+  muroCaido: boolean;
   compras: string[];
 }
 
 /** Juega una partida completa del nivel elegido; el bot mueve el círculo cada `cadaCuanto` segundos. */
-export function playRun(meta: Meta, seed: number, cadaCuanto = 1): { oro: number; reventados: number; gano: boolean; total: number; segundos: number } {
+export function playRun(meta: Meta, seed: number, cadaCuanto = 1): { oro: number; reventados: number; gano: boolean; total: number; segundos: number; muroCaido: boolean } {
   const run = createRun(stats(meta), BOT_FIELD_H, meta.jugando, seed);
   startRun(run);
   const dt = 1 / 30;
@@ -33,7 +34,7 @@ export function playRun(meta: Meta, seed: number, cadaCuanto = 1): { oro: number
     }
     stepRun(run, dt);
   }
-  return { oro: run.oro, reventados: run.reventados, gano: run.gano, total: run.nivel.total, segundos: run.t };
+  return { oro: run.oro, reventados: run.reventados, gano: run.gano, total: run.nivel.total, segundos: run.t, muroCaido: run.muro.caido };
 }
 
 /** Compra mientras alcance: siempre lo más barato que esté disponible. Devuelve qué compró. */
@@ -57,5 +58,5 @@ export function playAndShop(meta: Meta, seed: number): BotRun {
   const compras = shop(meta);
   if (r.gano || nivel < meta.nivel) chooseLevel(meta, meta.nivel);
   else chooseLevel(meta, nivel - 1);
-  return { nivel, gano: r.gano, oro: r.oro, premio, reventados: r.reventados, total: r.total, segundos: r.segundos, compras };
+  return { nivel, gano: r.gano, oro: r.oro, premio, reventados: r.reventados, total: r.total, segundos: r.segundos, muroCaido: r.muroCaido, compras };
 }

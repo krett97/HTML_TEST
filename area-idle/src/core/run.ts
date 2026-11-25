@@ -1,5 +1,5 @@
 // Una partida: el campo, los enemigos que aparecen y pasean, tu círculo donde caen flechas, el mago
-// con sus rectángulos de fuego y los arqueros que tiran a un objetivo a la vez. Lógica pura: la escena
+// con sus explosiones de fuego cuadradas y los arqueros que tiran a un objetivo a la vez. Lógica pura: la escena
 // llama a stepRun cada cuadro (a través del controlador) y dibuja los eventos.
 import { damageMultiplier, effectiveness, ENEMIES, levelConfig, LLEGADA, MAX_VIVOS, PRIMERA_OLA, type DamageType, type EnemyKind, type LevelConfig } from './datos';
 import { between, createRng, type Rng } from './rng';
@@ -32,7 +32,24 @@ export interface Enemy {
   vidaMax: number;
   /** Segundos hasta cambiar de rumbo. */
   giro: number;
+  /** Segundos hasta tirar la siguiente piedra (solo los que tienen resortera). */
+  tiro?: number;
 }
+
+/** Una piedra de resortera en el aire, de un slime rojo a la muralla. */
+export interface Pebble {
+  id: number;
+  sx: number;
+  sy: number;
+  x: number;
+  y: number;
+  tx: number;
+  ty: number;
+  danio: number;
+}
+
+/** Velocidad de las piedras (unidades por segundo). */
+const PEBBLE_SPEED = 170;
 
 export type Forma = { tipo: 'circulo'; r: number } | { tipo: 'rect'; w: number; h: number };
 
@@ -80,6 +97,9 @@ export type RunEvent =
   | { type: 'kill'; id: number; kind: EnemyKind; x: number; y: number; oro: number; danio: number; fuente: Source }
   | { type: 'fire'; x: number; y: number; w: number; h: number; duracion: number }
   | { type: 'volley'; arquero: number }
+  | { type: 'sling'; id: number; x: number; y: number }
+  | { type: 'wallHit'; x: number; y: number; danio: number; vida: number; max: number }
+  | { type: 'wallDown' }
   /** Se acabó: `gano` si se reventaron todos los slimes del nivel antes de que se acabara el tiempo. */
   | { type: 'end'; gano: boolean };
 
@@ -98,6 +118,9 @@ export interface Run {
   impacts: Impact[];
   fires: FireZone[];
   arrows: Arrow[];
+  piedras: Pebble[];
+  /** La muralla: si cae, el mago y los arqueros dejan de atacar el resto del nivel. */
+  muro: { vida: number; max: number; caido: boolean };
   cursor: { x: number; y: number };
   disparo: number;
   mago: number;
@@ -126,6 +149,8 @@ export function createRun(stats: Stats, h: number, nivel = 1, seed = Date.now(),
     impacts: [],
     fires: [],
     arrows: [],
+    piedras: [],
+    muro: { vida: stats.muro.vida, max: stats.muro.vida, caido: false },
     cursor: { x: FIELD_W / 2, y: (alto - ALLY_ROW) / 2 },
     // El primer disparo sale enseguida.
     disparo: 0.15,
@@ -173,7 +198,8 @@ export function moveCursor(run: Run, x: number, y: number): void {
 const bottom = (run: Run) => run.h - ALLY_ROW - MARGIN;
 
 function spawn(run: Run, events: RunEvent[]): void {
-  const kind: EnemyKind = run.rng() < run.nivel.azules ? 'azul' : 'verde';
+  const r = run.rng();
+  const kind: EnemyKind = r < run.nivel.azules ? 'azul' : r < run.nivel.azules + run.nivel.rojos ? 'rojo' : 'verde';
   const def = ENEMIES[kind];
   const vida = def.vida * run.nivel.vida;
   run.salieron++;
@@ -188,6 +214,7 @@ function spawn(run: Run, events: RunEvent[]): void {
     vida,
     vidaMax: vida,
     giro: between(run.rng, 1, 3),
+    ...(def.tiro ? { tiro: def.tiro * between(run.rng, 0.6, 1.1) } : {}),
   };
   run.enemies.push(enemy);
   events.push({ type: 'spawn', id: enemy.id, kind, x: enemy.x, y: enemy.y });
@@ -276,16 +303,51 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
     run.impacts.push({ x, y, forma, danio: s.danio, fuente: 'jugador', falta: ARROW_FALL });
   }
 
-  // El mago lanza una bola de fuego a donde haya alguien: revienta en un rectángulo (a lo ancho o a lo alto).
-  if (s.mago.activo) {
+  // El mago lanza una bola de fuego a donde haya alguien: revienta en un cuadrado.
+  // Los rojos le tiran piedras a la muralla.
+  for (const e of run.enemies) {
+    if (e.tiro === undefined || e.vida <= 0 || run.muro.caido) continue;
+    e.tiro -= step;
+    if (e.tiro > 0) continue;
+    const def = ENEMIES[e.kind];
+    e.tiro += (def.tiro ?? 3) * between(run.rng, 0.8, 1.2);
+    const tx = between(run.rng, 12, run.w - 12);
+    const ty = run.h - ALLY_ROW + 14;
+    run.piedras.push({ id: run.nextId++, sx: e.x, sy: e.y - 8, x: e.x, y: e.y - 8, tx, ty, danio: def.ataque * run.nivel.ataque });
+    events.push({ type: 'sling', id: e.id, x: e.x, y: e.y });
+  }
+  for (const p of run.piedras) {
+    const dx = p.tx - p.x;
+    const dy = p.ty - p.y;
+    const d = Math.hypot(dx, dy);
+    const paso = PEBBLE_SPEED * step;
+    if (d > paso) {
+      p.x += (dx / d) * paso;
+      p.y += (dy / d) * paso;
+      continue;
+    }
+    p.x = p.tx;
+    p.y = p.ty;
+    p.id = -1;
+    if (run.muro.caido) continue;
+    run.muro.vida = Math.max(0, run.muro.vida - p.danio);
+    events.push({ type: 'wallHit', x: p.tx, y: p.ty, danio: p.danio, vida: run.muro.vida, max: run.muro.max });
+    if (run.muro.vida <= 0) {
+      run.muro.caido = true;
+      events.push({ type: 'wallDown' });
+    }
+  }
+  run.piedras = run.piedras.filter((p) => p.id !== -1);
+
+  // Sin muralla, el mago y los arqueros ya no atacan en este nivel.
+  if (s.mago.activo && !run.muro.caido) {
     run.mago -= step;
     while (run.mago <= 0) {
       run.mago += s.mago.intervalo;
       const [blanco] = pickTargets(run, 1);
       const x = blanco?.x ?? between(run.rng, 0, run.w);
       const y = blanco?.y ?? between(run.rng, 0, bottom(run));
-      const acostado = run.rng() < 0.6;
-      const forma: Forma = { tipo: 'rect', w: acostado ? s.mago.ancho : s.mago.alto, h: acostado ? s.mago.alto : s.mago.ancho };
+      const forma: Forma = { tipo: 'rect', w: s.mago.lado, h: s.mago.lado };
       events.push({ type: 'shot', x, y, forma, fuente: 'mago', demora: FIREBALL_FLIGHT });
       run.impacts.push({ x, y, forma, danio: s.mago.danio, fuente: 'mago', falta: FIREBALL_FLIGHT });
     }
@@ -293,7 +355,7 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
 
   // Los arqueros: cada uno tira una flecha a cada uno de sus objetivos.
   const arcos = archerSpots(run);
-  run.arcos.forEach((_, i) => {
+  if (!run.muro.caido) run.arcos.forEach((_, i) => {
     run.arcos[i]! -= step;
     while (run.arcos[i]! <= 0) {
       run.arcos[i]! += s.arqueros.intervalo;
@@ -368,11 +430,13 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
 }
 
 /**
- * El mejor lugar para el círculo: el centro (entre los enemigos) que alcanza a más. Lo usan el
- * simulador y las pruebas para "tocar" como lo haría un jugador atento.
+ * El mejor lugar para el círculo: el centro (entre los enemigos) que alcanza a más. Los rojos (los que
+ * le tiran a la muralla) cuentan por cuatro mientras la muralla siga en pie: un jugador atento los
+ * busca primero. Lo usan el simulador y las pruebas para "tocar" como lo haría una persona.
  */
 export function bestSpot(run: Run): { x: number; y: number; cuantos: number } {
   const r = run.stats.radio;
+  const peso = (e: Enemy) => (e.tiro !== undefined && !run.muro.caido ? 4 : 1);
   let best = { x: run.cursor.x, y: run.cursor.y, cuantos: 0 };
   const paso = Math.max(1, Math.ceil(run.enemies.length / 60));
   for (let i = 0; i < run.enemies.length; i += paso) {
@@ -381,9 +445,13 @@ export function bestSpot(run: Run): { x: number; y: number; cuantos: number } {
     for (const e of run.enemies) {
       const dx = e.x - c.x;
       const dy = e.y - c.y;
-      if (dx * dx + dy * dy <= r * r) n++;
+      if (dx * dx + dy * dy <= r * r) n += peso(e);
     }
     if (n > best.cuantos) best = { x: c.x, y: c.y, cuantos: n };
+  }
+  // Un rojo lejos de todos también se busca.
+  for (const e of run.enemies) {
+    if (peso(e) > 1 && peso(e) > best.cuantos) best = { x: e.x, y: e.y, cuantos: peso(e) };
   }
   return best;
 }

@@ -40,3 +40,15 @@ export function formatClock(seconds: number): string {
   const s = Math.max(0, Math.ceil(seconds));
   return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 }
+
+/** Duración corta para leer: 45 → "1 min", 2700 → "45 min", 7980 → "2 h 13 min", 7200 → "2 h". */
+export function formatDuration(seconds: number): string {
+  const min = Math.max(1, Math.floor(seconds / 60));
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  if (!h) return `${m} min`;
+  return m ? `${h} h ${m} min` : `${h} h`;
+}
+
+/** Oro para mostrar: sin decimales (el oro se junta con fracciones, pero se cuenta en monedas enteras). */
+export const formatGold = (value: number): string => formatNum(Math.floor(value));

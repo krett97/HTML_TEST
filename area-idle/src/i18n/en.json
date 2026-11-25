@@ -6,7 +6,8 @@
     "pista": "Tap where you want the arrows to fall",
     "oro": "Gold",
     "nivel": "Level {n}",
-    "progreso": "Slimes popped this level"
+    "progreso": "Slimes popped this level",
+    "murallaCaida": "The wall fell! Your allies can't attack this level."
   },
   "fin": {
     "reventados": "Popped",
@@ -28,7 +29,8 @@
     "cerrar": "Close",
     "paraOro": "to farm gold",
     "nivelAnterior": "Previous level",
-    "nivelSiguiente": "Next level"
+    "nivelSiguiente": "Next level",
+    "requiereNivel": "Reach level {n}"
   },
   "talentos": {
     "danio": {
@@ -52,8 +54,8 @@
       "efecto": "{a} s → {b} s per round"
     },
     "oro": {
-      "nombre": "Gold",
-      "efecto": "Gold ×{a} → ×{b}"
+      "nombre": "Gold gain",
+      "efecto": "All gold ×{a} → ×{b}"
     },
     "mago": {
       "nombre": "Wizard",
@@ -65,7 +67,7 @@
     },
     "magoArea": {
       "nombre": "Big blast",
-      "efecto": "Size {a} → {b}"
+      "efecto": "Square size {a} → {b}"
     },
     "fuego": {
       "nombre": "Burning ground",
@@ -102,6 +104,18 @@
     "botin": {
       "nombre": "Loot",
       "efecto": "Level reward ×{a} → ×{b}"
+    },
+    "inactivo": {
+      "nombre": "Idle gold",
+      "efecto": "While away you earn {a} → {b} of your playing rate"
+    },
+    "bolsa": {
+      "nombre": "Big bag",
+      "efecto": "Holds up to {a} h → {b} h while away"
+    },
+    "muralla": {
+      "nombre": "Reinforced wall",
+      "efecto": "Wall health {a} → {b}"
     }
   },
   "ajustes": {
@@ -114,7 +128,8 @@
     "pruebas": "Testing",
     "oro": "+{n} gold",
     "terminar": "End round",
-    "masNivel": "+1 level"
+    "masNivel": "+1 level",
+    "simular": "Simulate 1 h away"
   },
   "secciones": {
     "jugador": "Player",
@@ -137,7 +152,8 @@
       "jugador": "Your arrows",
       "arqueros": "Archers",
       "mago": "Wizard"
-    }
+    },
+    "ataca": "{n} to the wall"
   },
   "tipos": {
     "fisico": "Physical",
@@ -155,9 +171,22 @@
     "azul": {
       "nombre": "Blue slime",
       "texto": "Made of water and wearing a helmet: fire barely hurts it."
+    },
+    "rojo": {
+      "nombre": "Red slime",
+      "texto": "Carries a slingshot and pelts your wall. If the wall falls, your wizard and archers stop attacking."
     }
   },
   "zonas": {
     "campo": "Green field"
+  },
+  "inactivo": {
+    "titulo": "While you were away",
+    "tiempo": "You were away {t}",
+    "tope": "You hit the {h} h cap. Big bag raises it.",
+    "cobrar": "Collect",
+    "nuevo": "New! You now earn gold even when not playing.",
+    "ritmo": "+{n}/min",
+    "explica": "Gold per minute while away (up to {h} h)"
   }
 }

@@ -2,7 +2,7 @@
   // El árbol de talentos, en tres secciones (pestañas arriba): Jugador, Mago y Arqueros. Cada nodo
   // muestra su ícono, su nivel y su precio; al tocarlo se abre abajo el detalle con el botón de compra.
   import { SECCIONES, TALENT_BY_ID, TALENTS, type Seccion, type TalentDef, type TalentId } from '../core/datos';
-  import { formatNum } from '../core/format';
+  import { formatNum, formatGold } from '../core/format';
   import { costOf, levelOf, talentState, talentVisible } from '../core/meta';
   import { t } from '../i18n';
   import Ajustes from './Ajustes.svelte';
@@ -52,7 +52,14 @@
 
 <div class="arbol" data-testid="arbol">
   <header>
-    <div class="pill oro" data-testid="oro-total"><Icon name="moneda" size={28} /><span class="cifra">{formatNum(meta.oro)}</span></div>
+    <div class="izq">
+      <div class="pill oro" data-testid="oro-total"><Icon name="moneda" size={28} /><span class="cifra">{formatGold(meta.oro)}</span></div>
+      {#if $view.ritmoInactivo}
+        <div class="pill inactivo" data-testid="ritmo-inactivo" title={$t('inactivo.explica', { h: $view.ritmoInactivo.horas })}>
+          <Icon name="inactivo" size={22} /><span class="cifra">{$t('inactivo.ritmo', { n: formatNum($view.ritmoInactivo.porMinuto) })}</span>
+        </div>
+      {/if}
+    </div>
     <div class="acciones">
       <button type="button" class="redondo" aria-label={$t('glosario.titulo')} onclick={() => (glosario = true)} data-testid="abrir-glosario"><Icon name="glosario" size={28} /></button>
       <button type="button" class="redondo" aria-label={$t('ajustes.titulo')} onclick={() => (ajustes = true)} data-testid="abrir-ajustes"><Icon name="ajustes" size={26} /></button>
@@ -107,8 +114,10 @@
       <div class="info">
         <strong>{$t(`talentos.${detalle.id}.nombre`)} <span class="muted cifra">{nivel}/{detalle.max}</span></strong>
         <span class="muted" data-testid="efecto">{efecto(detalle.id, estado === 'maximo')}</span>
-        {#if estado === 'bloqueado' && detalle.requiere}
+        {#if estado === 'bloqueado' && detalle.requiere && levelOf(meta, detalle.requiere.id) < detalle.requiere.nivel}
           <span class="aviso">{$t('arbol.requiere', { nombre: $t(`talentos.${detalle.requiere.id}.nombre`), n: detalle.requiere.nivel })}</span>
+        {:else if estado === 'bloqueado' && detalle.nivelMin}
+          <span class="aviso" data-testid="requiere-nivel">{$t('arbol.requiereNivel', { n: detalle.nivelMin })}</span>
         {/if}
       </div>
       {#if estado === 'maximo'}
@@ -174,6 +183,17 @@
     border-radius: 14px;
     background: var(--panel);
     box-shadow: 0 3px 0 var(--line);
+  }
+  .izq {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+  }
+  .pill.inactivo {
+    padding: 2px 10px 2px 4px;
+    background: #e8ddff;
+    font-size: 15px;
   }
   .acciones {
     display: flex;

@@ -1,7 +1,7 @@
 <script lang="ts">
   // Durante la partida, arriba de todo: la barra de progreso del nivel (cuántos llevas de cuántos) y,
   // debajo, el tiempo que queda (con su barrita), la zona y el nivel, y el oro que llevas.
-  import { formatClock, formatNum } from '../core/format';
+  import { formatClock, formatNum, formatGold } from '../core/format';
   import { t } from '../i18n';
   import { useJuego } from './context';
   import Icon from './Icon.svelte';
@@ -29,10 +29,13 @@
     </div>
     <div class="pill oro" data-testid="oro-partida">
       <Icon name="moneda" size={24} />
-      <span class="cifra">{formatNum($view.oroPartida)}</span>
+      <span class="cifra">{formatGold($view.oroPartida)}</span>
     </div>
   </div>
 </div>
+{#if $view.muro?.caido}
+  <div class="caida" data-testid="muralla-caida">{$t('hud.murallaCaida')}</div>
+{/if}
 {#if !$view.toco && $view.meta.partidas < 3}
   <div class="pista" data-testid="pista"><Icon name="mano" size={30} /> {$t('hud.pista')}</div>
 {/if}
@@ -148,6 +151,27 @@
     }
     .zona strong {
       font-size: 16px;
+    }
+  }
+  .caida {
+    position: absolute;
+    left: 50%;
+    top: calc(98px + env(safe-area-inset-top));
+    translate: -50% 0;
+    max-width: calc(100% - 32px);
+    padding: 5px 12px;
+    border: var(--borde);
+    border-radius: 14px;
+    background: var(--danger);
+    color: #fff;
+    font-size: 14px;
+    text-align: center;
+    pointer-events: none;
+    animation: entra 0.3s cubic-bezier(0.3, 1.6, 0.5, 1);
+  }
+  @keyframes entra {
+    from {
+      scale: 0.6;
     }
   }
   .pista {

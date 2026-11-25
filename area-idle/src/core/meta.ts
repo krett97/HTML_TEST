@@ -18,12 +18,14 @@ export interface Meta {
   mejor: number;
   reventados: number;
   ajustes: { sonido: boolean; idioma: Locale | null };
+  /** Cuándo se guardó por última vez (ms): de ahí se cuenta el oro mientras no juegas. 0: nunca. */
+  ultimaVez: number;
   /** Avisos que ya se vieron (la primera vez que se juega, etc.). */
   vistos: string[];
 }
 
 export function createMeta(): Meta {
-  return { version: SAVE_VERSION, oro: 0, talentos: {}, partidas: 0, nivel: 1, jugando: 1, mejor: 0, reventados: 0, ajustes: { sonido: true, idioma: null }, vistos: [] };
+  return { version: SAVE_VERSION, oro: 0, talentos: {}, partidas: 0, nivel: 1, jugando: 1, mejor: 0, reventados: 0, ajustes: { sonido: true, idioma: null }, ultimaVez: 0, vistos: [] };
 }
 
 export const levelOf = (meta: Meta, id: TalentId): number => meta.talentos[id] ?? 0;
@@ -41,6 +43,7 @@ export type TalentState = 'bloqueado' | 'disponible' | 'maximo';
 export function talentState(meta: Meta, def: TalentDef): TalentState {
   if (levelOf(meta, def.id) >= def.max) return 'maximo';
   if (def.requiere && levelOf(meta, def.requiere.id) < def.requiere.nivel) return 'bloqueado';
+  if (def.nivelMin && meta.nivel < def.nivelMin) return 'bloqueado';
   return 'disponible';
 }
 
@@ -67,7 +70,8 @@ export function buyTalent(meta: Meta, id: TalentId): boolean {
  * superar el nivel más alto se abre el siguiente y queda elegido. Devuelve el premio.
  */
 export function finishRun(meta: Meta, r: { oro: number; reventados: number; gano: boolean; nivel: number }): number {
-  const premio = r.gano ? Math.round(levelConfig(r.nivel).premio * stats(meta).premioMult) : 0;
+  const s = stats(meta);
+  const premio = r.gano ? Math.round(levelConfig(r.nivel).premio * s.premioMult * s.oroMult) : 0;
   meta.oro += r.oro + premio;
   meta.partidas++;
   meta.mejor = Math.max(meta.mejor, r.oro);
@@ -108,6 +112,7 @@ export function loadMeta(raw: unknown): Meta {
       sonido: typeof r.ajustes?.sonido === 'boolean' ? r.ajustes.sonido : true,
       idioma: r.ajustes?.idioma === 'es' || r.ajustes?.idioma === 'en' ? r.ajustes.idioma : null,
     },
+    ultimaVez: num(r.ultimaVez, 0),
     vistos: Array.isArray(r.vistos) ? r.vistos.filter((v): v is string => typeof v === 'string') : [],
   };
 }

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { playAndShop } from '../src/core/bot';
-import { AZUL_DESDE, DAMAGE_TYPES, damageMultiplier, ENEMIES, levelConfig, PRIMERA_OLA, SECCIONES, TALENT_BY_ID, TALENTS } from '../src/core/datos';
+import { activeGoldPerMinute, idleGoldPerMinute, idleReward, idleUnlocked } from '../src/core/inactivo';
+import { INACTIVO, ROJO_DESDE, AZUL_DESDE, DAMAGE_TYPES, damageMultiplier, ENEMIES, levelConfig, PRIMERA_OLA, SECCIONES, TALENT_BY_ID, TALENTS } from '../src/core/datos';
 import { formatClock, formatNum } from '../src/core/format';
 import { buyTalent, chooseLevel, costOf, createMeta, finishRun, levelOf, loadMeta, talentState, talentVisible } from '../src/core/meta';
 import { ALLY_ROW, archerSpots, createRun, DAMAGE_TYPE_OF, FIELD_W, moveCursor, startRun, stepRun, type Run, type RunEvent } from '../src/core/run';
@@ -111,7 +112,7 @@ describe('partida', () => {
     expect(run.t).toBeCloseTo(20);
     expect(stepRun(run, 1)).toEqual([]);
   });
-  it('el mago revienta un rectángulo donde hay alguien', () => {
+  it('el mago revienta un cuadrado donde hay alguien', () => {
     const run = createRun(computeStats({ mago: 1 }), 560, 1, 1);
     run.stats = { ...run.stats, ritmo: 0 };
     run.cursor = { x: -999, y: -999 };
@@ -120,7 +121,8 @@ describe('partida', () => {
     for (let i = 0; i < 40; i++) events.push(...stepRun(run, 0.1));
     const magia = events.filter((e) => e.type === 'shot' && e.fuente === 'mago');
     expect(magia.length).toBeGreaterThan(0);
-    expect(magia.every((e) => e.type === 'shot' && e.forma.tipo === 'rect')).toBe(true);
+    // Cuadrada: igual de ancho que de alto.
+    expect(magia.every((e) => e.type === 'shot' && e.forma.tipo === 'rect' && e.forma.w === e.forma.h)).toBe(true);
     expect(events.some((e) => e.type === 'hit' && e.fuente === 'mago')).toBe(true);
   });
   it('el fuego del mago sigue quemando', () => {
@@ -205,10 +207,113 @@ describe('niveles', () => {
   });
 });
 
+describe('slime rojo y muralla', () => {
+  const rojo = (run: Run, x: number, y: number, tiro = 0.01) =>
+    run.enemies.push({ id: 500, kind: 'rojo', x, y, vx: 0, vy: 0, vida: 100, vidaMax: 100, giro: 99, tiro });
+  it('los rojos salen desde el nivel 5', () => {
+    expect(levelConfig(ROJO_DESDE - 1).rojos).toBe(0);
+    expect(levelConfig(ROJO_DESDE).rojos).toBeGreaterThan(0);
+    expect(levelConfig(ROJO_DESDE + 10).ataque).toBeGreaterThan(levelConfig(ROJO_DESDE).ataque);
+  });
+  it('tiran piedras a la muralla y le bajan vida', () => {
+    const run = createRun(computeStats({}), 560, ROJO_DESDE, 1);
+    run.stats = { ...run.stats, ritmo: 0 };
+    run.cursor = { x: -999, y: -999 };
+    rojo(run, 180, 200);
+    const events: RunEvent[] = [];
+    // La piedra tarda en llegar (vuela a 170 unidades por segundo).
+    for (let i = 0; i < 60; i++) events.push(...stepRun(run, 0.05));
+    expect(events.some((e) => e.type === 'sling')).toBe(true);
+    const golpe = events.find((e) => e.type === 'wallHit');
+    expect(golpe).toMatchObject({ danio: ENEMIES.rojo.ataque });
+    expect(run.muro.vida).toBe(run.muro.max - ENEMIES.rojo.ataque);
+  });
+  it('si cae la muralla, el mago y los arqueros dejan de atacar el resto del nivel', () => {
+    const run = createRun(computeStats({ mago: 1, arqueros: 1 }), 560, ROJO_DESDE, 1);
+    run.stats = { ...run.stats, ritmo: 0 };
+    run.cursor = { x: -999, y: -999 };
+    withEnemy(run, 100, 100, 1e9);
+    run.muro.vida = 1;
+    rojo(run, 180, 200);
+    const events: RunEvent[] = [];
+    for (let i = 0; i < 60; i++) events.push(...stepRun(run, 0.05));
+    expect(events.some((e) => e.type === 'wallDown')).toBe(true);
+    expect(run.muro).toMatchObject({ vida: 0, caido: true });
+    const despues: RunEvent[] = [];
+    for (let i = 0; i < 100; i++) despues.push(...stepRun(run, 0.05));
+    expect(despues.some((e) => e.type === 'shot' && e.fuente === 'mago')).toBe(false);
+    expect(despues.some((e) => e.type === 'volley')).toBe(false);
+    expect(despues.some((e) => e.type === 'sling')).toBe(false);
+  });
+  it('Muralla reforzada sube su vida; los rojos son débiles al daño físico', () => {
+    expect(computeStats({ muralla: 4 }).muro.vida).toBe(computeStats({}).muro.vida * 3);
+    expect(damageMultiplier('rojo', 'fisico')).toBe(1.5);
+  });
+});
+
+describe('oro mientras no juegas', () => {
+  const HORA = 3600 * 1000;
+  const conNivel = (nivel: number) => {
+    const meta = createMeta();
+    meta.nivel = nivel;
+    meta.ultimaVez = 1_000_000;
+    return meta;
+  };
+  it('se abre al llegar al nivel 3', () => {
+    expect(idleUnlocked(conNivel(2))).toBe(false);
+    expect(idleReward(conNivel(2), 1_000_000 + HORA)).toBeNull();
+    expect(idleUnlocked(conNivel(3))).toBe(true);
+    expect(idleReward(conNivel(3), 1_000_000 + HORA)!.oro).toBeGreaterThan(0);
+  });
+  it('da una parte de lo que se gana jugando, por el tiempo fuera, hasta el tope de horas', () => {
+    const meta = conNivel(5);
+    const porMin = idleGoldPerMinute(meta);
+    expect(porMin).toBeCloseTo(activeGoldPerMinute(meta) * INACTIVO.eficiencia);
+    expect(idleReward(meta, 1_000_000 + HORA)!.oro).toBe(Math.floor(porMin * 60));
+    const tres = idleReward(meta, 1_000_000 + 3 * HORA)!;
+    expect(tres).toMatchObject({ segundos: 2 * 3600, tope: true, oro: Math.floor(porMin * 120) });
+  });
+  it('menos de un minuto o el reloj para atrás no cuentan; nunca guardado tampoco', () => {
+    const meta = conNivel(5);
+    expect(idleReward(meta, 1_000_000 + 30_000)).toBeNull();
+    expect(idleReward(meta, 1_000_000 - HORA)).toBeNull();
+    meta.ultimaVez = 0;
+    expect(idleReward(meta, Date.now())).toBeNull();
+  });
+  it('Oro inactivo sube la parte; Bolsa grande, las horas; Ganancia de oro lo multiplica todo', () => {
+    const meta = conNivel(5);
+    const base = idleGoldPerMinute(meta);
+    meta.talentos.inactivo = 2;
+    expect(idleGoldPerMinute(meta)).toBeCloseTo((base * (INACTIVO.eficiencia + 2 * INACTIVO.porNivel)) / INACTIVO.eficiencia);
+    meta.talentos.bolsa = 3;
+    expect(idleReward(meta, 1_000_000 + 10 * HORA)!.segundos).toBe(5 * 3600);
+    const sinOro = activeGoldPerMinute(meta);
+    meta.talentos.oro = 2;
+    expect(activeGoldPerMinute(meta)).toBeCloseTo(sinOro * 1.6);
+    // Y el premio por nivel también.
+    const m = createMeta();
+    m.talentos.oro = 2;
+    expect(finishRun(m, { oro: 0, reventados: 15, gano: true, nivel: 1 })).toBe(Math.round(levelConfig(1).premio * 1.6));
+  });
+  it('Oro inactivo pide haber llegado al nivel 3 (además de Ganancia de oro)', () => {
+    const meta = createMeta();
+    meta.oro = 1e9;
+    meta.talentos.oro = 1;
+    expect(talentState(meta, TALENT_BY_ID.inactivo)).toBe('bloqueado');
+    meta.nivel = 3;
+    expect(talentState(meta, TALENT_BY_ID.inactivo)).toBe('disponible');
+    expect(buyTalent(meta, 'inactivo')).toBe(true);
+  });
+  it('el guardado recuerda cuándo se guardó', () => {
+    const meta = conNivel(4);
+    expect(loadMeta(JSON.parse(JSON.stringify(meta))).ultimaVez).toBe(1_000_000);
+  });
+});
+
 describe('tipos de daño', () => {
   it('el verde es débil al fuego y el azul fuerte contra él', () => {
     const run = createRun(computeStats({ mago: 1 }), 560, 1, 1);
-    run.stats = { ...run.stats, ritmo: 0, mago: { ...run.stats.mago, intervalo: 100, ancho: 400, alto: 400 } };
+    run.stats = { ...run.stats, ritmo: 0, mago: { ...run.stats.mago, intervalo: 100, lado: 400 } };
     run.mago = 0.01;
     run.cursor = { x: -999, y: -999 };
     withEnemy(run, 100, 100, 1000);

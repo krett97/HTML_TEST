@@ -6,7 +6,8 @@
     "pista": "Toca donde quieras que caigan las flechas",
     "oro": "Oro",
     "nivel": "Nivel {n}",
-    "progreso": "Slimes reventados del nivel"
+    "progreso": "Slimes reventados del nivel",
+    "murallaCaida": "¡Cayó la muralla! Tus aliados no atacan en este nivel."
   },
   "fin": {
     "reventados": "Reventados",
@@ -28,7 +29,8 @@
     "cerrar": "Cerrar",
     "paraOro": "para juntar oro",
     "nivelAnterior": "Nivel anterior",
-    "nivelSiguiente": "Nivel siguiente"
+    "nivelSiguiente": "Nivel siguiente",
+    "requiereNivel": "Llega al nivel {n}"
   },
   "talentos": {
     "danio": {
@@ -52,8 +54,8 @@
       "efecto": "{a} s → {b} s por partida"
     },
     "oro": {
-      "nombre": "Oro",
-      "efecto": "Oro ×{a} → ×{b}"
+      "nombre": "Ganancia de oro",
+      "efecto": "Todo el oro ×{a} → ×{b}"
     },
     "mago": {
       "nombre": "Mago",
@@ -65,7 +67,7 @@
     },
     "magoArea": {
       "nombre": "Explosión grande",
-      "efecto": "Tamaño {a} → {b}"
+      "efecto": "Tamaño del cuadrado {a} → {b}"
     },
     "fuego": {
       "nombre": "Suelo en llamas",
@@ -102,6 +104,18 @@
     "botin": {
       "nombre": "Botín",
       "efecto": "Premio por nivel ×{a} → ×{b}"
+    },
+    "inactivo": {
+      "nombre": "Oro inactivo",
+      "efecto": "Sin jugar ganas {a} → {b} de lo que ganas jugando"
+    },
+    "bolsa": {
+      "nombre": "Bolsa grande",
+      "efecto": "Junta hasta {a} h → {b} h sin jugar"
+    },
+    "muralla": {
+      "nombre": "Muralla reforzada",
+      "efecto": "Vida de la muralla {a} → {b}"
     }
   },
   "ajustes": {
@@ -114,7 +128,8 @@
     "pruebas": "Pruebas",
     "oro": "+{n} oro",
     "terminar": "Terminar partida",
-    "masNivel": "+1 nivel"
+    "masNivel": "+1 nivel",
+    "simular": "Simular 1 h fuera"
   },
   "secciones": {
     "jugador": "Jugador",
@@ -137,7 +152,8 @@
       "jugador": "Tus flechas",
       "arqueros": "Arqueros",
       "mago": "Mago"
-    }
+    },
+    "ataca": "{n} a la muralla"
   },
   "tipos": {
     "fisico": "Físico",
@@ -155,9 +171,22 @@
     "azul": {
       "nombre": "Slime azul",
       "texto": "De agua y con casco: el fuego casi no le hace nada."
+    },
+    "rojo": {
+      "nombre": "Slime rojo",
+      "texto": "Trae resortera y le tira piedras a la muralla. Si la tumba, tu mago y tus arqueros dejan de atacar."
     }
   },
   "zonas": {
     "campo": "Campo verde"
+  },
+  "inactivo": {
+    "titulo": "Mientras no estabas",
+    "tiempo": "Estuviste fuera {t}",
+    "tope": "Llegaste al tope de {h} h. Bolsa grande lo sube.",
+    "cobrar": "Cobrar",
+    "nuevo": "¡Nuevo! Ahora ganas oro aunque no juegues.",
+    "ritmo": "+{n}/min",
+    "explica": "Oro por minuto mientras no juegas (hasta {h} h)"
   }
 }

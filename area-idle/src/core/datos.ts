@@ -8,7 +8,7 @@ export const DAMAGE_TYPES_EN_JUEGO: DamageType[] = ['fisico', 'fuego'];
 /** Cuánto reciben los enemigos del tipo al que son débiles y del que son fuertes. */
 export const EFFECTIVENESS = { debil: 1.5, fuerte: 0.5 } as const;
 
-export type EnemyKind = 'verde' | 'azul';
+export type EnemyKind = 'verde' | 'azul' | 'rojo';
 
 export interface EnemyDef {
   id: EnemyKind;
@@ -18,8 +18,9 @@ export interface EnemyDef {
   radio: number;
   /** Unidades por segundo al pasear. */
   velocidad: number;
-  /** Daño que hace (0: no ataca; por ahora ningún slime ataca). */
+  /** Daño de cada piedra que le tira a la muralla (0: no ataca) y cada cuántos segundos tira. */
   ataque: number;
+  tiro?: number;
   /** Tipos de daño que le hacen más (×1.5) y menos (×0.5). */
   debil: DamageType[];
   fuerte: DamageType[];
@@ -30,6 +31,8 @@ export const ENEMIES: Record<EnemyKind, EnemyDef> = {
   verde: { id: 'verde', vida: 3, oro: 1, radio: 9, velocidad: 9, ataque: 0, debil: ['fuego'], fuerte: [] },
   // De agua y con casco: el fuego casi no le hace; el hielo y la energía, mucho.
   azul: { id: 'azul', vida: 14, oro: 6, radio: 11, velocidad: 6, ataque: 0, debil: ['hielo', 'energia'], fuerte: ['fuego'] },
+  // Con resortera: le tira piedras a la muralla. Sin casco y nervioso: las flechas le duelen.
+  rojo: { id: 'rojo', vida: 8, oro: 4, radio: 10, velocidad: 8, ataque: 3, tiro: 3, debil: ['fisico', 'luz'], fuerte: ['muerte'] },
 };
 export const ENEMY_KINDS = Object.keys(ENEMIES) as EnemyKind[];
 
@@ -53,10 +56,12 @@ export const BASE = {
   duracion: 20,
   /** Multiplica la rapidez con que llegan los slimes del nivel (el talento "Atraer slimes" la sube). */
   ritmo: 1,
-  /** El mago: un rectángulo de fuego (ancho × alto) cada `intervalo` s, con `danio` veces tu daño. */
-  mago: { intervalo: 2.2, ancho: 64, alto: 24, danio: 1.5 },
+  /** El mago: una explosión de fuego cuadrada (`lado` × `lado`) cada `intervalo` s, con `danio` veces tu daño. */
+  mago: { intervalo: 2.2, lado: 40, danio: 1.5 },
   /** El suelo que deja ardiendo el mago: dura `duracion` s y quema `dps` veces tu daño por segundo. */
   fuego: { duracion: 1.6, dps: 0.6 },
+  /** La muralla (donde están el mago y los arqueros): si los rojos la tiran, ellos ya no atacan en ese nivel. */
+  muro: { vida: 100 },
   /** Cada arquero: una flecha a cada uno de sus `objetivos` cada `intervalo` s, con `danio` veces tu daño. */
   arqueros: { intervalo: 1.2, objetivos: 1, danio: 2 },
 } as const;
@@ -73,13 +78,16 @@ export interface LevelConfig {
   /** Multiplican la vida y el oro de cada slime. */
   vida: number;
   oro: number;
-  /** Fracción de los slimes que son azules. */
+  /** Fracción de los slimes que son azules y rojos, y cuánto pegan las piedras de los rojos. */
   azules: number;
+  rojos: number;
+  ataque: number;
   /** Oro extra por superar el nivel. */
   premio: number;
 }
-/** Desde qué nivel salen los slimes azules. */
+/** Desde qué nivel salen los slimes azules y los rojos (con resortera). */
 export const AZUL_DESDE = 4;
+export const ROJO_DESDE = 5;
 export const PRIMERA_OLA = 0.3;
 export const LLEGADA = 8;
 /** Lo más que puede haber vivos a la vez (por rendimiento; el resto espera su turno). */
@@ -93,9 +101,18 @@ export function levelConfig(nivel: number): LevelConfig {
     vida: Math.pow(1.3, n - 1),
     oro: Math.pow(1.05, n - 1),
     azules: n < AZUL_DESDE ? 0 : Math.min(0.5, 0.1 + 0.05 * (n - AZUL_DESDE)),
+    rojos: n < ROJO_DESDE ? 0 : Math.min(0.12, 0.06 + 0.01 * (n - ROJO_DESDE)),
+    ataque: Math.pow(1.05, Math.max(0, n - ROJO_DESDE)),
     premio: Math.round(8 * Math.pow(1.12, n - 1)),
   };
 }
+
+/**
+ * Oro mientras no juegas: se abre al llegar al nivel 3. Da una parte (`eficiencia`) de lo que se gana
+ * por minuto jugando el nivel más alto superado, hasta `horas` horas. Los talentos Oro inactivo y Bolsa
+ * grande suben la parte y las horas. Menos de un minuto fuera no cuenta.
+ */
+export const INACTIVO = { desde: 3, eficiencia: 0.15, porNivel: 0.1, horas: 2, horasPorNivel: 1, minSegundos: 60, segundosPorNivelJugado: 30 } as const;
 
 export type Seccion = 'jugador' | 'mago' | 'arqueros';
 export const SECCIONES: Seccion[] = ['jugador', 'mago', 'arqueros'];
@@ -109,6 +126,8 @@ export type TalentId =
   | 'slimes'
   | 'oro'
   | 'botin'
+  | 'inactivo'
+  | 'bolsa'
   // Mago
   | 'mago'
   | 'magoRapido'
@@ -121,7 +140,8 @@ export type TalentId =
   | 'masArqueros'
   | 'multiflecha'
   | 'arcoRapido'
-  | 'arcoDanio';
+  | 'arcoDanio'
+  | 'muralla';
 
 export interface TalentDef {
   id: TalentId;
@@ -134,6 +154,8 @@ export interface TalentDef {
   requiere: { id: TalentId; nivel: number } | null;
   /** La raíz de una sección: se ve siempre (con candado mientras falte su requisito). */
   raiz?: boolean;
+  /** Nivel del juego que hay que haber alcanzado para comprarlo (además del requisito). */
+  nivelMin?: number;
   /** Lugar en su árbol: columna (−2…2) y fila (0 arriba). */
   pos: [number, number];
 }
@@ -147,6 +169,9 @@ export const TALENTS: TalentDef[] = [
   { id: 'tiempo', seccion: 'jugador', icono: 'tiempo', max: 10, costo: { base: 12, crece: 2.1 }, requiere: { id: 'radio', nivel: 2 }, pos: [-1, 2] },
   { id: 'botin', seccion: 'jugador', icono: 'botin', max: 15, costo: { base: 20, crece: 1.8 }, requiere: { id: 'slimes', nivel: 2 }, pos: [0, 2] },
   { id: 'oro', seccion: 'jugador', icono: 'oro', max: 15, costo: { base: 15, crece: 1.9 }, requiere: { id: 'slimes', nivel: 2 }, pos: [1, 2] },
+  // Oro mientras no juegas (se abre solo al llegar al nivel 3; estos lo mejoran).
+  { id: 'inactivo', seccion: 'jugador', icono: 'inactivo', max: 7, costo: { base: 40, crece: 2.2 }, requiere: { id: 'oro', nivel: 1 }, nivelMin: 3, pos: [1, 3] },
+  { id: 'bolsa', seccion: 'jugador', icono: 'bolsa', max: 10, costo: { base: 60, crece: 2 }, requiere: { id: 'inactivo', nivel: 1 }, pos: [2, 3] },
 
   // ---- Mago: rectángulos de fuego ----
   { id: 'mago', seccion: 'mago', icono: 'mago', max: 1, costo: { base: 200, crece: 1 }, requiere: { id: 'cadencia', nivel: 3 }, raiz: true, pos: [0, 0] },
@@ -161,6 +186,7 @@ export const TALENTS: TalentDef[] = [
   { id: 'masArqueros', seccion: 'arqueros', icono: 'masArqueros', max: 5, costo: { base: 90, crece: 3 }, requiere: { id: 'arqueros', nivel: 1 }, pos: [-1, 1] },
   { id: 'multiflecha', seccion: 'arqueros', icono: 'multiflecha', max: 4, costo: { base: 70, crece: 3.2 }, requiere: { id: 'arqueros', nivel: 1 }, pos: [0, 1] },
   { id: 'arcoRapido', seccion: 'arqueros', icono: 'arcoRapido', max: 10, costo: { base: 30, crece: 1.9 }, requiere: { id: 'arqueros', nivel: 1 }, pos: [1, 1] },
+  { id: 'muralla', seccion: 'arqueros', icono: 'muralla', max: 10, costo: { base: 50, crece: 1.9 }, requiere: { id: 'masArqueros', nivel: 1 }, pos: [-1, 2] },
   { id: 'arcoDanio', seccion: 'arqueros', icono: 'arcoDanio', max: 15, costo: { base: 40, crece: 1.8 }, requiere: { id: 'multiflecha', nivel: 1 }, pos: [0, 2] },
 ];
 

@@ -21,6 +21,16 @@ function slime(base, sombra, claro, { enojado = false, casco = false } = {}) {
 }
 scene('slime_verde', slime(P.limo, P.limoS, P.limoC));
 scene('slime_azul', slime(P.agua, P.aguaS, P.aguaC, { enojado: true, casco: true }));
+// El rojo, con resortera: la sostiene en alto con una patita de baba y mira con picardía (ceja levantada).
+{
+  const base = slime('#ff6b5e', '#d8443a', '#ffb3a8', { enojado: true }).replace(/^<svg[^>]*>|<\/svg>$/g, '');
+  const resortera = line('M84 46 L84 30', K, 8) + line('M84 46 L84 30', P.maderaS, 4)
+    + line('M84 30 L76 14 M84 30 L92 14', K, 8) + line('M84 30 L76 14 M84 30 L92 14', P.maderaS, 4)
+    + line('M76 14 Q84 28 92 14', '#8a2f3e', 3) + circ(84, 23, 4.5, P.piedraS, 3);
+  const pata = o('M70 58 C78 56 84 52 86 46 l6 2 C90 58 80 64 70 64 Z', '#ff6b5e', 4);
+  // Lienzo más alto: arriba cabe la resortera (el cuerpo queda en la misma posición respecto al piso).
+  scene('slime_rojo', svg(104, 98, g('translate(0 14)', base + pata + resortera)));
+}
 
 // ---- El mago (120 × 150): túnica y sombrero morados con estrellas, barba blanca, bastón con cristal ----
 {
@@ -164,7 +174,7 @@ icon('oro', I(moneda(22, 38, 16) + moneda(42, 30, 16) + moneda(30, 20, 14)));
 icon('botin', I(o('M6 30 C6 14 58 14 58 30 Z', P.maderaS, 5) + o('M6 30 H58 V56 H6 Z', P.madera, 5) + rect(4, 28, 56, 8, 3, P.oroS, 4) + rect(26, 30, 12, 14, 3, P.oro, 4) + circ(32, 38, 2.5, K, 0) + moneda(16, 18, 7) + moneda(44, 16, 7) + moneda(30, 12, 7)));
 icon('mago', I(sombrero(0, 0, 1)));
 icon('magoRapido', I(sombrero(-2, 4, 0.8) + rayo(28, 22, 0.7)));
-icon('magoArea', I(`<rect x="4" y="30" width="56" height="26" rx="5" fill="${P.fuego}" fill-opacity=".45" stroke="${K}" stroke-width="5"/>` + sombrero(6, -6, 0.75)));
+icon('magoArea', I(`<rect x="12" y="20" width="40" height="40" rx="6" fill="${P.fuego}" fill-opacity=".45" stroke="${K}" stroke-width="5"/>` + sombrero(6, -8, 0.75)));
 icon('fuego', I(llama(0, 0, 1)));
 icon('fuegoFuerte', I(llama(-6, 10, 0.8) + llama(18, 4, 0.9, P.rojo, P.fuego)));
 const flechita = (x, y, a, s = 1) => g(`translate(${x} ${y}) rotate(${a}) scale(${s})`, line('M0 0 H40', K, 7) + line('M0 0 H40', P.madera, 3.5) + o('M36 -6 L50 0 L36 6 Z', P.grisS, 3.5) + o('M2 0 l-4 -6 h8 z M2 0 l-4 6 h8 z', P.blanco, 3));
@@ -199,6 +209,11 @@ icon('glosario', I(o('M8 12 C18 8 28 10 32 16 C36 10 46 8 56 12 V54 C46 50 36 52
 icon('vida', I(o('M32 54 C10 40 6 28 10 20 C14 10 28 10 32 22 C36 10 50 10 54 20 C58 28 54 40 32 54 Z', P.rojo, 5) + brillo(20, 22, 5, 3, 0.7)));
 icon('velocidad', I(o('M14 14 h18 v22 l18 6 c6 2 8 6 8 12 h-44 z', P.maderaC, 5) + line('M14 50 h44', K, 5) + line('M2 22 h8 M0 32 h10 M2 42 h8', P.grisS, 4)));
 icon('ataque', I(g('rotate(45 32 32)', rect(28, 4, 8, 40, 3, '#dfe5ee', 4) + rect(20, 42, 24, 6, 3, P.oroS, 4) + rect(29, 48, 6, 12, 2, P.maderaS, 4)) + g('rotate(-45 32 32)', rect(28, 4, 8, 40, 3, '#dfe5ee', 4) + rect(20, 42, 24, 6, 3, P.oroS, 4) + rect(29, 48, 6, 12, 2, P.maderaS, 4))));
+// Oro mientras no juegas: luna con "z" y una moneda; Bolsa grande: costal de monedas.
+icon('inactivo', I(o('M40 6 A24 24 0 1 0 58 40 A18 18 0 1 1 40 6 Z', '#b8a6f0', 5) + brillo(22, 22, 5, 3, 0.6) + line('M42 10 h8 l-8 9 h8', '#6a3fb0', 3.5) + moneda(44, 46, 12)));
+icon('bolsa', I(o('M22 18 C10 26 6 40 10 50 C14 58 50 58 54 50 C58 40 54 26 42 18 Z', P.maderaC, 5) + o('M22 18 l-4 -10 h28 l-4 10 Z', P.maderaC, 5) + line('M20 18 H44', P.maderaS, 5) + moneda(32, 40, 11) + line('M48 10 v10 M43 15 h10', P.pastoS, 4)));
+// Muralla reforzada: un tramo de muralla con un escudo.
+icon('muralla', I(o('M6 26 V14 h10 v6 h8 v-6 h10 v6 h8 v-6 h10 v12 Z', '#c9c0b2', 4) + o('M6 26 H52 V58 H6 Z', '#c9c0b2', 5) + line('M6 38 H52 M6 48 H52 M20 26 V38 M36 38 V48 M22 48 V58', '#8a7f70', 3) + o('M40 30 h20 v12 c0 10 -10 16 -10 16 c0 0 -10 -6 -10 -16 z', P.azul, 4) + line('M50 34 v16 M43 41 h14', P.blanco, 3)));
 icon('moneda', I(moneda(32, 32, 26)));
 icon('reloj', I(circ(32, 32, 26, P.blanco) + line('M32 32 v-16 M32 32 l12 8', K, 6) + circ(32, 32, 4, P.rojo, 0)));
 icon('candado', I(o('M18 28 v-8 a14 14 0 0 1 28 0 v8', 'none', 6) + rect(10, 28, 44, 30, 8, P.oro, 5) + circ(32, 41, 5, K, 0) + rect(29, 42, 6, 10, 2, K, 0)));

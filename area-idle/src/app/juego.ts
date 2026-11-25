@@ -3,6 +3,7 @@
 import { writable, type Readable } from 'svelte/store';
 import type { TalentId } from '../core/datos';
 import { buyTalent, chooseLevel, createMeta, finishRun, loadMeta, stats, type Meta } from '../core/meta';
+import { idleGoldPerMinute, idleReward, idleUnlocked } from '../core/inactivo';
 import { createRun, moveCursor, startRun, stepRun, type Run, type RunEvent } from '../core/run';
 import { locale, detectLocale } from '../i18n';
 import type { AudioEngine } from '../services/audio';
@@ -26,6 +27,14 @@ export interface Vista {
   /** El jugador ya tocó en esta partida (para esconder la pista). */
   toco: boolean;
   meta: Meta;
+  /** Oro juntado mientras no jugabas, esperando a que lo cobres (se muestra fuera de la partida). */
+  inactivo: { segundos: number; oro: number; tope: boolean } | null;
+  /** Oro por minuto sin jugar y hasta cuántas horas (null si aún no se abre). */
+  ritmoInactivo: { porMinuto: number; horas: number } | null;
+  /** Esta partida abrió el oro por inactividad (aviso en el fin). */
+  abrioInactivo: boolean;
+  /** La muralla en la partida: vida, y si ya cayó (sus aliados no atacan el resto del nivel). */
+  muro: { vida: number; max: number; caido: boolean } | null;
   /** Sube en cada partida nueva (la escena se reinicia al verlo cambiar). */
   partida: number;
 }
@@ -42,16 +51,45 @@ export class Juego {
   private toco = false;
   private partida = 0;
   private premio = 0;
+  private pendiente: { segundos: number; oro: number; tope: boolean } | null = null;
+  private abrioInactivo = false;
   /** Al abrir: quien ya jugó llega al árbol; quien es nuevo, directo a jugar. */
   fase: Fase = 'jugando';
   private ultimaVista = 0;
 
   constructor(private readonly audio: AudioEngine) {
     this.meta = loadMeta(loadRaw());
+    this.pendiente = idleReward(this.meta, Date.now());
     this.fase = this.meta.partidas > 0 ? 'arbol' : 'jugando';
     this.audio.enabled = this.meta.ajustes.sonido;
     locale.set(this.meta.ajustes.idioma ?? detectLocale());
+    this.save();
     this.publish();
+  }
+
+  /** La app vuelve del segundo plano: lo juntado mientras tanto (si fue más de un minuto). */
+  resume(): void {
+    const r = idleReward(this.meta, Date.now());
+    if (r) this.pendiente = { segundos: (this.pendiente?.segundos ?? 0) + r.segundos, oro: (this.pendiente?.oro ?? 0) + r.oro, tope: r.tope };
+    this.save();
+    this.publish();
+  }
+
+  /** Cobra lo juntado mientras no jugabas. */
+  collectIdle(): number {
+    const oro = this.pendiente?.oro ?? 0;
+    this.meta.oro += oro;
+    this.pendiente = null;
+    if (oro > 0) this.audio.play('compra');
+    this.save();
+    this.publish();
+    return oro;
+  }
+
+  /** Modo pruebas: como si hubieras estado fuera `segundos` (se cobra en la ventana de bienvenida). */
+  simulateAway(segundos: number): void {
+    this.meta.ultimaVez = Date.now() - segundos * 1000;
+    this.resume();
   }
 
   onEvents(fn: Listener): () => void {
@@ -91,6 +129,9 @@ export class Juego {
       else if (e.type === 'kill') this.audio.play(e.kind === 'azul' ? 'popGrande' : 'pop');
       else if (e.type === 'impact') this.audio.play(e.fuente === 'mago' ? 'magia' : 'disparo');
       else if (e.type === 'volley') this.audio.play('arco');
+      else if (e.type === 'sling') this.audio.play('resortera');
+      else if (e.type === 'wallHit') this.audio.play('golpeMuro');
+      else if (e.type === 'wallDown') this.audio.play('derrumbe');
       else if (e.type === 'fire') this.audio.play('fuego');
       else if (e.type === 'end') this.end(e.gano);
     }
@@ -115,7 +156,9 @@ export class Juego {
 
   private end(gano: boolean): void {
     const run = this.run!;
+    const antes = idleUnlocked(this.meta);
     this.premio = finishRun(this.meta, { oro: run.oro, reventados: run.reventados, gano, nivel: run.nivel.nivel });
+    this.abrioInactivo = !antes && idleUnlocked(this.meta);
     if (!this.meta.vistos.includes('primera')) this.meta.vistos.push('primera');
     this.fase = 'fin';
     this.audio.play(gano ? 'fin' : 'pierde');
@@ -193,6 +236,7 @@ export class Juego {
   }
 
   save(): void {
+    this.meta.ultimaVez = Date.now();
     saveRaw(this.meta);
   }
 
@@ -208,6 +252,10 @@ export class Juego {
       total: run?.nivel.total ?? 0,
       gano: run?.gano ?? false,
       premio: this.premio,
+      inactivo: this.pendiente,
+      muro: run ? { ...run.muro } : null,
+      ritmoInactivo: idleUnlocked(this.meta) ? { porMinuto: idleGoldPerMinute(this.meta), horas: stats(this.meta).inactivo.horas } : null,
+      abrioInactivo: this.abrioInactivo && this.fase === 'fin',
       vivos: run?.enemies.length ?? 0,
       toco: this.toco,
       // Una copia: la interfaz solo se entera de un cambio si recibe un objeto nuevo.

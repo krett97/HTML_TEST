@@ -12,11 +12,13 @@ const hitos = new Map<string, string>();
 const porMinuto = new Map<number, number>();
 const PAUSA = 6; // segundos entre partidas (fin y árbol)
 let perdidas = 0;
+let muros = 0;
 const perdidasPorTramo = [0, 0, 0, 0, 0];
 console.log('partida  minuto  nivel  resultado  tiempo  reventados  oro+premio  compras');
 for (let i = 1; i <= 200 && segundos < 45 * 60; i++) {
   const r = playAndShop(meta, i * 7919);
   segundos += r.segundos + PAUSA;
+  if (r.muroCaido) muros++;
   if (!r.gano) {
     perdidas++;
     perdidasPorTramo[Math.min(4, Math.floor((r.nivel - 1) / 10))]!++;
@@ -28,6 +30,7 @@ for (let i = 1; i <= 200 && segundos < 45 * 60; i++) {
   }
 }
 console.log(`\nPartidas perdidas: ${perdidas} (niveles 1-10: ${perdidasPorTramo[0]}, 11-20: ${perdidasPorTramo[1]}, 21-30: ${perdidasPorTramo[2]}, 31-40: ${perdidasPorTramo[3]}, 41+: ${perdidasPorTramo[4]})`);
+console.log(`Partidas en que cayó la muralla: ${muros}`);
 console.log('\nNivel superado al final de cada minuto:');
 console.log([5, 10, 15, 20, 30, 45].map((m) => `min ${m}: ${porMinuto.get(m - 1) ?? '-'}`).join(' · '));
 console.log('\nPrimera compra de cada talento:');

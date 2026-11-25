@@ -1,7 +1,7 @@
 <script lang="ts">
   // El glosario: los tipos de daño (y quién hace cuál) y cada enemigo con su vida, su velocidad, si
   // ataca y a qué es débil o fuerte. Los enemigos que aún no salen se ven como silueta.
-  import { AZUL_DESDE, DAMAGE_TYPES, DAMAGE_TYPES_EN_JUEGO, EFFECTIVENESS, ENEMIES, ENEMY_KINDS, type EnemyKind } from '../core/datos';
+  import { AZUL_DESDE, ROJO_DESDE, DAMAGE_TYPES, DAMAGE_TYPES_EN_JUEGO, EFFECTIVENESS, ENEMIES, ENEMY_KINDS, type EnemyKind } from '../core/datos';
   import { DAMAGE_TYPE_OF } from '../core/run';
   import { t } from '../i18n';
   import { useJuego } from './context';
@@ -18,7 +18,7 @@
     { id: 'mago', icono: 'mago', tipo: DAMAGE_TYPE_OF.mago },
   ] as const;
   /** Desde qué nivel sale cada enemigo (el verde, desde el primero). */
-  const DESDE: Record<EnemyKind, number> = { verde: 1, azul: AZUL_DESDE };
+  const DESDE: Record<EnemyKind, number> = { verde: 1, azul: AZUL_DESDE, rojo: ROJO_DESDE };
 
   const visto = (kind: EnemyKind) => $view.meta.nivel >= DESDE[kind];
   const rapidez = (v: number) => (v < 7 ? 'lenta' : v < 12 ? 'normal' : 'rapida');
@@ -61,7 +61,7 @@
           <div class="stats">
             <span><Icon name="vida" size={20} /> <span class="cifra">{def.vida}</span></span>
             <span><Icon name="velocidad" size={20} /> {$t(`glosario.${rapidez(def.velocidad)}`)}</span>
-            <span><Icon name="ataque" size={20} /> {def.ataque > 0 ? def.ataque : $t('glosario.noAtaca')}</span>
+            <span><Icon name="ataque" size={20} /> {def.ataque > 0 ? $t('glosario.ataca', { n: def.ataque }) : $t('glosario.noAtaca')}</span>
           </div>
           <div class="efectos">
             <span class="etiqueta">{$t('glosario.debil')}</span>

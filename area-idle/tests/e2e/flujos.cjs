@@ -32,7 +32,7 @@ async function fresh(browser, opts = {}) {
   page.tap = async (x = 0.5, y = 0.45) => { const box = await page.getByTestId('campo').boundingBox(); await page.mouse.click(box.x + box.width * x, box.y + box.height * y); };
   page.oro = async (n) => { await page.getByTestId('abrir-ajustes').click(); await page.getByTestId(`oro-${n}`).click(); await page.mouse.click(4, 4); await page.waitForTimeout(150); };
   page.comprar = async (id, veces = 1) => {
-    const seccion = await page.evaluate((id) => ({ danio: 'jugador', radio: 'jugador', slimes: 'jugador', cadencia: 'jugador', botin: 'jugador', tiempo: 'jugador', mago: 'mago', arqueros: 'arqueros', multiflecha: 'arqueros' })[id], id);
+    const seccion = await page.evaluate((id) => ({ danio: 'jugador', radio: 'jugador', slimes: 'jugador', cadencia: 'jugador', botin: 'jugador', tiempo: 'jugador', oro: 'jugador', inactivo: 'jugador', mago: 'mago', arqueros: 'arqueros', multiflecha: 'arqueros' })[id], id);
     await page.getByTestId(`seccion-${seccion}`).click();
     await page.getByTestId(`talento-${id}`).click();
     for (let i = 0; i < veces; i++) await page.getByTestId('comprar').click();
@@ -98,7 +98,7 @@ async function flow(name, browser, fn, opts) {
     check((await page.getByTestId('reloj').textContent()).includes('00:2'), 'el reloj no arrancó en 20 s');
   });
 
-  await flow('tres secciones: mago con rectángulos y arqueros con flechas', browser, async (page) => {
+  await flow('tres secciones: mago con explosiones cuadradas y arqueros con flechas', browser, async (page) => {
     await page.getByTestId('terminar').click();
     await page.getByTestId('mejorar').click();
     await page.oro(1000000);
@@ -121,7 +121,7 @@ async function flow(name, browser, fn, opts) {
     }
     magia = await page.evaluate(() => window.__magia);
     check(flechas > 0, 'los arqueros no tiraron flechas');
-    check(magia > 0, 'el mago no reventó ningún rectángulo');
+    check(magia > 0, 'el mago no reventó ningún cuadrado');
   });
 
   await flow('niveles: ganar abre el siguiente; perder ofrece reintentar o el anterior para juntar oro', browser, async (page) => {
@@ -156,6 +156,38 @@ async function flow(name, browser, fn, opts) {
     check(await page.getByTestId('nivel-mas').isDisabled(), 'deja ir más allá del nivel abierto');
   });
 
+  await flow('oro mientras no juegas: se abre en el nivel 3 y se cobra al volver', browser, async (page) => {
+    await page.getByTestId('terminar').click();
+    await page.getByTestId('mejorar').click();
+    check(!(await page.getByTestId('ritmo-inactivo').count()), 'el oro inactivo se ve antes del nivel 3');
+    await page.getByTestId('abrir-ajustes').click();
+    for (let i = 0; i < 2; i++) await page.getByTestId('mas-nivel').click();
+    await page.mouse.click(4, 4);
+    check(await page.getByTestId('ritmo-inactivo').count(), 'no se ve el oro por minuto en el nivel 3');
+    const antes = await page.evaluate(() => window.juego.meta.oro);
+    await page.getByTestId('abrir-ajustes').click();
+    await page.getByTestId('simular-hora').click();
+    await page.waitForTimeout(300);
+    check(await page.getByTestId('bienvenida').count(), 'no salió "Mientras no estabas"');
+    check((await page.getByTestId('tiempo-fuera').textContent()).includes('1 h'), 'no dice 1 h fuera');
+    const oro = await page.evaluate(() => window.juego.view && 0);
+    void oro;
+    await page.getByTestId('cobrar').click();
+    await page.waitForTimeout(200);
+    check(!(await page.getByTestId('bienvenida').count()), 'la ventana no se cerró');
+    const despues = await page.evaluate(() => window.juego.meta.oro);
+    check(despues > antes, `no se cobró el oro (${antes} → ${despues})`);
+    // Los talentos: Oro inactivo sale de Ganancia de oro.
+    await page.oro(1000000);
+    await page.comprar('danio', 1);
+    await page.comprar('slimes', 2);
+    await page.comprar('oro', 1);
+    await page.getByTestId('talento-inactivo').click();
+    await page.getByTestId('comprar').click();
+    check((await page.getByTestId('detalle').textContent()).includes('1/7'), 'no se compró Oro inactivo');
+    check(await page.getByTestId('talento-bolsa').count(), 'no apareció Bolsa grande');
+  });
+
   await flow('glosario: tipos de daño y enemigos (el azul, oculto hasta abrirlo)', browser, async (page) => {
     await page.getByTestId('terminar').click();
     await page.getByTestId('mejorar').click();
@@ -172,6 +204,37 @@ async function flow(name, browser, fn, opts) {
     await page.getByTestId('abrir-glosario').click();
     const azul = await page.getByTestId('enemigo-azul').textContent();
     check(azul.includes('Slime azul') && azul.includes('×0.5'), `el azul no se reveló: ${azul}`);
+  });
+
+  await flow('slime rojo: desde el nivel 5 le tira piedras a la muralla; si cae, los aliados no atacan', browser, async (page) => {
+    await page.getByTestId('terminar').click();
+    await page.getByTestId('mejorar').click();
+    await page.oro(1000000);
+    await page.comprar('danio', 3);
+    await page.comprar('arqueros', 1);
+    await page.getByTestId('abrir-ajustes').click();
+    for (let i = 0; i < 4; i++) await page.getByTestId('mas-nivel').click();
+    await page.mouse.click(4, 4);
+    check((await page.getByTestId('nivel-actual').textContent()).includes('Nivel 5'), 'no está en el nivel 5');
+    await page.getByTestId('jugar').click();
+    // Lejos de todo: nadie revienta a los rojos y la muralla recibe piedras.
+    await page.evaluate(() => { window.juego.run.cursor = { x: -999, y: -999 }; window.juego.run.muro.vida = 4; });
+    let rojos = 0;
+    for (let i = 0; i < 40 && !(await page.getByTestId('muralla-caida').count()); i++) {
+      rojos = Math.max(rojos, await page.evaluate(() => window.juego.run.enemies.filter((e) => e.kind === 'rojo').length));
+      await page.waitForTimeout(250);
+    }
+    check(rojos > 0, 'no salieron slimes rojos en el nivel 5');
+    check(await page.getByTestId('muralla-caida').count(), 'la muralla no cayó o no se avisa');
+    const flechas = await page.evaluate(() => window.juego.run.arrows.length);
+    await page.waitForTimeout(1600);
+    const despues = await page.evaluate(() => window.juego.run.arrows.length);
+    check(despues === 0 || despues < flechas, 'los arqueros siguen tirando con la muralla caída');
+    await page.getByTestId('terminar').click();
+    await page.getByTestId('mejorar').click();
+    await page.getByTestId('abrir-glosario').click();
+    const ficha = await page.getByTestId('enemigo-rojo').textContent();
+    check(ficha.includes('Slime rojo') && ficha.includes('a la muralla'), `el glosario no muestra al rojo: ${ficha}`);
   });
 
   await flow('guardado: al recargar se queda el oro y el árbol, y se llega al árbol', browser, async (page) => {

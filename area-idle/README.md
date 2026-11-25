@@ -3,12 +3,13 @@
 Idle de áreas para celular (vertical, una mano) y navegador. Tocas donde quieres que caigan tus
 flechas y el círculo dispara solo ahí. Cada **nivel** trae una cantidad de slimes y hay que reventarlos
 todos antes de que se acabe el tiempo; si no, se reintenta o se juega el anterior para juntar oro. Con
-el oro mejoras tres árboles: el tuyo, el del mago (rectángulos de fuego) y el de los arqueros (un
-objetivo a la vez, luego varios).
+el oro mejoras tres árboles: el tuyo, el del mago (explosiones de fuego cuadradas) y el de los arqueros
+(un objetivo a la vez, luego varios).
 
-**Estado: prototipo 0.2.0.** Una zona (Campo verde) con niveles sin fin, dos enemigos (slime verde y
-azul, desde el nivel 4), 18 talentos en tres secciones, seis tipos de daño (dos en juego: físico y
-fuego) y un glosario de enemigos.
+**Estado: prototipo 0.3.0.** Una zona (Campo verde) con niveles sin fin, tres enemigos (slime verde;
+azul desde el nivel 4; **rojo con resortera** desde el 5, que le tira piedras a la muralla y, si la tumba,
+deja sin atacar al mago y a los arqueros), **oro mientras no juegas** desde el nivel 3, 21 talentos en
+tres secciones, seis tipos de daño (dos en juego: físico y fuego) y un glosario de enemigos.
 
 - Diseño y decisiones: [`docs/DISENO.md`](docs/DISENO.md)
 - Lo que se tomó del juego del gato: [`../REUSO.md`](../REUSO.md)

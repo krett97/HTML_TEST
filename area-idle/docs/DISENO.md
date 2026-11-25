@@ -1,6 +1,6 @@
 # Campo de Slimes: diseño del prototipo
 
-> Versión 0.2.0. Nombre provisional. Nació de pausar el juego del gato
+> Versión 0.3.0. Nombre provisional. Nació de pausar el juego del gato
 > ([`../../gato-idle/docs/DECISIONES.md`](../../gato-idle/docs/DECISIONES.md)), tomando su base técnica y su
 > arte en código ([`../../REUSO.md`](../../REUSO.md)). Referencia de sensación: *Don't Stop The Pop!*
 > (cientos de cosas reventando en un área) y el idle del castor (rocas que caen, mundo que cambia por fase).
@@ -40,9 +40,9 @@ Nivel 5") y el oro. Ahí arriba no aparecen ni pasean slimes, para que nada qued
 
 | Sección | Ataque | Tipo de daño | Talentos |
 |---|---|---|---|
-| **Jugador** | Tu círculo: lluvia de flechas en el área | Físico | Daño (raíz), Área, Atraer slimes (llegan más rápido), Cadencia, Tiempo, Botín (premio por nivel), Oro |
-| **Mago** | Bola de fuego que revienta en un **rectángulo** (a lo ancho o a lo alto) donde hay alguien | Fuego | Mago (raíz), Mago veloz, Fuego mágico, Explosión grande, Suelo en llamas, Fuego intenso |
-| **Arqueros** | Flechas a **un objetivo a la vez**; con Flechas múltiples, a 2, 3… 5 | Físico | Arquero (raíz), Más arqueros (hasta 6), Flechas múltiples, Arco veloz, Puntas de acero |
+| **Jugador** | Tu círculo: lluvia de flechas en el área | Físico | Daño (raíz), Área, Atraer slimes (llegan más rápido), Cadencia, Tiempo, Botín (premio por nivel), Ganancia de oro (todo el oro), Oro inactivo, Bolsa grande |
+| **Mago** | Bola de fuego que revienta en un **cuadrado** (40 × 40) donde hay alguien | Fuego | Mago (raíz), Mago veloz, Fuego mágico, Explosión grande, Suelo en llamas (tierra quemada con borde de brasas), Fuego intenso |
+| **Arqueros** | Flechas a **un objetivo a la vez**; con Flechas múltiples, a 2, 3… 5 | Físico | Arquero (raíz), Más arqueros (hasta 6), Flechas múltiples, Arco veloz, Puntas de acero, Muralla reforzada |
 
 - Al principio solo se ve **Daño**; cada compra muestra lo que sale de ahí. Las raíces del Mago y los
   Arqueros se ven desde el principio con candado ("Sube Cadencia a 3", "Sube Daño a 3").
@@ -63,39 +63,58 @@ el golpe a una debilidad sale con número grande y rojizo, y el que choca con un
 |---|---|---|---|---|---|---|
 | Slime verde | 3 | Normal | No | Fuego | — | 1 |
 | Slime azul (desde el nivel 4) | 14 | Lenta | No | Hielo, Energía | Fuego | 6 |
+| Slime rojo (desde el nivel 5) | 8 | Normal | 3 a la muralla cada 3 s | Físico, Luz | Muerte | 4 |
 
 **Glosario** (botón del libro en el árbol): los tipos de daño, quién hace cuál y cada enemigo con su vida,
 velocidad, si ataca y sus debilidades y fortalezas. Los que aún no salen se ven como silueta con "???"
 ("Aparece desde el nivel 4"). La vida y el oro de la tabla son los del nivel 1; crecen con el nivel.
 
-## 5. La muralla
+## 5. La muralla y el slime rojo (desde 0.3.0)
 
-Abajo del campo hay una muralla de piedra con almenas (se repite a lo ancho) y una torre con estandarte a
-la izquierda. Los **arqueros** están parados en los huecos entre almenas y el **mago** arriba de la torre.
-Los slimes no bajan hasta ella. Queda espacio para que en el futuro haya enemigos que ataquen la muralla
-(el campo `ataque` de cada enemigo ya existe; hoy vale 0).
+Abajo del campo hay una muralla de piedra con almenas y una torre con estandarte a la izquierda. Los
+**arqueros** están en los huecos entre almenas y el **mago** arriba de la torre. Los slimes no bajan hasta ella.
+
+Desde el **nivel 5** salen **slimes rojos con resortera** (6 % de los del nivel, sube 1 % por nivel hasta
+12 %). Cada 3 s le tiran una piedra a la muralla (3 de daño, +5 % por nivel); la piedra vuela en arco.
+La muralla tiene **100 de vida** (Muralla reforzada: +50 % por nivel) y una barra en su cara que aparece
+cuando hay rojos. **Si cae, el mago y los arqueros dejan de atacar el resto del nivel**: la muralla se pone
+gris, sale polvo, ellos quedan tumbados y arriba sale el aviso "¡Cayó la muralla!". Los rojos son débiles
+al daño físico, así que tus flechas y los arqueros son la respuesta: hay que buscarlos primero.
+
+## 5b. Oro mientras no juegas (desde 0.3.0)
+
+Se abre al **llegar al nivel 3** (aviso en el fin de la partida). Al volver, la ventana "Mientras no
+estabas" dice cuánto tiempo pasó y cuánto oro se juntó, con un botón para cobrar.
+
+- Da **15 %** de lo que se gana por minuto jugando el nivel más alto ya superado (sus slimes y su premio,
+  una partida cada 30 s), hasta **2 horas**. Menos de un minuto fuera no cuenta.
+- **Oro inactivo** (+10 % por nivel, hasta 85 %; pide haber llegado al nivel 3) y **Bolsa grande** (+1 h por
+  nivel, hasta 12 h), en el árbol del jugador, bajo **Ganancia de oro**, que ahora multiplica todo el oro:
+  el de los slimes, el premio por nivel y lo que se junta sin jugar.
+- En el árbol, junto al oro, una píldora dice cuánto se gana por minuto sin jugar.
+- El juego guarda la hora en cada guardado (también cada 20 s y al pasar a segundo plano). El modo
+  pruebas tiene "Simular 1 h fuera".
 
 ## 6. Ritmo (`npm run simular`)
 
-Un bot que toca donde hay más slimes cada segundo, compra lo más barato y, si pierde un nivel, juega
-una vez el anterior para juntar oro y reintenta:
+Un bot que toca donde hay más slimes cada segundo (los rojos cuentan por cuatro: los busca primero),
+compra lo más barato y, si pierde un nivel, juega una vez el anterior para juntar oro y reintenta:
 
 | Minuto | Nivel superado |
 |---|---|
 | 5 | 4 |
 | 10 | 15 |
-| 15 | 22 |
-| 20 | 27 |
-| 30 | 30 (pared: falta la segunda zona) |
+| 15 | 20 |
+| 20 | 24 |
+| 30 | 27 (pared: falta la segunda zona) |
 
 Al principio pierde los niveles 3, 4 y 7 alguna vez, junta oro en el anterior y pasa. Del 11 al 20 casi
-no pierde (llegan el mago y los arqueros: el pico de poder se siente bien), y del 21 en adelante los
-niveles se pasan con poco margen (18 a 28 s de 20 a 40) hasta la pared del 31–40, que es donde
-entraría la segunda zona.
+no pierde (llegan el mago y los arqueros). Del 21 en adelante los rojos son el reto: la muralla cae en
+unas 30 partidas de 45 minutos y ahí sirve Muralla reforzada. (El bot no cobra oro inactivo.)
 
 ## 7. Técnica
 
-- `src/core/` es lógica pura y probada (30 pruebas): `run.ts` (la partida paso a paso; devuelve eventos),
+- `src/core/` es lógica pura y probada (40 pruebas): `run.ts` (la partida paso a paso; devuelve eventos),
   `stats.ts` (estadísticas desde los talentos), `meta.ts` (oro, árbol, guardado), `datos.ts`, `bot.ts`.
 - `src/game/Campo.ts` (Phaser 4) solo dibuja los eventos: sprites reciclados para cientos de slimes,
   números de daño con una **fuente de mapa de bits** hecha al arrancar (`numeros.ts`), partículas, flechas
@@ -110,6 +129,6 @@ entraría la segunda zona.
 
 - **Segunda zona** (bosque, desierto, nieve…): cada 10 niveles un jefe; al vencerlo cambia el mundo.
 - Fuentes de hielo, energía, muerte y luz (nuevos aliados o ramas) y enemigos que las pidan.
-- Enemigos que atacan la muralla (y una razón para defenderla).
+- Reparar la muralla durante el nivel (un talento o un botón con espera).
 - Anuncios recompensados: "+10 s a esta partida" y "×2 oro de esta partida".
-- Algo de idle mientras no juegas (el mago junta un poco de oro).
+- ×2 al oro de "Mientras no estabas" viendo un anuncio.

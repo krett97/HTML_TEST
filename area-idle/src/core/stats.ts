@@ -1,5 +1,5 @@
 // Las estadísticas de una partida, calculadas de los niveles de los talentos.
-import { BASE, type TalentId } from './datos';
+import { BASE, INACTIVO, type TalentId } from './datos';
 
 export type Levels = Partial<Record<TalentId, number>>;
 
@@ -14,13 +14,17 @@ export interface Stats {
   duracion: number;
   /** Multiplica la rapidez con que llegan los slimes del nivel. */
   ritmo: number;
-  /** Multiplica el oro de cada enemigo y el premio por superar un nivel. */
+  /** "Ganancia de oro" multiplica todo el oro (slimes, premio y lo que se junta sin jugar); "Botín", el premio. */
   oroMult: number;
   premioMult: number;
-  /** El mago: un rectángulo de `ancho` × `alto` cada `intervalo` s. */
-  mago: { activo: boolean; intervalo: number; ancho: number; alto: number; danio: number };
-  /** El suelo en llamas que dejan los rectángulos del mago. */
+  /** Oro mientras no juegas: qué parte de lo que se gana jugando y hasta cuántas horas. */
+  inactivo: { eficiencia: number; horas: number };
+  /** El mago: una explosión cuadrada de `lado` × `lado` cada `intervalo` s. */
+  mago: { activo: boolean; intervalo: number; lado: number; danio: number };
+  /** El suelo en llamas que dejan las explosiones del mago. */
   fuego: { activo: boolean; duracion: number; dps: number };
+  /** Vida de la muralla. */
+  muro: { vida: number };
   /** Arqueros: cuántos, cada cuánto tiran, a cuántos objetivos a la vez y cuánto pega cada flecha. */
   arqueros: { cantidad: number; intervalo: number; objetivos: number; danio: number };
 }
@@ -41,11 +45,14 @@ export function computeStats(levels: Levels): Stats {
     ritmo: BASE.ritmo * Math.pow(1.2, slimes),
     oroMult: 1 + 0.3 * lv(levels, 'oro'),
     premioMult: 1 + 0.25 * lv(levels, 'botin'),
+    inactivo: {
+      eficiencia: INACTIVO.eficiencia + INACTIVO.porNivel * lv(levels, 'inactivo'),
+      horas: INACTIVO.horas + INACTIVO.horasPorNivel * lv(levels, 'bolsa'),
+    },
     mago: {
       activo: lv(levels, 'mago') > 0,
       intervalo: BASE.mago.intervalo * Math.pow(0.88, lv(levels, 'magoRapido')),
-      ancho: BASE.mago.ancho * area,
-      alto: BASE.mago.alto * area,
+      lado: BASE.mago.lado * area,
       danio: golpe * BASE.mago.danio * (1 + 0.5 * lv(levels, 'magoDanio')),
     },
     fuego: {
@@ -53,6 +60,7 @@ export function computeStats(levels: Levels): Stats {
       duracion: BASE.fuego.duracion + 0.3 * lv(levels, 'fuegoFuerte'),
       dps: golpe * BASE.fuego.dps * (1 + 0.4 * lv(levels, 'fuegoFuerte')),
     },
+    muro: { vida: BASE.muro.vida * (1 + 0.5 * lv(levels, 'muralla')) },
     arqueros: {
       cantidad: lv(levels, 'arqueros') > 0 ? 1 + lv(levels, 'masArqueros') : 0,
       intervalo: BASE.arqueros.intervalo * Math.pow(0.88, lv(levels, 'arcoRapido')),
