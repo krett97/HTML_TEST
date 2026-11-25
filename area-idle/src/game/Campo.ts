@@ -185,11 +185,12 @@ export class Campo extends Phaser.Scene {
     this.unsub.push(
       this.juego.onEvents((events, run) => this.dibujar(events, run)),
       this.juego.onPlay(() => this.nuevaPartida()),
+      this.juego.onGuard(() => this.nuevaGuardia()),
     );
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.unsub.forEach((off) => off()));
 
     if (this.juego.fase === 'jugando') this.nuevaPartida();
-    else this.decorar(levelConfig(this.juego.meta.jugando).zona);
+    else this.nuevaGuardia();
   }
 
   /** Texturas hechas en código: la gota de las partículas, disco, anillo, rectángulo, bola de fuego y sombra. */
@@ -246,7 +247,8 @@ export class Campo extends Phaser.Scene {
     }
   }
 
-  private nuevaPartida(): void {
+  /** Deja el campo vacío: sin slimes, números, manchas ni fuego. */
+  private limpiar(): void {
     for (const v of this.slimes.values()) this.soltar(v);
     this.slimes.clear();
     for (const n of this.numeros) this.numerosLibres.push(n.text.setVisible(false));
@@ -255,17 +257,47 @@ export class Campo extends Phaser.Scene {
     this.manchas.length = 0;
     this.fuegos.forEach((f) => (f.img.destroy(), f.borde.destroy()));
     this.fuegos.length = 0;
-    const events = this.juego.start(this.alto, this.libreArriba());
-    const run = this.juego.run!;
-    this.decorar(run.nivel.zona);
-    this.cursorPos.x = run.cursor.x;
-    this.cursorPos.y = run.cursor.y;
+  }
+
+  /** El mago y los arqueros en su lugar (los que haya), y la muralla entera. */
+  private colocarTropas(run: Run): void {
     const m = wizardSpot(run);
     this.mago.setVisible(run.stats.mago.activo).setPosition(m.x, m.y).clearTint().setAngle(0).setAlpha(1);
     this.muralla.clearTint();
     this.torre.clearTint();
     this.arqueros.forEach((a) => a.destroy());
     this.arqueros = archerSpots(run).map((p) => this.add.image(p.x, p.y, 'arquero').setOrigin(0.5, 1).setScale(ARQUERO.alto / ARQUERO.px).setDepth(D.aliado));
+  }
+
+  private nuevaPartida(): void {
+    this.limpiar();
+    const events = this.juego.start(this.alto, this.libreArriba());
+    const run = this.juego.run!;
+    this.decorar(run.nivel.zona);
+    this.cursorPos.x = run.cursor.x;
+    this.cursorPos.y = run.cursor.y;
+    this.cursor.setVisible(true);
+    this.colocarTropas(run);
+    this.dibujar(events, run);
+  }
+
+  /** Modo guardia (en el árbol): tus tropas solas contra pocos enemigos. Sin tropas, el campo queda quieto. */
+  private nuevaGuardia(): void {
+    this.limpiar();
+    const events = this.juego.startGuard(this.alto, this.libreArriba());
+    const run = this.juego.run;
+    if (!run?.guardia) {
+      this.decorar(levelConfig(this.juego.meta.jugando).zona);
+      this.mago.setVisible(false);
+      this.cursor.setVisible(false);
+      this.arqueros.forEach((a) => a.destroy());
+      this.arqueros = [];
+      this.muralla.clearTint();
+      this.torre.clearTint();
+      return;
+    }
+    this.decorar(run.nivel.zona);
+    this.colocarTropas(run);
     this.dibujar(events, run);
   }
 
@@ -274,6 +306,8 @@ export class Campo extends Phaser.Scene {
     this.tiempo += dt;
     this.juego.step(dt);
     const run = this.juego.run;
+    // En guardia, si compraste tropas, se acomodan.
+    if (run?.guardia && (this.arqueros.length !== run.stats.arqueros.cantidad || this.mago.visible !== run.stats.mago.activo)) this.colocarTropas(run);
     if (run) {
       this.moverSlimes(run, dt);
       this.dibujarCursor(run, dt);
@@ -390,7 +424,9 @@ export class Campo extends Phaser.Scene {
             for (let i = 0; i < 5; i++) this.mancha(e.x + Phaser.Math.Between(-25, 25), e.y + Phaser.Math.Between(-10, 10), COLOR[e.kind]);
           } else this.emisores[e.kind].explode(e.kind === 'azul' ? 12 : 8, e.x, e.y - 6);
           this.mancha(e.x, e.y, COLOR[e.kind]);
-          if (numeros++ < 30) this.numero(e.x, e.y - 12, e.danio, 0xffe27a);
+          // En guardia, lo que sale es el oro que da cada uno.
+          if (run.guardia) this.numero(e.x, e.y - 12, e.oro, 0xffc93c, 9, '+');
+          else if (numeros++ < 30) this.numero(e.x, e.y - 12, e.danio, 0xffe27a);
           break;
         }
         case 'shot':
@@ -731,6 +767,9 @@ export class Campo extends Phaser.Scene {
   // ---- Tu círculo ----
 
   private dibujarCursor(run: Run, dt: number): void {
+    // En guardia tu círculo descansa.
+    this.cursor.setVisible(!run.guardia);
+    if (run.guardia) return;
     // El círculo se desliza rápido hasta donde tocaste.
     const k = 1 - Math.pow(0.0005, dt);
     this.cursorPos.x += (run.cursor.x - this.cursorPos.x) * k;
@@ -751,10 +790,10 @@ export class Campo extends Phaser.Scene {
 
   // ---- Números de daño ----
 
-  private numero(x: number, y: number, valor: number, color: number, tamanio = 8): void {
+  private numero(x: number, y: number, valor: number, color: number, tamanio = 8, prefijo = ''): void {
     if (this.numeros.length >= MAX_NUMEROS) return;
     const text = this.numerosLibres.pop() ?? this.add.bitmapText(0, 0, NUMEROS, '', 8).setOrigin(0.5).setDepth(D.numero);
-    text.setText(formatNum(valor)).setFontSize(tamanio).setTint(color).setAlpha(1).setVisible(true);
+    text.setText(prefijo + formatNum(valor)).setFontSize(tamanio).setTint(color).setAlpha(1).setVisible(true);
     const n = { text, vida: 0.6, x: x + Phaser.Math.FloatBetween(-4, 4), y };
     text.setPosition(n.x, n.y);
     this.numeros.push(n);

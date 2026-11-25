@@ -351,5 +351,8 @@
     "intentoTexto": "+1 attempt ({n}/{max})",
     "estandarteTexto": "PvP power +{a}% → +{b}% ({n}/{max})",
     "como": "Medals: 3 per win, 1 per loss and a prize when the week ends."
+  },
+  "guardia": {
+    "explica": "Guard: while you're here, your troops fight a few enemies on their own (20% of what you earn playing)."
   }
 }

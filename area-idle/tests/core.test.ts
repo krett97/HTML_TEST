@@ -4,6 +4,8 @@ import { activeGoldPerMinute, idleGoldPerMinute, idleReward, idleUnlocked } from
 import { isBossLevel, JEFE, JEFES, bossFor, zoneOf, DESDE, INACTIVO, ROJO_DESDE, AZUL_DESDE, DAMAGE_TYPES, damageMultiplier, ENEMIES, levelConfig, PRIMERA_OLA, SECCIONES, TALENT_BY_ID, TALENTS } from '../src/core/datos';
 import { formatClock, formatNum } from '../src/core/format';
 import { buyTalent, chooseLevel, costOf, createMeta, finishRun, levelOf, loadMeta, talentState, talentVisible } from '../src/core/meta';
+import { createGuardRun, guardLevel, startGuardRun, updateGuardRun } from '../src/core/run';
+import { GUARDIA } from '../src/core/datos';
 import { ALLY_ROW, archerSpots, bossOf, createRun, DAMAGE_TYPE_OF, FIELD_W, moveCursor, startRun, stepRun, type Run, type RunEvent } from '../src/core/run';
 import { computeStats } from '../src/core/stats';
 import { BONO_DIARIO, claimableCount, claimBonus, claimMission, dailyProgress, dayKey, DIARIAS, DIARIAS_POR_DIA, MISSION_BY_ID, msUntilReset, permanentProgress, rollDaily } from '../src/core/misiones';
@@ -915,5 +917,54 @@ describe('PvP', () => {
     expect(roto.intentos).toBe(INTENTOS_MAX);
     expect(roto.medallas).toBe(0);
     expect(loadPvp(null)).toEqual(emptyPvp());
+  });
+});
+
+describe('modo guardia', () => {
+  const tropas = computeStats({ danio: 3, arqueros: 1, masArqueros: 2 });
+  it('salen enemigos del nivel más alto superado (sin jefes)', () => {
+    expect(guardLevel(1)).toBe(1);
+    expect(guardLevel(8)).toBe(7);
+    expect(guardLevel(11)).toBe(9);
+    expect(guardLevel(21)).toBe(19);
+  });
+  it('tu círculo no dispara; salen pocos, uno cada 2.5 s, y no se acaba', () => {
+    const run = createGuardRun(computeStats({}), 560, 5, 1, 1);
+    const events = startGuardRun(run);
+    expect(events.filter((e) => e.type === 'spawn')).toHaveLength(GUARDIA.iniciales);
+    const todos: RunEvent[] = [];
+    for (let i = 0; i < 20 * 60; i++) todos.push(...stepRun(run, 0.05));
+    expect(todos.some((e) => e.type === 'shot' || e.type === 'impact')).toBe(false);
+    expect(todos.some((e) => e.type === 'end')).toBe(false);
+    expect(run.terminada).toBe(false);
+    // Sin tropas nadie los revienta: se llenan hasta el tope y ahí paran.
+    expect(run.enemies).toHaveLength(GUARDIA.max);
+  });
+  it('tus tropas revientan y cada baja da el oro fijo de la guardia', () => {
+    const run = createGuardRun(tropas, 560, 3, 0.5, 2);
+    startGuardRun(run);
+    let bajas = 0;
+    for (let i = 0; i < 60 * 20; i++) bajas += stepRun(run, 0.05).filter((e) => e.type === 'kill').length;
+    expect(bajas).toBeGreaterThan(15);
+    expect(run.oro).toBeCloseTo(bajas * 0.5);
+  });
+  it('nadie ataca la muralla ni marcha hacia ella', () => {
+    const run = createGuardRun(computeStats({}), 560, 16, 1, 3);
+    run.enemies.push({ id: 900, kind: 'orco', x: 100, y: 200, vx: 0, vy: 8, vida: 1e9, vidaMax: 1e9, giro: 0.5, tiro: 0.01 });
+    run.enemies.push({ id: 901, kind: 'goblin', x: 200, y: 200, vx: 0, vy: 0, vida: 1e9, vidaMax: 1e9, giro: 0.5, tiro: 0.01 });
+    const todos: RunEvent[] = [];
+    for (let i = 0; i < 400; i++) todos.push(...stepRun(run, 0.05));
+    expect(todos.some((e) => e.type === 'sling' || e.type === 'wallHit')).toBe(false);
+    expect(run.muro.vida).toBe(run.muro.max);
+  });
+  it('al comprar, la guardia toma las nuevas tropas sin empezar de nuevo', () => {
+    const run = createGuardRun(computeStats({ arqueros: 1 }), 560, 3, 1, 4);
+    startGuardRun(run);
+    const enemigos = run.enemies.length;
+    updateGuardRun(run, computeStats({ arqueros: 1, masArqueros: 2 }), 2);
+    expect(run.arcos).toHaveLength(3);
+    expect(run.guardia!.oroPorBaja).toBe(2);
+    expect(run.stats.duracion).toBe(Infinity);
+    expect(run.enemies).toHaveLength(enemigos);
   });
 });

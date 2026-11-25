@@ -219,7 +219,15 @@ export function levelConfig(nivel: number): LevelConfig {
  * por minuto jugando el nivel más alto superado, hasta `horas` horas. Los talentos Oro inactivo y Bolsa
  * grande suben la parte y las horas. Menos de un minuto fuera no cuenta.
  */
-export const INACTIVO = { desde: 3, eficiencia: 0.15, porNivel: 0.1, horas: 2, horasPorNivel: 1, minSegundos: 60, segundosPorNivelJugado: 30 } as const;
+export const INACTIVO = { desde: 3, eficiencia: 0.1, porNivel: 0.1, horas: 2, horasPorNivel: 1, minSegundos: 60, segundosPorNivelJugado: 30 } as const;
+
+/**
+ * Modo guardia: mientras estás en el árbol (sin jugar un nivel), tus tropas (arqueros y mago) pelean solas
+ * contra pocos enemigos: uno cada `cada` s, como mucho `max` a la vez, sin tiempo ni ataques a la muralla.
+ * Cada baja da oro fijo para que, si tus tropas alcanzan, se gane el 20 % de lo que se gana jugando: 10
+ * puntos más que con la app cerrada (y "Oro inactivo" sube los dos por igual).
+ */
+export const GUARDIA = { cada: 2.5, max: 12, extra: 0.1, iniciales: 3 } as const;
 
 /** Desde qué nivel se abren las misiones (diarias y permanentes), las gemas moradas y las Reliquias. */
 export const MISIONES_DESDE = 11;

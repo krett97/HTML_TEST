@@ -351,5 +351,8 @@
     "intentoTexto": "+1 intento ({n}/{max})",
     "estandarteTexto": "Poder en el PvP +{a}% → +{b}% ({n}/{max})",
     "como": "Medallas: 3 por pelea ganada, 1 por perdida y un premio al terminar la semana."
+  },
+  "guardia": {
+    "explica": "Guardia: mientras estás aquí, tus tropas pelean solas contra pocos enemigos (20 % de lo que ganas jugando)."
   }
 }

@@ -1,7 +1,7 @@
 // Una partida: el campo, los enemigos que aparecen y pasean, tu círculo donde caen flechas, el mago
 // con sus explosiones de fuego cuadradas y los arqueros que tiran a un objetivo a la vez. Lógica pura: la escena
 // llama a stepRun cada cuadro (a través del controlador) y dibuja los eventos.
-import { damageMultiplier, effectiveness, ENEMIES, JEFE, JEFES, levelConfig, LLEGADA, MAX_VIVOS, PRIMERA_OLA, type BossDef, type DamageType, type EnemyKind, type LevelConfig, type ProjectileKind } from './datos';
+import { damageMultiplier, effectiveness, ENEMIES, GUARDIA, JEFE, JEFES, levelConfig, LLEGADA, MAX_VIVOS, PRIMERA_OLA, type BossDef, type DamageType, type EnemyKind, type LevelConfig, type ProjectileKind } from './datos';
 import { between, createRng, type Rng } from './rng';
 import type { Stats } from './stats';
 
@@ -147,6 +147,8 @@ export interface Run {
   reventados: number;
   terminada: boolean;
   rng: Rng;
+  /** Modo guardia (fuera de los niveles): oro fijo por baja y cuándo sale el siguiente. null en un nivel. */
+  guardia: { oroPorBaja: number; falta: number } | null;
 }
 
 export function createRun(base: Stats, h: number, nivel = 1, seed = Date.now(), arriba = MARGIN): Run {
@@ -182,7 +184,46 @@ export function createRun(base: Stats, h: number, nivel = 1, seed = Date.now(), 
     reventados: 0,
     terminada: false,
     rng: createRng(seed),
+    guardia: null,
   };
+}
+
+/** El nivel cuyos enemigos salen en guardia: el más alto ya superado que no sea de jefe. */
+export function guardLevel(nivelAbierto: number): number {
+  const n = Math.max(1, nivelAbierto - 1);
+  return levelConfig(n).jefe ? Math.max(1, n - 1) : n;
+}
+
+/** Las estadísticas de la guardia: sin límite de tiempo. */
+const guardStats = (base: Stats): Stats => ({ ...base, duracion: Infinity });
+
+/**
+ * Modo guardia: tus tropas solas (tu círculo no dispara) contra pocos enemigos del nivel `nivel`, sin
+ * tiempo, sin perder y sin que le peguen a la muralla. Cada baja da `oroPorBaja`.
+ */
+export function createGuardRun(base: Stats, h: number, nivel: number, oroPorBaja: number, seed = Date.now(), arriba = MARGIN): Run {
+  const run = createRun(guardStats(base), h, guardLevel(nivel), seed, arriba);
+  run.guardia = { oroPorBaja, falta: GUARDIA.cada };
+  run.cursor = { x: -999, y: -999 };
+  run.disparo = Infinity;
+  return run;
+}
+
+/** Al comprar algo con la guardia andando: mismas tropas, nuevas estadísticas (y el oro por baja). */
+export function updateGuardRun(run: Run, base: Stats, oroPorBaja: number): void {
+  if (!run.guardia) return;
+  run.stats = guardStats(base);
+  run.guardia.oroPorBaja = oroPorBaja;
+  run.muro.max = run.muro.vida = run.stats.muro.vida;
+  while (run.arcos.length < run.stats.arqueros.cantidad) run.arcos.push(0.3 + run.arcos.length * 0.2);
+  run.arcos.length = run.stats.arqueros.cantidad;
+}
+
+/** Los primeros enemigos de la guardia. */
+export function startGuardRun(run: Run): RunEvent[] {
+  const events: RunEvent[] = [];
+  for (let i = 0; i < GUARDIA.iniciales; i++) spawn(run, events);
+  return events;
 }
 
 /** Dónde está parado el mago: arriba de la torre, a la izquierda (los pies, detrás de las almenas). */
@@ -311,7 +352,7 @@ function damage(run: Run, e: Enemy, base: number, fuente: Source, events: RunEve
     return;
   }
   run.porTipo[e.kind] = (run.porTipo[e.kind] ?? 0) + 1;
-  const oro = ENEMIES[e.kind].oro * run.nivel.oro * run.stats.oroMult;
+  const oro = run.guardia ? run.guardia.oroPorBaja : ENEMIES[e.kind].oro * run.nivel.oro * run.stats.oroMult;
   run.oro += oro;
   run.reventados++;
   events.push({ type: 'kill', id: e.id, kind: e.kind, x: e.x, y: e.y, oro, danio, fuente });
@@ -361,7 +402,8 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
   for (const e of run.enemies) {
     if (run.jefe && e.id === run.jefe.id) continue;
     const def = ENEMIES[e.kind];
-    if (def.marcha) {
+    // En guardia nadie marcha hacia la muralla: todos pasean.
+    if (def.marcha && !run.guardia) {
       // Marchan hacia la muralla (bamboleándose un poco) y al llegar se quedan golpeándola.
       if (e.y >= bottom(run)) {
         e.vx = 0;
@@ -458,6 +500,13 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
         events.push({ type: 'bossStun', id: boss.id, x: boss.x, y: boss.y, dura: jd.aturdido });
       }
     }
+  } else if (run.guardia) {
+    // Guardia: uno cada tanto, sin pasar de unos cuantos a la vez.
+    run.guardia.falta -= step;
+    while (run.guardia.falta <= 0) {
+      run.guardia.falta += GUARDIA.cada;
+      if (run.enemies.length < GUARDIA.max) spawn(run, events);
+    }
   } else if (!run.jefe) {
     // Llega el resto de los slimes del nivel (más rápido con "Atraer slimes").
     const resto = run.nivel.total - Math.ceil(run.nivel.total * PRIMERA_OLA);
@@ -468,9 +517,9 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
     }
   }
 
-  // Tu círculo: cada intervalo empiezan a caer flechas donde está; pegan al aterrizar.
+  // Tu círculo: cada intervalo empiezan a caer flechas donde está; pegan al aterrizar (en guardia, no).
   run.disparo -= step;
-  while (run.disparo <= 0) {
+  while (!run.guardia && run.disparo <= 0) {
     run.disparo += s.intervalo;
     const forma: Forma = { tipo: 'circulo', r: s.radio };
     const { x, y } = run.cursor;
@@ -482,7 +531,8 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
   // Los que atacan la muralla: los de lejos le tiran algo (piedras, lanzas, flechas); los orcos, ya
   // pegados a ella, la golpean.
   for (const e of run.enemies) {
-    if (e.tiro === undefined || e.vida <= 0 || run.muro.caido) continue;
+    // En guardia no atacan la muralla.
+    if (e.tiro === undefined || e.vida <= 0 || run.muro.caido || run.guardia) continue;
     const def = ENEMIES[e.kind];
     if (def.marcha && e.y < bottom(run)) continue;
     e.tiro -= step;
@@ -594,6 +644,9 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
   }
   run.fires = run.fires.filter((f) => f.restante > 0);
   run.enemies = run.enemies.filter((e) => e.vida > 0);
+
+  // La guardia no se acaba.
+  if (run.guardia) return events;
 
   // Nivel de jefe: se gana al vencerlo, y su escolta revienta con él. Si no, al reventar a todos.
   const jefeVencido = !!run.jefe && !bossOf(run);

@@ -62,7 +62,7 @@
   }
 </script>
 
-<div class="arbol" data-testid="arbol">
+<div class="arbol" class:guardia={!!$view.guardia} data-testid="arbol">
   <header>
     <div class="izq">
       <!-- El oro, y debajo lo que se junta por minuto sin jugar (desde el nivel 3). -->
@@ -70,7 +70,12 @@
         <Icon name="moneda" size={28} />
         <span class="cifras">
           <span class="cifra" data-testid="oro-total">{formatGold(meta.oro)}</span>
-          {#if $view.ritmoInactivo}
+          {#if $view.guardia}
+            <!-- En guardia: lo que juntan tus tropas por minuto mientras estás aquí. -->
+            <span class="ritmo guardia cifra" data-testid="ritmo-guardia" title={$t('guardia.explica')}>
+              <Icon name="arquero" size={13} />{$t('inactivo.ritmo', { n: formatNum($view.guardia.porMinuto) })}
+            </span>
+          {:else if $view.ritmoInactivo}
             <span class="ritmo cifra" data-testid="ritmo-inactivo" title={$t('inactivo.explica', { h: $view.ritmoInactivo.horas })}>
               <Icon name="inactivo" size={13} />{$t('inactivo.ritmo', { n: formatNum($view.ritmoInactivo.porMinuto) })}
             </span>
@@ -202,6 +207,7 @@
     gap: 10px;
     padding: calc(10px + env(safe-area-inset-top)) 12px calc(12px + env(safe-area-inset-bottom));
     background: rgba(30, 70, 50, 0.88);
+    transition: background-color 0.4s;
     background-image: radial-gradient(rgba(255, 255, 255, 0.06) 2px, transparent 2px);
     background-size: 22px 22px;
   }
@@ -238,6 +244,13 @@
     align-items: center;
     gap: 6px;
     min-width: 0;
+  }
+  /* En guardia el campo se ve detrás: tus tropas pelean mientras mejoras. */
+  .arbol.guardia {
+    background-color: rgba(30, 70, 50, 0.5);
+  }
+  .ritmo.guardia {
+    color: #2f7a2a;
   }
   .cifras {
     display: grid;

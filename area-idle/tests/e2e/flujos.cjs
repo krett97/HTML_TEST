@@ -64,7 +64,8 @@ async function flow(name, browser, fn, opts) {
     check(await page.getByTestId('reloj').count(), 'no empezó la partida');
     check(await page.getByTestId('pista').count(), 'no sale la pista de tocar');
     // Toca donde hay un slime (como lo haría alguien que juega).
-    const blanco = await page.evaluate(() => { const e = window.juego.run.enemies[0]; return { x: e.x / 360, y: e.y / window.juego.run.h }; });
+    // Uno lejos del reloj y de la pista (si no, el toque cae sobre ellos).
+    const blanco = await page.evaluate(() => { const r = window.juego.run; const e = r.enemies.find((x) => x.y / r.h > 0.3 && x.y / r.h < 0.75 && x.x > 30 && x.x < 330) ?? r.enemies[0]; return { x: e.x / 360, y: e.y / r.h }; });
     await page.tap(blanco.x, blanco.y);
     await page.waitForTimeout(300);
     check(!(await page.getByTestId('pista').count()), 'la pista no se fue al tocar');
@@ -506,6 +507,29 @@ async function flow(name, browser, fn, opts) {
     check((await page.evaluate(() => window.juego.meta.oro)) > oro, 'el cofre no dio oro');
     await page.getByTestId('comprar-estandarte').click();
     check((await page.evaluate(() => window.juego.meta.pvp.estandarte)) === 1, 'no subió el Estandarte');
+  });
+
+  await flow('modo guardia: en el árbol tus tropas pelean solas y juntan oro', browser, async (page) => {
+    await page.getByTestId('terminar').click();
+    await page.getByTestId('mejorar').click();
+    await page.waitForTimeout(300);
+    check(!(await page.evaluate(() => !!window.juego.run?.guardia)), 'hay guardia sin tropas');
+    check(!(await page.getByTestId('ritmo-guardia').count()), 'se ve el oro de guardia sin tropas');
+    await page.oro(10000);
+    await page.comprar('danio', 3);
+    await page.comprar('arqueros', 1);
+    await page.waitForTimeout(300);
+    check(await page.evaluate(() => !!window.juego.run?.guardia), 'comprar el primer arquero no empieza la guardia');
+    check(await page.getByTestId('ritmo-guardia').count(), 'no se ve el oro por minuto de la guardia');
+    const antes = await page.evaluate(() => window.juego.meta.oro);
+    await page.waitForTimeout(9000);
+    const despues = await page.evaluate(() => window.juego.meta.oro);
+    check(despues > antes, `la guardia no juntó oro (${antes} → ${despues})`);
+    check((await page.evaluate(() => window.juego.run.enemies.length)) <= 12, 'salen demasiados en guardia');
+    await page.getByTestId('jugar').click();
+    await page.waitForTimeout(400);
+    check(await page.getByTestId('reloj').count(), 'no empezó el nivel');
+    check(!(await page.evaluate(() => !!window.juego.run?.guardia)), 'el nivel sigue en modo guardia');
   });
 
   for (const [w, h] of [[320, 568], [390, 844], [768, 1024]]) {

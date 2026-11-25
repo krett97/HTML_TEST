@@ -6,8 +6,8 @@ import { buyTalent, chooseLevel, createMeta, finishRun, loadMeta, stats, type Me
 import { idleGoldPerMinute, idleReward, idleUnlocked } from '../core/inactivo';
 import { simulatePlay, type SimulatedPlay } from '../core/bot';
 import { claimableCount, claimBonus, claimMission, missionsUnlocked, rollDaily } from '../core/misiones';
-import { bossOf, createRun, moveCursor, startRun, stepRun, type Run, type RunEvent } from '../core/run';
-import { ENEMIES, levelConfig, type EnemyKind, type ZoneId } from '../core/datos';
+import { bossOf, createGuardRun, createRun, moveCursor, startGuardRun, startRun, stepRun, updateGuardRun, type Run, type RunEvent } from '../core/run';
+import { ENEMIES, GUARDIA, levelConfig, type EnemyKind, type ZoneId } from '../core/datos';
 import { locale, detectLocale } from '../i18n';
 import type { AudioEngine, SoundId } from '../services/audio';
 import { buyShop, endWeek, fight, INTENTOS_MAX, pvpUnlocked, syncPvp, type FightResult, type ShopId } from '../core/pvp';
@@ -49,6 +49,8 @@ export interface Vista {
   abrioRanking: boolean;
   /** PvP (desde el nivel 19). */
   pvp: { abierto: boolean };
+  /** Modo guardia andando (en el árbol, con tropas): cuánto oro da por minuto si tus tropas alcanzan. */
+  guardia: { porMinuto: number } | null;
   abrioPvp: boolean;
   /** El jefe del nivel (si es de jefe): quién, su vida y si está aturdido o furioso. */
   jefe: { kind: EnemyKind; vida: number; max: number; aturdido: boolean; furia: boolean } | null;
@@ -72,6 +74,7 @@ export class Juego {
   readonly view: Readable<Vista> = this.vista;
   private listeners: Listener[] = [];
   private playListeners: (() => void)[] = [];
+  private guardListeners: (() => void)[] = [];
   private toco = false;
   private partida = 0;
   private premio = 0;
@@ -128,6 +131,42 @@ export class Juego {
     return () => (this.listeners = this.listeners.filter((l) => l !== fn));
   }
 
+  /** La escena se apunta para saber cuándo empezar la guardia (al entrar al árbol). */
+  onGuard(fn: () => void): () => void {
+    this.guardListeners.push(fn);
+    return () => (this.guardListeners = this.guardListeners.filter((l) => l !== fn));
+  }
+
+  /** ¿Hay tropas para la guardia? (al menos un arquero o el mago) */
+  get hayTropas(): boolean {
+    const s = stats(this.meta);
+    return s.arqueros.cantidad > 0 || s.mago.activo;
+  }
+
+  /** Oro por baja en guardia: el 20 % (más "Oro inactivo") de lo que se gana jugando, si tus tropas alcanzan. */
+  private oroGuardia(): number {
+    return (stats(this.meta).inactivo.eficiencia + GUARDIA.extra) * activeGoldPerMinute(this.meta) * (GUARDIA.cada / 60);
+  }
+
+  /** Oro por minuto de la guardia (si tus tropas alcanzan a todos). */
+  get ritmoGuardia(): number {
+    return (stats(this.meta).inactivo.eficiencia + GUARDIA.extra) * activeGoldPerMinute(this.meta);
+  }
+
+  /** Empieza la guardia en un campo de `alto` unidades; sin tropas no hay guardia. */
+  startGuard(alto: number, arriba?: number): RunEvent[] {
+    if (this.fase !== 'arbol' || !this.hayTropas) {
+      if (this.run?.guardia) this.run = null;
+      return [];
+    }
+    this.run = createGuardRun(stats(this.meta), alto, this.meta.nivel, this.oroGuardia(), Date.now(), arriba);
+    return startGuardRun(this.run);
+  }
+
+  private guard(): void {
+    for (const fn of this.guardListeners) fn();
+  }
+
   /** La escena se apunta para saber cuándo empezar otra partida (botón ¡Jugar! u Otra vez). */
   onPlay(fn: () => void): () => void {
     this.playListeners.push(fn);
@@ -154,7 +193,9 @@ export class Juego {
   /** Lo llama la escena cada cuadro. */
   step(dt: number): RunEvent[] {
     const run = this.run;
-    if (!run || this.fase !== 'jugando') return [];
+    if (!run) return [];
+    if (run.guardia) return this.stepGuard(run, dt);
+    if (this.fase !== 'jugando') return [];
     const events = stepRun(run, dt);
     for (const e of events) {
       if (e.type === 'spawn' && run.t > 0) this.audio.play('aparece');
@@ -178,6 +219,24 @@ export class Juego {
     for (const fn of this.listeners) fn(events, run);
     const now = performance.now();
     if (now - this.ultimaVista > 100 || this.fase !== 'jugando') {
+      this.ultimaVista = now;
+      this.publish();
+    }
+    return events;
+  }
+
+  /** La guardia: tus tropas solas; el oro va directo a tu bolsa. Solo suena cuando revientan. */
+  private stepGuard(run: Run, dt: number): RunEvent[] {
+    if (this.fase !== 'arbol') return [];
+    const events = stepRun(run, dt);
+    if (events.some((e) => e.type === 'kill')) this.audio.play('pop');
+    for (const fn of this.listeners) fn(events, run);
+    if (run.oro > 0) {
+      this.meta.oro += run.oro;
+      run.oro = 0;
+    }
+    const now = performance.now();
+    if (now - this.ultimaVista > 250) {
       this.ultimaVista = now;
       this.publish();
     }
@@ -231,12 +290,20 @@ export class Juego {
   openTree(): void {
     this.fase = 'arbol';
     this.publish();
+    this.guard();
   }
 
   buy(id: TalentId): boolean {
     const ok = buyTalent(this.meta, id);
     this.audio.play(ok ? 'compra' : 'error');
-    if (ok) this.save();
+    if (ok) {
+      this.save();
+      // La guardia toma lo comprado; si era la primera tropa, empieza.
+      if (this.fase === 'arbol') {
+        if (this.run?.guardia) updateGuardRun(this.run, stats(this.meta), this.oroGuardia());
+        else if (this.hayTropas) this.guard();
+      }
+    }
     this.publish();
     return ok;
   }
@@ -264,6 +331,7 @@ export class Juego {
     this.save();
     this.fase = 'arbol';
     this.publish();
+    this.guard();
   }
 
   /** Cobra una misión (diaria o permanente) o el bono diario. Devuelve las gemas. */
@@ -365,6 +433,8 @@ export class Juego {
     const r = simulatePlay(this.meta, segundos);
     this.save();
     this.publish();
+    // Con lo nuevo (nivel y tropas), la guardia vuelve a empezar.
+    if (this.fase === 'arbol') this.guard();
     return r;
   }
 
@@ -429,6 +499,7 @@ export class Juego {
       abrioRanking: this.abrioRanking && this.fase === 'fin',
       abrioPvp: this.abrioPvp && this.fase === 'fin',
       pvp: { abierto: pvpUnlocked(this.meta) },
+      guardia: run?.guardia && this.fase === 'arbol' ? { porMinuto: this.ritmoGuardia } : null,
       ranking: { abierto: rankingUnlocked(this.meta), nombre: this.meta.nombre },
       misiones: { abiertas: missionsUnlocked(this.meta), listas: claimableCount(this.meta) },
       vivos: run?.enemies.length ?? 0,

@@ -1,6 +1,6 @@
 # Campo de Slimes: diseño del prototipo
 
-> Versión 0.8.0. Nombre provisional. Nació de pausar el juego del gato
+> Versión 0.9.0. Nombre provisional. Nació de pausar el juego del gato
 > ([`../../gato-idle/docs/DECISIONES.md`](../../gato-idle/docs/DECISIONES.md)), tomando su base técnica y su
 > arte en código ([`../../REUSO.md`](../../REUSO.md)). Referencia de sensación: *Don't Stop The Pop!*
 > (cientos de cosas reventando en un área) y el idle del castor (rocas que caen, mundo que cambia por fase).
@@ -87,12 +87,13 @@ al daño físico, así que tus flechas y los arqueros son la respuesta: hay que 
 Se abre al **llegar al nivel 3** (aviso en el fin de la partida). Al volver, la ventana "Mientras no
 estabas" dice cuánto tiempo pasó y cuánto oro se juntó, con un botón para cobrar.
 
-- Da **15 %** de lo que se gana por minuto jugando el nivel más alto ya superado (sus slimes y su premio,
-  una partida cada 30 s), hasta **2 horas**. Menos de un minuto fuera no cuenta.
-- **Oro inactivo** (+10 % por nivel, hasta 85 %; pide haber llegado al nivel 3) y **Bolsa grande** (+1 h por
+- Da **10 %** (desde 0.9.0; antes 15 %) de lo que se gana por minuto jugando el nivel más alto ya superado
+  (sus slimes y su premio, una partida cada 30 s), hasta **2 horas**. Menos de un minuto fuera no cuenta.
+- **Oro inactivo** (+10 % por nivel, hasta 80 %; también sube el modo guardia; pide haber llegado al nivel 3) y **Bolsa grande** (+1 h por
   nivel, hasta 12 h), en el árbol del jugador, bajo **Ganancia de oro**, que ahora multiplica todo el oro:
   el de los slimes, el premio por nivel y lo que se junta sin jugar.
-- En el árbol, junto al oro, una píldora dice cuánto se gana por minuto sin jugar.
+- En el árbol, debajo del oro, dice cuánto se gana por minuto sin jugar (o, si la guardia está andando,
+  cuánto junta la guardia, en verde).
 - El juego guarda la hora en cada guardado (también cada 20 s y al pasar a segundo plano). El modo
   pruebas tiene "Simular 1 h fuera", "+1 nivel" y **"+1 min de juego" / "+10 min de juego"**: el jugador
   simulado del simulador juega ese tiempo sobre tu partida (partidas, oro, compras en el árbol, niveles) y
@@ -240,6 +241,23 @@ Modo pruebas: **PvP: intentos 5/5**, **PvP: terminar semana** y **+50 medallas**
 los de jefes, poquito), las explosiones del mago tampoco, y las demás sacudidas son más suaves y nunca
 seguidas (máximo una cada medio segundo).
 
+## 5h. Modo guardia (desde 0.9.0)
+
+Mientras estás en el árbol (sin jugar un nivel) y tienes tropas (al menos un arquero o el mago), el campo
+de atrás se ve más claro y **tus tropas pelean solas**. Tu círculo descansa.
+
+- Salen **pocos enemigos**: los del nivel más alto ya superado (sin jefes), uno cada 2.5 s y como mucho
+  12 a la vez. No hay tiempo, no se pierde, nadie marcha hacia la muralla ni le tira cosas.
+- Cada baja da un oro fijo (sale "+N" dorado) para que, si tus tropas alcanzan a todos, se junte el
+  **20 %** de lo que se gana jugando. Si tus tropas no alcanzan, se junta menos. El oro va directo a tu
+  bolsa, así que puedes ir comprando.
+- **Oro inactivo** sube igual la guardia y la app cerrada: la guardia siempre da 10 puntos más (10 % → 20 %,
+  con un nivel 20 % → 30 %…). Así, abrir el juego y dejarlo en el árbol vale más que cerrarlo, pero jugar
+  niveles sigue siendo lo mejor (100 %).
+- No cuenta para misiones, ranking ni PvP (si no, "revienta 600" se cumpliría solo).
+- Al comprar en el árbol, la guardia toma lo nuevo sin empezar de nuevo; el primer arquero (o el mago) la
+  arranca. Solo suena el "pop" de cada baja.
+
 ## 6. Ritmo (`npm run simular`)
 
 Un bot que toca donde hay más slimes cada segundo (los rojos cuentan por cuatro: los busca primero),
@@ -262,7 +280,7 @@ unas 30 partidas de 45 minutos y ahí sirve Muralla reforzada. (El bot no cobra 
 
 ## 7. Técnica
 
-- `src/core/` es lógica pura y probada (76 pruebas): `run.ts` (la partida paso a paso; devuelve eventos),
+- `src/core/` es lógica pura y probada (81 pruebas): `run.ts` (la partida paso a paso; devuelve eventos),
   `stats.ts` (estadísticas desde los talentos), `meta.ts` (oro, gemas, árbol, guardado), `misiones.ts`
   (contadores, diarias y permanentes), `ranking.ts`, `pvp.ts` (poder, ligas, peleas, tienda), `datos.ts`, `bot.ts`. `src/services/ranking.ts`
   conecta el ranking con la base de datos de la página publicada.
