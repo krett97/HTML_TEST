@@ -8,6 +8,7 @@ import { ARMADURA, bestSpot as mejorLugar, hidden, inAir, createSurvivalRun, jef
 import { EQUIPO, baseChance, bonosEquipo, chanceOf, costoPieza, emptyEquipo, loadEquipo, mejorar, NIVEL_MAX, SUERTE_POR_FALLO, tierDe } from '../src/core/equipo';
 import { ENTRADAS_MAX, RECARGA_ENTRADA_MS, emptySupervivencia, nivelBaseOlas, refillEntradas, survivalUnlocked, usarEntrada } from '../src/core/supervivencia';
 import { SUPERVIVENCIA_DESDE } from '../src/core/datos';
+import { ANUNCIO, adGold, adStatus, canWatchAd, claimAdGold, loadAnuncios } from '../src/core/anuncios';
 import { autoAiming, circleActive, createGuardRun, guardLevel, startGuardRun, updateGuardRun } from '../src/core/run';
 import { AUTOAPUNTAR } from '../src/core/datos';
 import { CURVA, GUARDIA, ORO_TALENTOS } from '../src/core/datos';
@@ -1446,5 +1447,56 @@ describe('Supervivencia: oleadas que dan Runas', () => {
     expect(run.terminada).toBe(true);
     expect(ev.at(-1)).toEqual({ type: 'end', gano: false });
     expect(OLEADAS.duracion).toBe(30);
+  });
+});
+
+describe('oro por ver un anuncio', () => {
+  const conNivel = (n: number) => {
+    const m = createMeta();
+    m.nivel = n;
+    m.jugando = n;
+    m.oroMinuto = 1000;
+    return m;
+  };
+  const t0 = new Date(2026, 10, 26, 12, 0, 0).getTime();
+  it('se abre en el nivel 3 y da lo que ganas en unos minutos jugando (con un mínimo)', () => {
+    expect(adStatus(conNivel(2), t0).abierto).toBe(false);
+    expect(claimAdGold(conNivel(2), t0)).toBe(0);
+    const m = conNivel(ANUNCIO.desde);
+    expect(adStatus(m, t0)).toMatchObject({ abierto: true, quedan: ANUNCIO.porDia, espera: 0, oro: ANUNCIO.minutos * 1000 });
+    expect(claimAdGold(m, t0)).toBe(ANUNCIO.minutos * 1000);
+    expect(m.oro).toBe(ANUNCIO.minutos * 1000);
+    m.oroMinuto = 0.01;
+    expect(adGold(m)).toBe(ANUNCIO.minimo);
+  });
+  it('hay que esperar entre uno y otro, y como mucho unos cuantos al día; al otro día vuelven', () => {
+    const m = conNivel(10);
+    expect(claimAdGold(m, t0)).toBeGreaterThan(0);
+    expect(adStatus(m, t0 + 1000)).toMatchObject({ quedan: ANUNCIO.porDia - 1, espera: ANUNCIO.esperaMs - 1000 });
+    expect(claimAdGold(m, t0 + 1000)).toBe(0);
+    let t = t0;
+    for (let i = 1; i < ANUNCIO.porDia; i++) {
+      t += ANUNCIO.esperaMs;
+      expect(claimAdGold(m, t)).toBeGreaterThan(0);
+    }
+    expect(adStatus(m, t + ANUNCIO.esperaMs).quedan).toBe(0);
+    expect(canWatchAd(m, t + ANUNCIO.esperaMs)).toBe(false);
+    const manana = new Date(2026, 10, 27, 9, 0, 0).getTime();
+    expect(adStatus(m, manana)).toMatchObject({ quedan: ANUNCIO.porDia, espera: 0 });
+    expect(claimAdGold(m, manana)).toBeGreaterThan(0);
+  });
+  it('el reloj para atrás no deja esperando; se guarda y tolera guardados raros', () => {
+    const m = conNivel(10);
+    claimAdGold(m, t0);
+    expect(adStatus(m, t0 - 3600_000).espera).toBe(0);
+    const otra = loadMeta(JSON.parse(JSON.stringify(m)));
+    expect(otra.anuncios).toEqual(m.anuncios);
+    expect(loadAnuncios({ dia: 5, vistos: -2, ultimo: 'x' })).toEqual({ dia: '', vistos: 0, ultimo: 0 });
+    expect(loadMeta({ nivel: 4 }).anuncios).toEqual({ dia: '', vistos: 0, ultimo: 0 });
+  });
+  it('con el oro por minuto más bajo: la guardia da 10 % y la app cerrada 5 % (+1 % por nivel de Oro inactivo)', () => {
+    expect(GUARDIA.eficiencia).toBe(0.1);
+    expect(INACTIVO.eficiencia).toBe(0.05);
+    expect(computeStats({ inactivo: TALENT_BY_ID.inactivo.max }).inactivo.eficiencia).toBeCloseTo(0.05 + 0.01 * TALENT_BY_ID.inactivo.max);
   });
 });

@@ -167,7 +167,8 @@
     "pvpSemana": "PvP: end week",
     "masMedallas": "+50 medals",
     "oleadasRecargar": "Survival: entries 3/3",
-    "masRunas": "+100 runes"
+    "masRunas": "+100 runes",
+    "anunciosRecargar": "Ads: no wait"
   },
   "secciones": {
     "jugador": "Player",
@@ -342,7 +343,8 @@
     "cobrar": "Collect",
     "nuevo": "New! You now earn gold even when not playing.",
     "ritmo": "+{n}/min",
-    "explica": "Gold per minute while away (up to {h} h)"
+    "explica": "Gold per minute while away (up to {h} h)",
+    "doble": "×2 with an ad"
   },
   "misiones": {
     "titulo": "Missions",
@@ -457,7 +459,7 @@
     "como": "Medals: 3 per win, 1 per loss and a prize when the week ends."
   },
   "guardia": {
-    "explica": "Guard: while you're here, your troops fight a few enemies on their own (20% of what you earn playing)."
+    "explica": "Guard: while you're here, your troops fight a few enemies on their own (10% of what you earn playing)."
   },
   "oleadas": {
     "titulo": "Survival",
@@ -524,5 +526,12 @@
         "efecto": "All gold"
       }
     }
+  },
+  "anuncio": {
+    "boton": "Watch ad",
+    "espera": "Next in {t}",
+    "quedan": "{n} today",
+    "gano": "+{n} gold",
+    "titulo": "Watch an ad to earn gold"
   }
 }

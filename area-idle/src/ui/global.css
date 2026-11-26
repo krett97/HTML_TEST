@@ -74,3 +74,49 @@ button {
   box-shadow: 0 4px 0 #8a7a68;
   cursor: default;
 }
+
+/* El anuncio de prueba (src/services/ads.ts): cuenta regresiva y la recompensa al terminar. */
+.ad-mock {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: rgba(10, 16, 12, 0.92);
+}
+.ad-mock__box {
+  width: min(320px, 86vw);
+  padding: 24px 20px;
+  border: var(--borde);
+  border-radius: 20px;
+  background: var(--panel);
+  text-align: center;
+  box-shadow: var(--sombra);
+}
+.ad-mock__tag {
+  margin: 0 0 4px;
+  color: var(--gold);
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+.ad-mock__placement {
+  margin: 0 0 16px;
+  color: var(--muted);
+}
+.ad-mock__count {
+  margin: 0 0 20px;
+  font-size: 30px;
+  font-weight: 700;
+}
+.ad-mock__close {
+  min-height: 46px;
+  padding: 8px 18px;
+  border: var(--borde);
+  border-radius: 14px;
+  background: linear-gradient(#ffe27a, #ffc93c);
+  box-shadow: 0 3px 0 var(--line);
+  color: var(--line);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}

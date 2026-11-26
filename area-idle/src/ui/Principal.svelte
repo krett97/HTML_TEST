@@ -3,7 +3,7 @@
   // juntan oro despacio; si tocas el campo, tu círculo lanza flechas ahí un rato. Arriba, el oro y los
   // botones; abajo, el nivel, "Jugar nivel" y "Mejorar" (que abre el árbol encima del campo).
   import { TALENTS } from '../core/datos';
-  import { formatGold, formatNum } from '../core/format';
+  import { formatClock, formatGold, formatNum } from '../core/format';
   import { costOf, levelOf, talentState, talentVisible } from '../core/meta';
   import { INTENTOS_MAX } from '../core/pvp';
   import { t } from '../i18n';
@@ -33,6 +33,19 @@
   $effect(() => juego.setBottomInset(altoBarra));
 
   const meta = $derived($view.meta);
+  const anuncio = $derived($view.anuncio);
+  /** Lo que dio el último anuncio (sale "+45K de oro" un momento). */
+  let ganado = $state(0);
+  let ganadoHasta = 0;
+  async function verAnuncio() {
+    const oro = await juego.watchAdGold();
+    if (oro <= 0) return;
+    ganado = oro;
+    const hasta = (ganadoHasta = Date.now() + 2200);
+    setTimeout(() => {
+      if (ganadoHasta === hasta) ganado = 0;
+    }, 2200);
+  }
   /** Hay alguna mejora que ya te alcanza (punto rojo en "Mejorar"); las Reliquias, desde que se abren las misiones. */
   const hayMejora = $derived(
     TALENTS.some((d) => (d.moneda !== 'gemas' || $view.misiones.abiertas) && talentVisible(meta, d) && talentState(meta, d) === 'disponible' && (d.moneda === 'gemas' ? meta.gemas : meta.oro) >= costOf(d, levelOf(meta, d.id))),
@@ -79,8 +92,35 @@
   <div class="medio">
     {#if $view.mejorando}
       <Arbol cerrar={() => juego.toggleTree(false)} />
-    {:else if $view.pistaGuardia}
-      <p class="pista" data-testid="pista-guardia"><Icon name="mano" size={26} />{$t('principal.pista')}</p>
+    {:else}
+      {#if anuncio.abierto && anuncio.quedan > 0}
+        <!-- Ver un anuncio para ganar oro: lo que ganas en unos minutos jugando. Uno cada 10 min, 6 al día. -->
+        <button
+          type="button"
+          class="anuncio"
+          class:espera={anuncio.espera > 0}
+          disabled={anuncio.espera > 0 || anuncio.viendo}
+          title={$t('anuncio.titulo')}
+          onclick={verAnuncio}
+          data-testid="anuncio-oro"
+        >
+          <Icon name="anuncio" size={34} />
+          <span class="anuncio-txt">
+            {#if anuncio.espera > 0}
+              <span class="cifra" data-testid="anuncio-espera">{$t('anuncio.espera', { t: formatClock(anuncio.espera / 1000) })}</span>
+            {:else}
+              <span class="cifra oro-anuncio"><Icon name="moneda" size={16} />+{formatNum(anuncio.oro)}</span>
+            {/if}
+            <small class="cifra">{$t('anuncio.quedan', { n: anuncio.quedan })}</small>
+          </span>
+        </button>
+      {/if}
+      {#if ganado > 0}
+        <p class="ganado cifra" data-testid="anuncio-ganado"><Icon name="moneda" size={26} />{$t('anuncio.gano', { n: formatNum(ganado) })}</p>
+      {/if}
+      {#if $view.pistaGuardia}
+        <p class="pista" data-testid="pista-guardia"><Icon name="mano" size={26} />{$t('principal.pista')}</p>
+      {/if}
     {/if}
   </div>
 
@@ -228,6 +268,88 @@
     position: relative;
     min-height: 0;
     padding: 10px 10px 8px;
+  }
+  /* El botón del anuncio, arriba a la izquierda del campo: verde cuando se puede, gris con la espera. */
+  .anuncio {
+    position: absolute;
+    top: 10px;
+    left: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px 4px 6px;
+    border: var(--borde);
+    border-radius: 16px;
+    background: linear-gradient(#b8f0a0, #6fd16a);
+    box-shadow: 0 3px 0 var(--line);
+    animation: llama 2.4s ease-in-out infinite;
+  }
+  .anuncio.espera,
+  .anuncio:disabled {
+    background: #e6dccb;
+    animation: none;
+    opacity: 0.92;
+  }
+  .anuncio:active:not(:disabled) {
+    translate: 0 2px;
+    box-shadow: 0 1px 0 var(--line);
+  }
+  /* Brilla (sin cambiar de tamaño) para que se note que está listo. */
+  @keyframes llama {
+    50% {
+      box-shadow: 0 3px 0 var(--line), 0 0 14px 4px rgba(160, 255, 130, 0.85);
+    }
+  }
+  .anuncio-txt {
+    display: grid;
+    justify-items: start;
+    line-height: 1.05;
+  }
+  .oro-anuncio {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 17px;
+  }
+  .anuncio small {
+    color: #2c5a26;
+    font-size: 11px;
+  }
+  .anuncio.espera small,
+  .anuncio.espera .cifra {
+    color: var(--muted);
+  }
+  /* "+45K de oro" al cobrar el anuncio. */
+  .ganado {
+    position: absolute;
+    top: 64px;
+    left: 14px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin: 0;
+    color: #fff;
+    font-size: 22px;
+    -webkit-text-stroke: 1px var(--line);
+    paint-order: stroke fill;
+    animation: sube-oro 2.2s ease-out forwards;
+  }
+  @keyframes sube-oro {
+    0% {
+      translate: 0 10px;
+      opacity: 0;
+    }
+    15% {
+      translate: 0 0;
+      opacity: 1;
+    }
+    80% {
+      opacity: 1;
+    }
+    100% {
+      translate: 0 -16px;
+      opacity: 0;
+    }
   }
   /* La pista de la primera vez: toca el campo y tu círculo lanza flechas. */
   .pista {

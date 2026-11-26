@@ -199,6 +199,55 @@ async function flow(name, browser, fn, opts) {
     check(await page.getByTestId('talento-bolsa').count(), 'no apareció Bolsa grande');
   });
 
+  await flow('anuncio de oro: desde el nivel 3, da unos minutos de oro, luego espera; al volver, ×2 con anuncio', browser, async (page) => {
+    await page.getByTestId('terminar').click();
+    await page.getByTestId('mejorar').click();
+    await page.getByTestId('cerrar-arbol').click();
+    check(!(await page.getByTestId('anuncio-oro').count()), 'el anuncio sale antes del nivel 3');
+    await page.getByTestId('abrir-ajustes').click();
+    for (let i = 0; i < 2; i++) await page.getByTestId('mas-nivel').click();
+    await page.mouse.click(4, 4);
+    await page.waitForTimeout(300);
+    check(await page.getByTestId('anuncio-oro').isEnabled(), 'no sale el botón del anuncio en el nivel 3');
+    const premio = await page.evaluate(() => { let v; window.juego.view.subscribe((x) => (v = x))(); return v.anuncio.oro; });
+    // Cerrarlo antes de tiempo no da nada (y se puede volver a intentar).
+    const antes = await page.evaluate(() => window.juego.meta.oro);
+    await page.getByTestId('anuncio-oro').click();
+    check(await page.getByTestId('anuncio-prueba').count(), 'no salió el anuncio');
+    await page.getByTestId('cerrar-anuncio').click();
+    await page.waitForTimeout(200);
+    check((await page.evaluate(() => window.juego.meta.oro)) === antes, 'cerrar el anuncio antes de tiempo dio oro');
+    check(await page.getByTestId('anuncio-oro').isEnabled(), 'tras cerrarlo antes de tiempo ya no se puede ver');
+    // Visto completo: da el oro, sale "+N de oro" y empieza la espera.
+    await page.getByTestId('anuncio-oro').click();
+    await page.waitForTimeout(3300);
+    await page.getByTestId('cerrar-anuncio').click();
+    await page.waitForTimeout(300);
+    const despues = await page.evaluate(() => window.juego.meta.oro);
+    check(despues - antes >= premio, `el anuncio no dio su oro (${antes} → ${despues}, premio ${premio})`);
+    check(await page.getByTestId('anuncio-ganado').count(), 'no sale "+N de oro"');
+    check(await page.getByTestId('anuncio-espera').count() && !(await page.getByTestId('anuncio-oro').isEnabled()), 'no empezó la espera para el siguiente');
+    check((await page.getByTestId('anuncio-oro').textContent()).includes(`${5} hoy`), 'no cuenta los que quedan hoy');
+    await page.getByTestId('abrir-ajustes').click();
+    await page.getByTestId('anuncios-recargar').click();
+    await page.mouse.click(4, 4);
+    await page.waitForTimeout(300);
+    check(await page.getByTestId('anuncio-oro').isEnabled(), '"Anuncios: sin espera" no quita la espera');
+    // Al volver: cobrar el doble viendo un anuncio.
+    await page.getByTestId('abrir-ajustes').click();
+    await page.getByTestId('simular-hora').click();
+    await page.waitForTimeout(300);
+    const inactivo = Number((await page.getByTestId('oro-inactivo').textContent()).replace(/\D/g, ''));
+    const sinCobrar = await page.evaluate(() => window.juego.meta.oro);
+    await page.getByTestId('cobrar-doble').click();
+    await page.waitForTimeout(3300);
+    await page.getByTestId('cerrar-anuncio').click();
+    await page.waitForTimeout(300);
+    check(!(await page.getByTestId('bienvenida').count()), 'la ventana no se cerró tras el anuncio');
+    const cobrado = (await page.evaluate(() => window.juego.meta.oro)) - sinCobrar;
+    check(inactivo > 0 && cobrado >= 2 * inactivo - 2, `no cobró el doble (${inactivo} → ${cobrado})`);
+  });
+
   await flow('glosario: tipos de daño y enemigos (el azul, oculto hasta abrirlo)', browser, async (page) => {
     await page.getByTestId('terminar').click();
     await page.getByTestId('mejorar').click();
@@ -230,9 +279,10 @@ async function flow(name, browser, fn, opts) {
     check((await page.getByTestId('nivel-actual').textContent()).includes('Nivel 9'), 'no está en el nivel 9');
     await page.getByTestId('jugar').click();
     // Lejos de todo: nadie revienta a los rojos y la muralla recibe piedras.
-    await page.evaluate(() => { window.juego.run.cursor = { x: -999, y: -999 }; window.juego.run.muro.vida = 4; });
+    // (Desde 0.15.0 las piedras pegan menos al principio: con 1 de vida cae con el primer golpe.)
+    await page.evaluate(() => { window.juego.run.cursor = { x: -999, y: -999 }; window.juego.run.muro.vida = 1; });
     let rojos = 0;
-    for (let i = 0; i < 40 && !(await page.getByTestId('muralla-caida').count()); i++) {
+    for (let i = 0; i < 60 && !(await page.getByTestId('muralla-caida').count()); i++) {
       rojos = Math.max(rojos, await page.evaluate(() => window.juego.run.enemies.filter((e) => e.kind === 'rojo').length));
       await page.waitForTimeout(250);
     }

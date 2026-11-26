@@ -18,6 +18,8 @@ import { activeGoldPerMinute } from '../core/inactivo';
 import { clearRaw, loadRaw, saveRaw } from '../services/storage';
 import { RankingService } from '../services/ranking';
 import { cleanName, rankingEntry, rankingUnlocked } from '../core/ranking';
+import { adStatus, canWatchAd, claimAdGold, type EstadoAnuncio } from '../core/anuncios';
+import { createAds, type AdsService } from '../services/ads';
 
 export type Fase = 'jugando' | 'fin' | 'arbol';
 
@@ -39,6 +41,8 @@ export interface Vista {
   meta: Meta;
   /** Oro juntado mientras no jugabas, esperando a que lo cobres (se muestra fuera de la partida). */
   inactivo: { segundos: number; oro: number; tope: boolean } | null;
+  /** Oro por ver un anuncio (desde el nivel 3): cuánto da, cuántos quedan hoy, la espera y si se está viendo uno. */
+  anuncio: EstadoAnuncio & { viendo: boolean };
   /** Oro por minuto sin jugar y hasta cuántas horas (null si aún no se abre). */
   ritmoInactivo: { porMinuto: number; horas: number } | null;
   /** Esta partida abrió el oro por inactividad (aviso en el fin). */
@@ -112,7 +116,10 @@ export class Juego {
   abajo = 0;
   private ultimaVista = 0;
 
-  constructor(private readonly audio: AudioEngine) {
+  constructor(
+    private readonly audio: AudioEngine,
+    private readonly ads: AdsService = createAds(),
+  ) {
     this.meta = loadMeta(loadRaw());
     this.pendiente = idleReward(this.meta, Date.now());
     this.fase = this.meta.partidas > 0 ? 'arbol' : 'jugando';
@@ -128,6 +135,40 @@ export class Juego {
     if (r) this.pendiente = { segundos: (this.pendiente?.segundos ?? 0) + r.segundos, oro: (this.pendiente?.oro ?? 0) + r.oro, tope: r.tope };
     this.save();
     this.publish();
+  }
+
+  /** Viendo un anuncio ahora (para no abrir dos). */
+  private viendoAnuncio = false;
+
+  /** Ver un anuncio para ganar oro: si se ve completo, da lo de unos minutos jugando. Devuelve el oro (0 si no). */
+  async watchAdGold(): Promise<number> {
+    if (this.viendoAnuncio || !canWatchAd(this.meta, Date.now()) || !this.ads.isReady('oro')) return 0;
+    this.viendoAnuncio = true;
+    this.publish();
+    const r = await this.ads.showRewarded('oro');
+    this.viendoAnuncio = false;
+    const oro = r.rewarded ? claimAdGold(this.meta, Date.now()) : 0;
+    if (oro > 0) {
+      this.audio.play('compra');
+      this.save();
+    }
+    this.publish();
+    return oro;
+  }
+
+  /** Cobra lo juntado mientras no jugabas, ×2 si ves un anuncio completo (si no, se queda la ventana). */
+  async collectIdleDouble(): Promise<number> {
+    if (this.viendoAnuncio || !this.pendiente || !this.ads.isReady('doble')) return 0;
+    this.viendoAnuncio = true;
+    this.publish();
+    const r = await this.ads.showRewarded('doble');
+    this.viendoAnuncio = false;
+    if (!r.rewarded || !this.pendiente) {
+      this.publish();
+      return 0;
+    }
+    this.pendiente = { ...this.pendiente, oro: this.pendiente.oro * 2 };
+    return this.collectIdle();
   }
 
   /** Cobra lo juntado mientras no jugabas. */
@@ -165,7 +206,7 @@ export class Juego {
     return s.arqueros.cantidad > 0 || s.mago.activo;
   }
 
-  /** Oro por baja en guardia: el 20 % de lo que de verdad ganas jugando, si se revienta a todos. */
+  /** Oro por baja en guardia: el 10 % de lo que de verdad ganas jugando, si se revienta a todos. */
   private oroGuardia(): number {
     return GUARDIA.eficiencia * activeGoldPerMinute(this.meta) * (GUARDIA.cada / 60);
   }
@@ -555,6 +596,13 @@ export class Juego {
     this.publish();
   }
 
+  /** Modo pruebas: los anuncios de oro sin espera y con los del día completos. */
+  resetAds(): void {
+    this.meta.anuncios = { dia: '', vistos: 0, ultimo: 0 };
+    this.save();
+    this.publish();
+  }
+
   /**
    * Modo pruebas: avanza la partida como si hubieras jugado `segundos` (partidas, oro, compras en el
    * árbol, niveles). Devuelve un resumen.
@@ -619,6 +667,7 @@ export class Juego {
       gano: run?.gano ?? false,
       premio: this.premio,
       inactivo: this.pendiente,
+      anuncio: { ...adStatus(this.meta, Date.now()), viendo: this.viendoAnuncio },
       muro: run ? { ...run.muro } : null,
       jefe: run?.nivel.jefe
         ? (() => {

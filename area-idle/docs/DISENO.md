@@ -86,17 +86,18 @@ al daño físico, así que tus flechas y los arqueros son la respuesta: hay que 
 ## 5b. Oro mientras no juegas (desde 0.3.0)
 
 Se abre al **llegar al nivel 3** (aviso en el fin de la partida). Al volver, la ventana "Mientras no
-estabas" dice cuánto tiempo pasó y cuánto oro se juntó, con un botón para cobrar.
+estabas" dice cuánto tiempo pasó y cuánto oro se juntó, con un botón para cobrar y otro para cobrar
+**×2 viendo un anuncio** (desde 0.17.0; ver 5l).
 
-- Da **10 %** (desde 0.9.0; antes 15 %) de lo que **de verdad ganas por minuto jugando** (desde 0.15.0: el
+- Da **5 %** (desde 0.17.0; antes 10 %, y 15 % antes de 0.9.0) de lo que **de verdad ganas por minuto jugando** (desde 0.15.0: el
   promedio de tus últimas partidas, contando la pausa entre una y otra; antes era una estimación con el nivel
   más alto, que daba de más), hasta **2 horas**. Menos de un minuto fuera no cuenta.
-- **Oro inactivo** (+2 % por nivel, hasta 5 → **20 %**; pide haber llegado al nivel 3) y **Bolsa grande**
+- **Oro inactivo** (+1 % por nivel, hasta 5 → **10 %**; antes de 0.17.0, +2 % hasta 20 %; pide haber llegado al nivel 3) y **Bolsa grande**
   (+30 min por nivel, hasta 6 → **5 h**), en el árbol del jugador, bajo **Ganancia de oro** (+10 % por nivel,
   hasta 15 → ×2.5), que multiplica todo el oro: el de los slimes, el premio por nivel y lo que se junta sin
   jugar. (Antes de 0.15.0: Oro inactivo hasta 80 %, Bolsa hasta 12 h y Ganancia de oro ×5.5; ver 5k.)
-- En el árbol, debajo del oro, dice cuánto se gana por minuto sin jugar (o, si la guardia está andando,
-  cuánto junta la guardia, en verde).
+- En la pantalla principal, debajo del oro, dice cuánto juntan tus tropas por minuto (en verde) o, sin
+  tropas, cuánto se gana por minuto sin jugar.
 - El juego guarda la hora en cada guardado (también cada 20 s y al pasar a segundo plano). El modo
   pruebas tiene "Simular 1 h fuera", "+1 nivel" y **"+1 min de juego" / "+10 min de juego"**: el jugador
   simulado del simulador juega ese tiempo sobre tu partida (partidas, oro, compras en el árbol, niveles) y
@@ -282,8 +283,8 @@ días con Supervivencia y Herrería). Lo que estaba de más y qué cambió:
 
 | Qué | Antes | Ahora | Por qué |
 |---|---|---|---|
-| Oro de app cerrada | hasta 80 % por 12 h, con un estimado del nivel más alto | 10 % + 2 % por nivel de Oro inactivo (hasta 20 %), 2 h + 30 min por nivel de Bolsa grande (hasta 5 h), de lo que **de verdad** ganas por minuto | el 74 % del oro de un jugador a ratos salía de ahí; con 1 h de juego llegaba al 48 |
-| Guardia | 10 puntos más que la app cerrada (hasta 90 %) | 20 % fijo | casi valía lo mismo dejarla que jugar |
+| Oro de app cerrada | hasta 80 % por 12 h, con un estimado del nivel más alto | 10 % + 2 % por nivel de Oro inactivo (hasta 20 %; 0.17.0: 5 % + 1 %, hasta 10 %), 2 h + 30 min por nivel de Bolsa grande (hasta 5 h), de lo que **de verdad** ganas por minuto | el 74 % del oro de un jugador a ratos salía de ahí; con 1 h de juego llegaba al 48 |
+| Guardia | 10 puntos más que la app cerrada (hasta 90 %) | 20 % fijo (0.17.0: 10 %) | casi valía lo mismo dejarla que jugar |
 | Ganancia de oro | +30 % por nivel (×5.5) | +10 % (×2.5) | multiplicaba todo, también la app cerrada |
 | Botín y premio por nivel | +25 % por nivel; el premio era ~1 % del oro | +10 % por nivel; el premio es el 30 % del oro del nivel (×5 en jefes) | el Botín no servía |
 | Curva de vida | ×1.3 hasta el 20, ×1.14 después | ×1.32 y ×1.17 | se sentía fácil: del 20 al 48 en unos 70 minutos |
@@ -295,6 +296,23 @@ días con Supervivencia y Herrería). Lo que estaba de más y qué cambió:
 
 Lo que queda: el árbol se acaba hacia el nivel 38–45 (solo sigue Daño hasta 100); de ahí en adelante
 manda la Supervivencia con la Herrería, y la mazmorra (51–100) traerá lo siguiente.
+
+## 5l. Oro por ver un anuncio (desde 0.17.0)
+
+Para que el oro sin jugar no pese tanto (la guardia bajó a 10 % y la app cerrada a 5 %), pero quien quiera
+pueda adelantar:
+
+- **Botón en la pantalla principal** (arriba a la izquierda del campo, desde el **nivel 3**): una pantallita
+  con una moneda, "+45K" y cuántos quedan hoy. Brilla cuando está listo. Al verlo completo da **lo que ganas
+  en 5 minutos jugando** (el mismo promedio de oro por minuto; al menos 25) y sale "+45K de oro".
+- **Uno cada 10 minutos** (mientras, dice "Otro en 09:59") y **6 al día** (el día cambia a medianoche); si
+  ya no quedan, el botón se esconde hasta mañana. Cerrarlo antes de tiempo no da nada ni gasta el turno.
+- **Al volver** ("Mientras no estabas"): **×2 con anuncio** al cobrar lo de la app cerrada (no cuenta para
+  los 6 del día).
+- Cuánto pesa: 6 anuncios al día son media hora de oro de juego; jugar sigue siendo lo que más da.
+- Por ahora es un **anuncio de prueba** (cuenta regresiva de 3 s, en el navegador y en el APK de prueba):
+  `src/services/ads.ts` tiene la misma interfaz que el juego del gato, lista para AdMob cuando exista la app
+  con Capacitor (con los IDs fuera del repo). Modo pruebas: **Anuncios: sin espera**.
 
 ## 5e. Misiones, gemas moradas y Reliquias (desde 0.6.0)
 
@@ -408,8 +426,8 @@ Fuera de un nivel estás en la **pantalla principal**: el campo **a color** (ant
 - Salen **pocos enemigos**: los del nivel más alto ya superado (sin jefes), uno cada 2.5 s y como mucho
   12 a la vez. No hay tiempo, no se pierde, nadie marcha hacia la muralla ni le tira cosas.
 - Cada baja (de tus tropas o de tu círculo) da un oro fijo (sale "+N" dorado) para que, si se revienta a
-  todos, se junte el **20 %** de lo que de verdad ganas por minuto jugando (el mismo promedio que la app
-  cerrada). Como salen a ritmo fijo, tocar no da más que eso: solo ayuda a que no se escape nada cuando
+  todos, se junte el **10 %** (desde 0.17.0; antes 20 %) de lo que de verdad ganas por minuto jugando (el
+  mismo promedio que la app cerrada). Como salen a ritmo fijo, tocar no da más que eso: solo ayuda a que no se escape nada cuando
   tus tropas no alcanzan. Desde 0.15.0 **Oro inactivo ya no la sube** (antes llegaba a 90 %). Jugar
   niveles sigue siendo lo mejor.
 - No cuenta para misiones, ranking ni PvP (si no, "revienta 600" se cumpliría solo).
@@ -452,13 +470,14 @@ un 55–75 % en el desierto y la montaña, casi siempre porque cae la muralla: a
 máximo (cerca del 38 solo quedan Daño y Muralla reforzada) y lo que sigue es la Supervivencia y la
 Herrería.
 
-Otros jugadores simulados (`tools/balance.ts`):
-- **A ratos con la app cerrada** (15 min de juego cada 3 h): nivel 32 a las 6 h, 37 a las 12 h, 49 al
-  día y 55 a los 2 días; el 73 % de su oro es de la app cerrada.
-- **A ratos en la guardia** (15 min de juego, 1 h en la guardia): 36 a las 3 h, 46 a las 6 h, 49 a las
-  12 h; la guardia es la mitad de su oro.
-- **Días** (4 ratos de 15 min, la app cerrada entre ratos y 3 Supervivencias al día): día 1 → 47, día 2
-  → 53, día 3 → 58, día 5 → 63, día 8 → 64, con el equipo en +3/+4 al día 8.
+Otros jugadores simulados (`tools/balance.ts`; 0.17.0, con la guardia a 10 % y la app cerrada a 5 %; entre
+paréntesis, 0.15.0; los bots no ven anuncios):
+- **A ratos con la app cerrada** (15 min de juego cada 3 h): nivel 31 a las 6 h (32), 37 a las 12 h (37),
+  47 al día (49) y 52 a los 2 días (55); el 59 % de su oro es de la app cerrada (73 %).
+- **A ratos en la guardia** (15 min de juego, 1 h en la guardia): 34 a las 3 h (36), 37 a las 6 h (46), 49 a
+  las 12 h (49); la guardia es un tercio de su oro (la mitad).
+- **Días** (4 ratos de 15 min, la app cerrada entre ratos y 3 Supervivencias al día): día 1 → 38 (47), día 2
+  → 52 (53), día 3 → 58, día 5 → 59 (63), día 6 → 59 (64), con el equipo en +3/+4.
 
 ## 7. Técnica
 

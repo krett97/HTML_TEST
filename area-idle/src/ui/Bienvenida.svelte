@@ -1,5 +1,6 @@
 <script lang="ts">
-  // Al volver: lo que se juntó mientras no jugabas (desde el nivel 3). Se cobra con un toque.
+  // Al volver: lo que se juntó mientras no jugabas (desde el nivel 3). Se cobra con un toque, o el doble
+  // viendo un anuncio.
   import { formatDuration, formatNum } from '../core/format';
   import { t } from '../i18n';
   import { useJuego } from './context';
@@ -19,7 +20,11 @@
     {#if $view.inactivo.tope && $view.ritmoInactivo}
       <p class="tope">{$t('inactivo.tope', { h: $view.ritmoInactivo.horas })}</p>
     {/if}
-    <button type="button" class="btn btn--accent cobrar" onclick={() => juego.collectIdle()} data-testid="cobrar">{$t('inactivo.cobrar')}</button>
+    <div class="cobros">
+      <button type="button" class="btn cobrar" disabled={$view.anuncio.viendo} onclick={() => juego.collectIdle()} data-testid="cobrar">{$t('inactivo.cobrar')}</button>
+      <!-- Viendo un anuncio completo, se cobra el doble. -->
+      <button type="button" class="btn btn--accent cobrar doble" disabled={$view.anuncio.viendo} onclick={() => juego.collectIdleDouble()} data-testid="cobrar-doble"><Icon name="anuncio" size={26} />{$t('inactivo.doble')}</button>
+    </div>
   </div>
 {/if}
 
@@ -72,8 +77,16 @@
     color: var(--danger);
     font-size: 13px;
   }
+  .cobros {
+    display: grid;
+    gap: 8px;
+    width: 100%;
+  }
   .cobrar {
     width: 100%;
+    font-size: 20px;
+  }
+  .doble {
     font-size: 22px;
   }
 </style>

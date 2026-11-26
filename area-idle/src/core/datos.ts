@@ -336,22 +336,22 @@ export function levelConfig(nivel: number): LevelConfig {
   };
 }
 
-/**
- * Oro mientras no juegas: se abre al llegar al nivel 3. Da una parte (`eficiencia`) de lo que se gana
- * por minuto jugando el nivel más alto superado, hasta `horas` horas. Los talentos Oro inactivo y Bolsa
- * grande suben la parte y las horas. Menos de un minuto fuera no cuenta.
- */
 /** Lo que da cada nivel de las mejoras de oro: Ganancia de oro (todo el oro) y Botín (el premio por nivel). */
 export const ORO_TALENTOS = { oro: 0.1, botin: 0.1 };
-export const INACTIVO = { desde: 3, eficiencia: 0.1, porNivel: 0.02, horas: 2, horasPorNivel: 0.5, minSegundos: 60, segundosPorNivelJugado: 30 } as const;
+/**
+ * Oro mientras no juegas: se abre al llegar al nivel 3. Da una parte (`eficiencia`, 5 %) de lo que de
+ * verdad ganas por minuto jugando, hasta `horas` horas. Los talentos Oro inactivo (+1 % por nivel) y Bolsa
+ * grande (+30 min) suben la parte y las horas. Menos de un minuto fuera no cuenta.
+ */
+export const INACTIVO = { desde: 3, eficiencia: 0.05, porNivel: 0.01, horas: 2, horasPorNivel: 0.5, minSegundos: 60, segundosPorNivelJugado: 30 } as const;
 
 /**
- * Modo guardia: mientras estás en el árbol (sin jugar un nivel), tus tropas (arqueros y mago) pelean solas
+ * Modo guardia (la pantalla principal, fuera de los niveles): tus tropas (arqueros y mago) pelean solas
  * contra pocos enemigos: uno cada `cada` s, como mucho `max` a la vez, sin tiempo ni ataques a la muralla.
- * Cada baja da oro fijo para que, si tus tropas alcanzan, se gane el 20 % de lo que de verdad ganas
+ * Cada baja da oro fijo para que, si se revienta a todos, se gane el 10 % de lo que de verdad ganas
  * jugando (no lo sube "Oro inactivo", que es solo para la app cerrada).
  */
-export const GUARDIA = { cada: 2.5, max: 12, eficiencia: 0.2, iniciales: 3, reposo: 6 } as const;
+export const GUARDIA = { cada: 2.5, max: 12, eficiencia: 0.1, iniciales: 3, reposo: 6 } as const;
 
 /**
  * Autoapuntado (talento del jugador): si no tocas en `espera` s, tu círculo se va solo hacia donde hay más

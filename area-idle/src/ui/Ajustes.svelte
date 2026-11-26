@@ -64,6 +64,7 @@
       <button type="button" class="btn" onclick={() => juego.addMedals(50)} data-testid="mas-medallas">{$t('ajustes.masMedallas')}</button>
       <button type="button" class="btn" onclick={() => juego.survivalRefill()} data-testid="oleadas-recargar">{$t('ajustes.oleadasRecargar')}</button>
       <button type="button" class="btn" onclick={() => juego.addRunas(100)} data-testid="mas-runas">{$t('ajustes.masRunas')}</button>
+      <button type="button" class="btn" onclick={() => juego.resetAds()} data-testid="anuncios-recargar">{$t('ajustes.anunciosRecargar')}</button>
       <button type="button" class="btn" onclick={() => (juego.simulateAway(3600), cerrar())} data-testid="simular-hora">{$t('ajustes.simular')}</button>
     </div>
     <!-- Como si hubieras jugado ese tiempo: partidas, oro, compras en el árbol y niveles. -->

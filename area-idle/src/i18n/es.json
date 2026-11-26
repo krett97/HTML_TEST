@@ -167,7 +167,8 @@
     "pvpSemana": "PvP: terminar semana",
     "masMedallas": "+50 medallas",
     "oleadasRecargar": "Supervivencia: entradas 3/3",
-    "masRunas": "+100 runas"
+    "masRunas": "+100 runas",
+    "anunciosRecargar": "Anuncios: sin espera"
   },
   "secciones": {
     "jugador": "Jugador",
@@ -342,7 +343,8 @@
     "cobrar": "Cobrar",
     "nuevo": "¡Nuevo! Ahora ganas oro aunque no juegues.",
     "ritmo": "+{n}/min",
-    "explica": "Oro por minuto mientras no juegas (hasta {h} h)"
+    "explica": "Oro por minuto mientras no juegas (hasta {h} h)",
+    "doble": "×2 con anuncio"
   },
   "misiones": {
     "titulo": "Misiones",
@@ -457,7 +459,7 @@
     "como": "Medallas: 3 por pelea ganada, 1 por perdida y un premio al terminar la semana."
   },
   "guardia": {
-    "explica": "Guardia: mientras estás aquí, tus tropas pelean solas contra pocos enemigos (20 % de lo que ganas jugando)."
+    "explica": "Guardia: mientras estás aquí, tus tropas pelean solas contra pocos enemigos (10 % de lo que ganas jugando)."
   },
   "oleadas": {
     "titulo": "Supervivencia",
@@ -524,5 +526,12 @@
         "efecto": "Todo el oro"
       }
     }
+  },
+  "anuncio": {
+    "boton": "Ver anuncio",
+    "espera": "Otro en {t}",
+    "quedan": "{n} hoy",
+    "gano": "+{n} de oro",
+    "titulo": "Ver un anuncio para ganar oro"
   }
 }
