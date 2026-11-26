@@ -106,7 +106,7 @@
           <Icon name="pvp" size={28} /><small class="cifra">{meta.pvp.intentos}/{INTENTOS_MAX}</small>
         </button>
       {/if}
-      <button type="button" class="btn btn--accent jugar" onclick={() => juego.play()} data-testid="jugar"><Icon name="jugar" size={26} /> {$t('arbol.jugar')}</button>
+      <button type="button" class="btn btn--accent jugar" onclick={() => juego.play()} data-testid="jugar"><Icon name="jugar" size={22} />{$t('arbol.jugar')}</button>
       <button type="button" class="btn modo mejorar" class:abierto={$view.mejorando} aria-pressed={$view.mejorando} onclick={() => juego.toggleTree()} data-testid="abrir-mejorar">
         <Icon name="mejorar" size={32} /><small>{$t('principal.mejorar')}</small>
         {#if hayMejora && !$view.mejorando}<span class="punto" data-testid="punto-mejorar"></span>{/if}
@@ -314,9 +314,11 @@
   }
   .jugar {
     flex: 1;
+    gap: 4px;
     min-width: 0;
     min-height: 60px;
-    font-size: 22px;
+    padding: 6px 10px;
+    font-size: 21px;
     line-height: 1.05;
     text-align: center;
   }
@@ -328,7 +330,7 @@
     align-content: center;
     gap: 1px;
     min-height: 60px;
-    padding: 2px 9px;
+    padding: 2px 7px;
     line-height: 1;
   }
   .modo small {
@@ -341,7 +343,7 @@
     background: linear-gradient(#ffb3a8, #ef7a6c);
   }
   .mejorar {
-    min-width: 78px;
+    min-width: 72px;
     background: linear-gradient(#fffaf0, #ffe9c2);
   }
   .mejorar.abierto {
