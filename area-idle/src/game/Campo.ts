@@ -7,7 +7,7 @@ import { ENEMIES, levelConfig, type EnemyKind, type ZoneId } from '../core/datos
 import { formatNum } from '../core/format';
 import { crearFuenteNumeros, NUMEROS } from './numeros';
 import { tierDe } from '../core/equipo';
-import { ALLY_ROW, archerSpots, autoAiming, FIELD_W, hidden, wizardSpot, type Forma, type Run, type RunEvent } from '../core/run';
+import { ALLY_ROW, archerSpots, autoAiming, circleActive, FIELD_W, hidden, wizardSpot, type Forma, type Run, type RunEvent } from '../core/run';
 
 const URLS = import.meta.glob<string>('../assets/arte/*.png', { eager: true, query: '?url', import: 'default' });
 
@@ -127,6 +127,10 @@ export class Campo extends Phaser.Scene {
   private barraMuro!: Phaser.GameObjects.Graphics;
   private zoom = 1;
   private tiempo = 0;
+  /** Cuánto sube la cámara (unidades) en la pantalla principal para que la muralla quede arriba de los botones. */
+  private levante = 0;
+  /** Si el círculo se veía en el cuadro anterior (en guardia aparece donde tocaste, sin deslizarse). */
+  private cursorVisto = false;
   private unsub: (() => void)[] = [];
 
   constructor(private readonly juego: Juego) {
@@ -148,7 +152,7 @@ export class Campo extends Phaser.Scene {
     this.ajustarCamara();
     this.scale.on(Phaser.Scale.Events.RESIZE, this.ajustarCamara, this);
 
-    this.pasto = this.add.tileSprite(0, 0, FIELD_W, this.alto + 4, 'pasto').setOrigin(0, 0).setTileScale(0.36).setDepth(D.pasto);
+    this.pasto = this.add.tileSprite(0, 0, FIELD_W, this.alto + 400, 'pasto').setOrigin(0, 0).setTileScale(0.36).setDepth(D.pasto);
     // El arte de la muralla y la torre va a 8 px por unidad.
     this.muralla = this.add.tileSprite(0, 0, FIELD_W, ALLY_ROW, 'muralla').setOrigin(0, 0).setTileScale(1 / 8).setDepth(D.muro);
     this.sombraMuro = this.add.image(0, 0, 'rectangulo').setOrigin(0, 1).setTint(0x1e4a2a).setAlpha(0.25).setDepth(D.sombra - 0.1);
@@ -254,8 +258,9 @@ export class Campo extends Phaser.Scene {
 
   private ajustarCamara(): void {
     this.zoom = this.scale.width / FIELD_W;
-    this.cameras.main.setOrigin(0, 0).setZoom(this.zoom).setScroll(0, 0);
-    this.pasto?.setSize(FIELD_W, this.alto + 4);
+    this.cameras.main.setOrigin(0, 0).setZoom(this.zoom).setScroll(0, this.levante);
+    // Más alto que la pantalla: cuando la cámara sube (pantalla principal) también hay pasto abajo.
+    this.pasto?.setSize(FIELD_W, this.alto + 400);
     if (this.muralla) this.colocarMuralla();
   }
 
@@ -270,6 +275,13 @@ export class Campo extends Phaser.Scene {
   private libreArriba(): number {
     const pxPorUnidad = this.game.canvas.getBoundingClientRect().width / FIELD_W || 1;
     return 92 / pxPorUnidad;
+  }
+
+  /** En la pantalla principal la cámara sube lo que tapa la barra de abajo (en un nivel, nada). */
+  private levanteObjetivo(): number {
+    if (this.juego.fase !== 'arbol') return 0;
+    const pxPorUnidad = this.game.canvas.getBoundingClientRect().width / FIELD_W || 1;
+    return Math.min(this.alto / 3, this.juego.abajo / pxPorUnidad);
   }
 
   /** Flores, piedras y arbustos al azar sobre el pasto. */
@@ -328,10 +340,12 @@ export class Campo extends Phaser.Scene {
     this.dibujar(events, run);
   }
 
-  /** Modo guardia (en el árbol): tus tropas solas contra pocos enemigos. Sin tropas, el campo queda quieto. */
+  /** La pantalla principal (modo guardia): pocos enemigos, tus tropas y tu círculo si tocas. */
   private nuevaGuardia(): void {
     this.limpiar();
-    const events = this.juego.startGuard(this.alto, this.libreArriba());
+    this.levante = this.levanteObjetivo();
+    this.cameras.main.setScroll(0, this.levante);
+    const events = this.juego.startGuard(this.alto, this.levante + this.libreArriba());
     const run = this.juego.run;
     if (!run?.guardia) {
       this.decorar(levelConfig(this.juego.meta.jugando).zona);
@@ -375,6 +389,13 @@ export class Campo extends Phaser.Scene {
     const run = this.juego.run;
     // En guardia, si compraste tropas, se acomodan.
     if (run?.guardia && (this.arqueros.length !== run.stats.arqueros.cantidad || this.mago.visible !== run.stats.mago.activo)) this.colocarTropas(run);
+    // La cámara sube (pantalla principal) o baja (un nivel) suave; en guardia, los enemigos no pasean bajo el oro.
+    const objetivo = this.levanteObjetivo();
+    if (Math.abs(objetivo - this.levante) > 0.05) {
+      this.levante += (objetivo - this.levante) * (1 - Math.pow(0.002, dt));
+      this.cameras.main.setScroll(0, this.levante);
+    }
+    if (run?.guardia) run.arriba = Math.min(run.h / 3, objetivo + this.libreArriba());
     if (run) {
       this.moverSlimes(run, dt);
       this.dibujarCursor(run, dt);
@@ -986,9 +1007,18 @@ export class Campo extends Phaser.Scene {
   // ---- Tu círculo ----
 
   private dibujarCursor(run: Run, dt: number): void {
-    // En guardia tu círculo descansa.
-    this.cursor.setVisible(!run.guardia);
-    if (run.guardia) return;
+    // En guardia tu círculo descansa hasta que tocas (y aparece ahí, sin deslizarse).
+    const activo = circleActive(run) && run.cursor.x >= 0;
+    if (!activo) {
+      this.cursor.setVisible(false);
+      this.cursorVisto = false;
+      return;
+    }
+    if (!this.cursorVisto) {
+      this.cursorPos.x = run.cursor.x;
+      this.cursorPos.y = run.cursor.y;
+      this.cursorVisto = true;
+    }
     // El círculo se desliza rápido hasta donde tocaste.
     const k = 1 - Math.pow(0.0005, dt);
     this.cursorPos.x += (run.cursor.x - this.cursorPos.x) * k;

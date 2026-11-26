@@ -363,16 +363,19 @@ export function guardLevel(nivelAbierto: number): number {
 const guardStats = (base: Stats): Stats => ({ ...base, duracion: Infinity });
 
 /**
- * Modo guardia: tus tropas solas (tu círculo no dispara) contra pocos enemigos del nivel `nivel`, sin
- * tiempo, sin perder y sin que le peguen a la muralla. Cada baja da `oroPorBaja`.
+ * Modo guardia (la pantalla principal): tus tropas contra pocos enemigos del nivel `nivel`, sin tiempo, sin
+ * perder y sin que le peguen a la muralla. Cada baja da `oroPorBaja`. Tu círculo descansa hasta que tocas
+ * el campo; entonces dispara donde tocaste, hasta `GUARDIA.reposo` s después del último toque.
  */
 export function createGuardRun(base: Stats, h: number, nivel: number, oroPorBaja: number, seed = Date.now(), arriba = MARGIN): Run {
   const run = createRun(guardStats(base), h, guardLevel(nivel), seed, arriba);
   run.guardia = { oroPorBaja, falta: GUARDIA.cada };
   run.cursor = { x: -999, y: -999 };
-  run.disparo = Infinity;
   return run;
 }
+
+/** ¿Tu círculo está disparando? En un nivel, siempre; en guardia, solo un rato después de tocar. */
+export const circleActive = (run: Run): boolean => !run.guardia || run.manual < GUARDIA.reposo;
 
 /** Al comprar algo con la guardia andando: mismas tropas, nuevas estadísticas (y el oro por baja). */
 export function updateGuardRun(run: Run, base: Stats, oroPorBaja: number): void {
@@ -810,9 +813,12 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
     run.cursor.y += dy * k;
   }
 
-  // Tu círculo: cada intervalo empiezan a caer flechas donde está; pegan al aterrizar (en guardia, no).
+  // Tu círculo: cada intervalo empiezan a caer flechas donde está; pegan al aterrizar (en guardia, solo
+  // si tocaste hace poco: mientras descansa no junta disparos).
+  const circulo = circleActive(run);
   run.disparo -= step;
-  while (!run.guardia && run.disparo <= 0) {
+  if (!circulo) run.disparo = Math.max(0, run.disparo);
+  while (circulo && run.disparo <= 0) {
     run.disparo += s.intervalo;
     const forma: Forma = { tipo: 'circulo', r: s.radio };
     const { x, y } = run.cursor;

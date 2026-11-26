@@ -577,6 +577,8 @@ icon('reloj', I(circ(32, 32, 26, P.blanco) + line('M32 32 v-16 M32 32 l12 8', K,
 icon('candado', I(o('M18 28 v-8 a14 14 0 0 1 28 0 v8', 'none', 6) + rect(10, 28, 44, 30, 8, P.oro, 5) + circ(32, 41, 5, K, 0) + rect(29, 42, 6, 10, 2, K, 0)));
 icon('arbol', I(line('M32 14 V30 M32 30 L14 46 M32 30 V46 M32 30 L50 46', K, 5) + circ(32, 12, 9, P.oro, 5) + circ(14, 50, 8, P.limo, 5) + circ(32, 50, 8, P.magia, 5) + circ(50, 50, 8, P.fuego, 5)));
 icon('jugar', I(o('M20 10 L54 32 L20 54 Z', P.blanco, 6)));
+// Mejorar: una persona (capucha azul) con una flecha verde hacia arriba a su lado.
+icon('mejorar', I(o('M4 60 C4 44 12 37 24 37 C36 37 44 44 44 60 Z', P.azul, 5) + line('M24 40 V60', P.azulS, 3) + circ(24, 22, 11, P.crema, 5) + circ(20.5, 21, 1.8, K, 0) + circ(27.5, 21, 1.8, K, 0) + line('M21 26.5 q3 2.5 6 0', K, 2) + o('M50 4 L63 21 H56 V48 H44 V21 H37 Z', P.pasto, 4) + f('M50 9 L58 19 H53 V44 H48 V19 Z', P.pastoC, 'opacity=".7"')));
 icon('ajustes', I(o('M32 6 l6 2 l2 8 l8 4 l8 -2 l4 6 l-5 6 l0 8 l5 6 l-4 6 l-8 -2 l-8 4 l-2 8 l-6 2 l-6 -2 l-2 -8 l-8 -4 l-8 2 l-4 -6 l5 -6 l0 -8 l-5 -6 l4 -6 l8 2 l8 -4 l2 -8 z', P.grisS, 5) + circ(32, 34, 9, P.piedra, 5)));
 icon('mano', I(o('M20 60 v-22 l-8 -10 c-2 -4 4 -8 7 -4 l7 8 v-24 a4 4 0 0 1 8 0 v16 a4 4 0 0 1 8 0 v4 a4 4 0 0 1 8 0 v4 a4 4 0 0 1 8 0 v16 c0 8 -6 12 -14 12 z', P.crema, 5)));
 

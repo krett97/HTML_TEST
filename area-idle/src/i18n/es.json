@@ -27,7 +27,7 @@
     "leQuedo": "Le quedó {pct}%"
   },
   "arbol": {
-    "jugar": "¡Jugar!",
+    "jugar": "Jugar nivel",
     "comprar": "Comprar",
     "max": "MAX",
     "requiere": "Sube {nombre} a {n}",
@@ -36,6 +36,10 @@
     "nivelAnterior": "Nivel anterior",
     "nivelSiguiente": "Nivel siguiente",
     "requiereNivel": "Llega al nivel {n}"
+  },
+  "principal": {
+    "mejorar": "Mejorar",
+    "pista": "Toca el campo para lanzar flechas"
   },
   "talentos": {
     "danio": {

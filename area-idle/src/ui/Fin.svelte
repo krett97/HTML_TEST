@@ -21,7 +21,7 @@
       <div class="fila"><Icon name="runa" size={34} /><span>{$t('oleadas.runas')}</span><strong class="cifra runas" data-testid="fin-runas">+{formatNum(f.runas)}</strong></div>
       <div class="fila"><Icon name="moneda" size={34} /><span>{$t('fin.oro')}</span><strong class="cifra oro">+{formatGold(f.oro)}</strong></div>
       <div class="botones">
-        <button type="button" class="btn btn--accent ancho" onclick={() => juego.openTree()} data-testid="mejorar"><Icon name="arbol" size={26} /> {$t('fin.mejorar')}</button>
+        <button type="button" class="btn btn--accent ancho" onclick={() => juego.openTree()} data-testid="mejorar"><Icon name="mejorar" size={28} /> {$t('fin.mejorar')}</button>
       </div>
     </div>
   {:else}
@@ -54,14 +54,14 @@
     {/if}
     <div class="botones">
       {#if $view.gano}
-        <button type="button" class="btn" onclick={() => juego.openTree()} data-testid="mejorar"><Icon name="arbol" size={26} /> {$t('fin.mejorar')}</button>
+        <button type="button" class="btn" onclick={() => juego.openTree()} data-testid="mejorar"><Icon name="mejorar" size={28} /> {$t('fin.mejorar')}</button>
         <button type="button" class="btn btn--accent" onclick={() => juego.playLevel(nivel + 1)} data-testid="siguiente"><Icon name="jugar" size={22} /> {$t('fin.siguiente')}</button>
       {:else}
         <button type="button" class="btn btn--accent ancho" onclick={() => juego.playLevel(nivel)} data-testid="reintentar"><Icon name="jugar" size={22} /> {$t('fin.reintentar', { n: nivel })}</button>
         {#if nivel > 1}
           <button type="button" class="btn" onclick={() => juego.playLevel(nivel - 1)} data-testid="anterior"><Icon name="moneda" size={22} /> {$t('fin.anterior', { n: nivel - 1 })}</button>
         {/if}
-        <button type="button" class="btn" class:ancho={nivel <= 1} onclick={() => juego.openTree()} data-testid="mejorar"><Icon name="arbol" size={26} /> {$t('fin.mejorar')}</button>
+        <button type="button" class="btn" class:ancho={nivel <= 1} onclick={() => juego.openTree()} data-testid="mejorar"><Icon name="mejorar" size={28} /> {$t('fin.mejorar')}</button>
       {/if}
     </div>
   </div>

@@ -158,7 +158,10 @@ async function flow(name, browser, fn, opts) {
     check((await page.getByTestId('nivel-partida').textContent()).includes('Nivel 1'), 'el anterior no es el nivel 1');
     await page.getByTestId('terminar').click();
     await page.getByTestId('mejorar').click();
-    check((await page.getByTestId('nivel-actual').textContent()).includes('Nivel 1'), 'el árbol no recuerda el nivel elegido');
+    // Con el árbol abierto, el selector de nivel se esconde (más lugar); al cerrarlo vuelve.
+    check(!(await page.getByTestId('nivel-mas').isVisible()), 'el selector de nivel se ve con el árbol abierto');
+    await page.getByTestId('cerrar-arbol').click();
+    check((await page.getByTestId('nivel-actual').textContent()).includes('Nivel 1'), 'la pantalla principal no recuerda el nivel elegido');
     await page.getByTestId('nivel-mas').click();
     check((await page.getByTestId('nivel-actual').textContent()).includes('Nivel 2'), 'no deja volver al nivel 2');
     check(await page.getByTestId('nivel-mas').isDisabled(), 'deja ir más allá del nivel abierto');
@@ -454,7 +457,7 @@ async function flow(name, browser, fn, opts) {
     check(!/(^|\D)0\/100/.test(await page.getByTestId('detalle').textContent()), 'no compró nada en el árbol');
   });
 
-  await flow('guardado: al recargar se queda el oro y el árbol, y se llega al árbol', browser, async (page) => {
+  await flow('guardado: al recargar se queda el oro y el árbol, y se llega a la pantalla principal', browser, async (page) => {
     await page.getByTestId('terminar').click();
     await page.getByTestId('mejorar').click();
     await page.oro(100);
@@ -462,8 +465,10 @@ async function flow(name, browser, fn, opts) {
     const oro = await page.getByTestId('oro-total').textContent();
     await page.reload();
     await page.waitForTimeout(1200);
-    check(await page.getByTestId('arbol').count(), 'al volver no se llega al árbol');
+    check(await page.getByTestId('principal').count(), 'al volver no se llega a la pantalla principal');
+    check(!(await page.getByTestId('arbol').count()), 'al volver el árbol ya está abierto');
     check((await page.getByTestId('oro-total').textContent()) === oro, 'el oro no se guardó');
+    await page.getByTestId('abrir-mejorar').click();
     await page.getByTestId('talento-danio').click();
     check((await page.getByTestId('detalle').textContent()).includes('1/100'), 'el nivel de Daño no se guardó');
   });
@@ -478,6 +483,8 @@ async function flow(name, browser, fn, opts) {
     await page.getByTestId('reiniciar').click();
     await page.waitForTimeout(300);
     check((await page.getByTestId('oro-total').textContent()).trim() === '0', 'quedó oro');
+    check(!(await page.getByTestId('arbol').count()), 'tras reiniciar el árbol sigue abierto');
+    await page.getByTestId('abrir-mejorar').click();
     await page.getByTestId('talento-danio').click();
     check(/(^|\D)0\/100/.test(await page.getByTestId('detalle').textContent()), 'quedó nivel de Daño');
     await page.reload();
@@ -652,23 +659,52 @@ async function flow(name, browser, fn, opts) {
     check((await page.evaluate(() => window.juego.meta.pvp.estandarte)) === 1, 'no subió el Estandarte');
   });
 
-  await flow('modo guardia: en el árbol tus tropas pelean solas y juntan oro', browser, async (page) => {
+  await flow('pantalla principal: el campo a color con pocos enemigos; tocas y lanzas flechas; Mejorar abre el árbol; tus tropas juntan oro', browser, async (page) => {
     await page.getByTestId('terminar').click();
     await page.getByTestId('mejorar').click();
     await page.waitForTimeout(300);
-    check(!(await page.evaluate(() => !!window.juego.run?.guardia)), 'hay guardia sin tropas');
-    check(!(await page.getByTestId('ritmo-guardia').count()), 'se ve el oro de guardia sin tropas');
+    check(await page.getByTestId('principal').count() && (await page.getByTestId('arbol').count()), '"Mejorar" del fin no abre el árbol en la pantalla principal');
+    check((await page.getByTestId('abrir-mejorar').getAttribute('aria-pressed')) === 'true', 'el botón Mejorar no se ve apretado con el árbol abierto');
+    await page.getByTestId('cerrar-arbol').click();
+    await page.waitForTimeout(300);
+    check(!(await page.getByTestId('arbol').count()), 'el árbol no se cerró');
+    // Sin tropas también hay campo: pocos enemigos, y tu círculo descansa hasta que tocas.
+    check(await page.evaluate(() => !!window.juego.run?.guardia), 'no hay guardia en la pantalla principal');
+    check(!(await page.getByTestId('ritmo-guardia').count()), 'se ve el oro de las tropas sin tropas');
+    check(await page.getByTestId('pista-guardia').count(), 'no sale la pista de tocar el campo');
+    check(await page.evaluate(() => window.juego.run.cursor.x < 0), 'el círculo dispara sin tocar');
+    check((await page.getByTestId('jugar').textContent()).includes('Jugar nivel'), 'el botón no dice "Jugar nivel"');
+    // La muralla sube arriba de la barra de abajo (la cámara se levanta lo que tapa la barra).
+    const barra = await page.getByTestId('barra-principal').boundingBox();
+    check(barra.height > 80 && Math.abs((await page.evaluate(() => window.juego.abajo)) - barra.height) < 2, 'la escena no sabe cuánto tapa la barra de abajo');
+    // Tocas el campo: el círculo va ahí y revienta a un slime quieto.
+    const campo = await page.getByTestId('campo').boundingBox();
+    const antes = await page.evaluate(() => window.juego.meta.oro);
+    await page.mouse.click(campo.x + campo.width * 0.5, campo.y + campo.height * 0.35);
+    await page.waitForTimeout(200);
+    const cursor = await page.evaluate(() => ({ ...window.juego.run.cursor }));
+    check(cursor.x > 150 && cursor.x < 210, `el círculo no fue a donde tocaste (${cursor.x})`);
+    await page.evaluate(() => { const r = window.juego.run; for (const e of r.enemies) { e.x = r.cursor.x; e.y = r.cursor.y; e.vx = 0; e.vy = 0; e.giro = 99; e.vida = Math.min(e.vida, 1); } });
+    await page.waitForTimeout(1500);
+    check(!(await page.getByTestId('pista-guardia').count()), 'la pista no se fue al tocar');
+    check((await page.evaluate(() => window.juego.meta.oro)) > antes, 'tus flechas en la pantalla principal no dieron oro');
+    // Con oro, Mejorar tiene su punto rojo; comprar el primer arquero y tus tropas pelean solas.
     await page.oro(10000);
+    check(await page.getByTestId('punto-mejorar').count(), 'no sale el punto rojo en Mejorar con oro para comprar');
+    await page.getByTestId('abrir-mejorar').click();
+    check(await page.getByTestId('arbol').count(), 'Mejorar no abre el árbol');
+    check(!(await page.getByTestId('punto-mejorar').count()), 'el punto rojo sigue con el árbol abierto');
     await page.comprar('danio', 3);
     await page.comprar('arqueros', 1);
+    await page.getByTestId('abrir-mejorar').click();
     await page.waitForTimeout(300);
-    check(await page.evaluate(() => !!window.juego.run?.guardia), 'comprar el primer arquero no empieza la guardia');
-    check(await page.getByTestId('ritmo-guardia').count(), 'no se ve el oro por minuto de la guardia');
-    const antes = await page.evaluate(() => window.juego.meta.oro);
+    check(!(await page.getByTestId('arbol').count()), 'Mejorar no cierra el árbol');
+    check(await page.getByTestId('ritmo-guardia').count(), 'no se ve el oro por minuto de las tropas');
+    const conTropas = await page.evaluate(() => window.juego.meta.oro);
     await page.waitForTimeout(9000);
     const despues = await page.evaluate(() => window.juego.meta.oro);
-    check(despues > antes, `la guardia no juntó oro (${antes} → ${despues})`);
-    check((await page.evaluate(() => window.juego.run.enemies.length)) <= 12, 'salen demasiados en guardia');
+    check(despues > conTropas, `las tropas no juntaron oro (${conTropas} → ${despues})`);
+    check((await page.evaluate(() => window.juego.run.enemies.length)) <= 12, 'salen demasiados en la pantalla principal');
     await page.getByTestId('jugar').click();
     await page.waitForTimeout(400);
     check(await page.getByTestId('reloj').count(), 'no empezó el nivel');
@@ -720,7 +756,8 @@ async function flow(name, browser, fn, opts) {
       check(arriba.length === 0, `no caben arriba: ${arriba.join(', ')}`);
       for (const sec of ['jugador', 'mago', 'arqueros', 'reliquias']) {
         await page.getByTestId(`seccion-${sec}`).click();
-        const fuera = await page.$$eval('[data-testid^="talento-"], [data-testid="jugar"]', (els) => els.filter((e) => { const r = e.getBoundingClientRect(); return r.left < 0 || r.right > innerWidth || r.top < 0 || r.bottom > innerHeight; }).map((e) => e.dataset.testid));
+        // En pantallas chicas el árbol se desliza: cada nodo, al llevarlo a la vista, cabe completo.
+        const fuera = await page.$$eval('[data-testid^="talento-"], [data-testid="jugar"], [data-testid="abrir-mejorar"], [data-testid="cerrar-arbol"]', (els) => els.filter((e) => { e.scrollIntoView({ block: 'nearest' }); const r = e.getBoundingClientRect(); const caja = e.closest('[data-testid="lienzo-arbol"]')?.getBoundingClientRect(); return r.left < 0 || r.right > innerWidth || r.top < 0 || r.bottom > innerHeight || (caja && (r.top < caja.top - 14 || r.bottom > caja.bottom + 12)); }).map((e) => e.dataset.testid));
         check(fuera.length === 0, `en ${sec} se salen: ${fuera.join(', ')}`);
       }
       check(!(await desborda()), 'el árbol se desborda');

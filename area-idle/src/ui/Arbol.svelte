@@ -1,35 +1,24 @@
 <script lang="ts">
-  // El árbol de talentos, en tres secciones (pestañas arriba): Jugador, Mago y Arqueros. Cada nodo
-  // muestra su ícono, su nivel y su precio; al tocarlo se abre abajo el detalle con el botón de compra.
+  // El árbol de talentos (se abre con "Mejorar" encima del campo de la pantalla principal), en secciones
+  // (pestañas arriba): Jugador, Mago, Arqueros y Reliquias. Cada nodo muestra su ícono, su nivel y su
+  // precio; al tocarlo se abre abajo el detalle con el botón de compra.
   import { SECCIONES, TALENT_BY_ID, TALENTS, type Seccion, type TalentDef, type TalentId } from '../core/datos';
-  import { formatNum, formatGold } from '../core/format';
+  import { formatNum } from '../core/format';
   import { costOf, levelOf, talentState, talentVisible } from '../core/meta';
   import { t } from '../i18n';
-  import Ajustes from './Ajustes.svelte';
-  import Glosario from './Glosario.svelte';
-  import Misiones from './Misiones.svelte';
-  import Ranking from './Ranking.svelte';
-  import Pvp from './Pvp.svelte';
-  import Supervivencia from './Supervivencia.svelte';
-  import { INTENTOS_MAX } from '../core/pvp';
   import { DAMAGE_TYPE_OF } from '../core/run';
   import { effectValues } from './efectos';
   import Icon from './Icon.svelte';
 
   import { useJuego } from './context';
 
+  let { cerrar }: { cerrar: () => void } = $props();
   const juego = useJuego();
   const view = juego.view;
   const ICONO: Record<Seccion, string> = { jugador: 'lluvia', mago: 'mago', arqueros: 'arquero', reliquias: 'gema' };
 
   let seccion = $state<Seccion>('jugador');
   let elegido = $state<TalentId | null>(null);
-  let ajustes = $state(false);
-  let glosario = $state(false);
-  let misiones = $state(false);
-  let ranking = $state(false);
-  let pvp = $state(false);
-  let oleadas = $state(false);
   /** El tipo de daño de cada sección (marca en la esquina de su pestaña). */
   const TIPO: Partial<Record<Seccion, string>> = { jugador: DAMAGE_TYPE_OF.jugador, mago: DAMAGE_TYPE_OF.mago, arqueros: DAMAGE_TYPE_OF.arquero };
   /** Las Reliquias (con gemas) se ven desde que se abren las misiones. */
@@ -64,55 +53,23 @@
   }
 </script>
 
-<div class="arbol" class:guardia={!!$view.guardia} data-testid="arbol">
-  <header>
-    <div class="izq">
-      <!-- El oro, y debajo lo que se junta por minuto sin jugar (desde el nivel 3). -->
-      <div class="pill oro">
-        <Icon name="moneda" size={28} />
-        <span class="cifras">
-          <span class="cifra" data-testid="oro-total">{formatGold(meta.oro)}</span>
-          {#if $view.guardia}
-            <!-- En guardia: lo que juntan tus tropas por minuto mientras estás aquí. -->
-            <span class="ritmo guardia cifra" data-testid="ritmo-guardia" title={$t('guardia.explica')}>
-              <Icon name="arquero" size={13} />{$t('inactivo.ritmo', { n: formatNum($view.guardia.porMinuto) })}
-            </span>
-          {:else if $view.ritmoInactivo}
-            <span class="ritmo cifra" data-testid="ritmo-inactivo" title={$t('inactivo.explica', { h: $view.ritmoInactivo.horas })}>
-              <Icon name="inactivo" size={13} />{$t('inactivo.ritmo', { n: formatNum($view.ritmoInactivo.porMinuto) })}
-            </span>
-          {/if}
-        </span>
-      </div>
-      {#if $view.misiones.abiertas}
-        <div class="pill gemas"><Icon name="gema" size={24} /><span class="cifra" data-testid="gemas">{formatNum(meta.gemas)}</span></div>
-      {/if}
-    </div>
-    <div class="acciones">
-      {#if $view.misiones.abiertas}
-        <button type="button" class="redondo con-punto" aria-label={$t('misiones.titulo')} onclick={() => (misiones = true)} data-testid="abrir-misiones">
-          <Icon name="misiones" size={28} />{#if $view.misiones.listas > 0}<span class="punto-rojo cifra">{$view.misiones.listas}</span>{/if}
+<div class="arbol" data-testid="arbol">
+  <div class="arriba">
+    <div class="pestanas" role="tablist" style:--cols={secciones.length} class:cuatro={secciones.length > 3}>
+      {#each secciones as s (s)}
+        <button type="button" role="tab" class="pestana" class:activa={seccion === s} aria-selected={seccion === s} onclick={() => cambiar(s)} data-testid="seccion-{s}">
+          <Icon name={ICONO[s]} size={30} />
+          <span>{$t(`secciones.${s}`)}</span>
+          {#if TIPO[s]}<span class="tipo-sec" title={$t(`tipos.${TIPO[s]}`)}><Icon name="tipo_{TIPO[s]}" size={18} /></span>{/if}
+          {#if puede[s] && seccion !== s}<span class="punto"></span>{/if}
         </button>
-      {/if}
-      {#if $view.ranking.abierto}
-        <button type="button" class="redondo" aria-label={$t('ranking.titulo')} onclick={() => (ranking = true)} data-testid="abrir-ranking"><Icon name="trofeo" size={28} /></button>
-      {/if}
-      <button type="button" class="redondo" aria-label={$t('glosario.titulo')} onclick={() => (glosario = true)} data-testid="abrir-glosario"><Icon name="glosario" size={28} /></button>
-      <button type="button" class="redondo" aria-label={$t('ajustes.titulo')} onclick={() => (ajustes = true)} data-testid="abrir-ajustes"><Icon name="ajustes" size={26} /></button>
+      {/each}
     </div>
-  </header>
-
-  <div class="pestanas" role="tablist" style:--cols={secciones.length} class:cuatro={secciones.length > 3}>
-    {#each secciones as s (s)}
-      <button type="button" role="tab" class="pestana" class:activa={seccion === s} aria-selected={seccion === s} onclick={() => cambiar(s)} data-testid="seccion-{s}">
-        <Icon name={ICONO[s]} size={30} />
-        <span>{$t(`secciones.${s}`)}</span>
-        {#if TIPO[s]}<span class="tipo-sec" title={$t(`tipos.${TIPO[s]}`)}><Icon name="tipo_{TIPO[s]}" size={18} /></span>{/if}
-        {#if puede[s] && seccion !== s}<span class="punto"></span>{/if}
-      </button>
-    {/each}
+    <button type="button" class="redondo cerrar" aria-label={$t('arbol.cerrar')} onclick={cerrar} data-testid="cerrar-arbol">✕</button>
   </div>
 
+  <!-- Si no cabe (pantallas chicas), el árbol se desliza hacia arriba y abajo. -->
+  <div class="lienzo" data-testid="lienzo-arbol">
   <div class="tablero" style:--filas={filas}>
     <svg class="lineas" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
       {#each nodos as d (d.id)}
@@ -141,6 +98,7 @@
       </button>
     {/each}
   </div>
+  </div>
 
   {#if detalle}
     {@const estado = talentState(meta, detalle)}
@@ -165,79 +123,39 @@
       {/if}
     </div>
   {/if}
-
-  <!-- Qué nivel jugar: el más alto abierto, o uno anterior para juntar oro. -->
-  <div class="niveles">
-    <button type="button" class="flecha" aria-label={$t('arbol.nivelAnterior')} disabled={meta.jugando <= 1} onclick={() => juego.playLevel(meta.jugando - 1, false)} data-testid="nivel-menos">◀</button>
-    <span class="nivel-actual" data-testid="nivel-actual"><small class="zona">{$t(`zonas.${$view.zona}`)}{#if $view.nivelDeJefe}&nbsp;· {$t('hud.jefe')}{/if}</small><span class="con-corona">{#if $view.nivelDeJefe}<Icon name="corona" size={24} />{/if}{$t('hud.nivel', { n: meta.jugando })}</span>{#if meta.jugando < meta.nivel}<small>{$t('arbol.paraOro')}</small>{/if}</span>
-    <button type="button" class="flecha" aria-label={$t('arbol.nivelSiguiente')} disabled={meta.jugando >= meta.nivel} onclick={() => juego.playLevel(meta.jugando + 1, false)} data-testid="nivel-mas">▶</button>
-  </div>
-  <div class="jugar-fila" class:con-pvp={$view.pvp.abierto} class:con-oleadas={$view.supervivencia.abierto}>
-    {#if $view.supervivencia.abierto}
-      <button type="button" class="btn modo oleadas-btn" onclick={() => (oleadas = true)} data-testid="abrir-supervivencia">
-        <Icon name="oleadas" size={28} /><small class="cifra">{$view.supervivencia.entradas}/{$view.supervivencia.max}</small>
-      </button>
-    {/if}
-    {#if $view.pvp.abierto}
-      <button type="button" class="btn pvp" onclick={() => (pvp = true)} data-testid="abrir-pvp">
-        <Icon name="pvp" size={28} /><small class="cifra">{meta.pvp.intentos}/{INTENTOS_MAX}</small>
-      </button>
-    {/if}
-    <button type="button" class="btn btn--accent jugar" onclick={() => juego.play()} data-testid="jugar"><Icon name="jugar" size={26} /> {$t('arbol.jugar')}</button>
-  </div>
 </div>
 
-{#if ajustes}
-  <Ajustes cerrar={() => (ajustes = false)} />
-{/if}
-{#if oleadas}
-  <Supervivencia cerrar={() => (oleadas = false)} />
-{/if}
-{#if pvp}
-  <Pvp cerrar={() => (pvp = false)} />
-{/if}
-{#if ranking}
-  <Ranking cerrar={() => (ranking = false)} />
-{/if}
-{#if misiones}
-  <Misiones cerrar={() => (misiones = false)} />
-{/if}
-{#if glosario}
-  <Glosario cerrar={() => (glosario = false)} />
-{/if}
-
 <style>
+  /* Un panel sobre el campo, entre el oro (arriba) y los botones (abajo). */
   .arbol {
     position: absolute;
-    inset: 0;
+    inset: 10px 10px 8px;
     display: grid;
-    grid-template-rows: auto auto 1fr auto auto auto;
-    /* Que nada (pestañas, encabezado) ensanche la columna más allá de la pantalla. */
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    /* Que nada (las pestañas) ensanche la columna más allá de la pantalla. */
     grid-template-columns: minmax(0, 1fr);
-    gap: 10px;
-    padding: calc(10px + env(safe-area-inset-top)) 12px calc(12px + env(safe-area-inset-bottom));
-    background: rgba(30, 70, 50, 0.88);
-    transition: background-color 0.4s;
+    gap: 6px;
+    padding: 10px 10px 12px;
+    border: var(--borde);
+    border-radius: 22px;
+    background-color: rgba(30, 70, 50, 0.95);
     background-image: radial-gradient(rgba(255, 255, 255, 0.06) 2px, transparent 2px);
     background-size: 22px 22px;
+    box-shadow: var(--sombra);
+    pointer-events: auto;
+    animation: sube 0.18s ease-out;
   }
-  header {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px 6px;
+  @keyframes sube {
+    from {
+      translate: 0 24px;
+      opacity: 0;
+    }
   }
-  .pill {
-    display: flex;
+  .arriba {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
-    gap: 6px;
-    padding: 3px 14px 3px 5px;
-    border: var(--borde);
-    border-radius: 999px;
-    background: var(--panel);
-    box-shadow: 0 3px 0 var(--line);
-    font-size: 24px;
+    gap: 8px;
   }
   .redondo {
     display: grid;
@@ -249,54 +167,8 @@
     background: var(--panel);
     box-shadow: 0 3px 0 var(--line);
   }
-  .izq {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    min-width: 0;
-  }
-  /* En guardia el campo se ve detrás: tus tropas pelean mientras mejoras. */
-  .arbol.guardia {
-    background-color: rgba(30, 70, 50, 0.5);
-  }
-  .ritmo.guardia {
-    color: #2f7a2a;
-  }
-  .cifras {
-    display: grid;
-    line-height: 1;
-  }
-  .ritmo {
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    margin-top: 1px;
-    color: #6a4bb0;
-    font-size: 12px;
-    white-space: nowrap;
-  }
-  .pill.gemas {
-    padding: 3px 12px 3px 5px;
-    background: #efe4ff;
-    font-size: 20px;
-  }
   .precio.gemas {
     background: #efe4ff;
-  }
-  .con-punto {
-    position: relative;
-  }
-  .punto-rojo {
-    position: absolute;
-    top: -7px;
-    right: -7px;
-    min-width: 20px;
-    padding: 0 5px;
-    border: 2px solid var(--line);
-    border-radius: 999px;
-    background: var(--danger);
-    color: #fff;
-    font-size: 12px;
   }
   /* Con cuatro pestañas solo cabe el dibujo (el nombre, en pantallas anchas). */
   .pestanas.cuatro .pestana span:not(.tipo-sec):not(.punto) {
@@ -306,11 +178,6 @@
     .pestanas.cuatro .pestana span:not(.tipo-sec):not(.punto) {
       display: inline;
     }
-  }
-  .acciones {
-    display: flex;
-    gap: 8px;
-    margin-left: auto;
   }
   .tipo-sec {
     position: absolute;
@@ -352,9 +219,18 @@
     border-radius: 50%;
     background: var(--danger);
   }
+  .lienzo {
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    /* Lugar para el precio de los de arriba y el nivel de los de abajo. */
+    padding: 14px 0 12px;
+    overscroll-behavior: contain;
+  }
   .tablero {
     position: relative;
-    min-height: 0;
+    height: 100%;
+    min-height: calc(var(--filas) * 74px);
     margin: 0 4px;
   }
   .lineas {
@@ -459,91 +335,32 @@
     min-height: 46px;
     font-size: 18px;
   }
+  /* Pantallas bajitas: el detalle más compacto para que quepa más árbol. */
+  @media (max-height: 680px) {
+    .detalle {
+      gap: 8px;
+      padding: 6px 10px;
+    }
+    .detalle > :global(img:first-child) {
+      width: 36px;
+      height: 36px;
+    }
+    .info strong {
+      font-size: 16px;
+    }
+    .muted {
+      font-size: 13px;
+    }
+    .comprar {
+      min-width: 80px;
+      min-height: 40px;
+      font-size: 16px;
+    }
+  }
   .max {
     padding: 4px 10px;
     border: 2px solid var(--line);
     border-radius: 999px;
     background: #c9f0b8;
-  }
-  .niveles {
-    display: grid;
-    grid-template-columns: 46px 1fr 46px;
-    align-items: center;
-    gap: 8px;
-  }
-  .flecha {
-    height: 42px;
-    border: var(--borde);
-    border-radius: 12px;
-    background: var(--panel);
-    box-shadow: 0 3px 0 var(--line);
-  }
-  .flecha:disabled {
-    opacity: 0.4;
-  }
-  .nivel-actual {
-    display: grid;
-    justify-items: center;
-    color: #fff;
-    font-size: 22px;
-    -webkit-text-stroke: 1px var(--line);
-    paint-order: stroke fill;
-  }
-  .con-corona {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-  .nivel-actual small.zona {
-    color: #c8f59b;
-  }
-  .nivel-actual small {
-    font-size: 12px;
-    -webkit-text-stroke: 0;
-    color: #ffe27a;
-  }
-  .jugar {
-    min-height: 58px;
-    font-size: 24px;
-  }
-  .jugar-fila {
-    display: grid;
-    gap: 8px;
-  }
-  .jugar-fila.con-pvp {
-    grid-template-columns: auto 1fr;
-  }
-  .jugar-fila.con-pvp.con-oleadas {
-    grid-template-columns: auto auto 1fr;
-  }
-  .oleadas-btn {
-    display: grid;
-    justify-items: center;
-    gap: 0;
-    min-height: 58px;
-    padding: 2px 10px;
-    background: linear-gradient(#cfe4ff, #8ab8f0);
-    line-height: 1;
-  }
-  .oleadas-btn small {
-    font-size: 13px;
-  }
-  /* PvP y Supervivencia: botones compactos (el dibujo y, abajo, los intentos o entradas). */
-  .pvp {
-    display: grid;
-    justify-items: center;
-    gap: 0;
-    min-height: 58px;
-    padding: 2px 10px;
-    background: linear-gradient(#ffb3a8, #ef7a6c);
-    line-height: 1;
-  }
-  .pvp small {
-    font-size: 13px;
-  }
-  @media (max-width: 360px) {
-    .jugar-fila.con-pvp.con-oleadas .jugar {
-      font-size: 20px;
-    }
   }
 </style>

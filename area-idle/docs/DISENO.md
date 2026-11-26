@@ -22,11 +22,12 @@ sienta bien. Poco texto: lo que sigue se descubre jugando.
    aparece con una **chispa** de estrellitas y un anillo blanco.
 2. **Hay que reventarlos todos antes de que se acabe el tiempo** (20 s; el talento Tiempo suma hasta 20 más).
    - **Lo logras:** "¡Nivel N superado!", con el oro juntado y un **premio** por el nivel. Se abre el
-     siguiente. Botones: Siguiente y Mejorar.
+     siguiente. Botones: Siguiente y Mejorar (a la pantalla principal con el árbol abierto).
    - **No lo logras:** "¡Se acabó el tiempo!". **El oro juntado se queda.** Botones: Reintentar el nivel,
      jugar el **nivel anterior para juntar oro** y Mejorar.
-3. **Árbol** en tres secciones (pestañas): se gasta el oro. Abajo se elige el nivel (◀ Nivel 5 ▶; uno
-   anterior dice "para juntar oro") y ¡Jugar!.
+3. **Pantalla principal** (desde 0.16.0; ver 5h): el campo a color con pocos enemigos, tus tropas
+   peleando y tu círculo si tocas. Abajo se elige el nivel (◀ Nivel 5 ▶; uno anterior dice "para juntar
+   oro"), **Jugar nivel** y **Mejorar**, que abre el **árbol** (pestañas por sección) encima del campo.
 
 Cada nivel tiene más slimes, con más vida (×1.32 por nivel; desde 0.15.0, antes ×1.3) y algo más de oro (×1.05); los azules salen
 desde el nivel 4 y cada vez son más (hasta la mitad). Quien ya jugó, al abrir llega al árbol; quien es
@@ -384,22 +385,36 @@ Modo pruebas: **PvP: intentos 5/5**, **PvP: terminar semana** y **+50 medallas**
 los de jefes, poquito), las explosiones del mago tampoco, y las demás sacudidas son más suaves y nunca
 seguidas (máximo una cada medio segundo).
 
-## 5h. Modo guardia (desde 0.9.0)
+## 5h. Pantalla principal y modo guardia (guardia desde 0.9.0; pantalla principal desde 0.16.0)
 
-Mientras estás en el árbol (sin jugar un nivel) y tienes tropas (al menos un arquero o el mago), el campo
-de atrás se ve más claro y **tus tropas pelean solas**. Tu círculo descansa.
+Fuera de un nivel estás en la **pantalla principal**: el campo **a color** (antes se veía gris detrás del
+árbol), con pocos enemigos paseando, tus tropas en la muralla y tu círculo listo.
 
+- **Arriba:** el oro (y debajo lo que juntan tus tropas por minuto; sin tropas, lo que se junta con la app
+  cerrada), las gemas, misiones, ranking, glosario y ajustes.
+- **Abajo**, en una franja de tierra oscura: ◀ Nivel N ▶ (con la zona), y los botones **Supervivencia**,
+  **PvP** (cuando se abren), **Jugar nivel** y **Mejorar**: una persona con una flecha verde y un **punto
+  rojo** cuando te alcanza para alguna mejora (de oro, o de gemas si ya hay Reliquias).
+- **Mejorar** abre el árbol como un panel encima del campo (pestañas, nodos y el detalle con el botón de
+  compra); el botón queda apretado y ✕ o Mejorar otra vez lo cierran. Con el árbol abierto se esconde el
+  selector de nivel (más lugar) y "Jugar nivel" sigue a la mano. Si el árbol no cabe (pantallas chicas), se
+  desliza. El fin de un nivel ("Mejorar") lleva aquí con el árbol abierto; al abrir el juego o reiniciar,
+  con el árbol cerrado.
+- La cámara sube lo que tapa la franja de abajo, para que la muralla, el mago y los arqueros se vean
+  arriba de los botones; al empezar un nivel baja suave.
+- **Tu círculo:** descansa hasta que tocas el campo; entonces lanza flechas donde tocaste (y lo puedes
+  arrastrar) hasta **6 s** después del último toque. La primera vez sale la pista "Toca el campo para
+  lanzar flechas". Sin tropas también hay campo: lo que revientes tú da oro.
 - Salen **pocos enemigos**: los del nivel más alto ya superado (sin jefes), uno cada 2.5 s y como mucho
   12 a la vez. No hay tiempo, no se pierde, nadie marcha hacia la muralla ni le tira cosas.
-- Cada baja da un oro fijo (sale "+N" dorado) para que, si tus tropas alcanzan a todos, se junte el
-  **20 %** de lo que se gana jugando. Si tus tropas no alcanzan, se junta menos. El oro va directo a tu
-  bolsa, así que puedes ir comprando.
-- Siempre **20 %** de lo que de verdad ganas por minuto jugando (el mismo promedio que la app cerrada).
-  Desde 0.15.0 **Oro inactivo ya no la sube** (antes sí: con todo, llegaba a 90 %, casi como jugar). Así,
-  abrir el juego y dejarlo en el árbol vale más que cerrarlo, pero jugar niveles sigue siendo lo mejor.
+- Cada baja (de tus tropas o de tu círculo) da un oro fijo (sale "+N" dorado) para que, si se revienta a
+  todos, se junte el **20 %** de lo que de verdad ganas por minuto jugando (el mismo promedio que la app
+  cerrada). Como salen a ritmo fijo, tocar no da más que eso: solo ayuda a que no se escape nada cuando
+  tus tropas no alcanzan. Desde 0.15.0 **Oro inactivo ya no la sube** (antes llegaba a 90 %). Jugar
+  niveles sigue siendo lo mejor.
 - No cuenta para misiones, ranking ni PvP (si no, "revienta 600" se cumpliría solo).
-- Al comprar en el árbol, la guardia toma lo nuevo sin empezar de nuevo; el primer arquero (o el mago) la
-  arranca. Solo suena el "pop" de cada baja.
+- Al comprar en el árbol, la guardia toma lo nuevo sin empezar de nuevo. Suena el "pop" de cada baja y el
+  disparo de tu lluvia de flechas.
 
 ## 5i. Autoapuntado (desde 0.10.0)
 

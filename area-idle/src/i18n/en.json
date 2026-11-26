@@ -27,7 +27,7 @@
     "leQuedo": "{pct}% left"
   },
   "arbol": {
-    "jugar": "Play!",
+    "jugar": "Play level",
     "comprar": "Buy",
     "max": "MAX",
     "requiere": "Raise {nombre} to {n}",
@@ -36,6 +36,10 @@
     "nivelAnterior": "Previous level",
     "nivelSiguiente": "Next level",
     "requiereNivel": "Reach level {n}"
+  },
+  "principal": {
+    "mejorar": "Upgrade",
+    "pista": "Tap the field to shoot arrows"
   },
   "talentos": {
     "danio": {

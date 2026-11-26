@@ -351,7 +351,7 @@ export const INACTIVO = { desde: 3, eficiencia: 0.1, porNivel: 0.02, horas: 2, h
  * Cada baja da oro fijo para que, si tus tropas alcanzan, se gane el 20 % de lo que de verdad ganas
  * jugando (no lo sube "Oro inactivo", que es solo para la app cerrada).
  */
-export const GUARDIA = { cada: 2.5, max: 12, eficiencia: 0.2, iniciales: 3 } as const;
+export const GUARDIA = { cada: 2.5, max: 12, eficiencia: 0.2, iniciales: 3, reposo: 6 } as const;
 
 /**
  * Autoapuntado (talento del jugador): si no tocas en `espera` s, tu círculo se va solo hacia donde hay más

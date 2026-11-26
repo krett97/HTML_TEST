@@ -1,11 +1,12 @@
 <script lang="ts">
-  // La pantalla: el campo (Phaser) ocupa todo; encima van el reloj y el oro, el fin de la partida o el árbol.
+  // La pantalla: el campo (Phaser) ocupa todo; encima van el reloj y el oro (en un nivel), el fin de la
+  // partida o la pantalla principal (el campo con la guardia, "Jugar nivel" y "Mejorar").
   import { onMount } from 'svelte';
   import { mountScene } from '../game/boot';
-  import Arbol from './Arbol.svelte';
   import Bienvenida from './Bienvenida.svelte';
   import Fin from './Fin.svelte';
   import Hud from './Hud.svelte';
+  import Principal from './Principal.svelte';
 
   import { useJuego } from './context';
 
@@ -22,7 +23,7 @@
   {:else if $view.fase === 'fin'}
     <Fin />
   {:else}
-    <Arbol />
+    <Principal />
   {/if}
   <Bienvenida />
 </main>
@@ -32,6 +33,8 @@
     position: fixed;
     inset: 0;
     overflow: hidden;
+    /* Que ni un scrollIntoView la corra de lado. */
+    overflow: clip;
   }
   .campo {
     position: absolute;

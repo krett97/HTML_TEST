@@ -8,7 +8,7 @@ import { ARMADURA, bestSpot as mejorLugar, hidden, inAir, createSurvivalRun, jef
 import { EQUIPO, baseChance, bonosEquipo, chanceOf, costoPieza, emptyEquipo, loadEquipo, mejorar, NIVEL_MAX, SUERTE_POR_FALLO, tierDe } from '../src/core/equipo';
 import { ENTRADAS_MAX, RECARGA_ENTRADA_MS, emptySupervivencia, nivelBaseOlas, refillEntradas, survivalUnlocked, usarEntrada } from '../src/core/supervivencia';
 import { SUPERVIVENCIA_DESDE } from '../src/core/datos';
-import { autoAiming, createGuardRun, guardLevel, startGuardRun, updateGuardRun } from '../src/core/run';
+import { autoAiming, circleActive, createGuardRun, guardLevel, startGuardRun, updateGuardRun } from '../src/core/run';
 import { AUTOAPUNTAR } from '../src/core/datos';
 import { CURVA, GUARDIA, ORO_TALENTOS } from '../src/core/datos';
 import { ALLY_ROW, archerSpots, bossOf, createRun, DAMAGE_TYPE_OF, FIELD_W, moveCursor, startRun, stepRun, type Run, type RunEvent } from '../src/core/run';
@@ -940,7 +940,7 @@ describe('modo guardia', () => {
     expect(guardLevel(11)).toBe(9);
     expect(guardLevel(21)).toBe(19);
   });
-  it('tu círculo no dispara; salen pocos, uno cada 2.5 s, y no se acaba', () => {
+  it('sin tocar, tu círculo no dispara; salen pocos, uno cada 2.5 s, y no se acaba', () => {
     const run = createGuardRun(computeStats({}), 560, 5, 1, 1);
     const events = startGuardRun(run);
     expect(events.filter((e) => e.type === 'spawn')).toHaveLength(GUARDIA.iniciales);
@@ -951,6 +951,28 @@ describe('modo guardia', () => {
     expect(run.terminada).toBe(false);
     // Sin tropas nadie los revienta: se llenan hasta el tope y ahí paran.
     expect(run.enemies).toHaveLength(GUARDIA.max);
+  });
+  it('si tocas el campo, tu círculo dispara ahí (sus bajas dan el oro de la guardia) y descansa unos segundos después', () => {
+    const run = createGuardRun(computeStats({ danio: 50 }), 560, 3, 0.5, 9);
+    startGuardRun(run);
+    expect(circleActive(run)).toBe(false);
+    for (const e of run.enemies) Object.assign(e, { x: 150, y: 200, vx: 0, vy: 0, giro: 99 });
+    moveCursor(run, 150, 200);
+    expect(circleActive(run)).toBe(true);
+    const ev: RunEvent[] = [];
+    for (let i = 0; i < 40; i++) ev.push(...stepRun(run, 0.05));
+    expect(ev.some((e) => e.type === 'shot' && e.fuente === 'jugador')).toBe(true);
+    const bajas = ev.filter((e) => e.type === 'kill').length;
+    expect(bajas).toBeGreaterThanOrEqual(GUARDIA.iniciales);
+    expect(run.oro).toBeCloseTo(bajas * 0.5);
+    // Pasado el reposo sin tocar, deja de disparar (y no junta disparos para después).
+    for (let i = 0; i < GUARDIA.reposo * 20; i++) stepRun(run, 0.05);
+    expect(circleActive(run)).toBe(false);
+    const luego: RunEvent[] = [];
+    for (let i = 0; i < 100; i++) luego.push(...stepRun(run, 0.05));
+    expect(luego.some((e) => e.type === 'shot')).toBe(false);
+    moveCursor(run, 100, 100);
+    expect(stepRun(run, 0.05).filter((e) => e.type === 'shot')).toHaveLength(1);
   });
   it('tus tropas revientan y cada baja da el oro fijo de la guardia', () => {
     const run = createGuardRun(tropas, 560, 3, 0.5, 2);

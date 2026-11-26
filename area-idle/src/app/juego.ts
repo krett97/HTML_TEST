@@ -52,8 +52,12 @@ export interface Vista {
   abrioRanking: boolean;
   /** PvP (desde el nivel 19). */
   pvp: { abierto: boolean };
-  /** Modo guardia andando (en el árbol, con tropas): cuánto oro da por minuto si tus tropas alcanzan. */
-  guardia: { porMinuto: number } | null;
+  /** Modo guardia andando (la pantalla principal): cuánto oro da por minuto si se revienta a todos, y si ya tienes tropas que peleen solas. */
+  guardia: { porMinuto: number; tropas: boolean } | null;
+  /** En la pantalla principal: el árbol de mejoras abierto encima del campo. */
+  mejorando: boolean;
+  /** Aún no has tocado el campo en la pantalla principal (sale la pista "toca para lanzar flechas"). */
+  pistaGuardia: boolean;
   abrioPvp: boolean;
   /** Supervivencia (desde el nivel 26): si ya se abrió, entradas, cuánto falta para la siguiente y récord. */
   supervivencia: { abierto: boolean; entradas: number; max: number; espera: number; record: number };
@@ -100,8 +104,12 @@ export class Juego {
   private finOleadas: Vista['finOleadas'] = null;
   /** El ranking compartido (en Claude) o solo tu fila (fuera de Claude). */
   readonly ranking = new RankingService();
-  /** Al abrir: quien ya jugó llega al árbol; quien es nuevo, directo a jugar. */
+  /** Al abrir: quien ya jugó llega a la pantalla principal; quien es nuevo, directo a jugar. */
   fase: Fase = 'jugando';
+  /** El árbol de mejoras abierto sobre la pantalla principal. */
+  private mejorando = false;
+  /** Lo que tapa la barra de abajo de la pantalla principal (px): la escena sube la muralla para que se vea. */
+  abajo = 0;
   private ultimaVista = 0;
 
   constructor(private readonly audio: AudioEngine) {
@@ -157,7 +165,7 @@ export class Juego {
     return s.arqueros.cantidad > 0 || s.mago.activo;
   }
 
-  /** Oro por baja en guardia: el 20 % (más "Oro inactivo") de lo que se gana jugando, si tus tropas alcanzan. */
+  /** Oro por baja en guardia: el 20 % de lo que de verdad ganas jugando, si se revienta a todos. */
   private oroGuardia(): number {
     return GUARDIA.eficiencia * activeGoldPerMinute(this.meta) * (GUARDIA.cada / 60);
   }
@@ -167,9 +175,9 @@ export class Juego {
     return GUARDIA.eficiencia * activeGoldPerMinute(this.meta);
   }
 
-  /** Empieza la guardia en un campo de `alto` unidades; sin tropas no hay guardia. */
+  /** Empieza la guardia (la pantalla principal) en un campo de `alto` unidades: pocos enemigos, tus tropas y tu círculo si tocas. */
   startGuard(alto: number, arriba?: number): RunEvent[] {
-    if (this.fase !== 'arbol' || !this.hayTropas) {
+    if (this.fase !== 'arbol') {
       if (this.run?.guardia) this.run = null;
       return [];
     }
@@ -256,11 +264,12 @@ export class Juego {
     return events;
   }
 
-  /** La guardia: tus tropas solas; el oro va directo a tu bolsa. Solo suena cuando revientan. */
+  /** La guardia: tus tropas (y tu círculo si tocas); el oro va directo a tu bolsa. Suena al reventar y cuando cae tu lluvia de flechas. */
   private stepGuard(run: Run, dt: number): RunEvent[] {
     if (this.fase !== 'arbol') return [];
     const events = stepRun(run, dt);
     if (events.some((e) => e.type === 'kill')) this.audio.play('pop');
+    else if (events.some((e) => e.type === 'impact' && e.fuente === 'jugador')) this.audio.play('disparo');
     for (const fn of this.listeners) fn(events, run);
     if (run.oro > 0) {
       this.meta.oro += run.oro;
@@ -274,10 +283,18 @@ export class Juego {
     return events;
   }
 
-  /** El jugador tocó (o arrastró) en el campo: el círculo se queda ahí. */
+  /** El jugador tocó (o arrastró) en el campo: el círculo se queda ahí (en la pantalla principal también). */
   tap(x: number, y: number): void {
-    if (!this.run || this.fase !== 'jugando') return;
+    if (!this.run || (this.fase !== 'jugando' && !(this.fase === 'arbol' && this.run.guardia))) return;
     moveCursor(this.run, x, y);
+    if (this.run.guardia) {
+      if (!this.meta.vistos.includes('toqueGuardia')) {
+        this.meta.vistos.push('toqueGuardia');
+        this.save();
+        this.publish();
+      }
+      return;
+    }
     if (!this.toco) {
       this.toco = true;
       this.publish();
@@ -324,10 +341,29 @@ export class Juego {
     this.publish();
   }
 
-  openTree(): void {
+  /** A la pantalla principal (el campo con la guardia), con el árbol de mejoras abierto o no. */
+  home(mejorar = false): void {
+    const volvia = this.fase !== 'arbol';
     this.fase = 'arbol';
+    this.mejorando = mejorar;
     this.publish();
-    this.guard();
+    if (volvia) this.guard();
+  }
+
+  /** Abre el árbol de mejoras (desde el fin de una partida, a la pantalla principal con el árbol abierto). */
+  openTree(): void {
+    this.home(true);
+  }
+
+  /** Abre o cierra el árbol sobre la pantalla principal. */
+  toggleTree(abierto = !this.mejorando): void {
+    this.mejorando = abierto;
+    this.publish();
+  }
+
+  /** La barra de abajo de la pantalla principal midió `px` de alto. */
+  setBottomInset(px: number): void {
+    this.abajo = Math.max(0, px);
   }
 
   buy(id: TalentId): boolean {
@@ -335,10 +371,10 @@ export class Juego {
     this.audio.play(ok ? 'compra' : 'error');
     if (ok) {
       this.save();
-      // La guardia toma lo comprado; si era la primera tropa, empieza.
+      // La guardia toma lo comprado (si no andaba, empieza).
       if (this.fase === 'arbol') {
         if (this.run?.guardia) updateGuardRun(this.run, stats(this.meta), this.oroGuardia());
-        else if (this.hayTropas) this.guard();
+        else this.guard();
       }
     }
     this.publish();
@@ -367,6 +403,7 @@ export class Juego {
     this.meta.ajustes = ajustes;
     this.save();
     this.fase = 'arbol';
+    this.mejorando = false;
     this.publish();
     this.guard();
   }
@@ -606,7 +643,9 @@ export class Juego {
       })() : null,
       finOleadas: this.fase === 'fin' ? this.finOleadas : null,
       pvp: { abierto: pvpUnlocked(this.meta) },
-      guardia: run?.guardia && this.fase === 'arbol' ? { porMinuto: this.ritmoGuardia } : null,
+      guardia: run?.guardia && this.fase === 'arbol' ? { porMinuto: this.ritmoGuardia, tropas: this.hayTropas } : null,
+      mejorando: this.fase === 'arbol' && this.mejorando,
+      pistaGuardia: this.fase === 'arbol' && !this.meta.vistos.includes('toqueGuardia'),
       ranking: { abierto: rankingUnlocked(this.meta), nombre: this.meta.nombre },
       misiones: { abiertas: missionsUnlocked(this.meta), listas: claimableCount(this.meta) },
       vivos: run?.enemies.length ?? 0,
