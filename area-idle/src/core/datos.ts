@@ -42,7 +42,7 @@ export interface EnemyDef {
   entierra?: { cada: number; dura: number };
   /** Al marchar, pasando la mitad del campo embiste: su velocidad ×`carga` (minotauros). */
   carga?: number;
-  /** Armadura: recibe la mitad del daño mientras tenga más de la mitad de su vida; al perderla, marcha ×1.8 más rápido. */
+  /** Armadura: recibe 60 % del daño mientras tenga más de la mitad de su vida; al perderla, marcha ×1.8 más rápido. */
   armadura?: boolean;
   /** Al caer se parte en `n` enemigos de tipo `en` (los gólems, en piedritas). */
   parte?: { en: EnemyKind; n: number };
@@ -82,11 +82,11 @@ export const ENEMIES: Record<EnemyKind, EnemyDef> = {
   loboBlanco: { id: 'loboBlanco', vida: 0, oro: 0, radio: 30, velocidad: 6, ataque: 0, debil: ['fuego'], fuerte: ['hielo'], jefe: true },
   // ---- Pradera amarilla (niveles 21–30) ----
   // Araña gigante: escupe telaraña a un arquero y lo deja enredado (sin tirar) unos segundos. Se quema fácil.
-  arana: { id: 'arana', vida: 6, oro: 2.5, radio: 11, velocidad: 14, ataque: 2, tiro: 7, proyectil: 'telarana', enreda: 2.5, giro: [0.8, 2], debil: ['fuego'], fuerte: ['hielo'] },
+  arana: { id: 'arana', vida: 12, oro: 2.5, radio: 11, velocidad: 14, ataque: 2, tiro: 7, proyectil: 'telarana', enreda: 2.5, giro: [0.8, 2], debil: ['fuego'], fuerte: ['hielo'] },
   // Esqueleto con espada y escudo: marcha a la muralla y la golpea; el escudo aguanta flechas y, al caer, se rearma una vez.
-  esqueleto: { id: 'esqueleto', vida: 14, oro: 7, radio: 11, velocidad: 8, ataque: 5, tiro: 2.5, marcha: true, rearma: 0.5, debil: ['luz'], fuerte: ['fisico'] },
+  esqueleto: { id: 'esqueleto', vida: 16, oro: 7, radio: 11, velocidad: 8, ataque: 5, tiro: 2.5, marcha: true, rearma: 0.5, debil: ['luz'], fuerte: ['fisico'] },
   // Lobo negro: sale en manada de 3 y es más rápido que el gris.
-  loboNegro: { id: 'loboNegro', vida: 5, oro: 1.5, radio: 10, velocidad: 30, ataque: 0, manada: 3, giro: [0.3, 0.8], debil: ['fisico'], fuerte: ['muerte'] },
+  loboNegro: { id: 'loboNegro', vida: 8, oro: 1.5, radio: 10, velocidad: 30, ataque: 0, manada: 3, giro: [0.3, 0.8], debil: ['fisico'], fuerte: ['muerte'] },
   // Bandido con dagas (el más fuerte de la zona): las lanza a la muralla muy seguido y se aparta de tu círculo.
   bandido: { id: 'bandido', vida: 10, oro: 9, radio: 10, velocidad: 10, ataque: 3, tiro: 1.8, proyectil: 'daga', esquiva: 26, debil: ['fisico'], fuerte: [] },
   // El jefe del nivel 30: esqueleto con sombrero de mago y bastón de fuego. Invoca esqueletos, se teletransporta
@@ -106,9 +106,9 @@ export const ENEMIES: Record<EnemyKind, EnemyDef> = {
   liderBandido: { id: 'liderBandido', vida: 0, oro: 0, radio: 30, velocidad: 6, ataque: 0, debil: ['hielo'], fuerte: ['fuego'], jefe: true },
   // ---- Montaña de piedra (niveles 41–50) ----
   // Guerrero de hierro (el más común): marcha con armadura pesada (mitad de daño hasta perder media vida; luego corre).
-  guerreroHierro: { id: 'guerreroHierro', vida: 10, oro: 4, radio: 11, velocidad: 8, ataque: 3, tiro: 2.5, marcha: true, armadura: true, debil: ['energia'], fuerte: [] },
+  guerreroHierro: { id: 'guerreroHierro', vida: 9, oro: 4, radio: 11, velocidad: 8, ataque: 2, tiro: 2.5, marcha: true, armadura: true, debil: ['energia'], fuerte: [] },
   // Gólem de piedra: lento, le pega fuerte a la muralla y al caer se parte en dos piedritas.
-  golem: { id: 'golem', vida: 22, oro: 9, radio: 15, velocidad: 5, ataque: 7, tiro: 3.5, marcha: true, parte: { en: 'golemito', n: 2 }, debil: ['hielo'], fuerte: ['fuego'] },
+  golem: { id: 'golem', vida: 22, oro: 9, radio: 15, velocidad: 5, ataque: 5, tiro: 3.5, marcha: true, parte: { en: 'golemito', n: 2 }, debil: ['hielo'], fuerte: ['fuego'] },
   // Piedrita: lo que queda de un gólem. Rápida y débil; no cuenta para el nivel.
   golemito: { id: 'golemito', vida: 4, oro: 1, radio: 8, velocidad: 18, ataque: 0, giro: [0.4, 1], cria: true, debil: ['hielo'], fuerte: [] },
   // Arquero de hierro: dos flechas de hierro a la vez a la muralla; el hierro aguanta tus flechas.
@@ -208,7 +208,7 @@ export interface LevelConfig {
  * ×`premio`, a media vida se **enfurecen** (sus tiempos ×`furia`, una escolta más) y, después de moverse
  * (brinco o embestida), quedan **aturdidos** recibiendo ×`aturdidoMult`. Lo propio de cada uno, en JEFES.
  */
-export const JEFE = { cada: 10, vida: 6, aturdidoMult: 2, furia: 0.65, extra: 10, premio: 5 } as const;
+export const JEFE = { cada: 10, vida: 4, aturdidoMult: 2, furia: 0.65, extra: 10, premio: 5 } as const;
 
 export interface BossDef {
   /** Quién llega a ayudarlo, cuántos al empezar y cuántos cada `invoca` s. */
@@ -239,14 +239,14 @@ export const JEFES: Partial<Record<EnemyKind, BossDef>> = {
   // Brinca en arco, invoca slimes y lanza bolas de baba.
   rey: { escolta: 'verde', inicial: 6, invoca: 3, escoltaN: 3, mueve: 'brinco', cada: 5, dura: 0.5, aturdido: 1.5, proyectil: 'baba', lanza: 4, golpe: 10, esquiva: 22, alerta: 25 },
   // Embiste rapidísimo por el piso (y queda jadeando), aúlla para llamar lobos y avienta su hoz girando.
-  loboBlanco: { escolta: 'lobo', inicial: 6, invoca: 3.5, escoltaN: 3, mueve: 'embestida', cada: 3.5, dura: 0.35, aturdido: 1.2, proyectil: 'hoz', lanza: 4.5, golpe: 14, esquiva: 32, alerta: 30 },
+  loboBlanco: { escolta: 'lobo', inicial: 6, invoca: 3.5, escoltaN: 3, mueve: 'embestida', cada: 3.5, dura: 0.35, aturdido: 1.2, proyectil: 'hoz', lanza: 4.5, golpe: 14, esquiva: 32, alerta: 30, vida: 0.7 },
   // Se teletransporta entre llamas (y queda recuperándose), invoca esqueletos y lanza bolas de fuego.
-  esqueletoMago: { escolta: 'esqueleto', inicial: 3, invoca: 5, escoltaN: 2, mueve: 'teletransporte', cada: 4, dura: 0.4, aturdido: 1.3, proyectil: 'bolaFuego', lanza: 3.5, golpe: 16, esquiva: 18, alerta: 28, vida: 0.7 },
+  esqueletoMago: { escolta: 'esqueleto', inicial: 3, invoca: 5, escoltaN: 2, mueve: 'teletransporte', cada: 4, dura: 0.4, aturdido: 1.3, proyectil: 'bolaFuego', lanza: 3.5, golpe: 16, esquiva: 18, alerta: 28, vida: 0.6 },
   // Embiste rapidísimo, llama bandidos del desierto, lanza tres dagas en abanico y esquiva más que nadie.
+  liderBandido: { escolta: 'bandidoDesierto', inicial: 5, invoca: 3.5, escoltaN: 2, mueve: 'embestida', cada: 3, dura: 0.3, aturdido: 1, proyectil: 'daga', lanza: 3, golpe: 8, rafaga: 3, esquiva: 40, alerta: 34, vida: 1.2 },
   // Vuela alto a otro lado (en el aire tu círculo no le pega) y aterriza aturdido; llama dragones pequeños y
   // escupe cinco llamaradas a lo ancho de la muralla.
-  dragonAcero: { escolta: 'dragoncito', inicial: 2, invoca: 6, escoltaN: 1, mueve: 'vuelo', cada: 5, dura: 0.9, aturdido: 1.6, proyectil: 'llamarada', lanza: 4, golpe: 8, rafaga: 5, esquiva: 18, alerta: 26, vida: 0.75 },
-  liderBandido: { escolta: 'bandidoDesierto', inicial: 5, invoca: 3.5, escoltaN: 2, mueve: 'embestida', cada: 3, dura: 0.3, aturdido: 1, proyectil: 'daga', lanza: 3, golpe: 8, rafaga: 3, esquiva: 40, alerta: 34, vida: 1.5 },
+  dragonAcero: { escolta: 'dragoncito', inicial: 2, invoca: 6, escoltaN: 1, mueve: 'vuelo', cada: 5, dura: 0.9, aturdido: 1.6, proyectil: 'llamarada', lanza: 4, golpe: 8, rafaga: 5, esquiva: 18, alerta: 26, vida: 0.5 },
 };
 /** Los jefes en orden: Rey Slime (10), Lobo Blanco (20), Esqueleto Mago (30), Líder de los bandidos (40), Dragón de acero (50); luego se repiten. */
 export const ORDEN_JEFES: EnemyKind[] = ['rey', 'loboBlanco', 'esqueletoMago', 'liderBandido', 'dragonAcero'];
@@ -301,11 +301,21 @@ function mixFor(n: number): [EnemyKind, number][] {
  * juego se atora: lo mostró el simulador al agregar el desierto). El daño a la muralla, ×1.05 hasta el 20
  * y luego ×1.02 (la muralla tiene un máximo; con ×1.05 para siempre, en la montaña caía en cada partida).
  */
-export const CURVA = { vida: 1.3, oro: 1.05, desde: 20, vidaTarde: 1.14, oroTarde: 1.15, ataqueTarde: 1.02 };
+export const CURVA = { vida: 1.32, oro: 1.05, desde: 20, vidaTarde: 1.17, oroTarde: 1.15, ataqueTarde: 1.02, ataqueBase: 0.6 };
 export const vidaNivel = (n: number): number => Math.pow(CURVA.vida, Math.min(n, CURVA.desde) - 1) * Math.pow(CURVA.vidaTarde, Math.max(0, n - CURVA.desde));
 /** El daño de los ataques a la muralla: ×1.05 por nivel desde el 7 hasta el 20; después solo ×`ataqueTarde` (la muralla tiene un máximo). */
-export const ataqueNivel = (n: number): number => Math.pow(1.05, Math.max(0, Math.min(n, CURVA.desde) - ROJO_DESDE)) * Math.pow(CURVA.ataqueTarde, Math.max(0, n - CURVA.desde));
+export const ataqueNivel = (n: number): number => CURVA.ataqueBase * Math.pow(1.05, Math.max(0, Math.min(n, CURVA.desde) - ROJO_DESDE)) * Math.pow(CURVA.ataqueTarde, Math.max(0, n - CURVA.desde));
 export const oroNivel = (n: number): number => Math.pow(CURVA.oro, Math.min(n, CURVA.desde) - 1) * Math.pow(CURVA.oroTarde, Math.max(0, n - CURVA.desde));
+
+/**
+ * El premio por superar un nivel: `frac` del oro que dan todos sus enemigos (×5 en los de jefe). Así el
+ * Botín vale algo (antes el premio era ~1 % del oro).
+ */
+export const PREMIO = { frac: 0.3 };
+function premioNivel(n: number, mezcla: [EnemyKind, number][]): number {
+  const oroMedio = mezcla.reduce((t, [k, p]) => t + p * ENEMIES[k].oro * (ENEMIES[k].manada ?? 1), 0) / mezcla.reduce((t, [k, p]) => t + p * (ENEMIES[k].manada ?? 1), 0);
+  return Math.round(PREMIO.frac * (15 + 8 * (n - 1)) * oroMedio * oroNivel(n) * (isBossLevel(n) ? JEFE.premio : 1));
+}
 
 export function levelConfig(nivel: number): LevelConfig {
   const n = Math.max(1, Math.floor(nivel));
@@ -321,7 +331,7 @@ export function levelConfig(nivel: number): LevelConfig {
     azules: parte('azul'),
     rojos: parte('rojo'),
     ataque: ataqueNivel(n),
-    premio: Math.round(8 * Math.pow(1.12, n - 1) * (isBossLevel(n) ? JEFE.premio : 1)),
+    premio: premioNivel(n, mezcla),
     jefe: isBossLevel(n) ? { kind: bossFor(n), vida: Math.round(3 * (15 + 8 * (n - 1)) * vidaNivel(n) * JEFE.vida * (JEFES[bossFor(n)]?.vida ?? 1)) } : null,
   };
 }
@@ -331,15 +341,17 @@ export function levelConfig(nivel: number): LevelConfig {
  * por minuto jugando el nivel más alto superado, hasta `horas` horas. Los talentos Oro inactivo y Bolsa
  * grande suben la parte y las horas. Menos de un minuto fuera no cuenta.
  */
-export const INACTIVO = { desde: 3, eficiencia: 0.1, porNivel: 0.1, horas: 2, horasPorNivel: 1, minSegundos: 60, segundosPorNivelJugado: 30 } as const;
+/** Lo que da cada nivel de las mejoras de oro: Ganancia de oro (todo el oro) y Botín (el premio por nivel). */
+export const ORO_TALENTOS = { oro: 0.1, botin: 0.1 };
+export const INACTIVO = { desde: 3, eficiencia: 0.1, porNivel: 0.02, horas: 2, horasPorNivel: 0.5, minSegundos: 60, segundosPorNivelJugado: 30 } as const;
 
 /**
  * Modo guardia: mientras estás en el árbol (sin jugar un nivel), tus tropas (arqueros y mago) pelean solas
  * contra pocos enemigos: uno cada `cada` s, como mucho `max` a la vez, sin tiempo ni ataques a la muralla.
- * Cada baja da oro fijo para que, si tus tropas alcanzan, se gane el 20 % de lo que se gana jugando: 10
- * puntos más que con la app cerrada (y "Oro inactivo" sube los dos por igual).
+ * Cada baja da oro fijo para que, si tus tropas alcanzan, se gane el 20 % de lo que de verdad ganas
+ * jugando (no lo sube "Oro inactivo", que es solo para la app cerrada).
  */
-export const GUARDIA = { cada: 2.5, max: 12, extra: 0.1, iniciales: 3 } as const;
+export const GUARDIA = { cada: 2.5, max: 12, eficiencia: 0.2, iniciales: 3 } as const;
 
 /**
  * Autoapuntado (talento del jugador): si no tocas en `espera` s, tu círculo se va solo hacia donde hay más
@@ -422,8 +434,8 @@ export const TALENTS: TalentDef[] = [
   { id: 'botin', seccion: 'jugador', icono: 'botin', max: 15, costo: { base: 20, crece: 1.8 }, requiere: { id: 'slimes', nivel: 2 }, pos: [0, 2] },
   { id: 'oro', seccion: 'jugador', icono: 'oro', max: 15, costo: { base: 15, crece: 1.9 }, requiere: { id: 'slimes', nivel: 2 }, pos: [1, 2] },
   // Oro mientras no juegas (se abre solo al llegar al nivel 3; estos lo mejoran).
-  { id: 'inactivo', seccion: 'jugador', icono: 'inactivo', max: 7, costo: { base: 40, crece: 2.2 }, requiere: { id: 'oro', nivel: 1 }, nivelMin: 3, pos: [1, 3] },
-  { id: 'bolsa', seccion: 'jugador', icono: 'bolsa', max: 10, costo: { base: 60, crece: 2 }, requiere: { id: 'inactivo', nivel: 1 }, pos: [2, 3] },
+  { id: 'inactivo', seccion: 'jugador', icono: 'inactivo', max: 5, costo: { base: 40, crece: 2.2 }, requiere: { id: 'oro', nivel: 1 }, nivelMin: 3, pos: [1, 3] },
+  { id: 'bolsa', seccion: 'jugador', icono: 'bolsa', max: 6, costo: { base: 60, crece: 2 }, requiere: { id: 'inactivo', nivel: 1 }, pos: [2, 3] },
   { id: 'autoapuntar', seccion: 'jugador', icono: 'autoapuntar', max: 5, costo: { base: 50, crece: 2.4 }, requiere: { id: 'radio', nivel: 3 }, pos: [-2, 2] },
 
   // ---- Mago: rectángulos de fuego ----

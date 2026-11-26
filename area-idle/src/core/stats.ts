@@ -1,5 +1,5 @@
 // Las estadísticas de una partida, calculadas de los niveles de los talentos.
-import { AUTOAPUNTAR, BASE, INACTIVO, type TalentId } from './datos';
+import { AUTOAPUNTAR, BASE, INACTIVO, ORO_TALENTOS, type TalentId } from './datos';
 import { bonosEquipo, type EquipoNiveles } from './equipo';
 
 export type Levels = Partial<Record<TalentId, number>>;
@@ -51,8 +51,8 @@ export function computeStats(levels: Levels, equipo: EquipoNiveles = {}): Stats 
     intervalo: BASE.intervalo * Math.pow(0.9, lv(levels, 'cadencia')),
     duracion: BASE.duracion + 2 * lv(levels, 'tiempo'),
     ritmo: BASE.ritmo * Math.pow(1.2, slimes),
-    oroMult: (1 + 0.3 * lv(levels, 'oro')) * eq.oro,
-    premioMult: 1 + 0.25 * lv(levels, 'botin'),
+    oroMult: (1 + ORO_TALENTOS.oro * lv(levels, 'oro')) * eq.oro,
+    premioMult: 1 + ORO_TALENTOS.botin * lv(levels, 'botin'),
     inactivo: {
       eficiencia: INACTIVO.eficiencia + INACTIVO.porNivel * lv(levels, 'inactivo'),
       horas: INACTIVO.horas + INACTIVO.horasPorNivel * lv(levels, 'bolsa'),

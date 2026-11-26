@@ -9,7 +9,12 @@ export function idleUnlocked(meta: Meta): boolean {
 }
 
 /** Oro por minuto jugando el nivel más alto ya superado (la referencia). */
+/**
+ * Oro por minuto jugando: lo que de verdad ganas (promedio de tus últimas partidas). Si todavía no hay
+ * partidas, una estimación con el nivel más alto superado (una partida cada 30 s).
+ */
 export function activeGoldPerMinute(meta: Meta): number {
+  if (meta.oroMinuto > 0) return meta.oroMinuto;
   const s = stats(meta);
   const c = levelConfig(Math.max(1, meta.nivel - 1));
   const porSlime = (ENEMIES.verde.oro * (1 - c.azules) + ENEMIES.azul.oro * c.azules) * c.oro;

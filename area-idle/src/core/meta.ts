@@ -30,6 +30,8 @@ export interface Meta {
   misiones: MissionsState;
   /** Cuándo se guardó por última vez (ms): de ahí se cuenta el oro mientras no juegas. 0: nunca. */
   ultimaVez: number;
+  /** Oro por minuto que de verdad ganas jugando (promedio de las últimas partidas): de ahí salen el oro de app cerrada y el de la guardia. */
+  oroMinuto: number;
   /** Avisos que ya se vieron (la primera vez que se juega, etc.). */
   vistos: string[];
   /** Tu nombre en el ranking (desde el nivel 17) y en el PvP. */
@@ -43,7 +45,7 @@ export interface Meta {
 }
 
 export function createMeta(): Meta {
-  return { version: SAVE_VERSION, oro: 0, talentos: {}, partidas: 0, nivel: 1, jugando: 1, mejor: 0, reventados: 0, ajustes: { sonido: true, idioma: null }, gemas: 0, cuenta: emptyCounters(), misiones: emptyMissions(), ultimaVez: 0, vistos: [], nombre: '', pvp: emptyPvp(), runas: 0, equipo: emptyEquipo(), supervivencia: emptySupervivencia() };
+  return { version: SAVE_VERSION, oro: 0, talentos: {}, partidas: 0, nivel: 1, jugando: 1, mejor: 0, reventados: 0, ajustes: { sonido: true, idioma: null }, gemas: 0, cuenta: emptyCounters(), misiones: emptyMissions(), ultimaVez: 0, oroMinuto: 0, vistos: [], nombre: '', pvp: emptyPvp(), runas: 0, equipo: emptyEquipo(), supervivencia: emptySupervivencia() };
 }
 
 export const levelOf = (meta: Meta, id: TalentId): number => meta.talentos[id] ?? 0;
@@ -105,12 +107,22 @@ export interface RunResult {
   porTipo?: Partial<Record<EnemyKind, number>>;
   muroCaido?: boolean;
   jefe?: EnemyKind | null;
+  /** Cuánto duró (para el oro por minuto que de verdad ganas). */
+  segundos?: number;
 }
+
+/** Segundos entre partidas (ver el fin, comprar) que cuentan para el oro por minuto. */
+const PAUSA_PARTIDA = 6;
 
 export function finishRun(meta: Meta, r: RunResult): number {
   const s = stats(meta);
   const premio = r.gano ? Math.round(levelConfig(r.nivel).premio * s.premioMult * s.oroMult) : 0;
   meta.oro += r.oro + premio;
+  // Lo que de verdad ganas por minuto (contando la pausa entre partidas), en promedio.
+  if (r.segundos && r.segundos > 0) {
+    const tasa = ((r.oro + premio) * 60) / (r.segundos + PAUSA_PARTIDA);
+    meta.oroMinuto = meta.oroMinuto > 0 ? meta.oroMinuto * 0.8 + tasa * 0.2 : tasa;
+  }
   meta.partidas++;
   meta.mejor = Math.max(meta.mejor, r.oro);
   meta.reventados += r.reventados;
@@ -172,6 +184,7 @@ export function loadMeta(raw: unknown): Meta {
       return { dia, diarias, base: loadCounters(m.base), cobradas: ids(m.cobradas), bono: m.bono === true, logros: ids(m.logros) };
     })(),
     ultimaVez: num(r.ultimaVez, 0),
+    oroMinuto: num(r.oroMinuto, 0),
     vistos: Array.isArray(r.vistos) ? r.vistos.filter((v): v is string => typeof v === 'string') : [],
     nombre: cleanName(r.nombre),
     pvp: loadPvp(r.pvp),

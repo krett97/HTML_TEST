@@ -16,6 +16,8 @@ export const ARROW_FALL = 0.16;
 export const FIREBALL_FLIGHT = 0.28;
 /** Velocidad de las flechas de los arqueros (unidades por segundo). */
 const ARROW_SPEED = 330;
+/** Lo que recibe un enemigo con armadura mientras la tenga (guerreros de hierro, escamas del Dragón). */
+export const ARMADURA = 0.6;
 /** Después de soltarse de una telaraña, el arquero no puede volver a quedar enredado en estos segundos. */
 export const TELA_INMUNE = 4;
 /** Abajo del campo, la muralla donde están el mago y los arqueros (los enemigos no llegan ahí). */
@@ -213,8 +215,8 @@ export interface Oleadas {
  */
 export const OLEADAS = { duracion: 30, duracionJefe: 45, pausa: 3, llegada: 6, base: 10, porOla: 4, max: 220, jefeVida: 0.35, escape: 2, cura: 0.15, jefeGolpe: 0.5 } as const;
 export const jefesOla = (ola: number): number => (ola % 5 === 0 ? 1 + Math.floor(ola / 10) : 0);
-/** Runas por aguantar la oleada: 1, +1 cada 5 oleadas, y 3 por cada jefe. */
-export const runasOla = (ola: number): number => 1 + Math.floor(ola / 5) + 3 * jefesOla(ola);
+/** Runas por aguantar la oleada: 1, y 2 por cada jefe. */
+export const runasOla = (ola: number): number => 1 + 2 * jefesOla(ola);
 
 export function createRun(base: Stats, h: number, nivel = 1, seed = Date.now(), arriba = MARGIN): Run {
   const alto = Math.max(240, h);
@@ -535,8 +537,8 @@ function damage(run: Run, e: Enemy, base: number, fuente: Source, events: RunEve
   // Tus flechas pueden dar golpe crítico (Reliquia).
   const critico = fuente === 'jugador' && run.stats.critico.prob > 0 && run.rng() < run.stats.critico.prob;
   const def = ENEMIES[e.kind];
-  // Con armadura (guerreros de hierro, escamas del Dragón) recibe la mitad hasta perder media vida.
-  const armadura = def.armadura && !e.sinArmadura ? 0.5 : 1;
+  // Con armadura (guerreros de hierro, escamas del Dragón) recibe el 60 % hasta perder media vida.
+  const armadura = def.armadura && !e.sinArmadura ? ARMADURA : 1;
   const danio = base * damageMultiplier(e.kind, tipo) * aturdido * armadura * (critico ? run.stats.critico.mult : 1);
   e.vida -= danio;
   if (def.armadura && !e.sinArmadura && e.vida > 0 && e.vida <= e.vidaMax / 2) {

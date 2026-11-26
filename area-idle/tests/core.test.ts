@@ -4,13 +4,13 @@ import { activeGoldPerMinute, idleGoldPerMinute, idleReward, idleUnlocked } from
 import { isBossLevel, JEFE, JEFES, bossFor, zoneOf, DESDE, INACTIVO, ROJO_DESDE, AZUL_DESDE, DAMAGE_TYPES, damageMultiplier, ENEMIES, levelConfig, PRIMERA_OLA, SECCIONES, TALENT_BY_ID, TALENTS } from '../src/core/datos';
 import { formatClock, formatNum } from '../src/core/format';
 import { buyTalent, chooseLevel, costOf, createMeta, finishRun, levelOf, loadMeta, talentState, talentVisible } from '../src/core/meta';
-import { bestSpot as mejorLugar, hidden, inAir, createSurvivalRun, jefesOla, runasOla, OLEADAS } from '../src/core/run';
-import { baseChance, bonosEquipo, chanceOf, costoPieza, emptyEquipo, loadEquipo, mejorar, NIVEL_MAX, SUERTE_POR_FALLO, tierDe } from '../src/core/equipo';
+import { ARMADURA, bestSpot as mejorLugar, hidden, inAir, createSurvivalRun, jefesOla, runasOla, OLEADAS } from '../src/core/run';
+import { EQUIPO, baseChance, bonosEquipo, chanceOf, costoPieza, emptyEquipo, loadEquipo, mejorar, NIVEL_MAX, SUERTE_POR_FALLO, tierDe } from '../src/core/equipo';
 import { ENTRADAS_MAX, RECARGA_ENTRADA_MS, emptySupervivencia, nivelBaseOlas, refillEntradas, survivalUnlocked, usarEntrada } from '../src/core/supervivencia';
 import { SUPERVIVENCIA_DESDE } from '../src/core/datos';
 import { autoAiming, createGuardRun, guardLevel, startGuardRun, updateGuardRun } from '../src/core/run';
 import { AUTOAPUNTAR } from '../src/core/datos';
-import { GUARDIA } from '../src/core/datos';
+import { CURVA, GUARDIA, ORO_TALENTOS } from '../src/core/datos';
 import { ALLY_ROW, archerSpots, bossOf, createRun, DAMAGE_TYPE_OF, FIELD_W, moveCursor, startRun, stepRun, type Run, type RunEvent } from '../src/core/run';
 import { computeStats } from '../src/core/stats';
 import { BONO_DIARIO, claimableCount, claimBonus, claimMission, dailyProgress, dayKey, DIARIAS, DIARIAS_POR_DIA, MISSION_BY_ID, msUntilReset, permanentProgress, rollDaily } from '../src/core/misiones';
@@ -82,7 +82,7 @@ describe('partida', () => {
     const events = stepRun(run, 0.4);
     const kill = events.find((e) => e.type === 'kill');
     expect(kill).toBeDefined();
-    expect(run.oro).toBeCloseTo(ENEMIES.verde.oro * 1.6);
+    expect(run.oro).toBeCloseTo(ENEMIES.verde.oro * (1 + 2 * ORO_TALENTOS.oro));
     expect(run.reventados).toBe(1);
     expect(run.enemies).toHaveLength(0);
   });
@@ -215,7 +215,7 @@ describe('niveles', () => {
   it('el Botín sube el premio', () => {
     const meta = createMeta();
     meta.talentos.botin = 4;
-    expect(finishRun(meta, { oro: 0, reventados: 15, gano: true, nivel: 1 })).toBe(Math.round(levelConfig(1).premio * 2));
+    expect(finishRun(meta, { oro: 0, reventados: 15, gano: true, nivel: 1 })).toBe(Math.round(levelConfig(1).premio * (1 + 4 * ORO_TALENTOS.botin)));
   });
 });
 
@@ -228,7 +228,8 @@ describe('jefes', () => {
     expect(levelConfig(20).jefe!.vida).toBeGreaterThan(levelConfig(10).jefe!.vida);
     const run = createRun(computeStats({}), 560, 10, 1);
     expect(run.stats.duracion).toBe(20 + JEFE.extra);
-    expect(levelConfig(10).premio).toBe(Math.round(8 * Math.pow(1.12, 9) * JEFE.premio));
+    // El premio es una parte del oro de todos los enemigos del nivel; en los de jefe, ×5.
+    expect(levelConfig(10).premio / levelConfig(9).premio).toBeGreaterThan(JEFE.premio);
   });
   it('sale con su escolta, invoca más y brinca a otro lado', () => {
     const run = createRun(computeStats({}), 560, 10, 1);
@@ -395,8 +396,11 @@ describe('slime rojo y muralla', () => {
     for (let i = 0; i < 60; i++) events.push(...stepRun(run, 0.05));
     expect(events.some((e) => e.type === 'sling')).toBe(true);
     const golpe = events.find((e) => e.type === 'wallHit');
-    expect(golpe).toMatchObject({ danio: ENEMIES.rojo.ataque });
-    expect(run.muro.vida).toBe(run.muro.max - ENEMIES.rojo.ataque);
+    // Lo que pega crece con el nivel (al principio, menos de lo que dice el enemigo).
+    const danio = ENEMIES.rojo.ataque * levelConfig(ROJO_DESDE).ataque;
+    expect(danio).toBeLessThan(ENEMIES.rojo.ataque);
+    expect((golpe as { danio: number }).danio).toBeCloseTo(danio);
+    expect(run.muro.vida).toBeCloseTo(run.muro.max - danio);
   });
   it('si cae la muralla, el mago y los arqueros dejan de atacar el resto del nivel', () => {
     const run = createRun(computeStats({ mago: 1, arqueros: 1 }), 560, ROJO_DESDE, 1);
@@ -456,14 +460,14 @@ describe('oro mientras no juegas', () => {
     meta.talentos.inactivo = 2;
     expect(idleGoldPerMinute(meta)).toBeCloseTo((base * (INACTIVO.eficiencia + 2 * INACTIVO.porNivel)) / INACTIVO.eficiencia);
     meta.talentos.bolsa = 3;
-    expect(idleReward(meta, 1_000_000 + 10 * HORA)!.segundos).toBe(5 * 3600);
+    expect(idleReward(meta, 1_000_000 + 10 * HORA)!.segundos).toBe((INACTIVO.horas + 3 * INACTIVO.horasPorNivel) * 3600);
     const sinOro = activeGoldPerMinute(meta);
     meta.talentos.oro = 2;
-    expect(activeGoldPerMinute(meta)).toBeCloseTo(sinOro * 1.6);
+    expect(activeGoldPerMinute(meta)).toBeCloseTo(sinOro * (1 + 2 * ORO_TALENTOS.oro));
     // Y el premio por nivel también.
     const m = createMeta();
     m.talentos.oro = 2;
-    expect(finishRun(m, { oro: 0, reventados: 15, gano: true, nivel: 1 })).toBe(Math.round(levelConfig(1).premio * 1.6));
+    expect(finishRun(m, { oro: 0, reventados: 15, gano: true, nivel: 1 })).toBe(Math.round(levelConfig(1).premio * (1 + 2 * ORO_TALENTOS.oro)));
   });
   it('Oro inactivo pide haber llegado al nivel 3 (además de Ganancia de oro)', () => {
     const meta = createMeta();
@@ -596,11 +600,11 @@ describe('modo pruebas: jugar tiempo simulado', () => {
 describe('ritmo (bot)', () => {
   it('pierde a veces al principio, junta oro en el nivel anterior y avanza; abre arqueros y mago', () => {
     const meta = createMeta();
-    const partidas = Array.from({ length: 20 }, (_, i) => playAndShop(meta, (i + 1) * 7919));
+    const partidas = Array.from({ length: 30 }, (_, i) => playAndShop(meta, (i + 1) * 7919));
     expect(partidas.some((p) => !p.gano)).toBe(true);
     const perdida = partidas.findIndex((p) => !p.gano && p.nivel > 1);
     expect(partidas[perdida + 1]!.nivel).toBe(partidas[perdida]!.nivel - 1);
-    expect(meta.nivel).toBeGreaterThan(8);
+    expect(meta.nivel).toBeGreaterThan(6);
     expect(levelOf(meta, 'mago')).toBe(1);
     expect(levelOf(meta, 'arqueros')).toBe(1);
   });
@@ -1189,11 +1193,13 @@ describe('cuarta zona: Desierto, y los jefes del 30 y el 40', () => {
 });
 
 describe('curvas de la segunda mitad', () => {
-  it('hasta el 20 la vida ×1.3 y el oro ×1.05 por nivel; desde ahí la vida ×1.14 y el oro ×1.15', () => {
-    expect(levelConfig(20).vida / levelConfig(19).vida).toBeCloseTo(1.3);
-    expect(levelConfig(21).vida / levelConfig(20).vida).toBeCloseTo(1.14);
-    expect(levelConfig(21).oro / levelConfig(20).oro).toBeCloseTo(1.15);
-    expect(levelConfig(35).oro / levelConfig(34).oro).toBeCloseTo(1.15);
+  it('hasta el 20 la vida y el oro crecen con una curva; desde ahí con otra (la vida más lento que antes)', () => {
+    expect(levelConfig(20).vida / levelConfig(19).vida).toBeCloseTo(CURVA.vida);
+    expect(levelConfig(20).oro / levelConfig(19).oro).toBeCloseTo(CURVA.oro);
+    expect(levelConfig(21).vida / levelConfig(20).vida).toBeCloseTo(CURVA.vidaTarde);
+    expect(levelConfig(21).oro / levelConfig(20).oro).toBeCloseTo(CURVA.oroTarde);
+    expect(levelConfig(35).oro / levelConfig(34).oro).toBeCloseTo(CURVA.oroTarde);
+    expect(CURVA.vidaTarde).toBeLessThan(CURVA.vida);
   });
   it('Daño llega a 100 y, pasado el 40, cada nivel cuesta solo ×1.2 más', () => {
     const d = TALENT_BY_ID.danio;
@@ -1202,10 +1208,14 @@ describe('curvas de la segunda mitad', () => {
     expect(costOf(d, 50) / costOf(d, 49)).toBeCloseTo(1.2, 1);
     expect(TALENT_BY_ID.muralla.max).toBe(20);
   });
-  it('el Esqueleto Mago tiene menos vida (por sus defensas) y el Líder más', () => {
+  it('cada jefe ajusta su vida (el Lobo Blanco y el Esqueleto Mago, por sus defensas, tienen menos)', () => {
     const base = (n: number) => 3 * (15 + 8 * (n - 1)) * levelConfig(n).vida * JEFE.vida;
-    expect(levelConfig(30).jefe!.vida).toBeCloseTo(base(30) * 0.7, -2);
-    expect(levelConfig(40).jefe!.vida).toBeCloseTo(base(40) * 1.5, -2);
+    expect(JEFES.loboBlanco!.vida).toBeLessThan(1);
+    expect(JEFES.esqueletoMago!.vida).toBeLessThan(1);
+    expect(levelConfig(20).jefe!.vida).toBeCloseTo(base(20) * JEFES.loboBlanco!.vida!, -2);
+    expect(levelConfig(30).jefe!.vida).toBeCloseTo(base(30) * JEFES.esqueletoMago!.vida!, -2);
+    expect(levelConfig(40).jefe!.vida).toBeCloseTo(base(40) * JEFES.liderBandido!.vida!, -2);
+    expect(levelConfig(10).jefe!.vida).toBeCloseTo(base(10), -1);
   });
 });
 
@@ -1224,7 +1234,7 @@ describe('quinta zona: Montaña de piedra, y el Dragón de acero', () => {
     // El daño a la muralla crece ×1.02 por nivel después del 20.
     expect(levelConfig(45).ataque / levelConfig(44).ataque).toBeCloseTo(1.02);
   });
-  it('la armadura quita la mitad del daño hasta perder media vida; luego se cae y marcha más rápido', () => {
+  it('la armadura quita parte del daño hasta perder media vida; luego se cae y marcha más rápido', () => {
     const run = createRun(computeStats({}), 560, 41, 21);
     quieta(run);
     const g: Run['enemies'][number] = { id: 820, kind: 'guerreroHierro', x: 150, y: 150, vx: 0, vy: 0, vida: 10, vidaMax: 10, giro: 99 };
@@ -1233,7 +1243,7 @@ describe('quinta zona: Montaña de piedra, y el Dragón de acero', () => {
     const ev: RunEvent[] = [];
     for (let i = 0; i < 12; i++) ev.push(...stepRun(run, 0.05));
     const golpe = ev.find((e) => e.type === 'hit' && e.id === 820);
-    expect(golpe).toMatchObject({ danio: 0.5 });
+    expect((golpe as { danio: number }).danio).toBeCloseTo(ARMADURA);
     g.vida = 5.2;
     const y0 = g.y;
     for (let i = 0; i < 20; i++) ev.push(...stepRun(run, 0.05));
@@ -1337,15 +1347,15 @@ describe('Herrería: mejorar el equipo con Runas (a veces sale, a veces no)', ()
   });
   it('los bonos multiplican lo del árbol y el aspecto cambia en 3 etapas', () => {
     const b = bonosEquipo({ baculo: 5, tunica: 4, arco: 10, armadura: 10, muralla: 2, torre: 5, estandarte: 3 });
-    expect(b.magoDanio).toBeCloseTo(2);
-    expect(b.magoIntervalo).toBeCloseTo(0.95 ** 4);
+    expect(b.magoDanio).toBeCloseTo(1 + 5 * EQUIPO.baculo);
+    expect(b.magoIntervalo).toBeCloseTo(EQUIPO.tunica ** 4);
     expect(b.arcoObjetivos).toBe(2);
     const sin = computeStats({ danio: 5, mago: 1, arqueros: 1 });
     const con = computeStats({ danio: 5, mago: 1, arqueros: 1 }, { baculo: 5, torre: 5, muralla: 2, estandarte: 3 });
-    expect(con.mago.danio / sin.mago.danio).toBeCloseTo(2 * 1.4);
-    expect(con.danio / sin.danio).toBeCloseTo(1.4);
-    expect(con.muro.vida / sin.muro.vida).toBeCloseTo(1.3);
-    expect(con.oroMult / sin.oroMult).toBeCloseTo(1.3);
+    expect(con.mago.danio / sin.mago.danio).toBeCloseTo((1 + 5 * EQUIPO.baculo) * (1 + 5 * EQUIPO.torre));
+    expect(con.danio / sin.danio).toBeCloseTo(1 + 5 * EQUIPO.torre);
+    expect(con.muro.vida / sin.muro.vida).toBeCloseTo(1 + 2 * EQUIPO.muralla);
+    expect(con.oroMult / sin.oroMult).toBeCloseTo(1 + 3 * EQUIPO.estandarte);
     expect(tierDe({}, 'mago')).toBe(0);
     expect(tierDe({ baculo: 2, tunica: 1 }, 'mago')).toBe(1);
     expect(tierDe({ baculo: 5, tunica: 4, sombrero: 3 }, 'mago')).toBe(2);
@@ -1378,11 +1388,12 @@ describe('Supervivencia: oleadas que dan Runas', () => {
     expect(s.entradas).toBe(ENTRADAS_MAX);
     expect(nivelBaseOlas(40)).toBe(30);
   });
-  it('jefes cada 5 oleadas (uno más cada 10) y más Runas conforme avanzas', () => {
+  it('jefes cada 5 oleadas (uno más cada 10); 1 Runa por oleada y 2 más por cada jefe', () => {
     expect([1, 4, 5, 9, 10, 15, 20].map(jefesOla)).toEqual([0, 0, 1, 0, 2, 2, 3]);
     expect(runasOla(1)).toBe(1);
-    expect(runasOla(5)).toBe(2 + 3);
-    expect(runasOla(10)).toBe(3 + 6);
+    expect(runasOla(4)).toBe(1);
+    expect(runasOla(5)).toBe(1 + 2);
+    expect(runasOla(10)).toBe(1 + 4);
   });
   it('las oleadas llegan, se aguantan y suman Runas; en la 10 salen dos jefes a la vez', () => {
     const run = createSurvivalRun(computeStats({ danio: 40, radio: 10, cadencia: 10, arqueros: 1, masArqueros: 5, multiflecha: 4, mago: 1, muralla: 20 }), 600, 5, 30, 1);

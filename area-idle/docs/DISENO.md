@@ -28,7 +28,7 @@ sienta bien. Poco texto: lo que sigue se descubre jugando.
 3. **Árbol** en tres secciones (pestañas): se gasta el oro. Abajo se elige el nivel (◀ Nivel 5 ▶; uno
    anterior dice "para juntar oro") y ¡Jugar!.
 
-Cada nivel tiene más slimes, con más vida (×1.3 por nivel) y algo más de oro (×1.05); los azules salen
+Cada nivel tiene más slimes, con más vida (×1.32 por nivel; desde 0.15.0, antes ×1.3) y algo más de oro (×1.05); los azules salen
 desde el nivel 4 y cada vez son más (hasta la mitad). Quien ya jugó, al abrir llega al árbol; quien es
 nuevo, directo al nivel 1 con una pista.
 
@@ -87,11 +87,13 @@ al daño físico, así que tus flechas y los arqueros son la respuesta: hay que 
 Se abre al **llegar al nivel 3** (aviso en el fin de la partida). Al volver, la ventana "Mientras no
 estabas" dice cuánto tiempo pasó y cuánto oro se juntó, con un botón para cobrar.
 
-- Da **10 %** (desde 0.9.0; antes 15 %) de lo que se gana por minuto jugando el nivel más alto ya superado
-  (sus slimes y su premio, una partida cada 30 s), hasta **2 horas**. Menos de un minuto fuera no cuenta.
-- **Oro inactivo** (+10 % por nivel, hasta 80 %; también sube el modo guardia; pide haber llegado al nivel 3) y **Bolsa grande** (+1 h por
-  nivel, hasta 12 h), en el árbol del jugador, bajo **Ganancia de oro**, que ahora multiplica todo el oro:
-  el de los slimes, el premio por nivel y lo que se junta sin jugar.
+- Da **10 %** (desde 0.9.0; antes 15 %) de lo que **de verdad ganas por minuto jugando** (desde 0.15.0: el
+  promedio de tus últimas partidas, contando la pausa entre una y otra; antes era una estimación con el nivel
+  más alto, que daba de más), hasta **2 horas**. Menos de un minuto fuera no cuenta.
+- **Oro inactivo** (+2 % por nivel, hasta 5 → **20 %**; pide haber llegado al nivel 3) y **Bolsa grande**
+  (+30 min por nivel, hasta 6 → **5 h**), en el árbol del jugador, bajo **Ganancia de oro** (+10 % por nivel,
+  hasta 15 → ×2.5), que multiplica todo el oro: el de los slimes, el premio por nivel y lo que se junta sin
+  jugar. (Antes de 0.15.0: Oro inactivo hasta 80 %, Bolsa hasta 12 h y Ganancia de oro ×5.5; ver 5k.)
 - En el árbol, debajo del oro, dice cuánto se gana por minuto sin jugar (o, si la guardia está andando,
   cuánto junta la guardia, en verde).
 - El juego guarda la hora en cada guardado (también cada 20 s y al pasar a segundo plano). El modo
@@ -207,7 +209,7 @@ Misiones nuevas: diarias de escorpiones (100), minotauros (30) y cíclopes (20);
 atoraba en el nivel 29 (con cualquier jefe): la vida crecía ×1.3 por nivel y el oro ×1.05, y casi todas
 las mejoras ya estaban al máximo. Desde el nivel 20: vida ×1.14 y oro ×1.15 por nivel; **Daño** llega a
 100 (pasado su nivel 40 cada nivel cuesta ×1.2 en vez de ×1.4) y **Muralla reforzada** a 20. Los niveles
-1–20 no cambian.
+1–20 no cambian. (0.15.0: vida ×1.32 hasta el 20 y ×1.17 desde ahí; ver 5k.)
 
 ## 5d4. Montaña de piedra (41–50) y Dragón de acero (50) (desde 0.13.0)
 
@@ -244,19 +246,22 @@ hacia el 57).
 - **Jefes** cada 5 oleadas (Rey, Lobo, Esqueleto Mago, Líder, Dragón, en orden), uno más cada 10: **varios a
   la vez** (2 en la 10, 3 en la 20). El primero con todo su comportamiento; los demás pasean y le tiran a la
   muralla. Con 35 % de su vida y la mitad de su golpe.
-- Premio: **Runas** por oleada aguantada (1, +1 cada 5 oleadas, +3 por jefe) y el oro de lo que revientas.
+- Premio: **Runas** por oleada aguantada (1, y +2 por cada jefe; antes de 0.15.0, 1 + 1 cada 5 oleadas + 3 por jefe) y el oro de lo que revientas.
 - **3 entradas**; vuelve una cada **8 h**.
-- Simulador (jugador que toca bien): 19–22 oleadas, 64–88 Runas, 4–5 minutos por partida.
+- Simulador (jugador que toca bien): 19–23 oleadas y unas 25–40 Runas por partida (0.15.0; antes 64–88).
 
 **Herrería** (desde la ventana de Supervivencia): 9 piezas de +0 a +10.
 
 | Grupo | Pieza | Bono por nivel |
 |---|---|---|
-| Mago | Báculo / Túnica / Sombrero | +20 % daño / ×0.95 tiempo entre explosiones / +5 % lado de la explosión |
-| Arqueros | Arco / Flechas / Armadura | +20 % daño / ×0.95 tiempo entre flechas / +5 % daño y +1 objetivo cada 5 |
-| Base | Muralla / Torre / Estandarte | +15 % vida de la muralla / +8 % **todo** el daño / +10 % todo el oro |
+| Mago | Báculo / Túnica / Sombrero | +12 % daño / ×0.97 tiempo entre explosiones / +4 % lado de la explosión |
+| Arqueros | Arco / Flechas / Armadura | +12 % daño / ×0.97 tiempo entre flechas / +3 % daño y +1 objetivo cada 5 |
+| Base | Muralla / Torre / Estandarte | +10 % vida de la muralla / +5 % **todo** el daño / +5 % todo el oro |
 
-- **El gambleo:** cada intento cuesta Runas (4, ×1.45 por nivel) y **no siempre sale**: 100 % la primera
+(0.15.0; antes +20 %, ×0.95, +5 %, +20 %, ×0.95, +5 %, +15 %, +8 % y +10 %: con eso y Runas de sobra se
+llegaba al nivel 57 el primer día.)
+
+- **El gambleo:** cada intento cuesta Runas (10, ×1.6 por nivel; antes 4, ×1.45) y **no siempre sale**: 100 % la primera
   mejora, luego 87 %, 79 %… hasta 20 % (95 % − 8 % por nivel). **Cada fallo suma +10 %** al siguiente intento
   de esa pieza (se reinicia al lograrlo). Fallar **no quita niveles**.
 - Los bonos multiplican lo que da el árbol (y cuentan para el poder del PvP).
@@ -268,6 +273,27 @@ hacia el 57).
 - Pendiente: que los **mini jefes de la mazmorra** (niveles 51–100) también den Runas, cuando se haga.
 
 Modo pruebas: **Supervivencia: entradas 3/3** y **+100 runas**.
+
+## 5k. Pasada de balance (0.15.0)
+
+Pruebas con `tools/balance.ts` (jugador activo, a ratos con la app cerrada, a ratos en la guardia y por
+días con Supervivencia y Herrería). Lo que estaba de más y qué cambió:
+
+| Qué | Antes | Ahora | Por qué |
+|---|---|---|---|
+| Oro de app cerrada | hasta 80 % por 12 h, con un estimado del nivel más alto | 10 % + 2 % por nivel de Oro inactivo (hasta 20 %), 2 h + 30 min por nivel de Bolsa grande (hasta 5 h), de lo que **de verdad** ganas por minuto | el 74 % del oro de un jugador a ratos salía de ahí; con 1 h de juego llegaba al 48 |
+| Guardia | 10 puntos más que la app cerrada (hasta 90 %) | 20 % fijo | casi valía lo mismo dejarla que jugar |
+| Ganancia de oro | +30 % por nivel (×5.5) | +10 % (×2.5) | multiplicaba todo, también la app cerrada |
+| Botín y premio por nivel | +25 % por nivel; el premio era ~1 % del oro | +10 % por nivel; el premio es el 30 % del oro del nivel (×5 en jefes) | el Botín no servía |
+| Curva de vida | ×1.3 hasta el 20, ×1.14 después | ×1.32 y ×1.17 | se sentía fácil: del 20 al 48 en unos 70 minutos |
+| Muralla | los enemigos pegan su ataque completo | empiezan en 60 % y crecen igual | compensa la vida extra de la curva nueva (los enemigos duran más frente a la muralla) |
+| Supervivencia | ~90 Runas por partida | 25–40 (1 por oleada, +2 por jefe) | con la Herrería barata se llegaba al 57 el primer día |
+| Herrería | 4 Runas ×1.45; Báculo/Arco +20 %, Torre +8 %… | 10 Runas ×1.6; Báculo/Arco +12 %, Torre +5 %… (tabla en 5j) | igual |
+| Jefes | vida ×6; Lobo ×1, Esqueleto Mago ×0.7, Líder ×1.5, Dragón ×0.75 | vida ×4; Lobo ×0.7, Esqueleto Mago ×0.6, Líder ×1.2, Dragón ×0.5 | con la curva nueva, el Lobo pedía 10 intentos y el Líder 35 |
+| Enemigos de las zonas 3–5 | araña 6, lobo negro 5, esqueleto 14 de vida; gólem 7, guerrero de hierro 3 de ataque | 12, 8, 16; 5 y 2; armadura deja pasar 60 % (antes 50 %) | la pradera era muy fácil y la montaña tiraba la muralla siempre |
+
+Lo que queda: el árbol se acaba hacia el nivel 38–45 (solo sigue Daño hasta 100); de ahí en adelante
+manda la Supervivencia con la Herrería, y la mazmorra (51–100) traerá lo siguiente.
 
 ## 5e. Misiones, gemas moradas y Reliquias (desde 0.6.0)
 
@@ -368,9 +394,9 @@ de atrás se ve más claro y **tus tropas pelean solas**. Tu círculo descansa.
 - Cada baja da un oro fijo (sale "+N" dorado) para que, si tus tropas alcanzan a todos, se junte el
   **20 %** de lo que se gana jugando. Si tus tropas no alcanzan, se junta menos. El oro va directo a tu
   bolsa, así que puedes ir comprando.
-- **Oro inactivo** sube igual la guardia y la app cerrada: la guardia siempre da 10 puntos más (10 % → 20 %,
-  con un nivel 20 % → 30 %…). Así, abrir el juego y dejarlo en el árbol vale más que cerrarlo, pero jugar
-  niveles sigue siendo lo mejor (100 %).
+- Siempre **20 %** de lo que de verdad ganas por minuto jugando (el mismo promedio que la app cerrada).
+  Desde 0.15.0 **Oro inactivo ya no la sube** (antes sí: con todo, llegaba a 90 %, casi como jugar). Así,
+  abrir el juego y dejarlo en el árbol vale más que cerrarlo, pero jugar niveles sigue siendo lo mejor.
 - No cuenta para misiones, ranking ni PvP (si no, "revienta 600" se cumpliría solo).
 - Al comprar en el árbol, la guardia toma lo nuevo sin empezar de nuevo; el primer arquero (o el mago) la
   arranca. Solo suena el "pop" de cada baja.
@@ -388,30 +414,36 @@ y lo deja quieto 2.5 s, así que **apuntar siempre es mejor**: sirve para jugar 
 para ganarle al jugador. Contra los jefes que esquivan tu círculo casi no sirve. En el modo guardia tu
 círculo sigue descansando.
 
-## 6. Ritmo (`npm run simular`)
+## 6. Ritmo (`npm run simular`, `npx tsx tools/balance.ts`)
 
 Un bot que toca donde hay más slimes cada segundo (los rojos cuentan por cuatro: los busca primero),
-compra lo más barato y, si pierde un nivel, juega una vez el anterior para juntar oro y reintenta:
+compra lo más barato, cobra misiones, compra la Reliquia más barata y, si pierde un nivel, juega una vez
+el anterior para juntar oro y reintenta. Jugando sin parar (0.15.0, entre paréntesis 0.14.0):
 
 | Minuto | Nivel superado |
 |---|---|
-| 5 | 4 |
-| 10 | 9–12 |
-| 15 | 17 |
-| 20 | 19 |
-| 30 | 29 |
-| 45 | 35 |
-| 60 | 39 |
-| 90 | 48 |
-| 120 | 52 |
+| 10 | 10–11 (9–12) |
+| 20 | 18–19 (19) |
+| 30 | 19–25 (29) |
+| 60 | 34–35 (39) |
+| 90 | 36–37 (48) |
+| 120 | 38–44 (52) |
+| 180 | 46 |
+| 240 | 49 |
 
-(0.6.0: el bot también cobra misiones y compra la Reliquia más barata. 0.12.0: curvas nuevas desde el 20.)
-Jefes: el Rey ~3 intentos, el Lobo ~5, el Esqueleto Mago ~3, el Líder ~13 y el Dragón de acero ~8. En el desierto la muralla es
-el reto (del 36 al 38 cae seguido: ahí sirve Muralla reforzada hasta 20).
+Jefes (intentos): Rey 2, Lobo Blanco 3–7, Esqueleto Mago 3–5, Líder 1 (llegas fuerte después de atorarte
+en el desierto) y Dragón de acero 6–28. Pierde un 30–40 % de las partidas en las tres primeras zonas y
+un 55–75 % en el desierto y la montaña, casi siempre porque cae la muralla: ahí el árbol ya está casi al
+máximo (cerca del 38 solo quedan Daño y Muralla reforzada) y lo que sigue es la Supervivencia y la
+Herrería.
 
-Al principio pierde los niveles 3, 4 y 7 alguna vez, junta oro en el anterior y pasa. Del 11 al 20 casi
-no pierde (llegan el mago y los arqueros). Del 21 en adelante los rojos son el reto: la muralla cae en
-unas 30 partidas de 45 minutos y ahí sirve Muralla reforzada. (El bot no cobra oro inactivo.)
+Otros jugadores simulados (`tools/balance.ts`):
+- **A ratos con la app cerrada** (15 min de juego cada 3 h): nivel 32 a las 6 h, 37 a las 12 h, 49 al
+  día y 55 a los 2 días; el 73 % de su oro es de la app cerrada.
+- **A ratos en la guardia** (15 min de juego, 1 h en la guardia): 36 a las 3 h, 46 a las 6 h, 49 a las
+  12 h; la guardia es la mitad de su oro.
+- **Días** (4 ratos de 15 min, la app cerrada entre ratos y 3 Supervivencias al día): día 1 → 47, día 2
+  → 53, día 3 → 58, día 5 → 63, día 8 → 64, con el equipo en +3/+4 al día 8.
 
 ## 7. Técnica
 

@@ -25,6 +25,11 @@ export const PIEZAS: PiezaDef[] = [
 export const GRUPOS: Grupo[] = ['mago', 'arqueros', 'base'];
 
 export const NIVEL_MAX = 10;
+/**
+ * Números del equipo: costo del primer intento y cuánto sube por nivel, y lo que da cada nivel de cada pieza.
+ * (Ajustados con el simulador de días: con los primeros valores se llegaba al nivel 57 el primer día.)
+ */
+export const EQUIPO = { costo: 10, crece: 1.6, baculo: 0.12, tunica: 0.97, sombrero: 0.04, arco: 0.12, flechas: 0.97, armadura: 0.03, muralla: 0.1, torre: 0.05, estandarte: 0.05 };
 /** Lo que sube la probabilidad del siguiente intento por cada fallo. */
 export const SUERTE_POR_FALLO = 0.1;
 
@@ -49,7 +54,7 @@ export function chanceOf(e: EquipoState, id: PiezaId): number {
 }
 
 /** Runas que cuesta cada intento para subir desde `nivel`. */
-export const costoPieza = (nivel: number): number => Math.round(4 * Math.pow(1.45, nivel));
+export const costoPieza = (nivel: number): number => Math.round(EQUIPO.costo * Math.pow(EQUIPO.crece, nivel));
 
 export interface Intento {
   exito: boolean;
@@ -103,16 +108,17 @@ export interface BonosEquipo {
 
 export function bonosEquipo(niveles: EquipoNiveles = {}): BonosEquipo {
   const n = (id: PiezaId) => niveles[id] ?? 0;
+  const E = EQUIPO;
   return {
-    magoDanio: 1 + 0.2 * n('baculo'),
-    magoIntervalo: Math.pow(0.95, n('tunica')),
-    magoArea: 1 + 0.05 * n('sombrero'),
-    arcoDanio: (1 + 0.2 * n('arco')) * (1 + 0.05 * n('armadura')),
-    arcoIntervalo: Math.pow(0.95, n('flechas')),
+    magoDanio: 1 + E.baculo * n('baculo'),
+    magoIntervalo: Math.pow(E.tunica, n('tunica')),
+    magoArea: 1 + E.sombrero * n('sombrero'),
+    arcoDanio: (1 + E.arco * n('arco')) * (1 + E.armadura * n('armadura')),
+    arcoIntervalo: Math.pow(E.flechas, n('flechas')),
     arcoObjetivos: Math.floor(n('armadura') / 5),
-    muroVida: 1 + 0.15 * n('muralla'),
-    danio: 1 + 0.08 * n('torre'),
-    oro: 1 + 0.1 * n('estandarte'),
+    muroVida: 1 + E.muralla * n('muralla'),
+    danio: 1 + E.torre * n('torre'),
+    oro: 1 + E.estandarte * n('estandarte'),
   };
 }
 

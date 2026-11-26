@@ -159,12 +159,12 @@ export class Juego {
 
   /** Oro por baja en guardia: el 20 % (más "Oro inactivo") de lo que se gana jugando, si tus tropas alcanzan. */
   private oroGuardia(): number {
-    return (stats(this.meta).inactivo.eficiencia + GUARDIA.extra) * activeGoldPerMinute(this.meta) * (GUARDIA.cada / 60);
+    return GUARDIA.eficiencia * activeGoldPerMinute(this.meta) * (GUARDIA.cada / 60);
   }
 
   /** Oro por minuto de la guardia (si tus tropas alcanzan a todos). */
   get ritmoGuardia(): number {
-    return (stats(this.meta).inactivo.eficiencia + GUARDIA.extra) * activeGoldPerMinute(this.meta);
+    return GUARDIA.eficiencia * activeGoldPerMinute(this.meta);
   }
 
   /** Empieza la guardia en un campo de `alto` unidades; sin tropas no hay guardia. */
@@ -295,7 +295,7 @@ export class Juego {
     const rankingAntes = rankingUnlocked(this.meta);
     const pvpAntes = pvpUnlocked(this.meta);
     const supervivenciaAntes = survivalUnlocked(this.meta);
-    this.premio = finishRun(this.meta, { oro: run.oro, reventados: run.reventados, gano, nivel: run.nivel.nivel, porTipo: run.porTipo, muroCaido: run.muro.caido, jefe: run.nivel.jefe?.kind ?? null });
+    this.premio = finishRun(this.meta, { oro: run.oro, reventados: run.reventados, gano, nivel: run.nivel.nivel, porTipo: run.porTipo, muroCaido: run.muro.caido, jefe: run.nivel.jefe?.kind ?? null, segundos: run.t });
     this.abrioInactivo = !antes && idleUnlocked(this.meta);
     this.abrioMisiones = !misionesAntes && missionsUnlocked(this.meta);
     this.abrioRanking = !rankingAntes && rankingUnlocked(this.meta);

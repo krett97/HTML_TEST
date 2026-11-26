@@ -1,4 +1,5 @@
-// Pruebas de punta a punta: el juego real en Chromium (Playwright). Uso: npm run e2e
+// Pruebas de punta a punta: el juego real en Chromium (Playwright). Uso: npm run e2e (o SOLO=niveles
+// node tests/e2e/flujos.cjs para uno solo, sobre lo ya construido)
 // (levanta `vite preview` en el puerto 4174 si no está corriendo). Sale con código 1 si algo falla.
 const { spawn } = require('child_process');
 const http = require('http');
@@ -43,6 +44,8 @@ async function fresh(browser, opts = {}) {
 }
 
 async function flow(name, browser, fn, opts) {
+  // SOLO=texto npm run e2e: solo los flujos cuyo nombre lo contenga.
+  if (process.env.SOLO && !name.includes(process.env.SOLO)) return;
   const page = await fresh(browser, opts);
   try {
     await fn(page);
@@ -135,7 +138,8 @@ async function flow(name, browser, fn, opts) {
     await page.oro(1000000);
     for (const [id, n] of [['danio', 5], ['radio', 3], ['cadencia', 4], ['slimes', 3], ['tiempo', 3], ['arqueros', 1], ['multiflecha', 2]]) await page.comprar(id, n);
     await page.getByTestId('jugar').click();
-    for (let i = 0; i < 60 && !(await page.getByTestId('fin').count()); i++) {
+    // Hasta 60 s (en una máquina cargada el reloj del nivel puede ir por delante de los toques).
+    for (let i = 0; i < 120 && !(await page.getByTestId('fin').count()); i++) {
       // Toca donde haya un slime, como alguien que juega.
       const b = await page.evaluate(() => { const r = window.juego.run; const e = r && r.enemies[0]; return e ? { x: e.x / 360, y: e.y / r.h } : null; });
       if (b) await page.tap(b.x, b.y);
@@ -188,7 +192,7 @@ async function flow(name, browser, fn, opts) {
     await page.comprar('oro', 1);
     await page.getByTestId('talento-inactivo').click();
     await page.getByTestId('comprar').click();
-    check((await page.getByTestId('detalle').textContent()).includes('1/7'), 'no se compró Oro inactivo');
+    check((await page.getByTestId('detalle').textContent()).includes('1/5'), 'no se compró Oro inactivo');
     check(await page.getByTestId('talento-bolsa').count(), 'no apareció Bolsa grande');
   });
 
