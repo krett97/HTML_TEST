@@ -161,7 +161,9 @@
     "nuevoDia": "New day (new dailies)",
     "pvpRecargar": "PvP: attempts 5/5",
     "pvpSemana": "PvP: end week",
-    "masMedallas": "+50 medals"
+    "masMedallas": "+50 medals",
+    "oleadasRecargar": "Survival: entries 3/3",
+    "masRunas": "+100 runes"
   },
   "secciones": {
     "jugador": "Player",
@@ -452,5 +454,71 @@
   },
   "guardia": {
     "explica": "Guard: while you're here, your troops fight a few enemies on their own (20% of what you earn playing)."
+  },
+  "oleadas": {
+    "titulo": "Survival",
+    "ola": "Wave {n}",
+    "siguiente": "Next",
+    "entradas": "Entries",
+    "mejor": "Best (waves)",
+    "runas": "Runes",
+    "recarga": "+1 entry in {t}",
+    "entrar": "Enter!",
+    "aguantaste": "You held {n} waves!",
+    "record": "New best!",
+    "explica": "Ever harder waves until your wall falls. Each wave you hold gives Runes to upgrade your gear.",
+    "nuevo": "New! Survival: hold off waves and earn Runes for the Forge."
+  },
+  "herreria": {
+    "titulo": "Forge",
+    "grupos": {
+      "mago": "Mage",
+      "arqueros": "Archers",
+      "base": "Base"
+    },
+    "aspecto": "Look {n}/{max}",
+    "probabilidad": "Chance: {p}",
+    "porFallos": "+{p} from fails",
+    "exito": "Success! Now +{n}",
+    "fallo": "It failed… next time: {p}",
+    "como": "Each try costs Runes and doesn't always work. If it fails, the next try is likelier. You never lose levels.",
+    "piezas": {
+      "baculo": {
+        "nombre": "Staff",
+        "efecto": "Mage damage"
+      },
+      "tunica": {
+        "nombre": "Robe",
+        "efecto": "Mage speed"
+      },
+      "sombrero": {
+        "nombre": "Hat",
+        "efecto": "Mage blast"
+      },
+      "arco": {
+        "nombre": "Bow",
+        "efecto": "Archer damage"
+      },
+      "flechas": {
+        "nombre": "Arrows",
+        "efecto": "Archer speed"
+      },
+      "armadura": {
+        "nombre": "Armor",
+        "efecto": "Damage and targets (every 5)"
+      },
+      "muralla": {
+        "nombre": "Wall",
+        "efecto": "Wall life"
+      },
+      "torre": {
+        "nombre": "Tower",
+        "efecto": "All damage"
+      },
+      "estandarte": {
+        "nombre": "Banner",
+        "efecto": "All gold"
+      }
+    }
   }
 }

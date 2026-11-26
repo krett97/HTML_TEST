@@ -161,7 +161,9 @@
     "nuevoDia": "Nuevo día (otras diarias)",
     "pvpRecargar": "PvP: intentos 5/5",
     "pvpSemana": "PvP: terminar semana",
-    "masMedallas": "+50 medallas"
+    "masMedallas": "+50 medallas",
+    "oleadasRecargar": "Supervivencia: entradas 3/3",
+    "masRunas": "+100 runas"
   },
   "secciones": {
     "jugador": "Jugador",
@@ -452,5 +454,71 @@
   },
   "guardia": {
     "explica": "Guardia: mientras estás aquí, tus tropas pelean solas contra pocos enemigos (20 % de lo que ganas jugando)."
+  },
+  "oleadas": {
+    "titulo": "Supervivencia",
+    "ola": "Oleada {n}",
+    "siguiente": "Siguiente",
+    "entradas": "Entradas",
+    "mejor": "Mejor marca (oleadas)",
+    "runas": "Runas",
+    "recarga": "+1 entrada en {t}",
+    "entrar": "¡Entrar!",
+    "aguantaste": "¡Aguantaste {n} oleadas!",
+    "record": "¡Nueva mejor marca!",
+    "explica": "Oleadas cada vez más difíciles hasta que caiga tu muralla. Cada oleada aguantada da Runas para mejorar tu equipo.",
+    "nuevo": "¡Nuevo! Supervivencia: aguanta oleadas y gana Runas para la Herrería."
+  },
+  "herreria": {
+    "titulo": "Herrería",
+    "grupos": {
+      "mago": "Mago",
+      "arqueros": "Arqueros",
+      "base": "Base"
+    },
+    "aspecto": "Aspecto {n}/{max}",
+    "probabilidad": "Probabilidad: {p}",
+    "porFallos": "+{p} por fallos",
+    "exito": "¡Salió! Ahora +{n}",
+    "fallo": "No salió… la próxima: {p}",
+    "como": "Cada intento cuesta Runas y no siempre sale. Si falla, la siguiente vez es más probable. Nunca se pierden niveles.",
+    "piezas": {
+      "baculo": {
+        "nombre": "Báculo",
+        "efecto": "Daño del mago"
+      },
+      "tunica": {
+        "nombre": "Túnica",
+        "efecto": "Rapidez del mago"
+      },
+      "sombrero": {
+        "nombre": "Sombrero",
+        "efecto": "Explosión del mago"
+      },
+      "arco": {
+        "nombre": "Arco",
+        "efecto": "Daño de los arqueros"
+      },
+      "flechas": {
+        "nombre": "Flechas",
+        "efecto": "Rapidez de los arqueros"
+      },
+      "armadura": {
+        "nombre": "Armadura",
+        "efecto": "Daño y objetivos (cada 5)"
+      },
+      "muralla": {
+        "nombre": "Muralla",
+        "efecto": "Vida de la muralla"
+      },
+      "torre": {
+        "nombre": "Torre",
+        "efecto": "Todo el daño"
+      },
+      "estandarte": {
+        "nombre": "Estandarte",
+        "efecto": "Todo el oro"
+      }
+    }
   }
 }

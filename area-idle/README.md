@@ -6,7 +6,7 @@ todos antes de que se acabe el tiempo; si no, se reintenta o se juega el anterio
 el oro mejoras tres árboles: el tuyo, el del mago (explosiones de fuego cuadradas) y el de los arqueros
 (un objetivo a la vez, luego varios).
 
-**Estado: prototipo 0.13.0.** Cinco zonas: **Campo verde** (niveles 1–10, slimes), **Campo de batalla**
+**Estado: prototipo 0.14.0.** Cinco zonas: **Campo verde** (niveles 1–10, slimes), **Campo de batalla**
 (11–20: goblins con lanzas, lobos, orcos y orcos arqueros, con espadas y tablas tiradas) y **Pradera
 amarilla** (21–30 y siguientes: arañas gigantes, esqueletos con espada y escudo, lobos negros y bandidos
 con dagas, entre cráneos y pedazos de armadura) y **Desierto** (31–40: escorpiones gigantes que se
@@ -22,7 +22,9 @@ pelean solas contra pocos enemigos, 20 %), y desde el 11
 **Reliquias**, desde el 17 un **ranking** (compartido en la versión publicada en Claude) y desde el 19 una **arena PvP**
 sin conexión (ligas semanales de 100 con rivales simulados, intentos que se recargan y tienda de medallas). 26 talentos en cuatro secciones, seis tipos de daño (dos en juego: físico y fuego) y un
 glosario de enemigos. Con **Autoapuntado** (talento) tu círculo se mueve solo hacia los enemigos, pero
-muy despacio: apuntar siempre es mejor.
+muy despacio: apuntar siempre es mejor. Desde el 26, **Supervivencia** (oleadas hasta que cae la muralla)
+da **Runas** para la **Herrería**: 9 piezas de equipo para el mago, los arqueros y la base que a veces
+fallan al mejorar (cada fallo sube la probabilidad del siguiente) y cambian cómo se ven.
 
 - Diseño y decisiones: [`docs/DISENO.md`](docs/DISENO.md)
 - Lo que se tomó del juego del gato: [`../REUSO.md`](../REUSO.md)

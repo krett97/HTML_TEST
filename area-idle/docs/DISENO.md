@@ -1,6 +1,6 @@
 # Campo de Slimes: diseño del prototipo
 
-> Versión 0.13.0. Nombre provisional. Nació de pausar el juego del gato
+> Versión 0.14.0. Nombre provisional. Nació de pausar el juego del gato
 > ([`../../gato-idle/docs/DECISIONES.md`](../../gato-idle/docs/DECISIONES.md)), tomando su base técnica y su
 > arte en código ([`../../REUSO.md`](../../REUSO.md)). Referencia de sensación: *Don't Stop The Pop!*
 > (cientos de cosas reventando en un área) y el idle del castor (rocas que caen, mundo que cambia por fase).
@@ -231,6 +231,44 @@ Suelo de roca gris con grietas, peñascos, pinos y cascos tirados.
 - Misiones: diarias de guerreros de hierro (100), gólems (30) y dragones pequeños (20); permanentes
   "Llega al 45" (35), "Llega al 50" (40) y "Vence al Dragón de acero" (25).
 
+## 5j. Supervivencia, Runas y Herrería (desde 0.14.0)
+
+La mecánica para seguir volviéndose fuerte después del nivel ~50 (con el árbol solo, el juego se atora
+hacia el 57).
+
+**Supervivencia** (se abre en el **nivel 26**; botón azul junto a "¡Jugar!"):
+- Oleadas seguidas hasta que **cae la muralla**. Cada oleada trae 10 + 4 × oleada enemigos (hasta 220) del
+  nivel *más alto abierto − 10 + oleada* (uno más difícil cada vez), de una zona al azar entre las abiertas.
+- Cada oleada tiene **30 s** (45 con jefes); los que queden **se escapan y golpean la muralla**. Limpiar una
+  oleada repara 15 % de la muralla.
+- **Jefes** cada 5 oleadas (Rey, Lobo, Esqueleto Mago, Líder, Dragón, en orden), uno más cada 10: **varios a
+  la vez** (2 en la 10, 3 en la 20). El primero con todo su comportamiento; los demás pasean y le tiran a la
+  muralla. Con 35 % de su vida y la mitad de su golpe.
+- Premio: **Runas** por oleada aguantada (1, +1 cada 5 oleadas, +3 por jefe) y el oro de lo que revientas.
+- **3 entradas**; vuelve una cada **8 h**.
+- Simulador (jugador que toca bien): 19–22 oleadas, 64–88 Runas, 4–5 minutos por partida.
+
+**Herrería** (desde la ventana de Supervivencia): 9 piezas de +0 a +10.
+
+| Grupo | Pieza | Bono por nivel |
+|---|---|---|
+| Mago | Báculo / Túnica / Sombrero | +20 % daño / ×0.95 tiempo entre explosiones / +5 % lado de la explosión |
+| Arqueros | Arco / Flechas / Armadura | +20 % daño / ×0.95 tiempo entre flechas / +5 % daño y +1 objetivo cada 5 |
+| Base | Muralla / Torre / Estandarte | +15 % vida de la muralla / +8 % **todo** el daño / +10 % todo el oro |
+
+- **El gambleo:** cada intento cuesta Runas (4, ×1.45 por nivel) y **no siempre sale**: 100 % la primera
+  mejora, luego 87 %, 79 %… hasta 20 % (95 % − 8 % por nivel). **Cada fallo suma +10 %** al siguiente intento
+  de esa pieza (se reinicia al lograrlo). Fallar **no quita niveles**.
+- Los bonos multiplican lo que da el árbol (y cuentan para el poder del PvP).
+- **Se ve:** el mago (morado → azul con estrellas → rojo con oro y bastón en llamas → blanco con oro y
+  cristal radiante), los arqueros (capucha → cota de malla → armadura plateada con casco → dorada con capa)
+  y la muralla y la torre (piedra → bandas de hierro → piedra azulada con remates de metal → blanca con oro;
+  el estandarte cambia de color y salen banderines). Cada grupo cambia según la suma de sus tres piezas:
+  3, 12 y 24 (de 30).
+- Pendiente: que los **mini jefes de la mazmorra** (niveles 51–100) también den Runas, cuando se haga.
+
+Modo pruebas: **Supervivencia: entradas 3/3** y **+100 runas**.
+
 ## 5e. Misiones, gemas moradas y Reliquias (desde 0.6.0)
 
 Al pasar el nivel 10 (al vencer al Rey Slime) se abren las **misiones**, que dan **gemas moradas**, la
@@ -377,9 +415,10 @@ unas 30 partidas de 45 minutos y ahí sirve Muralla reforzada. (El bot no cobra 
 
 ## 7. Técnica
 
-- `src/core/` es lógica pura y probada (104 pruebas): `run.ts` (la partida paso a paso; devuelve eventos),
+- `src/core/` es lógica pura y probada (113 pruebas): `run.ts` (la partida paso a paso; devuelve eventos),
   `stats.ts` (estadísticas desde los talentos), `meta.ts` (oro, gemas, árbol, guardado), `misiones.ts`
-  (contadores, diarias y permanentes), `ranking.ts`, `pvp.ts` (poder, ligas, peleas, tienda), `datos.ts`, `bot.ts`. `src/services/ranking.ts`
+  (contadores, diarias y permanentes), `ranking.ts`, `pvp.ts` (poder, ligas, peleas, tienda), `equipo.ts` (Herrería), `supervivencia.ts`
+  (entradas), `datos.ts`, `bot.ts`. `src/services/ranking.ts`
   conecta el ranking con la base de datos de la página publicada.
 - `src/game/Campo.ts` (Phaser 4) solo dibuja los eventos: sprites reciclados para cientos de slimes,
   números de daño con una **fuente de mapa de bits** hecha al arrancar (`numeros.ts`), partículas, flechas

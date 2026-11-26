@@ -290,91 +290,153 @@ scene('espada', svg(90, 30, g('rotate(-12 45 15)', o('M18 12 H74 L82 15 L74 18 H
 scene('tabla', svg(90, 34, g('rotate(8 45 17)', rect(4, 8, 82, 18, 4, P.madera, 4) + line('M10 14 H60 M24 20 H80', P.maderaS, 2) + circ(12, 17, 2, K, 0) + circ(78, 17, 2, K, 0))));
 scene('escudo', svg(54, 40, ell(27, 22, 24, 15, P.maderaS, 5) + ell(27, 22, 16, 9, P.madera, 0) + ell(27, 22, 5, 3, P.grisS, 3) + line('M8 22 H46', '#8a7f70', 3)));
 
-// ---- El mago (120 × 150): túnica y sombrero morados con estrellas, barba blanca, bastón con cristal ----
-{
+// ---- El mago (120 × 150): túnica y sombrero con estrellas, barba blanca, bastón con cristal ----
+// Con el equipo de la Herrería cambia en 3 etapas: azul con estrellas plateadas, roja con oro y llama, y
+// blanca con oro y cristal radiante.
+const MAGO = [
+  { tunica: P.morado, sombra: '#7a49b8', ala: '#6a3fb0', estrella: P.amarillo, gema: P.magiaC },
+  { tunica: '#4a7fd6', sombra: '#3a64ad', ala: '#2f56a0', estrella: '#eef3fb', gema: '#9ad8ff' },
+  { tunica: '#c0392b', sombra: '#962d22', ala: '#7e2420', estrella: P.amarillo, gema: P.fuego, ribete: P.oro },
+  { tunica: '#f4f0e6', sombra: '#d8cfbc', ala: '#e8a91c', estrella: '#e8a91c', gema: '#bff4ff', ribete: P.oro, aura: true },
+];
+function mago(t = 0) {
+  const c = MAGO[t];
   let s = '';
+  if (c.aura) s += `<circle cx="96" cy="26" r="20" fill="#bff4ff" opacity=".45"/>` + `<circle cx="96" cy="26" r="13" fill="#ffffff" opacity=".6"/>`;
   // Bastón
-  s += line('M98 40 L90 146', K, 12) + line('M98 40 L90 146', P.maderaS, 6);
-  s += o('M98 14 l10 14 l-10 14 l-10 -14 z', P.magiaC, 5) + brillo(96, 22, 3, 4, 0.8);
+  s += line('M98 40 L90 146', K, 12) + line('M98 40 L90 146', t >= 2 ? '#7a4f2a' : P.maderaS, 6);
+  if (t === 2) s += o('M98 6 c5 10 13 14 13 24 a13 13 0 0 1 -26 0 c0 -7 4 -10 6 -15 c2 4 4 5 5 5 c0 -5 1 -10 2 -14 z', P.fuego, 4) + f('M98 24 c1 5 6 6 6 11 a6 6 0 0 1 -12 0 c0 -4 3 -5 4 -8 z', P.fuegoC);
+  else s += o(t === 3 ? 'M98 8 l13 20 l-13 20 l-13 -20 z' : 'M98 14 l10 14 l-10 14 l-10 -14 z', c.gema, 5) + brillo(96, 22, 3, 4, 0.8);
+  if (t >= 2) s += rect(90, 40, 16, 6, 3, P.oro, 3);
   // Túnica
-  s += o('M30 70 C26 100 18 130 14 144 H86 C82 130 74 100 70 70 Z', P.morado, 6);
-  s += f('M50 74 V144 H60 C58 120 56 96 54 74 Z', '#7a49b8');
-  s += circ(36, 112, 3, P.amarillo, 0) + circ(66, 126, 3, P.amarillo, 0) + circ(28, 136, 2.5, P.amarillo, 0);
+  s += o('M30 70 C26 100 18 130 14 144 H86 C82 130 74 100 70 70 Z', c.tunica, 6);
+  s += f('M50 74 V144 H60 C58 120 56 96 54 74 Z', c.sombra);
+  s += circ(36, 112, 3, c.estrella, 0) + circ(66, 126, 3, c.estrella, 0) + circ(28, 136, 2.5, c.estrella, 0);
+  if (t >= 1) s += circ(44, 92, 2.5, c.estrella, 0) + circ(58, 108, 2.5, c.estrella, 0);
+  if (c.ribete) s += line('M16 138 H84', c.ribete, 5) + line('M30 72 H70', c.ribete, 4);
   // Brazo con el bastón
-  s += o('M64 84 C76 82 86 78 94 74 l4 10 C88 92 76 96 66 98 Z', P.morado, 5) + circ(96, 80, 7, P.crema, 5);
+  s += o('M64 84 C76 82 86 78 94 74 l4 10 C88 92 76 96 66 98 Z', c.tunica, 5) + circ(96, 80, 7, P.crema, 5);
+  if (c.ribete) s += line('M90 76 l4 10', c.ribete, 3);
   // Cara y barba
   s += circ(50, 62, 18, P.crema, 6);
   s += o('M32 64 C34 92 42 104 50 108 C58 104 66 92 68 64 C62 74 56 76 50 76 C44 76 38 74 32 64 Z', P.blanco, 5);
   s += circ(43, 58, 3.4, K, 0) + circ(57, 58, 3.4, K, 0) + circ(44.2, 56.8, 1.2, P.blanco, 0) + circ(58.2, 56.8, 1.2, P.blanco, 0) + line('M38 51 l8 -2 M62 51 l-8 -2', P.grisS, 4) + o('M46 64 h8 l-4 5 z', P.rosa, 3.5);
   // Sombrero
-  s += o('M16 46 C30 40 70 40 84 46 C78 52 22 52 16 46 Z', '#6a3fb0', 6);
-  s += o('M28 44 C34 30 40 10 58 2 C56 14 64 30 72 44 Z', P.morado, 6);
-  s += f('M40 30 l3 6 l6 1 l-5 4 l1 6 l-5 -3 l-5 3 l1 -6 l-5 -4 l6 -1 z', P.amarillo) + circ(56, 22, 2.5, P.amarillo, 0);
-  scene('mago', svg(120, 150, s));
+  s += o('M16 46 C30 40 70 40 84 46 C78 52 22 52 16 46 Z', c.ala, 6);
+  s += o('M28 44 C34 30 40 10 58 2 C56 14 64 30 72 44 Z', c.tunica, 6);
+  if (c.ribete) s += line('M30 42 H70', c.ribete, 4);
+  s += f('M40 30 l3 6 l6 1 l-5 4 l1 6 l-5 -3 l-5 3 l1 -6 l-5 -4 l6 -1 z', c.estrella) + circ(56, 22, 2.5, c.estrella, 0);
+  return svg(120, 150, s);
 }
+scene('mago', mago(0));
+for (const t of [1, 2, 3]) scene(`mago_${t}`, mago(t));
 
 // ---- El arquero (100 × 120): capucha verde, arco y carcaj ----
-function arquero() {
+// Con el equipo: cota de malla, armadura plateada con casco, y armadura dorada con capa roja.
+const ARQ = [
+  { cuerpo: P.pastoS, sombra: P.pastoO, capucha: P.pasto, arco: P.madera },
+  { cuerpo: '#9aa3b2', sombra: '#7a8396', capucha: '#3f8a50', arco: P.maderaS, malla: true },
+  { cuerpo: '#c9d0dc', sombra: '#9aa3b4', capucha: '#c9d0dc', arco: '#dfe5ee', casco: true },
+  { cuerpo: '#e8b93c', sombra: '#c4922a', capucha: '#e8b93c', arco: P.oro, casco: true, capa: true },
+];
+function arquero(t = 0) {
+  const c = ARQ[t];
   let s = '';
+  if (c.capa) s += o('M26 52 C18 80 14 104 14 116 H82 C82 104 78 80 70 52 Z', '#c0392b', 5);
   // Carcaj con flechas a la espalda
   s += o('M22 46 l10 -4 l10 34 l-10 4 z', P.maderaS, 5) + line('M26 44 l-4 -14 M31 42 l-2 -14', K, 3) + o('M18 28 l4 -6 l3 7 z M27 26 l2 -7 l4 6 z', P.blanco, 3);
-  // Cuerpo (túnica verde con cinturón)
-  s += o('M30 64 C28 84 24 102 22 114 H72 C70 102 66 84 64 64 Z', P.pastoS, 6) + f('M47 66 V114 H56 C55 98 53 82 52 66 Z', P.pastoO);
-  s += rect(26, 84, 44, 7, 3, P.maderaS, 4) + rect(43, 83, 9, 9, 2, P.oro, 3);
-  // Cara y capucha
+  // Cuerpo (túnica o armadura, con cinturón)
+  s += o('M30 64 C28 84 24 102 22 114 H72 C70 102 66 84 64 64 Z', c.cuerpo, 6) + f('M47 66 V114 H56 C55 98 53 82 52 66 Z', c.sombra);
+  if (c.malla) for (let y = 70; y < 112; y += 7) for (let x = 32 + ((y / 7) % 2) * 3; x < 64; x += 6) s += circ(x, y, 1.3, c.sombra, 0);
+  if (c.casco) s += o('M36 66 H58 L56 82 C52 86 42 86 38 82 Z', c.sombra, 3) + brillo(42, 70, 4, 3, 0.6);
+  s += rect(26, 84, 44, 7, 3, t === 3 ? '#7e2420' : P.maderaS, 4) + rect(43, 83, 9, 9, 2, P.oro, 3);
+  // Cara y capucha (o casco)
   s += circ(47, 46, 17, P.crema, 6);
   s += circ(41, 46, 3.2, K, 0) + circ(54, 46, 3.2, K, 0) + circ(42.2, 44.8, 1.1, P.blanco, 0) + circ(55.2, 44.8, 1.1, P.blanco, 0) + line('M43 54 q4 3 8 0', K, 3.5);
-  s += o('M28 50 C26 30 36 18 48 16 C62 18 70 32 68 50 C64 36 58 30 48 30 C38 30 32 36 28 50 Z', P.pasto, 6);
-  s += o('M48 16 C54 8 62 6 70 8 C64 12 60 18 58 24 Z', P.pasto, 5);
+  if (c.casco) s += o('M28 46 C28 28 38 20 48 20 C58 20 68 28 68 46 L64 40 C60 34 56 32 48 32 C40 32 36 34 32 40 Z', c.capucha, 6) + line('M48 20 V32', c.sombra, 3) + (t === 3 ? circ(48, 18, 4, '#5bd1a8', 3) : '');
+  else s += o('M28 50 C26 30 36 18 48 16 C62 18 70 32 68 50 C64 36 58 30 48 30 C38 30 32 36 28 50 Z', c.capucha, 6) + o('M48 16 C54 8 62 6 70 8 C64 12 60 18 58 24 Z', c.capucha, 5);
   // Arco y mano
-  s += line('M80 30 C96 50 96 82 80 102', K, 9) + line('M80 30 C96 50 96 82 80 102', P.madera, 5) + line('M80 30 L80 102', P.blanco, 2);
-  s += o('M60 66 C68 66 76 66 84 66 l0 8 C76 74 68 74 60 74 Z', P.pastoS, 5) + circ(86, 70, 6, P.crema, 4);
+  s += line('M80 30 C96 50 96 82 80 102', K, 9) + line('M80 30 C96 50 96 82 80 102', c.arco, 5) + line('M80 30 L80 102', P.blanco, 2);
+  if (t === 3) s += circ(92, 66, 4, '#5bd1a8', 3);
+  s += o('M60 66 C68 66 76 66 84 66 l0 8 C76 74 68 74 60 74 Z', c.cuerpo, 5) + circ(86, 70, 6, P.crema, 4);
   return svg(100, 120, s);
 }
-scene('arquero', arquero());
+scene('arquero', arquero(0));
+for (const t of [1, 2, 3]) scene(`arquero_${t}`, arquero(t));
 // La flecha que cae del cielo (vertical, punta abajo) y la de los arqueros (horizontal, punta a la derecha).
 scene('flecha', svg(16, 72, line('M8 4 V58', K, 7) + line('M8 4 V58', P.madera, 3.5) + o('M2 54 L8 70 L14 54 Z', P.grisS, 3.5) + o('M8 4 l-6 -2 v12 l6 4 z M8 4 l6 -2 v12 l-6 4 z', P.blanco, 3)));
 
 // ---- La muralla (se repite a lo ancho: 320 × 400 px = 40 × 50 unidades) y la torre del mago ----
+// Con el equipo de la Herrería (Base) cambian en 3 etapas: bandas de hierro, piedra azulada con remates de
+// metal, y piedra blanca con remates de oro (y el estandarte cambia de color).
 const PIEDRA = { base: '#c9c0b2', sombra: '#a89e8f', clara: '#e4ddd0', junta: '#8a7f70' };
+const PIEDRAS = [
+  PIEDRA,
+  PIEDRA,
+  { base: '#a9b0bf', sombra: '#8a91a2', clara: '#c9cfdc', junta: '#6a7186', remate: '#8d93a6' },
+  { base: '#efe9dc', sombra: '#d8cfbc', clara: '#fffaf0', junta: '#bfae8a', remate: P.oro },
+];
+const ESTANDARTE = [P.morado, '#3a6fc4', '#c0392b', '#e8a91c'];
 /** Bloques de piedra en hileras alternadas, dentro de un rectángulo (sin pasarse de sus bordes). */
-function bloques(x0, y0, w, h, alto = 48, ancho = 80, desfase = 0) {
+function bloques(x0, y0, w, h, alto = 48, ancho = 80, desfase = 0, pal = PIEDRA) {
   let s = '';
   for (let fila = 0, y = y0; y < y0 + h; fila++, y += alto) {
     const off = (fila % 2 ? ancho / 2 : 0) + desfase;
-    s += line(`M${x0} ${y} H${x0 + w}`, PIEDRA.junta, 4);
+    s += line(`M${x0} ${y} H${x0 + w}`, pal.junta, 4);
     for (let x = x0 - ancho + (off % ancho); x < x0 + w; x += ancho) {
-      if (x > x0) s += line(`M${x} ${y} V${Math.min(y + alto, y0 + h)}`, PIEDRA.junta, 4);
-      if (x + 10 > x0 && x + ancho - 10 < x0 + w) s += f(`M${x + 8} ${y + 6} h${ancho - 24} v6 h-${ancho - 24} z`, PIEDRA.clara, 'opacity=".7"');
+      if (x > x0) s += line(`M${x} ${y} V${Math.min(y + alto, y0 + h)}`, pal.junta, 4);
+      if (x + 10 > x0 && x + ancho - 10 < x0 + w) s += f(`M${x + 8} ${y + 6} h${ancho - 24} v6 h-${ancho - 24} z`, pal.clara, 'opacity=".7"');
     }
   }
   return s;
 }
-{
+function muralla(t = 0) {
+  const pal = PIEDRAS[t];
   let s = '';
   // Almenas (dos por tramo; el hueco de la orilla casa con el del siguiente tramo).
-  for (const x of [40, 200]) s += o(`M${x} 66 V8 h80 V66`, PIEDRA.base, 6) + f(`M${x + 6} 14 h68 v10 h-68 z`, PIEDRA.clara, 'opacity=".8"');
+  for (const x of [40, 200]) {
+    s += o(`M${x} 66 V8 h80 V66`, pal.base, 6) + f(`M${x + 6} 14 h68 v10 h-68 z`, pal.clara, 'opacity=".8"');
+    if (pal.remate) s += rect(x - 4, 2, 88, 12, 3, pal.remate, 5);
+  }
   // Borde de arriba (adarve) y la cara del muro.
-  s += rect(-10, 62, 340, 30, 0, PIEDRA.clara, 6);
-  s += f('M-10 92 H330 V400 H-10 Z', PIEDRA.base) + line('M-10 92 H330', K, 6);
-  s += bloques(0, 92, 320, 308);
-  s += f('M-10 360 H330 V400 H-10 Z', PIEDRA.sombra, 'opacity=".7"');
-  scene('muralla', svg(320, 400, s));
+  s += rect(-10, 62, 340, 30, 0, pal.clara, 6);
+  s += f('M-10 92 H330 V400 H-10 Z', pal.base) + line('M-10 92 H330', K, 6);
+  s += bloques(0, 92, 320, 308, 48, 80, 0, pal);
+  // Bandas de hierro con remaches (desde la primera etapa).
+  if (t >= 1) for (const y of [150, 290]) {
+    s += rect(-10, y, 340, 18, 0, t === 3 ? '#c4922a' : '#5c6276', 5);
+    for (let x = 20; x < 320; x += 50) s += circ(x, y + 9, 4, t === 3 ? P.amarillo : '#b9bfcc', 2.5);
+  }
+  if (pal.remate) s += line('M-10 64 H330', pal.remate, 6);
+  s += f('M-10 360 H330 V400 H-10 Z', pal.sombra, 'opacity=".7"');
+  return svg(320, 400, s);
 }
-{
+scene('muralla', muralla(0));
+for (const t of [1, 2, 3]) scene(`muralla_${t}`, muralla(t));
+function torre(t = 0) {
   // La torre del mago: 384 × 640 px = 48 × 80 unidades, con almenas, aspillera y estandarte.
+  const pal = PIEDRAS[t];
   let s = '';
-  for (const x of [36, 156, 276]) s += o(`M${x} 112 V44 h72 V112`, PIEDRA.base, 6) + f(`M${x + 6} 50 h60 v10 h-60 z`, PIEDRA.clara, 'opacity=".8"');
-  s += o('M24 108 H360 V140 H24 Z', PIEDRA.clara, 6);
-  s += o('M40 140 H344 V640 H40 Z', PIEDRA.base, 6);
-  s += `<clipPath id="t"><rect x="40" y="140" width="304" height="500"/></clipPath><g clip-path="url(#t)">${bloques(40, 140, 304, 500, 52, 76)}</g>`;
-  // Aspillera y estandarte morado con estrella.
+  // Banderines arriba (desde la segunda etapa).
+  if (t >= 2) for (const x of [72, 312]) s += line(`M${x} 44 V0`, P.maderaS, 6) + o(`M${x} 2 L${x + 40} 12 L${x} 22 Z`, ESTANDARTE[t], 4);
+  for (const x of [36, 156, 276]) {
+    s += o(`M${x} 112 V44 h72 V112`, pal.base, 6) + f(`M${x + 6} 50 h60 v10 h-60 z`, pal.clara, 'opacity=".8"');
+    if (pal.remate) s += rect(x - 4, 38, 80, 14, 3, pal.remate, 5);
+  }
+  s += o('M24 108 H360 V140 H24 Z', pal.clara, 6);
+  s += o('M40 140 H344 V640 H40 Z', pal.base, 6);
+  s += `<clipPath id="t${t}"><rect x="40" y="140" width="304" height="500"/></clipPath><g clip-path="url(#t${t})">${bloques(40, 140, 304, 500, 52, 76, 0, pal)}</g>`;
+  if (t >= 1) for (const y of [200, 520]) s += rect(40, y, 304, 16, 0, t === 3 ? '#c4922a' : '#5c6276', 4);
+  // Aspillera y estandarte con estrella (cambia de color con el equipo).
   s += o('M182 230 h20 v70 h-20 z', '#4a3b30', 5);
-  s += o('M120 330 H264 V470 L192 430 L120 470 Z', P.morado, 6) + f('M192 360 l9 18 l20 3 l-15 14 l4 20 l-18 -10 l-18 10 l4 -20 l-15 -14 l20 -3 z', P.amarillo);
+  s += o('M120 330 H264 V470 L192 430 L120 470 Z', ESTANDARTE[t], 6) + f('M192 360 l9 18 l20 3 l-15 14 l4 20 l-18 -10 l-18 10 l4 -20 l-15 -14 l20 -3 z', t === 3 ? P.blanco : P.amarillo);
+  if (t >= 2) s += line('M120 470 L192 430 L264 470', P.oro, 4);
   s += line('M112 330 H272', P.maderaS, 10);
-  s += f('M40 590 H344 V640 H40 Z', PIEDRA.sombra, 'opacity=".7"');
-  scene('torre', svg(384, 640, s));
+  s += f('M40 590 H344 V640 H40 Z', pal.sombra, 'opacity=".7"');
+  return svg(384, 640, s);
 }
+scene('torre', torre(0));
+for (const t of [1, 2, 3]) scene(`torre_${t}`, torre(t));
 
 // ---- El pasto (256 × 256, se repite): verde con matitas y manchas claras que cruzan el borde sin costura ----
 // (la Pradera amarilla usa el mismo dibujo con hierba seca)
@@ -496,6 +558,20 @@ for (const [id, color, claro] of [['bronce', '#c47a3a', '#e8a46a'], ['plata', '#
 }
 // Autoapuntado: una mira azul con su flecha que da vuelta (se mueve sola).
 icon('autoapuntar', I(circ(30, 34, 22, P.azulC, 5) + circ(30, 34, 11, 'none', 4) + line('M30 6 V16 M30 52 V62 M2 34 H12 M48 34 H58', K, 4) + circ(30, 34, 4, P.rojo, 0) + line('M44 6 C54 8 60 14 61 24', P.azulS, 5) + o('M55 22 L62 28 L66 19 Z', P.azulS, 3)));
+// Supervivencia, Runas, Herrería y las piezas del equipo.
+const runa = (x, y, k = 1) => g(`translate(${x} ${y}) scale(${k})`, o('M32 4 L56 18 V46 L32 60 L8 46 V18 Z', '#4a90e2', 5) + f('M32 10 L50 21 V43 L32 54 Z', '#7ab4f5', 'opacity=".6"') + line('M32 16 V48 M22 24 L32 32 L42 24 M24 42 L32 36 L40 42', '#eaf4ff', 4));
+icon('runa', I(runa(0, 0)));
+icon('oleadas', I(o('M8 56 V28 L32 10 L56 28 V56 Z', '#9aa3b4', 5) + rect(24, 36, 16, 20, 3, '#5c6276', 4) + line('M2 50 q8 -8 16 0 t16 0 t16 0 t16 0', '#4a90e2', 5) + line('M2 60 q8 -8 16 0 t16 0 t16 0 t16 0', '#7ab4f5', 4)));
+icon('herreria', I(o('M6 26 H46 C46 34 40 38 32 38 V46 H44 V56 H12 V46 H24 V38 C14 38 6 34 6 26 Z', '#5c6276', 5) + line('M10 30 H42', '#8d93a6', 3) + g('rotate(-35 46 20)', rect(42, 2, 8, 30, 3, P.maderaS, 4) + rect(34, 0, 24, 12, 3, '#b9bfcc', 4)) + circ(54, 40, 3, P.fuegoC, 0) + circ(48, 46, 2, P.fuego, 0)));
+icon('eq_baculo', I(line('M40 14 L20 60', K, 9) + line('M40 14 L20 60', P.maderaS, 5) + o('M42 2 l9 12 l-9 12 l-9 -12 z', '#9ad8ff', 4) + brillo(40, 8, 2, 3, 0.8)));
+icon('eq_tunica', I(o('M20 10 H44 L50 20 L58 56 H6 L14 20 Z', '#4a7fd6', 5) + line('M32 12 V56', '#3a64ad', 4) + circ(22, 40, 2.5, '#eef3fb', 0) + circ(42, 30, 2.5, '#eef3fb', 0)));
+icon('eq_sombrero', I(o('M4 48 C18 42 46 42 60 48 C54 54 10 54 4 48 Z', '#2f56a0', 5) + o('M14 46 C20 30 26 12 44 4 C42 16 50 30 54 46 Z', '#4a7fd6', 5) + f('M30 30 l3 6 l6 1 l-5 4 l1 6 l-5 -3 l-5 3 l1 -6 l-5 -4 l6 -1 z', '#eef3fb')));
+icon('eq_arco', I(line('M20 4 C50 20 50 44 20 60', K, 9) + line('M20 4 C50 20 50 44 20 60', '#dfe5ee', 5) + line('M20 4 V60', P.blanco, 2.5) + line('M8 32 H44', P.maderaS, 4) + o('M44 26 L56 32 L44 38 Z', '#9aa3b4', 3)));
+icon('eq_flechas', I(o('M22 24 l14 -4 l10 38 l-14 4 z', P.maderaS, 5) + line('M26 22 l-6 -16 M32 20 l-2 -16 M38 18 l2 -16', K, 3) + o('M16 8 l4 -6 l4 7 z M26 4 l3 -6 l4 6 z M38 2 l3 -6 l4 6 z', '#dfe5ee', 3)));
+icon('eq_armadura', I(o('M14 12 C22 6 42 6 50 12 L56 24 L48 28 L46 56 H18 L16 28 L8 24 Z', '#c9d0dc', 5) + line('M32 10 V54 M18 34 H46', '#9aa3b4', 3) + brillo(22, 18, 5, 3, 0.6)));
+icon('eq_muralla', I(o('M4 58 V24 H12 V14 H22 V24 H28 V14 H38 V24 H44 V14 H54 V24 H60 V58 Z', '#c9c0b2', 5) + rect(4, 36, 56, 8, 0, '#5c6276', 3) + line('M4 50 H60 M18 24 V36 M40 44 V58', '#8a7f70', 3)));
+icon('eq_torre', I(o('M16 60 V20 H12 V8 H20 V14 H28 V8 H36 V14 H44 V8 H52 V20 H48 V60 Z', '#c9c0b2', 5) + rect(28, 28, 8, 14, 2, '#4a3b30', 3) + line('M16 48 H48', '#8a7f70', 3)));
+icon('eq_estandarte', I(line('M16 4 V62', P.maderaS, 6) + circ(16, 4, 4, P.oro, 3) + o('M18 8 H54 V40 L36 32 L18 40 Z', '#3a6fc4', 5) + o('M36 14 l3 6 l6 1 l-5 4 l1 6 l-5 -3 l-5 3 l1 -6 l-5 -4 l6 -1 z', P.amarillo, 2)));
 icon('moneda', I(moneda(32, 32, 26)));
 icon('reloj', I(circ(32, 32, 26, P.blanco) + line('M32 32 v-16 M32 32 l12 8', K, 6) + circ(32, 32, 4, P.rojo, 0)));
 icon('candado', I(o('M18 28 v-8 a14 14 0 0 1 28 0 v8', 'none', 6) + rect(10, 28, 44, 30, 8, P.oro, 5) + circ(32, 41, 5, K, 0) + rect(29, 42, 6, 10, 2, K, 0)));

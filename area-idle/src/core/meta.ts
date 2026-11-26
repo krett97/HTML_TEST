@@ -2,6 +2,8 @@
 import { ENEMY_KINDS, levelConfig, TALENT_BY_ID, TALENTS, type EnemyKind, type TalentDef, type TalentId } from './datos';
 import { cleanName } from './ranking';
 import { emptyPvp, loadPvp, type PvpState } from './pvp';
+import { emptyEquipo, loadEquipo, type EquipoState } from './equipo';
+import { emptySupervivencia, loadSupervivencia, type SupervivenciaState } from './supervivencia';
 import { emptyCounters, emptyMissions, MISSION_BY_ID, type Counters, type MissionsState } from './misiones';
 import { computeStats, type Stats } from './stats';
 
@@ -34,16 +36,20 @@ export interface Meta {
   nombre: string;
   /** El PvP (desde el nivel 19): liga, puntos, intentos, medallas. */
   pvp: PvpState;
+  /** Runas (de la Supervivencia; mejoran el equipo), el equipo de la Herrería y las entradas a la Supervivencia. */
+  runas: number;
+  equipo: EquipoState;
+  supervivencia: SupervivenciaState;
 }
 
 export function createMeta(): Meta {
-  return { version: SAVE_VERSION, oro: 0, talentos: {}, partidas: 0, nivel: 1, jugando: 1, mejor: 0, reventados: 0, ajustes: { sonido: true, idioma: null }, gemas: 0, cuenta: emptyCounters(), misiones: emptyMissions(), ultimaVez: 0, vistos: [], nombre: '', pvp: emptyPvp() };
+  return { version: SAVE_VERSION, oro: 0, talentos: {}, partidas: 0, nivel: 1, jugando: 1, mejor: 0, reventados: 0, ajustes: { sonido: true, idioma: null }, gemas: 0, cuenta: emptyCounters(), misiones: emptyMissions(), ultimaVez: 0, vistos: [], nombre: '', pvp: emptyPvp(), runas: 0, equipo: emptyEquipo(), supervivencia: emptySupervivencia() };
 }
 
 export const levelOf = (meta: Meta, id: TalentId): number => meta.talentos[id] ?? 0;
 
 export function stats(meta: Meta): Stats {
-  return computeStats(meta.talentos);
+  return computeStats(meta.talentos, meta.equipo.niveles);
 }
 
 export function costOf(def: TalentDef, nivel: number): number {
@@ -169,6 +175,9 @@ export function loadMeta(raw: unknown): Meta {
     vistos: Array.isArray(r.vistos) ? r.vistos.filter((v): v is string => typeof v === 'string') : [],
     nombre: cleanName(r.nombre),
     pvp: loadPvp(r.pvp),
+    runas: Math.floor(num(r.runas, 0)),
+    equipo: loadEquipo(r.equipo),
+    supervivencia: loadSupervivencia(r.supervivencia),
   };
 }
 

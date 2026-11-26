@@ -7,6 +7,7 @@ import { PVP_DESDE, type TalentId } from './datos';
 import { dayKey } from './misiones';
 import { createRng } from './rng';
 import { computeStats, type Stats } from './stats';
+import type { EquipoNiveles } from './equipo';
 
 export const INTENTOS_MAX = 5;
 export const RECARGA_MS = 2 * 3600_000;
@@ -104,11 +105,13 @@ export interface PvpHost {
   oro: number;
   gemas: number;
   talentos: Partial<Record<TalentId, number>>;
+  /** El equipo de la Herrería (también cuenta para el poder). */
+  equipo?: { niveles: EquipoNiveles };
   pvp: PvpState;
 }
 
 export const pvpUnlocked = (m: { nivel: number }): boolean => m.nivel >= PVP_DESDE;
-export const myPower = (m: PvpHost): Power => powerOf(computeStats(m.talentos), m.pvp.estandarte);
+export const myPower = (m: PvpHost): Power => powerOf(computeStats(m.talentos, m.equipo?.niveles), m.pvp.estandarte);
 
 /** Tolera guardados viejos o dañados. */
 export function loadPvp(raw: unknown): PvpState {
@@ -253,7 +256,7 @@ function startWeek(m: PvpHost, ahora: number): void {
   p.puntos = 0;
   p.peleas = 0;
   p.ganadas = 0;
-  p.base = powerOf(computeStats(m.talentos), 0).total;
+  p.base = powerOf(computeStats(m.talentos, m.equipo?.niveles), 0).total;
   p.dia = dayKey(ahora);
 }
 
@@ -262,7 +265,7 @@ function newDay(m: PvpHost, ahora: number): void {
   const p = m.pvp;
   if (p.dia === dayKey(ahora)) return;
   p.dia = dayKey(ahora);
-  p.base = Math.max(p.base, powerOf(computeStats(m.talentos), 0).total);
+  p.base = Math.max(p.base, powerOf(computeStats(m.talentos, m.equipo?.niveles), 0).total);
 }
 
 /** Premio en medallas por cómo quedaste: más en los 20 de arriba, y más en ligas altas. */

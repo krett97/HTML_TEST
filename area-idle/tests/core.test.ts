@@ -4,7 +4,10 @@ import { activeGoldPerMinute, idleGoldPerMinute, idleReward, idleUnlocked } from
 import { isBossLevel, JEFE, JEFES, bossFor, zoneOf, DESDE, INACTIVO, ROJO_DESDE, AZUL_DESDE, DAMAGE_TYPES, damageMultiplier, ENEMIES, levelConfig, PRIMERA_OLA, SECCIONES, TALENT_BY_ID, TALENTS } from '../src/core/datos';
 import { formatClock, formatNum } from '../src/core/format';
 import { buyTalent, chooseLevel, costOf, createMeta, finishRun, levelOf, loadMeta, talentState, talentVisible } from '../src/core/meta';
-import { hidden, inAir } from '../src/core/run';
+import { bestSpot as mejorLugar, hidden, inAir, createSurvivalRun, jefesOla, runasOla, OLEADAS } from '../src/core/run';
+import { baseChance, bonosEquipo, chanceOf, costoPieza, emptyEquipo, loadEquipo, mejorar, NIVEL_MAX, SUERTE_POR_FALLO, tierDe } from '../src/core/equipo';
+import { ENTRADAS_MAX, RECARGA_ENTRADA_MS, emptySupervivencia, nivelBaseOlas, refillEntradas, survivalUnlocked, usarEntrada } from '../src/core/supervivencia';
+import { SUPERVIVENCIA_DESDE } from '../src/core/datos';
 import { autoAiming, createGuardRun, guardLevel, startGuardRun, updateGuardRun } from '../src/core/run';
 import { AUTOAPUNTAR } from '../src/core/datos';
 import { GUARDIA } from '../src/core/datos';
@@ -1296,5 +1299,119 @@ describe('quinta zona: Montaña de piedra, y el Dragón de acero', () => {
     expect(enAire).toBe(true);
     expect(llamas).toBeGreaterThanOrEqual(5);
     expect(ENEMIES.dragonAcero.armadura).toBe(true);
+  });
+});
+
+describe('Herrería: mejorar el equipo con Runas (a veces sale, a veces no)', () => {
+  it('la primera mejora siempre sale; después la probabilidad baja hasta 20 %', () => {
+    expect(baseChance(0)).toBe(1);
+    expect(baseChance(1)).toBeCloseTo(0.87);
+    expect(baseChance(5)).toBeCloseTo(0.55);
+    expect(baseChance(9)).toBeCloseTo(0.23);
+    expect(baseChance(20)).toBe(0.2);
+  });
+  it('cada fallo suma +10 % al siguiente intento de esa pieza; al lograrlo se reinicia', () => {
+    const host = { runas: 1000, equipo: emptyEquipo() };
+    host.equipo.niveles.baculo = 5;
+    const antes = chanceOf(host.equipo, 'baculo');
+    const fallo = mejorar(host, 'baculo', 0.999)!;
+    expect(fallo).toMatchObject({ exito: false, nivel: 5 });
+    expect(fallo.siguiente).toBeCloseTo(antes + SUERTE_POR_FALLO);
+    mejorar(host, 'baculo', 0.999);
+    expect(chanceOf(host.equipo, 'baculo')).toBeCloseTo(antes + 2 * SUERTE_POR_FALLO);
+    // Otra pieza no se ve afectada.
+    expect(chanceOf(host.equipo, 'arco')).toBe(1);
+    const exito = mejorar(host, 'baculo', 0)!;
+    expect(exito).toMatchObject({ exito: true, nivel: 6 });
+    expect(chanceOf(host.equipo, 'baculo')).toBeCloseTo(baseChance(6));
+  });
+  it('cada intento cuesta Runas (salga o no); sin Runas o al máximo no se puede', () => {
+    const host = { runas: costoPieza(0), equipo: emptyEquipo() };
+    expect(mejorar(host, 'arco', 0)).toMatchObject({ exito: true, costo: costoPieza(0) });
+    expect(host.runas).toBe(0);
+    expect(mejorar(host, 'arco', 0)).toBeNull();
+    host.runas = 1e6;
+    host.equipo.niveles.arco = NIVEL_MAX;
+    expect(mejorar(host, 'arco', 0)).toBeNull();
+    expect(costoPieza(5)).toBeGreaterThan(costoPieza(4));
+  });
+  it('los bonos multiplican lo del árbol y el aspecto cambia en 3 etapas', () => {
+    const b = bonosEquipo({ baculo: 5, tunica: 4, arco: 10, armadura: 10, muralla: 2, torre: 5, estandarte: 3 });
+    expect(b.magoDanio).toBeCloseTo(2);
+    expect(b.magoIntervalo).toBeCloseTo(0.95 ** 4);
+    expect(b.arcoObjetivos).toBe(2);
+    const sin = computeStats({ danio: 5, mago: 1, arqueros: 1 });
+    const con = computeStats({ danio: 5, mago: 1, arqueros: 1 }, { baculo: 5, torre: 5, muralla: 2, estandarte: 3 });
+    expect(con.mago.danio / sin.mago.danio).toBeCloseTo(2 * 1.4);
+    expect(con.danio / sin.danio).toBeCloseTo(1.4);
+    expect(con.muro.vida / sin.muro.vida).toBeCloseTo(1.3);
+    expect(con.oroMult / sin.oroMult).toBeCloseTo(1.3);
+    expect(tierDe({}, 'mago')).toBe(0);
+    expect(tierDe({ baculo: 2, tunica: 1 }, 'mago')).toBe(1);
+    expect(tierDe({ baculo: 5, tunica: 4, sombrero: 3 }, 'mago')).toBe(2);
+    expect(tierDe({ baculo: 8, tunica: 8, sombrero: 8 }, 'mago')).toBe(3);
+  });
+  it('el equipo se guarda y tolera basura', () => {
+    const meta = createMeta();
+    meta.runas = 33;
+    meta.equipo.niveles.torre = 4;
+    meta.equipo.suerte.torre = 0.2;
+    const de = loadMeta(JSON.parse(JSON.stringify(meta)));
+    expect(de.runas).toBe(33);
+    expect(de.equipo).toEqual(meta.equipo);
+    expect(loadEquipo({ niveles: { torre: 99, inventada: 3 }, suerte: { torre: 'x' } })).toEqual({ niveles: { torre: NIVEL_MAX }, suerte: {} });
+  });
+});
+
+describe('Supervivencia: oleadas que dan Runas', () => {
+  it('se abre en el nivel 26, con 3 entradas que vuelven cada 8 h', () => {
+    expect(SUPERVIVENCIA_DESDE).toBe(26);
+    expect(survivalUnlocked({ nivel: 25 })).toBe(false);
+    expect(survivalUnlocked({ nivel: 26 })).toBe(true);
+    const s = emptySupervivencia();
+    const t0 = 1_000_000;
+    for (let i = 0; i < ENTRADAS_MAX; i++) expect(usarEntrada(s, t0)).toBe(true);
+    expect(usarEntrada(s, t0)).toBe(false);
+    refillEntradas(s, t0 + RECARGA_ENTRADA_MS);
+    expect(s.entradas).toBe(1);
+    refillEntradas(s, t0 + 10 * RECARGA_ENTRADA_MS);
+    expect(s.entradas).toBe(ENTRADAS_MAX);
+    expect(nivelBaseOlas(40)).toBe(30);
+  });
+  it('jefes cada 5 oleadas (uno más cada 10) y más Runas conforme avanzas', () => {
+    expect([1, 4, 5, 9, 10, 15, 20].map(jefesOla)).toEqual([0, 0, 1, 0, 2, 2, 3]);
+    expect(runasOla(1)).toBe(1);
+    expect(runasOla(5)).toBe(2 + 3);
+    expect(runasOla(10)).toBe(3 + 6);
+  });
+  it('las oleadas llegan, se aguantan y suman Runas; en la 10 salen dos jefes a la vez', () => {
+    const run = createSurvivalRun(computeStats({ danio: 40, radio: 10, cadencia: 10, arqueros: 1, masArqueros: 5, multiflecha: 4, mago: 1, muralla: 20 }), 600, 5, 30, 1);
+    const ev: RunEvent[] = [];
+    let jefesVistos = 0;
+    for (let i = 0; i < 4000 && !run.terminada && run.oleadas!.ola < 10; i++) {
+      if (i % 20 === 0) { const b = mejorLugar(run); moveCursor(run, b.x, b.y); }
+      const e = stepRun(run, 0.05);
+      ev.push(...e);
+      for (const x of e) if (x.type === 'wave' && x.ola === 10) jefesVistos = x.jefes;
+    }
+    expect(run.oleadas!.ola).toBe(10);
+    expect(jefesVistos).toBe(2);
+    expect(run.enemies.filter((e) => ENEMIES[e.kind].jefe)).toHaveLength(2);
+    expect(run.enemies.filter((e) => e.elite)).toHaveLength(1);
+    expect(run.oleadas!.superadas).toBeGreaterThanOrEqual(9);
+    expect(run.oleadas!.bote).toBe([1, 2, 3, 4, 5, 6, 7, 8, 9].reduce((t, o) => t + runasOla(o), 0));
+    expect(ev.filter((e) => e.type === 'waveClear')).toHaveLength(9);
+  });
+  it('si se acaba el tiempo, los que quedan se escapan y golpean la muralla; si cae, se acaba', () => {
+    // Slimes verdes (no atacan): la muralla solo cae por los que se escapan.
+    const run = createSurvivalRun(computeStats({}), 600, 1, 1, 2);
+    run.cursor = { x: -999, y: -999 };
+    const ev: RunEvent[] = [];
+    for (let i = 0; i < 6000 && !run.terminada; i++) ev.push(...stepRun(run, 0.05));
+    expect(ev.some((e) => e.type === 'escape' && e.cuantos > 0)).toBe(true);
+    expect(run.muro.caido).toBe(true);
+    expect(run.terminada).toBe(true);
+    expect(ev.at(-1)).toEqual({ type: 'end', gano: false });
+    expect(OLEADAS.duracion).toBe(30);
   });
 });

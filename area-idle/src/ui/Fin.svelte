@@ -12,6 +12,19 @@
 </script>
 
 <div class="fondo" data-testid="fin">
+  {#if $view.finOleadas}
+    {@const f = $view.finOleadas}
+    <!-- Terminó la Supervivencia: oleadas aguantadas, Runas y oro. -->
+    <div class="tarjeta" data-testid="fin-oleadas">
+      <h2>{$t('oleadas.aguantaste', { n: f.olas })}</h2>
+      {#if f.record}<p class="record" data-testid="record-oleadas">{$t('oleadas.record')}</p>{/if}
+      <div class="fila"><Icon name="runa" size={34} /><span>{$t('oleadas.runas')}</span><strong class="cifra runas" data-testid="fin-runas">+{formatNum(f.runas)}</strong></div>
+      <div class="fila"><Icon name="moneda" size={34} /><span>{$t('fin.oro')}</span><strong class="cifra oro">+{formatGold(f.oro)}</strong></div>
+      <div class="botones">
+        <button type="button" class="btn btn--accent ancho" onclick={() => juego.openTree()} data-testid="mejorar"><Icon name="arbol" size={26} /> {$t('fin.mejorar')}</button>
+      </div>
+    </div>
+  {:else}
   <div class="tarjeta" class:perdio={!$view.gano} data-testid={$view.gano ? 'gano' : 'perdio'}>
     <h2>{$view.gano ? ($view.jefe ? $t('fin.ganoJefe', { nombre: $t(`enemigos.${$view.jefe.kind}.nombre`) }) : $t('fin.gano', { n: nivel })) : $t('fin.perdio')}</h2>
     {#if $view.jefe && !$view.gano}
@@ -23,6 +36,9 @@
       <div class="fila"><Icon name="botin" size={34} /><span>{$t('fin.premio')}</span><strong class="cifra oro" data-testid="fin-premio">+{formatNum($view.premio)}</strong></div>
     {:else}
       <p class="nota">{$t('fin.seQueda')}</p>
+    {/if}
+    {#if $view.abrioSupervivencia}
+      <div class="nuevo" data-testid="nuevo-supervivencia"><Icon name="oleadas" size={36} /><span>{$t('oleadas.nuevo')}</span></div>
     {/if}
     {#if $view.abrioPvp}
       <div class="nuevo" data-testid="nuevo-pvp"><Icon name="pvp" size={36} /><span>{$t('pvp.nuevo')}</span></div>
@@ -49,9 +65,19 @@
       {/if}
     </div>
   </div>
+  {/if}
 </div>
 
 <style>
+  .record {
+    margin: -4px 0 2px;
+    color: #c07a00;
+    font-weight: 700;
+    text-align: center;
+  }
+  .runas {
+    color: #3a78c8;
+  }
   .fondo {
     position: absolute;
     inset: 0;

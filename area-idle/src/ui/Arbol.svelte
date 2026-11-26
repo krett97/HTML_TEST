@@ -10,6 +10,7 @@
   import Misiones from './Misiones.svelte';
   import Ranking from './Ranking.svelte';
   import Pvp from './Pvp.svelte';
+  import Supervivencia from './Supervivencia.svelte';
   import { INTENTOS_MAX } from '../core/pvp';
   import { DAMAGE_TYPE_OF } from '../core/run';
   import { effectValues } from './efectos';
@@ -28,6 +29,7 @@
   let misiones = $state(false);
   let ranking = $state(false);
   let pvp = $state(false);
+  let oleadas = $state(false);
   /** El tipo de daño de cada sección (marca en la esquina de su pestaña). */
   const TIPO: Partial<Record<Seccion, string>> = { jugador: DAMAGE_TYPE_OF.jugador, mago: DAMAGE_TYPE_OF.mago, arqueros: DAMAGE_TYPE_OF.arquero };
   /** Las Reliquias (con gemas) se ven desde que se abren las misiones. */
@@ -170,10 +172,15 @@
     <span class="nivel-actual" data-testid="nivel-actual"><small class="zona">{$t(`zonas.${$view.zona}`)}{#if $view.nivelDeJefe}&nbsp;· {$t('hud.jefe')}{/if}</small><span class="con-corona">{#if $view.nivelDeJefe}<Icon name="corona" size={24} />{/if}{$t('hud.nivel', { n: meta.jugando })}</span>{#if meta.jugando < meta.nivel}<small>{$t('arbol.paraOro')}</small>{/if}</span>
     <button type="button" class="flecha" aria-label={$t('arbol.nivelSiguiente')} disabled={meta.jugando >= meta.nivel} onclick={() => juego.playLevel(meta.jugando + 1, false)} data-testid="nivel-mas">▶</button>
   </div>
-  <div class="jugar-fila" class:con-pvp={$view.pvp.abierto}>
+  <div class="jugar-fila" class:con-pvp={$view.pvp.abierto} class:con-oleadas={$view.supervivencia.abierto}>
+    {#if $view.supervivencia.abierto}
+      <button type="button" class="btn modo oleadas-btn" onclick={() => (oleadas = true)} data-testid="abrir-supervivencia">
+        <Icon name="oleadas" size={28} /><small class="cifra">{$view.supervivencia.entradas}/{$view.supervivencia.max}</small>
+      </button>
+    {/if}
     {#if $view.pvp.abierto}
       <button type="button" class="btn pvp" onclick={() => (pvp = true)} data-testid="abrir-pvp">
-        <Icon name="pvp" size={28} /><span class="pvp-txt">PvP<small class="cifra">{meta.pvp.intentos}/{INTENTOS_MAX}</small></span>
+        <Icon name="pvp" size={28} /><small class="cifra">{meta.pvp.intentos}/{INTENTOS_MAX}</small>
       </button>
     {/if}
     <button type="button" class="btn btn--accent jugar" onclick={() => juego.play()} data-testid="jugar"><Icon name="jugar" size={26} /> {$t('arbol.jugar')}</button>
@@ -182,6 +189,9 @@
 
 {#if ajustes}
   <Ajustes cerrar={() => (ajustes = false)} />
+{/if}
+{#if oleadas}
+  <Supervivencia cerrar={() => (oleadas = false)} />
 {/if}
 {#if pvp}
   <Pvp cerrar={() => (pvp = false)} />
@@ -503,18 +513,37 @@
   .jugar-fila.con-pvp {
     grid-template-columns: auto 1fr;
   }
-  .pvp {
-    gap: 6px;
-    min-height: 58px;
-    padding: 4px 14px 4px 10px;
-    background: linear-gradient(#ffb3a8, #ef7a6c);
-    font-size: 20px;
+  .jugar-fila.con-pvp.con-oleadas {
+    grid-template-columns: auto auto 1fr;
   }
-  .pvp-txt {
+  .oleadas-btn {
     display: grid;
+    justify-items: center;
+    gap: 0;
+    min-height: 58px;
+    padding: 2px 10px;
+    background: linear-gradient(#cfe4ff, #8ab8f0);
     line-height: 1;
   }
-  .pvp-txt small {
+  .oleadas-btn small {
     font-size: 13px;
+  }
+  /* PvP y Supervivencia: botones compactos (el dibujo y, abajo, los intentos o entradas). */
+  .pvp {
+    display: grid;
+    justify-items: center;
+    gap: 0;
+    min-height: 58px;
+    padding: 2px 10px;
+    background: linear-gradient(#ffb3a8, #ef7a6c);
+    line-height: 1;
+  }
+  .pvp small {
+    font-size: 13px;
+  }
+  @media (max-width: 360px) {
+    .jugar-fila.con-pvp.con-oleadas .jugar {
+      font-size: 20px;
+    }
   }
 </style>

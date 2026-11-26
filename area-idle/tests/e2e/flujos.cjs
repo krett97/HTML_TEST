@@ -376,6 +376,65 @@ async function flow(name, browser, fn, opts) {
     check(!(await page.getByTestId('enemigo-golemito').count()), 'la piedrita sale en el glosario');
   });
 
+  await flow('Supervivencia (nivel 26) y Herrería: oleadas, Runas y mejoras que a veces fallan', browser, async (page) => {
+    await page.getByTestId('terminar').click();
+    await page.getByTestId('mejorar').click();
+    await page.getByTestId('abrir-ajustes').click();
+    for (let i = 0; i < 24; i++) await page.getByTestId('mas-nivel').click();
+    await page.mouse.click(4, 4);
+    check(!(await page.getByTestId('abrir-supervivencia').count()), 'la Supervivencia se ve antes del nivel 26');
+    await page.getByTestId('abrir-ajustes').click();
+    await page.getByTestId('mas-nivel').click();
+    await page.mouse.click(4, 4);
+    check((await page.getByTestId('abrir-supervivencia').textContent()).includes('3/3'), 'no se ven 3/3 entradas');
+    await page.getByTestId('abrir-supervivencia').click();
+    await page.getByTestId('abrir-herreria').click();
+    check(await page.getByTestId('herreria').count(), 'no abre la Herrería');
+    check(await page.getByTestId('mejorar-baculo').isDisabled(), 'se puede mejorar sin Runas');
+    await page.evaluate(() => window.juego.addRunas(100));
+    await page.waitForTimeout(100);
+    // La primera mejora siempre sale.
+    await page.getByTestId('mejorar-baculo').click();
+    check((await page.getByTestId('nivel-baculo').textContent()).includes('+1'), 'el báculo no subió a +1');
+    check(await page.getByTestId('forja-exito').count(), 'no dice que salió');
+    // Forzamos un fallo: la siguiente vez es más probable.
+    const antes = await page.getByTestId('chance-baculo').textContent();
+    await page.evaluate(() => { window.__random = Math.random; Math.random = () => 0.999; });
+    await page.getByTestId('mejorar-baculo').click();
+    await page.evaluate(() => { Math.random = window.__random; });
+    check(await page.getByTestId('forja-fallo').count(), 'no dice que falló');
+    check((await page.getByTestId('nivel-baculo').textContent()).includes('+1'), 'fallar cambió el nivel');
+    const despues = await page.getByTestId('chance-baculo').textContent();
+    check(despues !== antes && despues.includes('fallos'), `la probabilidad no subió tras fallar: ${antes} → ${despues}`);
+    // Tres mejoras al mago cambian su aspecto.
+    await page.evaluate(() => { window.__random = Math.random; Math.random = () => 0; });
+    await page.getByTestId('mejorar-tunica').click();
+    await page.getByTestId('mejorar-tunica').click();
+    await page.evaluate(() => { Math.random = window.__random; });
+    check((await page.getByTestId('vista-equipo').getAttribute('src')).includes('mago_1'), 'el mago no cambió de aspecto');
+    await page.mouse.click(4, 4);
+    await page.waitForTimeout(150);
+    // Entrar a las oleadas.
+    const runas = await page.evaluate(() => window.juego.meta.runas);
+    await page.getByTestId('entrar-oleadas').click();
+    await page.waitForTimeout(2500);
+    check((await page.getByTestId('oleada-actual').textContent()).includes('Oleada'), 'no se ve la oleada');
+    check(await page.getByTestId('bote-runas').count(), 'no se ven las Runas juntadas');
+    await page.waitForTimeout(6000);
+    const bote = await page.evaluate(() => window.juego.run.oleadas.bote);
+    await page.getByTestId('terminar').click();
+    await page.waitForTimeout(300);
+    check(await page.getByTestId('fin-oleadas').count(), 'no sale el resultado de la Supervivencia');
+    check((await page.evaluate(() => window.juego.meta.runas)) === runas + bote, 'no se sumaron las Runas del bote');
+    check((await page.evaluate(() => window.juego.meta.supervivencia.entradas)) === 2, 'no gastó una entrada');
+    await page.getByTestId('mejorar').click();
+    await page.getByTestId('jugar').click();
+    await page.waitForTimeout(300);
+    await page.getByTestId('terminar').click();
+    await page.waitForTimeout(300);
+    check(!(await page.getByTestId('fin-oleadas').count()), 'un nivel normal muestra el resultado de la Supervivencia');
+  });
+
   await flow('modo pruebas: "+10 min de juego" avanza la partida como si hubieras jugado', browser, async (page) => {
     await page.getByTestId('terminar').click();
     await page.getByTestId('mejorar').click();
@@ -622,7 +681,8 @@ async function flow(name, browser, fn, opts) {
     check((await page.getByTestId('detalle').textContent()).includes('1/5'), 'no se compró el Autoapuntado');
     await page.getByTestId('jugar').click();
     await page.waitForTimeout(300);
-    const inicio = await page.evaluate(() => ({ ...window.juego.run.cursor }));
+    // Los slimes, lejos del centro: así el círculo tiene a dónde ir.
+    const inicio = await page.evaluate(() => { const r = window.juego.run; for (const e of r.enemies) { e.x = 310; e.y = 120; e.vx = 0; e.vy = 0; e.giro = 99; } r.auto.falta = 0; return { ...r.cursor }; });
     await page.waitForTimeout(2000);
     const luego = await page.evaluate(() => ({ ...window.juego.run.cursor }));
     const avance = Math.hypot(luego.x - inicio.x, luego.y - inicio.y);
@@ -664,6 +724,15 @@ async function flow(name, browser, fn, opts) {
       const fueraPvp = await page.$$eval('[data-testid="pvp-liga"], [data-testid="mi-poder"], [data-testid="abrir-tienda-pvp"], [data-testid="pvp-intentos"]', (els) => els.filter((e) => { const r = e.getBoundingClientRect(); return r.left < 0 || r.right > innerWidth || r.top < 0 || r.bottom > innerHeight; }).map((e) => e.dataset.testid));
       check(fueraPvp.length === 0, `en el PvP se salen: ${fueraPvp.join(', ')}`);
       check(!(await desborda()), 'el PvP se desborda');
+      await page.mouse.click(4, 4);
+      await page.getByTestId('abrir-ajustes').click();
+      for (let i = 0; i < 8; i++) await page.getByTestId('mas-nivel').click();
+      await page.mouse.click(4, 4);
+      const fila = await page.$$eval('[data-testid="abrir-supervivencia"], [data-testid="abrir-pvp"], [data-testid="jugar"]', (els) => els.filter((e) => { const r = e.getBoundingClientRect(); return r.left < 0 || r.right > innerWidth; }).map((e) => e.dataset.testid));
+      check(fila.length === 0, `los botones de abajo no caben: ${fila.join(', ')}`);
+      await page.getByTestId('abrir-supervivencia').click();
+      await page.getByTestId('abrir-herreria').click();
+      check(!(await desborda()), 'la Herrería se desborda');
     }, { viewport: { width: w, height: h } });
   }
 

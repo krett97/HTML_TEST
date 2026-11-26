@@ -354,6 +354,8 @@ export const MISIONES_DESDE = 11;
 export const RANKING_DESDE = 17;
 /** El PvP (ligas semanales contra otros jugadores) se abre al llegar a este nivel. */
 export const PVP_DESDE = 19;
+/** La Supervivencia (oleadas que dan Runas para el equipo) se abre al llegar a este nivel. */
+export const SUPERVIVENCIA_DESDE = 26;
 
 export type Seccion = 'jugador' | 'mago' | 'arqueros' | 'reliquias';
 export const SECCIONES: Seccion[] = ['jugador', 'mago', 'arqueros', 'reliquias'];

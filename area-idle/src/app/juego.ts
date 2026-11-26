@@ -6,6 +6,9 @@ import { buyTalent, chooseLevel, createMeta, finishRun, loadMeta, stats, type Me
 import { idleGoldPerMinute, idleReward, idleUnlocked } from '../core/inactivo';
 import { simulatePlay, type SimulatedPlay } from '../core/bot';
 import { claimableCount, claimBonus, claimMission, missionsUnlocked, rollDaily } from '../core/misiones';
+import { createSurvivalRun } from '../core/run';
+import { mejorar, type Intento, type PiezaId } from '../core/equipo';
+import { ENTRADAS_MAX, msHastaEntrada, nivelBaseOlas, refillEntradas, survivalUnlocked, usarEntrada } from '../core/supervivencia';
 import { bossOf, createGuardRun, createRun, moveCursor, startGuardRun, startRun, stepRun, updateGuardRun, type Run, type RunEvent } from '../core/run';
 import { ENEMIES, GUARDIA, levelConfig, type EnemyKind, type ZoneId } from '../core/datos';
 import { locale, detectLocale } from '../i18n';
@@ -52,6 +55,13 @@ export interface Vista {
   /** Modo guardia andando (en el árbol, con tropas): cuánto oro da por minuto si tus tropas alcanzan. */
   guardia: { porMinuto: number } | null;
   abrioPvp: boolean;
+  /** Supervivencia (desde el nivel 26): si ya se abrió, entradas, cuánto falta para la siguiente y récord. */
+  supervivencia: { abierto: boolean; entradas: number; max: number; espera: number; record: number };
+  abrioSupervivencia: boolean;
+  /** En una partida de Supervivencia: la oleada, su tiempo, cuántos van y las Runas juntadas. */
+  oleada: { ola: number; restante: number; duracion: number; total: number; muertos: number; bote: number; pausa: boolean; jefes: number } | null;
+  /** Cómo te fue en la Supervivencia que acaba de terminar. */
+  finOleadas: { olas: number; runas: number; oro: number; record: boolean } | null;
   /** El jefe del nivel (si es de jefe): quién, su vida y si está aturdido o furioso. */
   jefe: { kind: EnemyKind; vida: number; max: number; aturdido: boolean; furia: boolean } | null;
   /** El nivel elegido en el árbol es de jefe (corona en el selector). */
@@ -84,6 +94,10 @@ export class Juego {
   private abrioMisiones = false;
   private abrioRanking = false;
   private abrioPvp = false;
+  private abrioSupervivencia = false;
+  /** Lo que empieza con el siguiente "¡Jugar!": un nivel o la Supervivencia. */
+  private siguiente: 'nivel' | 'oleadas' = 'nivel';
+  private finOleadas: Vista['finOleadas'] = null;
   /** El ranking compartido (en Claude) o solo tu fila (fuera de Claude). */
   readonly ranking = new RankingService();
   /** Al abrir: quien ya jugó llega al árbol; quien es nuevo, directo a jugar. */
@@ -179,7 +193,18 @@ export class Juego {
 
   /** Empieza una partida en un campo de `alto` unidades (lo decide la escena según la pantalla). */
   start(alto: number, arriba?: number): RunEvent[] {
+    if (this.siguiente === 'oleadas') {
+      this.siguiente = 'nivel';
+      this.run = createSurvivalRun(stats(this.meta), alto, nivelBaseOlas(this.meta.nivel), this.meta.nivel, Date.now(), arriba);
+      this.premio = 0;
+      this.finOleadas = null;
+      this.partida++;
+      this.fase = 'jugando';
+      this.publish();
+      return [];
+    }
     this.run = createRun(stats(this.meta), alto, this.meta.jugando, Date.now(), arriba);
+    this.finOleadas = null;
 
     this.premio = 0;
     this.toco = false;
@@ -207,6 +232,9 @@ export class Juego {
       else if (e.type === 'bossJump') this.audio.play(run.jefe?.def.mueve === 'embestida' ? 'embiste' : run.jefe?.def.mueve === 'teletransporte' ? 'magia' : 'brinco');
       else if (e.type === 'charge') this.audio.play('embiste');
       else if (e.type === 'armorBreak') this.audio.play('critico');
+      else if (e.type === 'wave') this.audio.play(e.jefes ? 'furia' : 'invoca');
+      else if (e.type === 'waveClear') this.audio.play('gema');
+      else if (e.type === 'escape') this.audio.play('derrumbe');
       else if (e.type === 'bossStun') this.audio.play('aturde');
       else if (e.type === 'bossSummon') this.audio.play(run.jefe?.def.escolta === 'lobo' ? 'aullido' : 'invoca');
       else if (e.type === 'bossThrow') this.audio.play('lanza');
@@ -258,15 +286,21 @@ export class Juego {
 
   private end(gano: boolean): void {
     const run = this.run!;
+    if (run.oleadas) {
+      this.endSurvival(run);
+      return;
+    }
     const antes = idleUnlocked(this.meta);
     const misionesAntes = missionsUnlocked(this.meta);
     const rankingAntes = rankingUnlocked(this.meta);
     const pvpAntes = pvpUnlocked(this.meta);
+    const supervivenciaAntes = survivalUnlocked(this.meta);
     this.premio = finishRun(this.meta, { oro: run.oro, reventados: run.reventados, gano, nivel: run.nivel.nivel, porTipo: run.porTipo, muroCaido: run.muro.caido, jefe: run.nivel.jefe?.kind ?? null });
     this.abrioInactivo = !antes && idleUnlocked(this.meta);
     this.abrioMisiones = !misionesAntes && missionsUnlocked(this.meta);
     this.abrioRanking = !rankingAntes && rankingUnlocked(this.meta);
     this.abrioPvp = !pvpAntes && pvpUnlocked(this.meta);
+    this.abrioSupervivencia = !supervivenciaAntes && survivalUnlocked(this.meta);
     if (!this.meta.vistos.includes('primera')) this.meta.vistos.push('primera');
     this.fase = 'fin';
     this.audio.play(gano ? 'fin' : 'pierde');
@@ -344,6 +378,62 @@ export class Juego {
     if (gemas > 0) this.save();
     this.publish();
     return gemas;
+  }
+
+  /** Supervivencia: gasta una entrada y empieza las oleadas. */
+  playSurvival(): boolean {
+    if (!survivalUnlocked(this.meta) || !usarEntrada(this.meta.supervivencia, Date.now())) {
+      this.audio.play('error');
+      this.publish();
+      return false;
+    }
+    this.siguiente = 'oleadas';
+    this.save();
+    this.play();
+    return true;
+  }
+
+  /** Terminó la Supervivencia (cayó la muralla): Runas, oro y récord. */
+  private endSurvival(run: Run): void {
+    const o = run.oleadas!;
+    const s = this.meta.supervivencia;
+    const record = o.superadas > s.record;
+    s.record = Math.max(s.record, o.superadas);
+    s.partidas++;
+    this.meta.runas += o.bote;
+    this.meta.oro += run.oro;
+    this.finOleadas = { olas: o.superadas, runas: o.bote, oro: run.oro, record };
+    this.fase = 'fin';
+    this.audio.play(o.superadas > 0 ? 'fin' : 'pierde');
+    this.save();
+    this.publish();
+  }
+
+  /** Herrería: intenta mejorar una pieza (a veces sale, a veces no). */
+  forge(id: PiezaId): Intento | null {
+    const r = mejorar(this.meta, id, Math.random());
+    this.audio.play(!r ? 'error' : r.exito ? 'repara' : 'pierde');
+    if (r) {
+      this.save();
+      // Si la guardia anda, toma el equipo nuevo.
+      if (this.run?.guardia) updateGuardRun(this.run, stats(this.meta), this.oroGuardia());
+    }
+    this.publish();
+    return r;
+  }
+
+  /** Modo pruebas: entradas llenas y Runas de regalo. */
+  survivalRefill(): void {
+    this.meta.supervivencia.entradas = ENTRADAS_MAX;
+    this.meta.supervivencia.desde = Date.now();
+    this.save();
+    this.publish();
+  }
+
+  addRunas(n: number): void {
+    this.meta.runas += n;
+    this.save();
+    this.publish();
   }
 
   /** Vuelve a publicar la vista (p. ej. cuando vuelve un intento del PvP con la ventana abierta). */
@@ -443,6 +533,11 @@ export class Juego {
 
   /** Modo pruebas: termina la partida ya. */
   endNow(): void {
+    if (this.run?.oleadas && this.fase === 'jugando') {
+      this.run.muro.caido = true;
+      this.step(0.0001);
+      return;
+    }
     if (this.run && this.fase === 'jugando') {
       this.run.stats = { ...this.run.stats, duracion: this.run.t };
       this.step(0.0001);
@@ -475,6 +570,7 @@ export class Juego {
     // intentos y, si cambió la semana, la cierra.
     rollDaily(this.meta, Date.now());
     if (syncPvp(this.meta, Date.now())) saveRaw(this.meta);
+    if (survivalUnlocked(this.meta)) refillEntradas(this.meta.supervivencia, Date.now());
     this.vista.set({
       fase: this.fase,
       restante: run ? Math.max(0, run.stats.duracion - run.t) : 0,
@@ -501,6 +597,14 @@ export class Juego {
       abrioMisiones: this.abrioMisiones && this.fase === 'fin',
       abrioRanking: this.abrioRanking && this.fase === 'fin',
       abrioPvp: this.abrioPvp && this.fase === 'fin',
+      abrioSupervivencia: this.abrioSupervivencia && this.fase === 'fin',
+      supervivencia: { abierto: survivalUnlocked(this.meta), entradas: this.meta.supervivencia.entradas, max: ENTRADAS_MAX, espera: msHastaEntrada(this.meta.supervivencia, Date.now()), record: this.meta.supervivencia.record },
+      oleada: run?.oleadas && this.fase === 'jugando' ? (() => {
+        const o = run.oleadas!;
+        const vivos = run.enemies.filter((e) => !e.cria).length;
+        return { ola: Math.max(1, o.ola), restante: Math.max(0, o.restante), duracion: o.duracion, total: run.nivel.total, muertos: Math.max(0, run.salieron - vivos), bote: o.bote, pausa: o.pausa > 0, jefes: run.enemies.filter((e) => ENEMIES[e.kind].jefe).length };
+      })() : null,
+      finOleadas: this.fase === 'fin' ? this.finOleadas : null,
       pvp: { abierto: pvpUnlocked(this.meta) },
       guardia: run?.guardia && this.fase === 'arbol' ? { porMinuto: this.ritmoGuardia } : null,
       ranking: { abierto: rankingUnlocked(this.meta), nombre: this.meta.nombre },
@@ -508,7 +612,7 @@ export class Juego {
       vivos: run?.enemies.length ?? 0,
       toco: this.toco,
       // Una copia: la interfaz solo se entera de un cambio si recibe un objeto nuevo.
-      meta: { ...this.meta, talentos: { ...this.meta.talentos }, ajustes: { ...this.meta.ajustes }, cuenta: { ...this.meta.cuenta }, misiones: { ...this.meta.misiones }, pvp: { ...this.meta.pvp } },
+      meta: { ...this.meta, talentos: { ...this.meta.talentos }, ajustes: { ...this.meta.ajustes }, cuenta: { ...this.meta.cuenta }, misiones: { ...this.meta.misiones }, pvp: { ...this.meta.pvp }, equipo: { niveles: { ...this.meta.equipo.niveles }, suerte: { ...this.meta.equipo.suerte } }, supervivencia: { ...this.meta.supervivencia } },
       partida: this.partida,
     });
   }

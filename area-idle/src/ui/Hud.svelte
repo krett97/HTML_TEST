@@ -8,8 +8,12 @@
 
   const juego = useJuego();
   const view = juego.view;
-  const prisa = $derived($view.restante <= 5);
-  const avance = $derived($view.total ? Math.min(1, $view.reventados / $view.total) : 0);
+  // En la Supervivencia el reloj y la barra son los de la oleada.
+  const ol = $derived($view.oleada);
+  const restante = $derived(ol ? ol.restante : $view.restante);
+  const duracion = $derived(ol ? ol.duracion : $view.duracion);
+  const prisa = $derived(restante <= 5 && !ol?.pausa);
+  const avance = $derived(ol ? (ol.total ? Math.min(1, ol.muertos / ol.total) : 0) : $view.total ? Math.min(1, $view.reventados / $view.total) : 0);
   /** En un nivel de jefe la barra de arriba es su vida. */
   const vidaJefe = $derived($view.jefe ? Math.max(0, $view.jefe.vida / $view.jefe.max) : 0);
   /** El letrero "¡Jefe!" en los primeros segundos. */
@@ -17,7 +21,12 @@
 </script>
 
 <div class="cabecera">
-  {#if $view.jefe}
+  {#if ol}
+    <div class="progreso oleada" data-testid="progreso-oleada">
+      <span class="hecho" style:width="{avance * 100}%"></span>
+      <span class="texto cifra">{$t('oleadas.ola', { n: ol.ola })} · {ol.muertos}/{ol.total}{#if ol.jefes} · <Icon name="corona" size={16} />×{ol.jefes}{/if}</span>
+    </div>
+  {:else if $view.jefe}
     <div class="progreso jefe" data-testid="vida-jefe" aria-label={$t(`enemigos.${$view.jefe.kind}.nombre`)}>
       <span class="hecho" style:width="{vidaJefe * 100}%"></span>
       <span class="texto cifra"><Icon name="corona" size={18} /> {$t(`enemigos.${$view.jefe.kind}.nombre`)} · {Math.ceil(vidaJefe * 100)}%</span>
@@ -31,17 +40,28 @@
   <div class="fila">
     <div class="pill reloj" class:prisa data-testid="reloj">
       <Icon name="reloj" size={24} />
-      <span class="cifra">{formatClock($view.restante)}</span>
-      <span class="barra"><span class="lleno" style:width="{(100 * $view.restante) / $view.duracion}%"></span></span>
+      <span class="cifra">{formatClock(restante)}</span>
+      <span class="barra"><span class="lleno" style:width="{(100 * restante) / duracion}%"></span></span>
     </div>
-    <div class="zona" data-testid="nivel-partida">
-      <small>{$t(`zonas.${$view.zona}`)}{#if $view.jefe}<span class="es-jefe">&nbsp;· {$t('hud.jefe')}</span>{/if}</small>
-      <strong>{$t('hud.nivel', { n: $view.nivel })}</strong>
-    </div>
-    <div class="pill oro" data-testid="oro-partida">
-      <Icon name="moneda" size={24} />
-      <span class="cifra">{formatGold($view.oroPartida)}</span>
-    </div>
+    {#if ol}
+      <div class="zona" data-testid="nivel-partida">
+        <small>{$t('oleadas.titulo')}</small>
+        <strong data-testid="oleada-actual">{$t('oleadas.ola', { n: ol.ola })}</strong>
+      </div>
+      <div class="pill oro runas" data-testid="bote-runas">
+        <Icon name="runa" size={24} />
+        <span class="cifra">{formatNum(ol.bote)}</span>
+      </div>
+    {:else}
+      <div class="zona" data-testid="nivel-partida">
+        <small>{$t(`zonas.${$view.zona}`)}{#if $view.jefe}<span class="es-jefe">&nbsp;· {$t('hud.jefe')}</span>{/if}</small>
+        <strong>{$t('hud.nivel', { n: $view.nivel })}</strong>
+      </div>
+      <div class="pill oro" data-testid="oro-partida">
+        <Icon name="moneda" size={24} />
+        <span class="cifra">{formatGold($view.oroPartida)}</span>
+      </div>
+    {/if}
   </div>
 </div>
 <div class="avisos">
@@ -61,6 +81,12 @@
     <strong>{$t(`enemigos.${$view.jefe.kind}.nombre`)}</strong>
   </div>
 {/if}
+{#if ol?.pausa}
+  <div class="presenta" data-testid="entre-oleadas">
+    <small>{$t('oleadas.siguiente')}</small>
+    <strong>{$t('oleadas.ola', { n: ol.ola + 1 })}</strong>
+  </div>
+{/if}
 {#if !$view.toco && $view.meta.partidas < 3}
   <div class="pista" data-testid="pista"><Icon name="mano" size={30} /> {$t('hud.pista')}</div>
 {/if}
@@ -69,6 +95,12 @@
 {/if}
 
 <style>
+  .progreso.oleada .hecho {
+    background: linear-gradient(#9ad0ff, #4a90e2);
+  }
+  .pill.runas {
+    background: #dcecff;
+  }
   .cabecera {
     position: absolute;
     top: calc(8px + env(safe-area-inset-top));

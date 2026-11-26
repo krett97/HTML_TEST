@@ -6,6 +6,7 @@ import type { Juego } from '../app/juego';
 import { ENEMIES, levelConfig, type EnemyKind, type ZoneId } from '../core/datos';
 import { formatNum } from '../core/format';
 import { crearFuenteNumeros, NUMEROS } from './numeros';
+import { tierDe } from '../core/equipo';
 import { ALLY_ROW, archerSpots, autoAiming, FIELD_W, hidden, wizardSpot, type Forma, type Run, type RunEvent } from '../core/run';
 
 const URLS = import.meta.glob<string>('../assets/arte/*.png', { eager: true, query: '?url', import: 'default' });
@@ -309,7 +310,8 @@ export class Campo extends Phaser.Scene {
     this.muralla.clearTint();
     this.torre.clearTint();
     this.arqueros.forEach((a) => a.destroy());
-    this.arqueros = archerSpots(run).map((p) => this.add.image(p.x, p.y, 'arquero').setOrigin(0.5, 1).setScale(ARQUERO.alto / ARQUERO.px).setDepth(D.aliado));
+    this.arqueros = archerSpots(run).map((p) => this.add.image(p.x, p.y, this.claveEquipo('arquero', 'arqueros')).setOrigin(0.5, 1).setScale(ARQUERO.alto / ARQUERO.px).setDepth(D.aliado));
+    this.aplicarEquipo();
     this.telas.forEach((t) => t?.destroy());
     this.telas = [];
   }
@@ -346,10 +348,30 @@ export class Campo extends Phaser.Scene {
     this.dibujar(events, run);
   }
 
+  /** La textura según el equipo de la Herrería: `mago`, `mago_1`… `mago_3`. */
+  private claveEquipo(base: string, grupo: 'mago' | 'arqueros' | 'base'): string {
+    const t = tierDe(this.juego.meta.equipo.niveles, grupo);
+    return t ? `${base}_${t}` : base;
+  }
+
+  /** Viste al mago, a los arqueros, la muralla y la torre con su etapa de equipo (si cambió). */
+  private equipoVisto = '';
+  private aplicarEquipo(): void {
+    const n = this.juego.meta.equipo.niveles;
+    const clave = `${tierDe(n, 'mago')}${tierDe(n, 'arqueros')}${tierDe(n, 'base')}${this.arqueros.length}`;
+    if (clave === this.equipoVisto) return;
+    this.equipoVisto = clave;
+    this.mago.setTexture(this.claveEquipo('mago', 'mago'));
+    for (const a of this.arqueros) a.setTexture(this.claveEquipo('arquero', 'arqueros'));
+    this.muralla.setTexture(this.claveEquipo('muralla', 'base'));
+    this.torre.setTexture(this.claveEquipo('torre', 'base'));
+  }
+
   update(_time: number, deltaMs: number): void {
     const dt = Math.min(0.05, deltaMs / 1000);
     this.tiempo += dt;
     this.juego.step(dt);
+    this.aplicarEquipo();
     const run = this.juego.run;
     // En guardia, si compraste tropas, se acomodan.
     if (run?.guardia && (this.arqueros.length !== run.stats.arqueros.cantidad || this.mago.visible !== run.stats.mago.activo)) this.colocarTropas(run);
@@ -579,6 +601,32 @@ export class Campo extends Phaser.Scene {
           const v = this.slimes.get(e.id);
           if (v) v.golpe = -0.6;
           this.emisores.polvo.explode(12, e.x, e.y);
+          break;
+        }
+        case 'wave':
+          // Empieza una oleada: chispas a lo ancho del campo.
+          for (let i = 0; i < 5; i++) this.emisores.aparece.explode(6, 40 + i * 70, run.arriba + 30);
+          break;
+        case 'waveClear':
+          // Oleada aguantada: confeti.
+          for (let i = 0; i < 3; i++) this.time.delayedCall(i * 90, () => this.emisores.confeti.explode(12, 80 + i * 100, this.alto - 70));
+          break;
+        case 'escape': {
+          // Se acabó el tiempo de la oleada: los que quedaban se escapan y golpean la muralla.
+          // Los que se escaparon ya no están en la partida: se quitan sus dibujos.
+          for (const [id, v] of this.slimes) {
+            if (run.enemies.some((x) => x.id === id)) continue;
+            this.emisores.polvo.explode(3, v.img.x, v.img.y);
+            this.soltar(v);
+            this.slimes.delete(id);
+          }
+          if (!e.cuantos) break;
+          for (let i = 0; i < 6; i++) this.emisores.piedra.explode(6, 30 + i * 60, this.alto - ALLY_ROW + 10);
+          for (const img of [this.muralla, this.torre]) img.setTint(0xff8a80);
+          this.time.delayedCall(200, () => {
+            if (!this.juego.run?.muro.caido) for (const img of [this.muralla, this.torre]) img.clearTint();
+          });
+          this.sacudir(220, 0.004);
           break;
         }
         case 'armorBreak': {
