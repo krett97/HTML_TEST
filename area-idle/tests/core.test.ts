@@ -13,8 +13,8 @@ import { autoAiming, circleActive, createGuardRun, guardLevel, startGuardRun, up
 import { AUTOAPUNTAR } from '../src/core/datos';
 import { CURVA, GUARDIA, ORO_TALENTOS } from '../src/core/datos';
 import { ALLY_ROW, archerSpots, bossOf, createRun, DAMAGE_TYPE_OF, FIELD_W, moveCursor, startRun, stepRun, type Run, type RunEvent } from '../src/core/run';
-import { KNIGHT_R, priestSpot } from '../src/core/run';
-import { BASE, CABALLERO_DESDE, SACERDOTE_DESDE } from '../src/core/datos';
+import { KNIGHT_R, priestSpot, witchSpot } from '../src/core/run';
+import { BASE, BRUJA_DESDE, CABALLERO_DESDE, ELEMENTO_DESDE, SACERDOTE_DESDE } from '../src/core/datos';
 import { computeStats } from '../src/core/stats';
 import { BONO_DIARIO, claimableCount, claimBonus, claimMission, dailyProgress, dayKey, DIARIAS, DIARIAS_POR_DIA, MISSION_BY_ID, msUntilReset, permanentProgress, rollDaily } from '../src/core/misiones';
 import { MISIONES_DESDE, PVP_DESDE, RANKING_DESDE } from '../src/core/datos';
@@ -1559,14 +1559,14 @@ describe('PvP: poder fácil de leer y los dos ejércitos', () => {
     m.talentos = { arqueros: 1, masArqueros: 2, mago: 1 };
     m.equipo.niveles = { baculo: 5, tunica: 5, sombrero: 3 };
     const mio = myArmy(m);
-    expect(mio).toMatchObject({ arqueros: 3, mago: true, caballero: false, sacerdote: false, etapas: { mago: 2, arqueros: 0, base: 0 } });
+    expect(mio).toMatchObject({ arqueros: 3, mago: true, caballero: false, sacerdote: false, bruja: false, etapas: { mago: 2, arqueros: 0, base: 0 } });
     const fuerte = rivalArmy(mio, 2.5, 5, 'r1');
     const flojo = rivalArmy(mio, 0.4, 0, 'r1');
     expect(fuerte.arqueros).toBeGreaterThan(flojo.arqueros);
     expect(fuerte.etapas.base).toBeGreaterThan(flojo.etapas.base);
     expect(rivalArmy(mio, 1, 2, 'r7')).toEqual(rivalArmy(mio, 1, 2, 'r7'));
     for (const id of ['r1', 'r2', 'r3', 'r4']) {
-      const e = rivalArmy({ arqueros: 0, mago: false, caballero: false, sacerdote: false, etapas: { mago: 0, arqueros: 0, base: 0 } }, 1, 0, id);
+      const e = rivalArmy({ arqueros: 0, mago: false, caballero: false, sacerdote: false, bruja: false, etapas: { mago: 0, arqueros: 0, base: 0 } }, 1, 0, id);
       expect(e.arqueros).toBeGreaterThanOrEqual(1);
       expect(e.arqueros).toBeLessThanOrEqual(6);
     }
@@ -1667,5 +1667,71 @@ describe('caballero y sacerdote', () => {
     const run = createRun(computeStats({ arqueros: 1, masArqueros: 5, sacerdote: 1 }), 600, 32, 7);
     const xs = archerSpots(run).map((p) => p.x);
     expect(Math.max(...xs)).toBeLessThan(priestSpot(run).x);
+  });
+});
+
+describe('bruja y elemento de tu círculo', () => {
+  const quieto = (run: Run) => {
+    run.stats = { ...run.stats, ritmo: 0 };
+    run.cursor = { x: -999, y: -999 };
+    run.disparo = Infinity;
+  };
+  it('la bruja se compra desde el nivel 41 y tiene su sección', () => {
+    const m = createMeta();
+    m.oro = 1e12;
+    m.nivel = BRUJA_DESDE - 1;
+    expect(talentState(m, TALENT_BY_ID.bruja)).toBe('bloqueado');
+    m.nivel = BRUJA_DESDE;
+    expect(buyTalent(m, 'bruja')).toBe(true);
+    expect(TALENTS.filter((t) => t.seccion === 'bruja')).toHaveLength(6);
+    expect(DAMAGE_TYPE_OF.bruja).toBe('muerte');
+  });
+  it('su rayo atraviesa a todos los de su línea (daño de muerte: a los bandidos les duele más)', () => {
+    const run = createRun(computeStats({ danio: 10, bruja: 1 }), 600, 42, 11);
+    quieto(run);
+    const o = witchSpot(run);
+    // Tres en fila hacia arriba desde la bruja, y uno lejos a un lado.
+    for (let i = 0; i < 3; i++) run.enemies.push({ id: 950 + i, kind: 'bandido', x: o.x, y: o.y - 26 - 60 * (i + 1), vx: 0, vy: 0, vida: 1e9, vidaMax: 1e9, giro: 99 });
+    run.enemies.push({ id: 960, kind: 'verde', x: 330, y: 120, vx: 0, vy: 0, vida: 1e9, vidaMax: 1e9, giro: 99 });
+    const ev: RunEvent[] = [];
+    for (let i = 0; i < 40 && !ev.some((e) => e.type === 'darkRay'); i++) ev.push(...stepRun(run, 0.05));
+    const rayo = ev.find((e) => e.type === 'darkRay') as Extract<RunEvent, { type: 'darkRay' }>;
+    expect(rayo.n).toBe(3);
+    const golpes = ev.filter((e): e is Extract<RunEvent, { type: 'hit' }> => e.type === 'hit' && e.fuente === 'bruja');
+    expect(golpes.map((g) => g.id).sort()).toEqual([950, 951, 952]);
+    expect(golpes.every((g) => g.efecto === 'debil')).toBe(true);
+  });
+  it('la Maldición: a los que toca el rayo les entra más daño de todo por unos segundos', () => {
+    const run = createRun(computeStats({ danio: 10, bruja: 1, conjuro: 2, maldicion: 3 }), 600, 42, 12);
+    quieto(run);
+    const o = witchSpot(run);
+    run.enemies.push({ id: 970, kind: 'verde', x: o.x, y: o.y - 120, vx: 0, vy: 0, vida: 1e9, vidaMax: 1e9, giro: 99 });
+    for (let i = 0; i < 60 && !(run.enemies[0]!.maldito ?? 0); i++) stepRun(run, 0.05);
+    const e = run.enemies[0]!;
+    expect(e.maldito).toBeGreaterThan(run.t);
+    expect(run.stats.bruja.maldicion).toBeCloseTo(0.3);
+    // Tu lluvia de flechas le pega 30 % más mientras está maldito.
+    const antes = e.vida;
+    run.disparo = 0;
+    moveCursor(run, e.x, e.y);
+    const ev: RunEvent[] = [];
+    for (let i = 0; i < 10; i++) ev.push(...stepRun(run, 0.05));
+    const tuyo = ev.find((x): x is Extract<RunEvent, { type: 'hit' }> => x.type === 'hit' && x.fuente === 'jugador');
+    expect(tuyo!.danio).toBeCloseTo(run.stats.danio * 1.3);
+    expect(antes).toBeGreaterThan(e.vida);
+  });
+  it('tu círculo pega con el elemento que elegiste (se guarda; por defecto, físico)', () => {
+    expect(createMeta().elemento).toBe('fisico');
+    expect(loadMeta({ elemento: 'fuego' }).elemento).toBe('fuego');
+    expect(loadMeta({ elemento: 'plasma' }).elemento).toBe('fisico');
+    const run = createRun(computeStats({ danio: 10 }, {}, 'hielo'), 600, 32, 13);
+    run.stats = { ...run.stats, ritmo: 0 };
+    run.enemies.push({ id: 980, kind: 'escorpion', x: 150, y: 200, vx: 0, vy: 0, vida: 1e9, vidaMax: 1e9, giro: 99, entierro: 99 });
+    moveCursor(run, 150, 200);
+    const ev: RunEvent[] = [];
+    for (let i = 0; i < 20; i++) ev.push(...stepRun(run, 0.05));
+    const golpe = ev.find((x): x is Extract<RunEvent, { type: 'hit' }> => x.type === 'hit' && x.fuente === 'jugador');
+    expect(golpe!.efecto).toBe('debil');
+    expect(ELEMENTO_DESDE).toBeGreaterThan(BRUJA_DESDE);
   });
 });

@@ -476,6 +476,51 @@ async function flow(name, browser, fn, opts) {
     check((await page.evaluate(() => window.juego.run.muro.vida / window.juego.run.muro.max)) > 0.5, 'el sacerdote no curó la muralla');
   });
 
+  await flow('bruja (nivel 41) y elemento de tu círculo (nivel 45, con anuncio)', browser, async (page) => {
+    await page.getByTestId('terminar').click();
+    await page.getByTestId('mejorar').click();
+    await page.getByTestId('abrir-ajustes').click();
+    for (let i = 0; i < 40; i++) await page.getByTestId('mas-nivel').click();
+    await page.mouse.click(4, 4);
+    check(await page.getByTestId('seccion-bruja').count(), 'no sale la pestaña de la bruja en el 41');
+    check(!(await page.getByTestId('abrir-elemento').count()), 'el elemento se puede cambiar antes del 45');
+    await page.oro(1000000);
+    await page.oro(1000000);
+    await page.getByTestId('seccion-bruja').click();
+    await page.getByTestId('talento-bruja').click();
+    await page.getByTestId('comprar').click();
+    check(await page.getByTestId('talento-rayoOscuro').count(), 'comprar la bruja no abre sus mejoras');
+    await page.waitForTimeout(300);
+    check(await page.evaluate(() => !!window.juego.run?.bruja), 'la bruja no está en la pantalla principal');
+    // Su rayo atraviesa: tres en fila desde ella.
+    await page.evaluate(() => { const r = window.juego.run; r.enemies = []; const x = 84; const y = r.h - 50 - 20 + 2 - 26; for (let i = 0; i < 3; i++) r.enemies.push({ id: 88800 + i, kind: 'bandido', x, y: y - 60 * (i + 1), vx: 0, vy: 0, vida: 1e12, vidaMax: 1e12, giro: 99 }); r.guardia.falta = 99; });
+    await page.waitForTimeout(2600);
+    check((await page.evaluate(() => window.juego.run.enemies.filter((e) => e.id >= 88800 && e.vida < 1e12).length)) === 3, 'el rayo de la bruja no atravesó a los tres');
+    // Elemento: desde el 45, cambiarlo pide un anuncio (cerrarlo antes no cambia nada).
+    await page.getByTestId('abrir-ajustes').click();
+    for (let i = 0; i < 4; i++) await page.getByTestId('mas-nivel').click();
+    await page.mouse.click(4, 4);
+    await page.getByTestId('seccion-jugador').click();
+    await page.getByTestId('abrir-elemento').click();
+    check(await page.getByTestId('elemento').count(), 'no abre la ventana del elemento');
+    check((await page.locator('li:has([data-testid="elemento-actual"])').textContent()).includes('Físico'), 'no empieza en físico');
+    await page.getByTestId('elemento-hielo').click();
+    check(await page.getByTestId('anuncio-prueba').count(), 'cambiar el elemento no pide anuncio');
+    await page.getByTestId('cerrar-anuncio').click();
+    await page.waitForTimeout(200);
+    check((await page.evaluate(() => window.juego.meta.elemento)) === 'fisico', 'cerrar el anuncio antes cambió el elemento');
+    await page.getByTestId('elemento-hielo').click();
+    await page.waitForTimeout(3300);
+    await page.getByTestId('cerrar-anuncio').click();
+    await page.waitForTimeout(300);
+    check((await page.evaluate(() => window.juego.meta.elemento)) === 'hielo', 'ver el anuncio no cambió el elemento');
+    check((await page.evaluate(() => window.juego.run.stats.elemento)) === 'hielo', 'la pantalla principal no tomó el elemento nuevo');
+    check((await page.locator('li:has([data-testid="elemento-actual"])').textContent()).includes('Hielo'), 'la ventana no marca el elemento nuevo');
+    await page.reload();
+    await page.waitForTimeout(1200);
+    check((await page.evaluate(() => window.juego.meta.elemento)) === 'hielo', 'el elemento no se guardó');
+  });
+
   await flow('Supervivencia (nivel 26) y Herrería: oleadas, Runas y mejoras que a veces fallan', browser, async (page) => {
     await page.getByTestId('terminar').click();
     await page.getByTestId('mejorar').click();

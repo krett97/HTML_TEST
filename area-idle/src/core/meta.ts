@@ -1,5 +1,5 @@
 // Lo que se guarda entre partidas: el oro, los niveles del árbol y los récords.
-import { ENEMY_KINDS, levelConfig, TALENT_BY_ID, TALENTS, type EnemyKind, type TalentDef, type TalentId } from './datos';
+import { DAMAGE_TYPES, ENEMY_KINDS, levelConfig, TALENT_BY_ID, TALENTS, type DamageType, type EnemyKind, type TalentDef, type TalentId } from './datos';
 import { cleanName } from './ranking';
 import { emptyPvp, loadPvp, type PvpState } from './pvp';
 import { emptyEquipo, loadEquipo, type EquipoState } from './equipo';
@@ -45,16 +45,18 @@ export interface Meta {
   supervivencia: SupervivenciaState;
   /** Oro por ver anuncios: cuántos hoy y cuándo el último. */
   anuncios: AnunciosState;
+  /** El elemento de tu círculo (desde el nivel 45 se cambia viendo un anuncio). */
+  elemento: DamageType;
 }
 
 export function createMeta(): Meta {
-  return { version: SAVE_VERSION, oro: 0, talentos: {}, partidas: 0, nivel: 1, jugando: 1, mejor: 0, reventados: 0, ajustes: { sonido: true, idioma: null }, gemas: 0, cuenta: emptyCounters(), misiones: emptyMissions(), ultimaVez: 0, oroMinuto: 0, vistos: [], nombre: '', pvp: emptyPvp(), runas: 0, equipo: emptyEquipo(), supervivencia: emptySupervivencia(), anuncios: emptyAnuncios() };
+  return { version: SAVE_VERSION, oro: 0, talentos: {}, partidas: 0, nivel: 1, jugando: 1, mejor: 0, reventados: 0, ajustes: { sonido: true, idioma: null }, gemas: 0, cuenta: emptyCounters(), misiones: emptyMissions(), ultimaVez: 0, oroMinuto: 0, vistos: [], nombre: '', pvp: emptyPvp(), runas: 0, equipo: emptyEquipo(), supervivencia: emptySupervivencia(), anuncios: emptyAnuncios(), elemento: 'fisico' };
 }
 
 export const levelOf = (meta: Meta, id: TalentId): number => meta.talentos[id] ?? 0;
 
 export function stats(meta: Meta): Stats {
-  return computeStats(meta.talentos, meta.equipo.niveles);
+  return computeStats(meta.talentos, meta.equipo.niveles, meta.elemento);
 }
 
 export function costOf(def: TalentDef, nivel: number): number {
@@ -195,6 +197,7 @@ export function loadMeta(raw: unknown): Meta {
     equipo: loadEquipo(r.equipo),
     supervivencia: loadSupervivencia(r.supervivencia),
     anuncios: loadAnuncios(r.anuncios),
+    elemento: DAMAGE_TYPES.includes(r.elemento as DamageType) ? (r.elemento as DamageType) : 'fisico',
   };
 }
 

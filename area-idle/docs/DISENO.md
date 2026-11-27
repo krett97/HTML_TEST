@@ -46,6 +46,7 @@ Nivel 5") y el oro. Ahí arriba no aparecen ni pasean slimes, para que nada qued
 | **Arqueros** | Flechas a **un objetivo a la vez**; con Flechas múltiples, a 2, 3… 5 | Físico | Arquero (raíz), Más arqueros (hasta 6), Flechas múltiples, Arco veloz, Puntas de acero, Muralla reforzada |
 | **Caballero** (desde el nivel 21) | Tajos **cuerpo a cuerpo**: camina por el campo y **frena** a los que marchan | Físico | Caballero (raíz), Tajo veloz, Espada, Coraza, Barrido, De pie otra vez, Mando (ver 5m) |
 | **Sacerdote** (desde el nivel 31) | **Columna de luz** en un círculo sobre el de más vida; **cura** al caballero y a la muralla | Luz | Sacerdote (raíz), Plegaria, Luz sagrada, Sanar, Halo, Bendición (ver 5m) |
+| **Bruja** (desde el nivel 41) | **Rayos de oscuridad** que atraviesan a todos los de su línea; Maldición | Muerte | Bruja (raíz), Conjuro rápido, Rayo oscuro, Sombra ancha, Rayos gemelos, Maldición (ver 5n) |
 | **Reliquias** (desde el nivel 11, con **gemas**) | — | — | Poder ancestral (raíz), Golpes críticos, Carcaj encantado, Albañil (ver 5e) |
 
 - Al principio solo se ve **Daño**; cada compra muestra lo que sale de ahí. Las raíces del Mago y los
@@ -371,6 +372,39 @@ suben el multiplicador) y se ven en los castillos: el caballero delante de la mu
 extremo. En la batalla los dos caballeros salen al centro y se dan de espadazos, y el sacerdote baja una
 columna de luz en la muralla de enfrente y cura la suya (cruces verdes). Los rivales tienen caballero si tú
 lo tienes o si son bastante más fuertes (×1.3), y sacerdote igual (×1.6).
+
+## 5n. Bruja y elemento de tu círculo (desde 0.21.0)
+
+**Bruja** (nivel **41**; 1.5 millones): flota delante de la muralla, a la izquierda (el caballero sale al
+centro), con su pelo morado, sombrero de pico con cinta verde y luna, y una varita con un orbe oscuro. Cada
+2.2 s lanza un **rayo de oscuridad**: prueba unos cuantos blancos y se queda con la línea que **atraviesa a
+más enemigos**; a todos los que toca les hace 5× tu daño de **muerte** (también a los que vuelan; no a los
+enterrados). Con **Maldición**, a los que toca les entra **más daño de todo** (+10 % por nivel) por 3 s: se
+ven morados. Si cae la muralla sigue (no está en ella).
+
+| Talento | Qué hace | Máx. | Precio |
+|---|---|---|---|
+| Conjuro rápido | ×0.9 el tiempo entre rayos | 5 | 300 mil, ×1.8 |
+| Rayo oscuro | +50 % daño de muerte | 10 | 400 mil, ×1.6 |
+| Sombra ancha | +20 % ancho del rayo | 5 | 300 mil, ×1.8 |
+| Rayos gemelos | +1 rayo a la vez | 2 | 3 millones, ×4 |
+| Maldición | +10 % de daño de todo a los que toca, 3 s | 5 | 800 mil, ×2.2 |
+
+Para que el daño de muerte sirva, ahora le duele más a los **bandidos**, los **bandidos del desierto** y los
+**minotauros** (a los slimes rojos y los lobos negros les sigue doliendo menos). En el PvP cuenta para el
+poder y sale flotando delante de su castillo; en la batalla su rayo cruza el campo hasta la muralla de
+enfrente.
+
+**Elemento de tu círculo** (nivel **45**): en tu sección del árbol sale un botón con tu elemento (físico al
+principio). Abre una ventana con los **seis**: físico, fuego, hielo, energía, muerte y luz, y para cada uno
+los enemigos que ya viste que son débiles (verde, ×1.5) o fuertes (rojo, ×0.5). **Cada cambio pide ver un
+anuncio completo** (si lo cierras antes, no cambia). Tus flechas, tu círculo y su destello toman el color del
+elemento (fuego naranja, hielo celeste, energía turquesa, muerte morado, luz dorado claro). Se guarda; el
+glosario dice qué elemento llevas.
+
+**Balance** (simulador): jugando sin parar no cambia (49 a los 210 min); el Dragón del 50 pide unos intentos
+más (la bruja se lleva parte del oro del 41 al 50). Por días: 39, 59, 59, 69 (antes 39, 55, 59, 59): más
+rápido después del 50, donde todavía no está la mazmorra. El simulador no cambia de elemento.
 
 ## 5e. Misiones, gemas moradas y Reliquias (desde 0.6.0)
 

@@ -10,7 +10,7 @@ import { createSurvivalRun } from '../core/run';
 import { mejorar, type Intento, type PiezaId } from '../core/equipo';
 import { ENTRADAS_MAX, msHastaEntrada, nivelBaseOlas, refillEntradas, survivalUnlocked, usarEntrada } from '../core/supervivencia';
 import { bossOf, createGuardRun, createRun, moveCursor, startGuardRun, startRun, stepRun, updateGuardRun, type Run, type RunEvent } from '../core/run';
-import { CABALLERO_DESDE, ENEMIES, GUARDIA, levelConfig, SACERDOTE_DESDE, type EnemyKind, type ZoneId } from '../core/datos';
+import { BRUJA_DESDE, CABALLERO_DESDE, ELEMENTO_DESDE, ENEMIES, GUARDIA, levelConfig, SACERDOTE_DESDE, type DamageType, type EnemyKind, type ZoneId } from '../core/datos';
 import { locale, detectLocale } from '../i18n';
 import type { AudioEngine, SoundId } from '../services/audio';
 import { buyShop, endWeek, fight, INTENTOS_MAX, pvpUnlocked, syncPvp, type FightResult, type ShopId } from '../core/pvp';
@@ -69,6 +69,9 @@ export interface Vista {
   /** Se acaba de abrir el Caballero (nivel 21) o el Sacerdote (nivel 31). */
   abrioCaballero: boolean;
   abrioSacerdote: boolean;
+  /** Se acaba de abrir la Bruja (nivel 41) o el cambio de elemento de tu círculo (nivel 45). */
+  abrioBruja: boolean;
+  abrioElemento: boolean;
   /** En una partida de Supervivencia: la oleada, su tiempo, cuántos van y las Runas juntadas. */
   oleada: { ola: number; restante: number; duracion: number; total: number; muertos: number; bote: number; pausa: boolean; jefes: number } | null;
   /** Cómo te fue en la Supervivencia que acaba de terminar. */
@@ -108,6 +111,8 @@ export class Juego {
   private abrioSupervivencia = false;
   private abrioCaballero = false;
   private abrioSacerdote = false;
+  private abrioBruja = false;
+  private abrioElemento = false;
   /** Lo que empieza con el siguiente "¡Jugar!": un nivel o la Supervivencia. */
   private siguiente: 'nivel' | 'oleadas' = 'nivel';
   private finOleadas: Vista['finOleadas'] = null;
@@ -159,6 +164,27 @@ export class Juego {
     }
     this.publish();
     return oro;
+  }
+
+  /**
+   * Cambia el elemento de tu círculo (desde el nivel 45): cada cambio pide ver un anuncio completo. Si lo
+   * cierras antes, no cambia. Devuelve si cambió.
+   */
+  async changeElement(tipo: DamageType): Promise<boolean> {
+    if (this.viendoAnuncio || this.meta.nivel < ELEMENTO_DESDE || this.meta.elemento === tipo || !this.ads.isReady('elemento')) return false;
+    this.viendoAnuncio = true;
+    this.publish();
+    const r = await this.ads.showRewarded('elemento');
+    this.viendoAnuncio = false;
+    if (r.rewarded) {
+      this.meta.elemento = tipo;
+      this.audio.play('compra');
+      this.save();
+      // La guardia toma el elemento nuevo.
+      if (this.run?.guardia) updateGuardRun(this.run, stats(this.meta), this.oroGuardia());
+    }
+    this.publish();
+    return r.rewarded;
   }
 
   /** Cobra lo juntado mientras no jugabas, ×2 si ves un anuncio completo (si no, se queda la ventana). */
@@ -282,6 +308,7 @@ export class Juego {
       else if (e.type === 'kill') this.audio.play(e.kind === 'azul' ? 'popGrande' : 'pop');
       else if (e.type === 'impact') this.audio.play(e.fuente === 'mago' ? 'magia' : e.fuente === 'sacerdote' ? 'gema' : 'disparo');
       else if (e.type === 'knightHit') this.audio.play('lanza');
+      else if (e.type === 'darkRay') this.audio.play('magia');
       else if (e.type === 'knightDown') this.audio.play('aturde');
       else if (e.type === 'knightUp') this.audio.play('repara');
       else if (e.type === 'volley') this.audio.play('arco');
@@ -369,6 +396,8 @@ export class Juego {
     this.abrioSupervivencia = !supervivenciaAntes && survivalUnlocked(this.meta);
     this.abrioCaballero = nivelAntes < CABALLERO_DESDE && this.meta.nivel >= CABALLERO_DESDE;
     this.abrioSacerdote = nivelAntes < SACERDOTE_DESDE && this.meta.nivel >= SACERDOTE_DESDE;
+    this.abrioBruja = nivelAntes < BRUJA_DESDE && this.meta.nivel >= BRUJA_DESDE;
+    this.abrioElemento = nivelAntes < ELEMENTO_DESDE && this.meta.nivel >= ELEMENTO_DESDE;
     if (!this.meta.vistos.includes('primera')) this.meta.vistos.push('primera');
     this.fase = 'fin';
     this.audio.play(gano ? 'fin' : 'pierde');
@@ -696,6 +725,8 @@ export class Juego {
       abrioSupervivencia: this.abrioSupervivencia && this.fase === 'fin',
       abrioCaballero: this.abrioCaballero && this.fase === 'fin',
       abrioSacerdote: this.abrioSacerdote && this.fase === 'fin',
+      abrioBruja: this.abrioBruja && this.fase === 'fin',
+      abrioElemento: this.abrioElemento && this.fase === 'fin',
       supervivencia: { abierto: survivalUnlocked(this.meta), entradas: this.meta.supervivencia.entradas, max: ENTRADAS_MAX, espera: msHastaEntrada(this.meta.supervivencia, Date.now()), record: this.meta.supervivencia.record },
       oleada: run?.oleadas && this.fase === 'jugando' ? (() => {
         const o = run.oleadas!;

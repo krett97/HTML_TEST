@@ -47,6 +47,8 @@ export interface Enemy {
   cargando?: boolean;
   /** Ya perdió la armadura (guerreros de hierro, Dragón de acero). */
   sinArmadura?: boolean;
+  /** Maldito por la bruja hasta este momento de la partida (le entra más daño de todo). */
+  maldito?: number;
   /** Salió de otro al partirse (piedritas del gólem): no cuenta para el nivel. */
   cria?: boolean;
   /** Jefe de más en una oleada de Supervivencia: pasea y le tira a la muralla, sin brincos ni invocaciones. */
@@ -75,10 +77,16 @@ const PROJECTILE_SPEED: Record<ProjectileKind, number> = { piedra: 170, lanza: 2
 
 export type Forma = { tipo: 'circulo'; r: number } | { tipo: 'rect'; w: number; h: number };
 
-export type Source = 'jugador' | 'mago' | 'fuego' | 'arquero' | 'caballero' | 'sacerdote';
+export type Source = 'jugador' | 'mago' | 'fuego' | 'arquero' | 'caballero' | 'sacerdote' | 'bruja';
 
-/** Qué tipo de daño hace cada quien: tus flechas, los arqueros y el caballero, físico; el mago y su fuego, fuego; el sacerdote, luz. */
-export const DAMAGE_TYPE_OF: Record<Source, DamageType> = { jugador: 'fisico', arquero: 'fisico', mago: 'fuego', fuego: 'fuego', caballero: 'fisico', sacerdote: 'luz' };
+/**
+ * Qué tipo de daño hace cada quien: tus flechas (las de siempre; desde el nivel 45 eliges su elemento), los
+ * arqueros y el caballero, físico; el mago y su fuego, fuego; el sacerdote, luz; la bruja, muerte.
+ */
+export const DAMAGE_TYPE_OF: Record<Source, DamageType> = { jugador: 'fisico', arquero: 'fisico', mago: 'fuego', fuego: 'fuego', caballero: 'fisico', sacerdote: 'luz', bruja: 'muerte' };
+
+/** Hasta dónde llega un rayo de la bruja (atraviesa el campo). */
+const RAYO_LARGO = 900;
 
 /** Lo que tarda en caer la columna de luz del sacerdote. */
 export const LUZ_DEMORA = 0.35;
@@ -154,6 +162,8 @@ export type RunEvent =
   | { type: 'knightUp'; x: number; y: number }
   /** El sacerdote curó al caballero o a la muralla. */
   | { type: 'heal'; a: 'caballero' | 'muro'; x: number; y: number; n: number }
+  /** Un rayo de oscuridad de la bruja (de x0, y0 hacia x1, y1, de `ancho`) que le pegó a `n` enemigos. */
+  | { type: 'darkRay'; x0: number; y0: number; x1: number; y1: number; ancho: number; n: number }
   /** Se acabó: `gano` si se reventaron todos los slimes del nivel antes de que se acabara el tiempo. */
   | { type: 'end'; gano: boolean };
 
@@ -205,6 +215,8 @@ export interface Run {
   caballero: { x: number; y: number; vida: number; max: number; golpe: number; caido: number } | null;
   /** El sacerdote (si lo tienes): lo que le falta para la siguiente columna de luz y para la siguiente cura. */
   sacerdote: { disparo: number; cura: number } | null;
+  /** La bruja (si la tienes): lo que le falta para el siguiente rayo. */
+  bruja: { rayo: number } | null;
 }
 
 export interface Oleadas {
@@ -276,6 +288,7 @@ export function createRun(base: Stats, h: number, nivel = 1, seed = Date.now(), 
     oleadas: null,
     caballero: stats.caballero.activo ? nuevoCaballero(stats, alto) : null,
     sacerdote: stats.sacerdote.activo ? { disparo: stats.sacerdote.intervalo * 0.6, cura: stats.sacerdote.cadaCura } : null,
+    bruja: stats.bruja.activo ? { rayo: stats.bruja.intervalo * 0.4 } : null,
   };
 }
 
@@ -407,6 +420,7 @@ export function updateGuardRun(run: Run, base: Stats, oroPorBaja: number): void 
     }
   }
   if (run.stats.sacerdote.activo && !run.sacerdote) run.sacerdote = { disparo: run.stats.sacerdote.intervalo * 0.6, cura: run.stats.sacerdote.cadaCura };
+  if (run.stats.bruja.activo && !run.bruja) run.bruja = { rayo: run.stats.bruja.intervalo * 0.4 };
 }
 
 /** Los primeros enemigos de la guardia. */
@@ -436,6 +450,65 @@ export function archerSpots(run: Run): { x: number; y: number }[] {
 /** Dónde está parado el sacerdote: en el último hueco de la muralla, a la derecha. */
 export function priestSpot(run: Run): { x: number; y: number } {
   return { x: 60 + 40 * 7, y: run.h - ALLY_ROW + 12 };
+}
+
+/** Dónde flota la bruja: delante de la muralla, a la izquierda (el caballero sale al centro). */
+export function witchSpot(run: Run): { x: number; y: number } {
+  return { x: 84, y: run.h - ALLY_ROW - MARGIN + 2 };
+}
+
+/** Los enemigos que toca un rayo que sale de (x0, y0) hacia (tx, ty), de `ancho`. */
+function enRayo(run: Run, x0: number, y0: number, tx: number, ty: number, ancho: number): Enemy[] {
+  const d = Math.hypot(tx - x0, ty - y0) || 1;
+  const ux = (tx - x0) / d;
+  const uy = (ty - y0) / d;
+  return run.enemies.filter((e) => {
+    if (e.vida <= 0 || hidden(run, e)) return false;
+    const px = e.x - x0;
+    const py = e.y - y0;
+    const a = px * ux + py * uy;
+    return a >= 0 && a <= RAYO_LARGO && Math.abs(px * uy - py * ux) <= ancho / 2 + ENEMIES[e.kind].radio;
+  });
+}
+
+/**
+ * La bruja: cada tanto lanza sus rayos de oscuridad hacia donde atraviesen a más enemigos (prueba unos
+ * cuantos blancos al azar y se queda con el mejor). Daño de muerte a todos los que toca, y con Maldición
+ * les entra más daño de todo un rato.
+ */
+function stepWitch(run: Run, step: number, events: RunEvent[]): void {
+  const b = run.bruja;
+  const s = run.stats.bruja;
+  if (!b || !s.activo) return;
+  b.rayo -= step;
+  if (b.rayo > 0) return;
+  const vivos = run.enemies.filter((e) => e.vida > 0 && !hidden(run, e));
+  if (!vivos.length) {
+    b.rayo = 0.3;
+    return;
+  }
+  b.rayo += s.intervalo;
+  const o = witchSpot(run);
+  const y0 = o.y - 26;
+  const usados = new Set<number>();
+  for (let r = 0; r < s.rayos; r++) {
+    let mejor: { e: Enemy; n: number } | null = null;
+    for (let i = 0; i < 8; i++) {
+      const e = vivos[Math.floor(run.rng() * vivos.length)]!;
+      if (usados.has(e.id)) continue;
+      const n = enRayo(run, o.x, y0, e.x, e.y, s.ancho).length;
+      if (!mejor || n > mejor.n) mejor = { e, n };
+    }
+    if (!mejor) break;
+    usados.add(mejor.e.id);
+    const tocados = enRayo(run, o.x, y0, mejor.e.x, mejor.e.y, s.ancho);
+    const d = Math.hypot(mejor.e.x - o.x, mejor.e.y - y0) || 1;
+    events.push({ type: 'darkRay', x0: o.x, y0, x1: o.x + ((mejor.e.x - o.x) / d) * RAYO_LARGO, y1: y0 + ((mejor.e.y - y0) / d) * RAYO_LARGO, ancho: s.ancho, n: tocados.length });
+    for (const e of tocados) {
+      damage(run, e, s.danio, 'bruja', events);
+      if (s.maldicion > 0) e.maldito = run.t + s.dura;
+    }
+  }
 }
 
 /** Adónde vuelve el caballero (y de dónde sale): delante de la muralla, al centro. */
@@ -688,7 +761,10 @@ export function inside(e: Enemy, x: number, y: number, forma: Forma): boolean {
 }
 
 function damage(run: Run, e: Enemy, base: number, fuente: Source, events: RunEvent[]): void {
-  const tipo = DAMAGE_TYPE_OF[fuente];
+  // Tus flechas son del elemento que elegiste; los demás, del suyo.
+  const tipo = fuente === 'jugador' ? run.stats.elemento : DAMAGE_TYPE_OF[fuente];
+  // Maldito por la bruja: le entra más daño de todo.
+  const maldito = (e.maldito ?? 0) > run.t ? 1 + run.stats.bruja.maldicion : 1;
   // El jefe aturdido (recién caído de un brinco) recibe doble.
   const aturdido = run.jefe?.id === e.id && run.jefe.aturdido > 0 ? JEFE.aturdidoMult : 1;
   // Tus flechas pueden dar golpe crítico (Reliquia).
@@ -696,7 +772,7 @@ function damage(run: Run, e: Enemy, base: number, fuente: Source, events: RunEve
   const def = ENEMIES[e.kind];
   // Con armadura (guerreros de hierro, escamas del Dragón) recibe el 60 % hasta perder media vida.
   const armadura = def.armadura && !e.sinArmadura ? ARMADURA : 1;
-  const danio = base * damageMultiplier(e.kind, tipo) * aturdido * armadura * (critico ? run.stats.critico.mult : 1);
+  const danio = base * damageMultiplier(e.kind, tipo) * aturdido * armadura * maldito * (critico ? run.stats.critico.mult : 1);
   e.vida -= danio;
   if (def.armadura && !e.sinArmadura && e.vida > 0 && e.vida <= e.vidaMax / 2) {
     e.sinArmadura = true;
@@ -1092,6 +1168,7 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
   });
   stepPriest(run, step, events);
   stepKnight(run, step, events);
+  stepWitch(run, step, events);
 
   const porId = new Map(run.enemies.map((e) => [e.id, e]));
   for (const a of run.arrows) {

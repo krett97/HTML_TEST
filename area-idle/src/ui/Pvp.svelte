@@ -100,6 +100,7 @@
           {#if poder.arqueros > 0}<span title={$t('secciones.arqueros')}><Icon name="arquero" size={16} />{formatNum(Math.round(poder.arqueros))}</span>{/if}
           {#if poder.caballero > 0}<span title={$t('secciones.caballero')}><Icon name="caballero" size={16} />{formatNum(Math.round(poder.caballero))}</span>{/if}
           {#if poder.sacerdote > 0}<span title={$t('secciones.sacerdote')}><Icon name="sacerdote" size={16} />{formatNum(Math.round(poder.sacerdote))}</span>{/if}
+          {#if poder.bruja > 0}<span title={$t('secciones.bruja')}><Icon name="bruja" size={16} />{formatNum(Math.round(poder.bruja))}</span>{/if}
         </span>
       </div>
     </div>

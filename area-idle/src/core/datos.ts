@@ -4,7 +4,7 @@
 /** Tipos de daño. Por ahora hay físico (tus flechas y los arqueros) y fuego (el mago); los demás llegan después. */
 export type DamageType = 'fisico' | 'fuego' | 'hielo' | 'energia' | 'muerte' | 'luz';
 export const DAMAGE_TYPES: DamageType[] = ['fisico', 'fuego', 'hielo', 'energia', 'muerte', 'luz'];
-export const DAMAGE_TYPES_EN_JUEGO: DamageType[] = ['fisico', 'fuego', 'luz'];
+export const DAMAGE_TYPES_EN_JUEGO: DamageType[] = ['fisico', 'fuego', 'luz', 'muerte'];
 /** Cuánto reciben los enemigos del tipo al que son débiles y del que son fuertes. */
 export const EFFECTIVENESS = { debil: 1.5, fuerte: 0.5 } as const;
 
@@ -88,7 +88,7 @@ export const ENEMIES: Record<EnemyKind, EnemyDef> = {
   // Lobo negro: sale en manada de 3 y es más rápido que el gris.
   loboNegro: { id: 'loboNegro', vida: 8, oro: 1.5, radio: 10, velocidad: 30, ataque: 0, manada: 3, giro: [0.3, 0.8], debil: ['fisico'], fuerte: ['muerte'] },
   // Bandido con dagas (el más fuerte de la zona): las lanza a la muralla muy seguido y se aparta de tu círculo.
-  bandido: { id: 'bandido', vida: 10, oro: 9, radio: 10, velocidad: 10, ataque: 3, tiro: 1.8, proyectil: 'daga', esquiva: 26, debil: ['fisico'], fuerte: [] },
+  bandido: { id: 'bandido', vida: 10, oro: 9, radio: 10, velocidad: 10, ataque: 3, tiro: 1.8, proyectil: 'daga', esquiva: 26, debil: ['fisico', 'muerte'], fuerte: [] },
   // El jefe del nivel 30: esqueleto con sombrero de mago y bastón de fuego. Invoca esqueletos, se teletransporta
   // entre llamas, lanza bolas de fuego y, al caer, se rearma una vez. El fuego casi no le hace.
   esqueletoMago: { id: 'esqueletoMago', vida: 0, oro: 0, radio: 30, velocidad: 4, ataque: 0, rearma: 0.3, debil: ['luz'], fuerte: ['fuego'], jefe: true },
@@ -96,9 +96,9 @@ export const ENEMIES: Record<EnemyKind, EnemyDef> = {
   // Escorpión gigante: se entierra en la arena (no se le puede pegar) y sale en otro lado; el caparazón aguanta flechas.
   escorpion: { id: 'escorpion', vida: 9, oro: 3, radio: 12, velocidad: 12, ataque: 0, entierra: { cada: 4, dura: 1.6 }, giro: [1, 2.5], debil: ['hielo'], fuerte: ['fisico'] },
   // Bandido del desierto: lanza cimitarras a la muralla y esquiva tu círculo; acostumbrado al calor, aguanta el fuego.
-  bandidoDesierto: { id: 'bandidoDesierto', vida: 8, oro: 3, radio: 10, velocidad: 12, ataque: 3, tiro: 2.2, proyectil: 'cimitarra', esquiva: 30, debil: ['hielo'], fuerte: ['fuego'] },
+  bandidoDesierto: { id: 'bandidoDesierto', vida: 8, oro: 3, radio: 10, velocidad: 12, ataque: 3, tiro: 2.2, proyectil: 'cimitarra', esquiva: 30, debil: ['hielo', 'muerte'], fuerte: ['fuego'] },
   // Minotauro guerrero: marcha y, pasando la mitad del campo, embiste la muralla y la golpea fuerte con su hacha.
-  minotauro: { id: 'minotauro', vida: 26, oro: 12, radio: 14, velocidad: 7, ataque: 6, tiro: 3, marcha: true, carga: 3, debil: ['fuego'], fuerte: [] },
+  minotauro: { id: 'minotauro', vida: 26, oro: 12, radio: 14, velocidad: 7, ataque: 6, tiro: 3, marcha: true, carga: 3, debil: ['fuego', 'muerte'], fuerte: [] },
   // Cíclope guerrero (el más fuerte de la zona): mucha vida y le avienta rocas enormes a la muralla.
   ciclope: { id: 'ciclope', vida: 30, oro: 15, radio: 15, velocidad: 5, ataque: 7, tiro: 6, proyectil: 'roca', debil: ['luz'], fuerte: ['fuego'] },
   // El jefe del nivel 40: el Líder de los bandidos. Llama a sus bandidos, embiste, lanza un abanico de dagas y
@@ -161,6 +161,12 @@ export const BASE = {
    * su vida) y a la muralla (`curaMuro` de su vida).
    */
   sacerdote: { danio: 4, intervalo: 2.5, radio: 18, cadaCura: 3, curaCaballero: 0.08, curaMuro: 0.01 },
+  /**
+   * La bruja (desde el nivel 41), flotando sobre la muralla: cada `intervalo` s lanza `rayos` rayos de
+   * oscuridad (daño de muerte, `danio` veces tu daño) que atraviesan a todos en su línea (de `ancho`).
+   * Con Maldición, a quien toca el rayo le entra más daño de todo (`maldicion` por nivel) por `dura` s.
+   */
+  bruja: { danio: 5, intervalo: 2.2, rayos: 1, ancho: 10, maldicion: 0.1, dura: 3 },
 } as const;
 
 /** Qué tanto le pegan al caballero los que lo tocan: su ataque (al menos 1; los jefes, su golpe × `jefe`) × esto, por segundo. */
@@ -386,9 +392,12 @@ export const SUPERVIVENCIA_DESDE = 26;
 /** El caballero y el sacerdote: desde qué nivel se pueden comprar (y se ve su pestaña en el árbol). */
 export const CABALLERO_DESDE = 21;
 export const SACERDOTE_DESDE = 31;
+export const BRUJA_DESDE = 41;
+/** Desde qué nivel puedes cambiar el elemento de tu círculo (cada cambio, viendo un anuncio). */
+export const ELEMENTO_DESDE = 45;
 
-export type Seccion = 'jugador' | 'mago' | 'arqueros' | 'caballero' | 'sacerdote' | 'reliquias';
-export const SECCIONES: Seccion[] = ['jugador', 'mago', 'arqueros', 'caballero', 'sacerdote', 'reliquias'];
+export type Seccion = 'jugador' | 'mago' | 'arqueros' | 'caballero' | 'sacerdote' | 'bruja' | 'reliquias';
+export const SECCIONES: Seccion[] = ['jugador', 'mago', 'arqueros', 'caballero', 'sacerdote', 'bruja', 'reliquias'];
 
 export type TalentId =
   // Jugador
@@ -431,6 +440,13 @@ export type TalentId =
   | 'sanar'
   | 'halo'
   | 'bendicion'
+  // Bruja
+  | 'bruja'
+  | 'rayoOscuro'
+  | 'conjuro'
+  | 'rayos'
+  | 'maldicion'
+  | 'sombra'
   // Reliquias (se pagan con gemas moradas)
   | 'poder'
   | 'critico'
@@ -504,6 +520,14 @@ export const TALENTS: TalentDef[] = [
   { id: 'sanar', seccion: 'sacerdote', icono: 'sanar', max: 5, costo: { base: 30_000, crece: 1.8 }, requiere: { id: 'sacerdote', nivel: 1 }, pos: [1, 1] },
   { id: 'halo', seccion: 'sacerdote', icono: 'halo', max: 5, costo: { base: 40_000, crece: 1.9 }, requiere: { id: 'plegaria', nivel: 2 }, pos: [-1, 2] },
   { id: 'bendicion', seccion: 'sacerdote', icono: 'bendicion', max: 5, costo: { base: 60_000, crece: 1.9 }, requiere: { id: 'sanar', nivel: 2 }, pos: [1, 2] },
+
+  // ---- Bruja: rayos de oscuridad que atraviesan (desde el nivel 41) ----
+  { id: 'bruja', seccion: 'bruja', icono: 'bruja', max: 1, costo: { base: 1_500_000, crece: 1 }, requiere: null, raiz: true, nivelMin: BRUJA_DESDE, pos: [0, 0] },
+  { id: 'conjuro', seccion: 'bruja', icono: 'conjuro', max: 5, costo: { base: 300_000, crece: 1.8 }, requiere: { id: 'bruja', nivel: 1 }, pos: [-1, 1] },
+  { id: 'rayoOscuro', seccion: 'bruja', icono: 'rayoOscuro', max: 10, costo: { base: 400_000, crece: 1.6 }, requiere: { id: 'bruja', nivel: 1 }, pos: [0, 1] },
+  { id: 'sombra', seccion: 'bruja', icono: 'sombra', max: 5, costo: { base: 300_000, crece: 1.8 }, requiere: { id: 'bruja', nivel: 1 }, pos: [1, 1] },
+  { id: 'rayos', seccion: 'bruja', icono: 'rayos', max: 2, costo: { base: 3_000_000, crece: 4 }, requiere: { id: 'rayoOscuro', nivel: 2 }, pos: [0, 2] },
+  { id: 'maldicion', seccion: 'bruja', icono: 'maldicion', max: 5, costo: { base: 800_000, crece: 2.2 }, requiere: { id: 'conjuro', nivel: 2 }, pos: [-1, 2] },
 
   // ---- Reliquias: mejoras que el oro no da; se pagan con gemas moradas (misiones) ----
   { id: 'poder', seccion: 'reliquias', icono: 'poder', max: 10, costo: { base: 5, crece: 1.35 }, moneda: 'gemas', requiere: null, raiz: true, nivelMin: MISIONES_DESDE, pos: [0, 0] },

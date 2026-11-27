@@ -33,6 +33,9 @@
   {#if p.sacerdote}
     <img class="unidad sacerdote" src={artUrl('sacerdote')} alt="" style:left="{p.sacerdote.x}px" style:top="{p.sacerdote.y}px" style:height="{p.sacerdote.h}px" />
   {/if}
+  {#if p.bruja}
+    <img class="unidad bruja" src={artUrl('bruja')} alt="" style:left="{p.bruja.x}px" style:top="{p.bruja.y}px" style:height="{p.bruja.h}px" />
+  {/if}
   {#if p.caballero}
     <img class="unidad caballero" class:pelea={avanza && !cae && !festeja} src={artUrl('caballero')} alt="" style:left="{p.caballero.x}px" style:top="{yCaballero}px" style:height="{p.caballero.h}px" data-testid={testid ? `${testid}-caballero` : undefined} />
   {/if}
@@ -74,6 +77,15 @@
   }
   .caballero {
     transition: top 0.9s ease-in-out;
+  }
+  /* La bruja flota. */
+  .bruja {
+    animation: flota 1.6s ease-in-out infinite alternate;
+  }
+  @keyframes flota {
+    to {
+      translate: -50% -108%;
+    }
   }
   /* Los dos caballeros se dan de espadazos en el centro. */
   .caballero.pelea {

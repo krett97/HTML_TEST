@@ -26,7 +26,9 @@
     "ganoJefe": "¡Venciste al {nombre}!",
     "leQuedo": "Le quedó {pct}%",
     "nuevoCaballero": "¡Nuevo! El Caballero: pelea cuerpo a cuerpo y frena a los enemigos (en el árbol).",
-    "nuevoSacerdote": "¡Nuevo! El Sacerdote: luz sagrada y cura al caballero y a la muralla (en el árbol)."
+    "nuevoSacerdote": "¡Nuevo! El Sacerdote: luz sagrada y cura al caballero y a la muralla (en el árbol).",
+    "nuevoBruja": "¡Nuevo! La Bruja: rayos de oscuridad que atraviesan a todos (en el árbol).",
+    "nuevoElemento": "¡Nuevo! Ya puedes cambiar el elemento de tu círculo (en tu árbol, con un anuncio)."
   },
   "arbol": {
     "jugar": "Jugar nivel",
@@ -199,6 +201,30 @@
     "mando": {
       "nombre": "Mando",
       "efecto": "Todo el daño (tuyo y de tus aliados) {a} → {b}"
+    },
+    "bruja": {
+      "nombre": "Bruja",
+      "efecto": "Lanza rayos de oscuridad que atraviesan a todos en su línea"
+    },
+    "rayoOscuro": {
+      "nombre": "Rayo oscuro",
+      "efecto": "Daño de muerte {a} → {b}"
+    },
+    "conjuro": {
+      "nombre": "Conjuro rápido",
+      "efecto": "Un rayo cada {a} s → {b} s"
+    },
+    "rayos": {
+      "nombre": "Rayos gemelos",
+      "efecto": "Rayos a la vez {a} → {b}"
+    },
+    "maldicion": {
+      "nombre": "Maldición",
+      "efecto": "Los que toca reciben más daño de todo: {a} → {b}"
+    },
+    "sombra": {
+      "nombre": "Sombra ancha",
+      "efecto": "Ancho del rayo {a} → {b}"
     }
   },
   "ajustes": {
@@ -230,7 +256,8 @@
     "arqueros": "Arqueros",
     "reliquias": "Reliquias",
     "caballero": "Caballero",
-    "sacerdote": "Sacerdote"
+    "sacerdote": "Sacerdote",
+    "bruja": "Bruja"
   },
   "glosario": {
     "titulo": "Glosario",
@@ -247,7 +274,10 @@
     "quien": {
       "jugador": "Tus flechas",
       "arqueros": "Arqueros",
-      "mago": "Mago"
+      "mago": "Mago",
+      "caballero": "Caballero",
+      "sacerdote": "Sacerdote",
+      "bruja": "Bruja"
     },
     "ataca": "{n} a la muralla",
     "jefes": "Jefes",
@@ -589,5 +619,15 @@
     "quedan": "{n} hoy",
     "gano": "+{n} de oro",
     "titulo": "Ver un anuncio para ganar oro"
+  },
+  "elemento": {
+    "titulo": "Elemento de tu círculo",
+    "explica": "Tus flechas pegan con este elemento. A los débiles (verde) les duele ×1.5; a los fuertes (rojo), ×0.5. Cada cambio: ver un anuncio.",
+    "actual": "Ahora",
+    "cambiar": "Cambiar",
+    "debiles": "les duele más",
+    "fuertes": "lo aguantan",
+    "nadie": "Nadie de los que has visto es débil o fuerte a este",
+    "chip": "cambiar"
   }
 }

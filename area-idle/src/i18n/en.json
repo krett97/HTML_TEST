@@ -26,7 +26,9 @@
     "ganoJefe": "You beat the {nombre}!",
     "leQuedo": "{pct}% left",
     "nuevoCaballero": "New! The Knight: fights hand to hand and holds enemies back (in the tree).",
-    "nuevoSacerdote": "New! The Priest: holy light; heals the knight and the wall (in the tree)."
+    "nuevoSacerdote": "New! The Priest: holy light; heals the knight and the wall (in the tree).",
+    "nuevoBruja": "New! The Witch: dark rays that pierce through everyone (in the tree).",
+    "nuevoElemento": "New! You can now change your circle's element (in your tree, with an ad)."
   },
   "arbol": {
     "jugar": "Play level",
@@ -199,6 +201,30 @@
     "mando": {
       "nombre": "Command",
       "efecto": "All damage (yours and your allies') {a} → {b}"
+    },
+    "bruja": {
+      "nombre": "Witch",
+      "efecto": "Casts dark rays that pierce everyone in their line"
+    },
+    "rayoOscuro": {
+      "nombre": "Dark ray",
+      "efecto": "Death damage {a} → {b}"
+    },
+    "conjuro": {
+      "nombre": "Quick spell",
+      "efecto": "A ray every {a} s → {b} s"
+    },
+    "rayos": {
+      "nombre": "Twin rays",
+      "efecto": "Rays at once {a} → {b}"
+    },
+    "maldicion": {
+      "nombre": "Curse",
+      "efecto": "Those hit take more damage from everything: {a} → {b}"
+    },
+    "sombra": {
+      "nombre": "Wide shadow",
+      "efecto": "Ray width {a} → {b}"
     }
   },
   "ajustes": {
@@ -230,7 +256,8 @@
     "arqueros": "Archers",
     "reliquias": "Relics",
     "caballero": "Knight",
-    "sacerdote": "Priest"
+    "sacerdote": "Priest",
+    "bruja": "Witch"
   },
   "glosario": {
     "titulo": "Glossary",
@@ -247,7 +274,10 @@
     "quien": {
       "jugador": "Your arrows",
       "arqueros": "Archers",
-      "mago": "Wizard"
+      "mago": "Wizard",
+      "caballero": "Knight",
+      "sacerdote": "Priest",
+      "bruja": "Witch"
     },
     "ataca": "{n} to the wall",
     "jefes": "Bosses",
@@ -589,5 +619,15 @@
     "quedan": "{n} today",
     "gano": "+{n} gold",
     "titulo": "Watch an ad to earn gold"
+  },
+  "elemento": {
+    "titulo": "Your circle's element",
+    "explica": "Your arrows hit with this element. Those weak to it (green) take ×1.5; those strong (red), ×0.5. Each change: watch an ad.",
+    "actual": "Current",
+    "cambiar": "Change",
+    "debiles": "take more",
+    "fuertes": "resist it",
+    "nadie": "None of the enemies you've seen are weak or strong to this",
+    "chip": "change"
   }
 }

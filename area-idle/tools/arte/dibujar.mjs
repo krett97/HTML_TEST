@@ -414,6 +414,38 @@ function sacerdote() {
   return svg(100, 130, s);
 }
 scene('sacerdote', sacerdote());
+
+// ---- La bruja (100 × 130): pelo largo morado oscuro, sombrero de pico con cinta verde y luna, vestido
+// morado con capa, y una varita con un orbe oscuro. Flota sobre una neblina de sombra. ----
+function bruja() {
+  let s = '';
+  // Neblina oscura bajo ella (flota)
+  s += `<ellipse cx="50" cy="122" rx="34" ry="7" fill="#3a1f5c" opacity=".45"/><ellipse cx="50" cy="122" rx="20" ry="4" fill="#5b2f8f" opacity=".5"/>`;
+  // Pelo largo y ondulado por detrás
+  s += o('M30 48 C20 62 18 80 22 96 C26 92 28 98 32 95 C32 89 34 85 37 82 L63 82 C66 85 68 89 68 95 C72 98 74 92 78 96 C82 80 80 62 70 48 Z', '#6b3fa0', 5) + line('M26 66 C24 74 25 82 27 88 M74 66 C76 74 75 82 73 88', '#8f5cc9', 2.5);
+  // Vestido con vuelo, corsé oscuro y bastilla verde
+  s += o('M38 64 C34 82 26 100 18 116 H82 C74 100 66 82 62 64 Z', '#7a3fb8', 5) + f('M50 66 V116 H64 C60 98 56 82 54 66 Z', '#6a33a3');
+  s += line('M21 110 H79', '#3ed4a0', 3.5) + o('M40 70 H60 L58 86 H42 Z', '#2e1a46', 3) + o('M50 74 l3 3 l-3 3 l-3 -3 z', '#3ed4a0', 2);
+  // Cuello de capa con picos
+  s += o('M34 66 L40 60 L50 66 L60 60 L66 66 L58 70 H42 Z', '#2e1a46', 3);
+  // Brazo con la varita
+  s += o('M62 72 C70 70 78 64 84 58 l5 7 C82 74 72 80 64 82 Z', '#7a3fb8', 5) + circ(87, 61, 5.5, P.crema, 4);
+  s += line('M86 60 L94 30', K, 7) + line('M86 60 L94 30', '#2e1a46', 3.5);
+  s += circ(95, 26, 8, '#5b2f8f', 4) + circ(93, 24, 3, '#c9a9f5', 0) + circ(86, 18, 1.8, '#c9a9f5', 0) + circ(99, 15, 1.5, '#3ed4a0', 0);
+  // Cara
+  s += circ(50, 52, 16, P.crema, 5);
+  // Fleco y mechones
+  s += o('M34 50 C36 38 44 34 52 34 C60 34 66 40 66 50 C60 44 54 42 50 44 C46 42 40 44 34 50 Z', '#4a2a6e', 4);
+  // Ojos verdes con pestañas, sonrisa segura
+  s += ell(44, 54, 3.4, 4, P.blanco, 2.5) + ell(57, 54, 3.4, 4, P.blanco, 2.5) + circ(44.5, 54.5, 2.2, '#2fa67a', 0) + circ(57.5, 54.5, 2.2, '#2fa67a', 0) + circ(45, 53.6, 0.8, P.blanco, 0) + circ(58, 53.6, 0.8, P.blanco, 0);
+  s += line('M40 50 l-2 -2 M61 50 l2 -2', K, 2) + line('M46 61 q4 3 8 0', '#b8325a', 2.6) + circ(40, 59, 2.4, P.rosa, 0) + circ(60, 59, 2.4, P.rosa, 0);
+  // Sombrero de pico (ala ancha, pico doblado) con cinta y luna
+  s += o('M18 40 C30 34 70 34 82 40 C76 46 24 46 18 40 Z', '#2e1a46', 5);
+  s += o('M32 38 C36 26 42 12 58 4 C62 2 68 6 64 10 C56 16 60 26 66 38 Z', '#5b2f8f', 5);
+  s += rect(32, 32, 34, 6, 2, '#3ed4a0', 3) + o('M58 30 a5 5 0 1 0 0 -0.1 a3.5 3.5 0 1 1 0 0.1 z', P.amarillo, 1.5);
+  return svg(100, 130, s);
+}
+scene('bruja', bruja());
 // La flecha que cae del cielo (vertical, punta abajo) y la de los arqueros (horizontal, punta a la derecha).
 scene('flecha', svg(16, 72, line('M8 4 V58', K, 7) + line('M8 4 V58', P.madera, 3.5) + o('M2 54 L8 70 L14 54 Z', P.grisS, 3.5) + o('M8 4 l-6 -2 v12 l6 4 z M8 4 l6 -2 v12 l-6 4 z', P.blanco, 3)));
 
@@ -647,6 +679,15 @@ icon('tajo', I(espadaI(20, 36, 30) + line('M6 24 C10 16 16 12 22 10 M4 36 C8 28 
 icon('coraza', I(o('M14 12 C22 6 42 6 50 12 L56 24 L48 28 L46 56 H18 L16 28 L8 24 Z', '#c9d0dc', 5) + line('M32 10 V54 M18 32 C26 36 38 36 46 32', '#9aa3b4', 3) + brillo(22, 18, 5, 3, 0.6) + o('M28 22 h8 v6 h6 v8 h-6 v6 h-8 v-6 h-6 v-8 h6 z', P.rojo, 2.5)));
 icon('barrido', I(line('M8 44 C16 14 48 14 56 44', P.azulS, 7) + line('M8 44 C16 14 48 14 56 44', P.blanco, 3) + espadaI(-50, 30, 40) + circ(10, 54, 5, P.limo, 3) + circ(54, 54, 5, P.limo, 3)));
 icon('regreso', I(o('M32 6 A26 26 0 1 1 8 40', 'none', 6) + o('M2 34 L10 46 L18 34 Z', P.pasto, 3) + line('M32 6 A26 26 0 1 1 8 40', P.pasto, 4) + yelmo(15, 16, 0.55)));
+// Bruja: su sombrero, rayos de oscuridad, conjuro, maldición y sombra.
+const rayoN = (x, y, k = 1) => g(`translate(${x} ${y}) scale(${k})`, o('M36 2 L14 34 H28 L20 62 L50 24 H34 L44 2 Z', '#5b2f8f', 4) + f('M36 6 L20 30 H30 L26 48 L42 26 H32 Z', '#c9a9f5', 'opacity=".7"'));
+icon('bruja', I(o('M4 50 C18 42 46 42 60 50 C52 58 12 58 4 50 Z', '#2e1a46', 5) + o('M16 48 C22 32 28 14 46 4 C52 2 58 8 52 12 C44 18 46 32 50 48 Z', '#5b2f8f', 5) + rect(16, 40, 34, 7, 2, '#3ed4a0', 3) + circ(42, 30, 3, P.amarillo, 0)));
+icon('rayoOscuro', I(rayoN(0, 0)));
+icon('rayos', I(rayoN(-8, 4, 0.85) + rayoN(16, -2, 0.85)));
+icon('conjuro', I(o('M8 16 C18 12 26 14 32 20 C38 14 46 12 56 16 V52 C46 48 38 50 32 56 C26 50 18 48 8 52 Z', '#4a2a6e', 5) + line('M32 20 V56', '#2e1a46', 3) + o('M20 28 l2 4 l4 1 l-3 3 l1 4 l-4 -2 l-4 2 l1 -4 l-3 -3 l4 -1 z', '#3ed4a0', 2) + o('M44 28 a6 6 0 1 0 0 12 a4.5 4.5 0 1 1 0 -12 z', P.amarillo, 2)));
+icon('maldicion', I(o('M32 6 C46 6 56 16 56 30 C56 40 50 46 44 48 V56 H20 V48 C14 46 8 40 8 30 C8 16 18 6 32 6 Z', '#c9a9f5', 5) + circ(22, 30, 6, '#2e1a46', 0) + circ(42, 30, 6, '#2e1a46', 0) + circ(22, 30, 2, '#3ed4a0', 0) + circ(42, 30, 2, '#3ed4a0', 0) + o('M32 36 l-3 6 h6 z', '#2e1a46', 2) + line('M24 52 V56 M32 52 V56 M40 52 V56', '#2e1a46', 3)));
+icon('sombra', I(o('M4 22 L60 10 L60 30 L4 42 Z', '#5b2f8f', 4) + f('M8 28 L56 18 L56 22 L8 34 Z', '#c9a9f5', 'opacity=".75"') + line('M10 52 H54', '#5b2f8f', 4) + o('M4 52 l8 -5 v10 z M60 52 l-8 -5 v10 z', '#5b2f8f', 2)));
+
 // Mando: el estandarte del líder (bandera azul con corona) y un brillo de "+".
 icon('mando', I(line('M14 4 V62', P.maderaS, 6) + circ(14, 4, 4, P.oro, 3) + o('M16 8 H54 L46 22 L54 36 H16 Z', '#2f56a0', 5) + o('M24 28 L26 16 L31 22 L35 13 L39 22 L44 16 L46 28 Z', P.oro, 2.5) + o('M44 44 h6 v6 h6 v6 h-6 v6 h-6 v-6 h-6 v-6 h6 z', P.rojo, 2.5)));
 icon('sacerdote', I(sol(32, 34, 13) + `<ellipse cx="32" cy="9" rx="16" ry="5" fill="none" stroke="${K}" stroke-width="6"/><ellipse cx="32" cy="9" rx="16" ry="5" fill="none" stroke="${P.oro}" stroke-width="3"/>`));

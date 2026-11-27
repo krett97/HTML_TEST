@@ -2,12 +2,13 @@
   // El árbol de talentos (se abre con "Mejorar" encima del campo de la pantalla principal), en secciones
   // (pestañas arriba): Jugador, Mago, Arqueros y Reliquias. Cada nodo muestra su ícono, su nivel y su
   // precio; al tocarlo se abre abajo el detalle con el botón de compra.
-  import { CABALLERO_DESDE, SACERDOTE_DESDE, SECCIONES, TALENT_BY_ID, TALENTS, type Seccion, type TalentDef, type TalentId } from '../core/datos';
+  import { BRUJA_DESDE, CABALLERO_DESDE, ELEMENTO_DESDE, SACERDOTE_DESDE, SECCIONES, TALENT_BY_ID, TALENTS, type Seccion, type TalentDef, type TalentId } from '../core/datos';
   import { formatNum } from '../core/format';
   import { costOf, levelOf, talentState, talentVisible } from '../core/meta';
   import { t } from '../i18n';
   import { DAMAGE_TYPE_OF } from '../core/run';
   import { effectValues } from './efectos';
+  import Elemento from './Elemento.svelte';
   import Icon from './Icon.svelte';
 
   import { useJuego } from './context';
@@ -15,15 +16,18 @@
   let { cerrar }: { cerrar: () => void } = $props();
   const juego = useJuego();
   const view = juego.view;
-  const ICONO: Record<Seccion, string> = { jugador: 'lluvia', mago: 'mago', arqueros: 'arquero', caballero: 'caballero', sacerdote: 'sacerdote', reliquias: 'gema' };
+  const ICONO: Record<Seccion, string> = { jugador: 'lluvia', mago: 'mago', arqueros: 'arquero', caballero: 'caballero', sacerdote: 'sacerdote', bruja: 'bruja', reliquias: 'gema' };
 
   let seccion = $state<Seccion>('jugador');
   let elegido = $state<TalentId | null>(null);
   /** El tipo de daño de cada sección (marca en la esquina de su pestaña). */
-  const TIPO: Partial<Record<Seccion, string>> = { jugador: DAMAGE_TYPE_OF.jugador, mago: DAMAGE_TYPE_OF.mago, arqueros: DAMAGE_TYPE_OF.arquero, caballero: DAMAGE_TYPE_OF.caballero, sacerdote: DAMAGE_TYPE_OF.sacerdote };
+  // El de tu sección es el elemento que elegiste para tu círculo.
+  const TIPO = $derived<Partial<Record<Seccion, string>>>({ jugador: $view.meta.elemento, mago: DAMAGE_TYPE_OF.mago, arqueros: DAMAGE_TYPE_OF.arquero, caballero: DAMAGE_TYPE_OF.caballero, sacerdote: DAMAGE_TYPE_OF.sacerdote, bruja: DAMAGE_TYPE_OF.bruja });
+  /** La ventana para cambiar el elemento de tu círculo (desde el nivel 45). */
+  let elemento = $state(false);
   /** Las Reliquias (con gemas) se ven desde que se abren las misiones; el Caballero y el Sacerdote, desde su nivel. */
   const secciones = $derived(
-    SECCIONES.filter((s) => (s !== 'reliquias' || $view.misiones.abiertas) && (s !== 'caballero' || $view.meta.nivel >= CABALLERO_DESDE) && (s !== 'sacerdote' || $view.meta.nivel >= SACERDOTE_DESDE)),
+    SECCIONES.filter((s) => (s !== 'reliquias' || $view.misiones.abiertas) && (s !== 'caballero' || $view.meta.nivel >= CABALLERO_DESDE) && (s !== 'sacerdote' || $view.meta.nivel >= SACERDOTE_DESDE) && (s !== 'bruja' || $view.meta.nivel >= BRUJA_DESDE)),
   );
 
   const meta = $derived($view.meta);
@@ -72,6 +76,12 @@
 
   <!-- Si no cabe (pantallas chicas), el árbol se desliza hacia arriba y abajo. -->
   <div class="lienzo" data-testid="lienzo-arbol">
+  {#if seccion === 'jugador' && $view.meta.nivel >= ELEMENTO_DESDE}
+    <!-- El elemento de tu círculo (cambiarlo pide un anuncio). -->
+    <button type="button" class="elemento-chip" onclick={() => (elemento = true)} data-testid="abrir-elemento">
+      <Icon name="tipo_{$view.meta.elemento}" size={22} /><span>{$t(`tipos.${$view.meta.elemento}`)}</span><small>{$t('elemento.chip')}</small>
+    </button>
+  {/if}
   <div class="tablero" style:--filas={filas}>
     <svg class="lineas" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
       {#each nodos as d (d.id)}
@@ -126,6 +136,10 @@
     </div>
   {/if}
 </div>
+
+{#if elemento}
+  <Elemento cerrar={() => (elemento = false)} />
+{/if}
 
 <style>
   /* Un panel sobre el campo, entre el oro (arriba) y los botones (abajo). */
@@ -220,6 +234,26 @@
     border: 2px solid var(--line);
     border-radius: 50%;
     background: var(--danger);
+  }
+  .elemento-chip {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    width: max-content;
+    margin: -8px 0 4px 4px;
+    padding: 2px 10px 2px 4px;
+    border: 2px solid var(--line);
+    border-radius: 999px;
+    background: var(--panel);
+    box-shadow: 0 2px 0 var(--line);
+    font-size: 13px;
+  }
+  .elemento-chip small {
+    color: var(--muted);
+    font-size: 11px;
   }
   .lienzo {
     min-height: 0;

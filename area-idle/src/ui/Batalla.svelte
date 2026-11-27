@@ -47,7 +47,9 @@
   let avanzan = $state(false);
   interface Disparo {
     id: number;
-    tipo: 'flecha' | 'bola' | 'aro' | 'luz' | 'cura';
+    tipo: 'flecha' | 'bola' | 'aro' | 'luz' | 'cura' | 'rayo';
+    /** Largo del rayo de la bruja. */
+    largo?: number;
     x0: number;
     y0: number;
     x1: number;
@@ -77,6 +79,13 @@
     // El círculo de cada jugador: cae en un lugar de la muralla de enfrente.
     const x = azar(b.x0 + 30, b.x1 - 30);
     nuevos.push({ id: id++, tipo: 'aro', x0: x, y0: b.y, x1: x, y1: b.y, ang: 0 });
+    // La bruja: un rayo de oscuridad que cruza el campo hasta la muralla de enfrente.
+    if (p.bruja) {
+      const x0 = p.bruja.x;
+      const y0 = p.bruja.y - p.bruja.h * 0.8;
+      const x1 = azar(b.x0, b.x1);
+      nuevos.push({ id: id++, tipo: 'rayo', x0, y0, x1, y1: b.y, ang: (Math.atan2(b.y - y0, x1 - x0) * 180) / Math.PI, largo: Math.hypot(x1 - x0, b.y - y0) });
+    }
     // El sacerdote: una columna de luz en la muralla de enfrente y una cura en la suya.
     if (p.sacerdote) {
       const xl = azar(b.x0 + 20, b.x1 - 20);
@@ -163,6 +172,7 @@
         style:--y1="{d.y1}px"
         style:--ang="{d.ang}deg"
         style:--vuelo="{VUELO}ms"
+        style:--largo="{d.largo ?? 0}px"
       >
         {#if d.tipo === 'flecha'}
           <svg viewBox="0 0 26 8" width="26" height="8" aria-hidden="true"><path d="M1 4 H20" stroke="#6b4423" stroke-width="2.2" stroke-linecap="round" /><path d="M19 1 L25 4 L19 7 Z" fill="#c9d0dc" stroke="#3a2518" stroke-width="1" /><path d="M1 1.5 L5 4 L1 6.5" fill="none" stroke="#ef5a4c" stroke-width="1.6" /></svg>
@@ -330,6 +340,32 @@
     background: rgba(255, 226, 122, 0.3);
     box-shadow: 0 0 0 2px #8a5a2b;
     animation: aro var(--vuelo) ease-in forwards;
+  }
+  /* El rayo de la bruja: una franja morada que sale de ella y cruza hasta la muralla de enfrente. */
+  .disparo.rayo {
+    animation: none;
+    translate: var(--x0) var(--y0);
+  }
+  .disparo.rayo::before {
+    content: '';
+    display: block;
+    width: var(--largo);
+    height: 9px;
+    translate: 0 -4.5px;
+    rotate: var(--ang);
+    transform-origin: 0 50%;
+    border-radius: 6px;
+    background: linear-gradient(#5b2f8f, #e0c8ff 50%, #5b2f8f);
+    box-shadow: 0 0 10px 3px rgba(122, 63, 184, 0.7);
+    animation: rayo var(--vuelo) ease-out forwards;
+  }
+  @keyframes rayo {
+    from {
+      clip-path: inset(0 100% 0 0);
+    }
+    to {
+      clip-path: inset(0 0 0 0);
+    }
   }
   /* La columna de luz del sacerdote: baja del cielo sobre la muralla de enfrente. */
   .disparo.luz {

@@ -43,6 +43,7 @@ export interface Power {
   arqueros: number;
   caballero: number;
   sacerdote: number;
+  bruja: number;
   /** Multiplica todo (en bruto): tiempo por nivel, muralla (y Albañil). */
   mult: number;
   total: number;
@@ -68,12 +69,15 @@ export function powerOf(s: Stats, estandarte = 0): Power {
   const caballero = c.activo ? ((10 * c.danio * c.objetivos) / c.intervalo) * (1 + c.vida / 400) : 0;
   const z = s.sacerdote;
   const sacerdote = z.activo ? (40 * (z.radio / 30) ** 2 * z.danio) / z.intervalo : 0;
+  // La bruja: sus rayos atraviesan a varios (más con un rayo ancho) y la Maldición sube lo que les entra.
+  const w = s.bruja;
+  const bruja = w.activo ? ((12 * w.danio * w.rayos * (w.ancho / 10)) / w.intervalo) * (1 + w.maldicion) : 0;
   const mult = Math.sqrt(s.duracion / 20) * (s.muro.vida / 100) ** 0.25 * (1 + 0.25 * s.muro.reparar) * (z.activo ? 1 + 3 * z.curaMuro : 1);
-  const suma = jugador + mago + arqueros + caballero + sacerdote;
+  const suma = jugador + mago + arqueros + caballero + sacerdote + bruja;
   // El Estandarte de la tienda: +5 % al número que se ve.
   const total = Math.max(1, Math.round((Math.sqrt(suma * mult) / PODER.escala) * (1 + ESTANDARTE.porNivel * estandarte)));
   const parte = (x: number) => (suma > 0 ? (total * x) / suma : 0);
-  return { jugador: parte(jugador), mago: parte(mago), arqueros: parte(arqueros), caballero: parte(caballero), sacerdote: parte(sacerdote), mult, total };
+  return { jugador: parte(jugador), mago: parte(mago), arqueros: parte(arqueros), caballero: parte(caballero), sacerdote: parte(sacerdote), bruja: parte(bruja), mult, total };
 }
 
 /** Un poder guardado en bruto (antes de 0.19.0) llevado a la escala de ahora. */
@@ -140,6 +144,8 @@ export interface Ejercito {
   /** El caballero (delante de la muralla) y el sacerdote (en la muralla). */
   caballero: boolean;
   sacerdote: boolean;
+  /** La bruja, flotando delante de la muralla. */
+  bruja: boolean;
   etapas: { mago: 0 | 1 | 2 | 3; arqueros: 0 | 1 | 2 | 3; base: 0 | 1 | 2 | 3 };
 }
 
@@ -147,7 +153,7 @@ export interface Ejercito {
 export function myArmy(m: PvpHost): Ejercito {
   const s = computeStats(m.talentos, m.equipo?.niveles);
   const n = m.equipo?.niveles ?? {};
-  return { arqueros: s.arqueros.cantidad, mago: s.mago.activo, caballero: s.caballero.activo, sacerdote: s.sacerdote.activo, etapas: { mago: tierDe(n, 'mago'), arqueros: tierDe(n, 'arqueros'), base: tierDe(n, 'base') } };
+  return { arqueros: s.arqueros.cantidad, mago: s.mago.activo, caballero: s.caballero.activo, sacerdote: s.sacerdote.activo, bruja: s.bruja.activo, etapas: { mago: tierDe(n, 'mago'), arqueros: tierDe(n, 'arqueros'), base: tierDe(n, 'base') } };
 }
 
 /**
@@ -162,9 +168,10 @@ export function rivalArmy(mio: Ejercito, ratio: number, liga: number, id: string
   // Los que van más adelantados que tú ya tienen caballero (y, mucho más, sacerdote).
   const caballero = mio.caballero || r > 1.3;
   const sacerdote = mio.sacerdote || r > 1.6;
+  const bruja = mio.bruja || r > 1.9;
   const porLiga = [0, 0, 1, 1, 2, 3][liga] ?? 0;
   const etapa = (mia: number) => Math.min(3, Math.max(0, Math.round((porLiga + mia) / 2 + (r > 1.25 ? 1 : r < 0.75 ? -1 : 0)))) as 0 | 1 | 2 | 3;
-  return { arqueros, mago, caballero, sacerdote, etapas: { mago: etapa(mio.etapas.mago), arqueros: etapa(mio.etapas.arqueros), base: etapa(mio.etapas.base) } };
+  return { arqueros, mago, caballero, sacerdote, bruja, etapas: { mago: etapa(mio.etapas.mago), arqueros: etapa(mio.etapas.arqueros), base: etapa(mio.etapas.base) } };
 }
 export const myPower = (m: PvpHost): Power => powerOf(computeStats(m.talentos, m.equipo?.niveles), m.pvp.estandarte);
 

@@ -1,5 +1,5 @@
 // Las estadísticas de una partida, calculadas de los niveles de los talentos.
-import { AUTOAPUNTAR, BASE, INACTIVO, ORO_TALENTOS, type TalentId } from './datos';
+import { AUTOAPUNTAR, BASE, INACTIVO, ORO_TALENTOS, type DamageType, type TalentId } from './datos';
 import { bonosEquipo, type EquipoNiveles } from './equipo';
 
 export type Levels = Partial<Record<TalentId, number>>;
@@ -36,12 +36,16 @@ export interface Stats {
   caballero: { activo: boolean; danio: number; intervalo: number; objetivos: number; alcance: number; vida: number; velocidad: number; regreso: number };
   /** El sacerdote: su columna de luz (daño, cada cuánto, radio) y sus curas (cada cuánto y qué parte de la vida del caballero y de la muralla). */
   sacerdote: { activo: boolean; danio: number; intervalo: number; radio: number; cadaCura: number; curaCaballero: number; curaMuro: number };
+  /** La bruja: sus rayos de oscuridad (daño, cada cuánto, cuántos, qué tan anchos) y su maldición (más daño de todo, por cuánto tiempo). */
+  bruja: { activo: boolean; danio: number; intervalo: number; rayos: number; ancho: number; maldicion: number; dura: number };
+  /** De qué elemento es tu círculo (físico, si no lo has cambiado). */
+  elemento: DamageType;
 }
 
 const lv = (levels: Levels, id: TalentId) => levels[id] ?? 0;
 
-/** Las estadísticas: el árbol (`levels`) y, si se da, el equipo de la Herrería (multiplica encima). */
-export function computeStats(levels: Levels, equipo: EquipoNiveles = {}): Stats {
+/** Las estadísticas: el árbol (`levels`), si se da, el equipo de la Herrería (multiplica encima) y el elemento de tu círculo. */
+export function computeStats(levels: Levels, equipo: EquipoNiveles = {}, elemento: DamageType = 'fisico'): Stats {
   const eq = bonosEquipo(equipo);
   const danio = lv(levels, 'danio');
   const slimes = lv(levels, 'slimes');
@@ -103,5 +107,15 @@ export function computeStats(levels: Levels, equipo: EquipoNiveles = {}): Stats 
       curaCaballero: BASE.sacerdote.curaCaballero + 0.03 * lv(levels, 'sanar'),
       curaMuro: BASE.sacerdote.curaMuro + 0.004 * lv(levels, 'bendicion'),
     },
+    bruja: {
+      activo: lv(levels, 'bruja') > 0,
+      danio: golpe * BASE.bruja.danio * (1 + 0.5 * lv(levels, 'rayoOscuro')),
+      intervalo: BASE.bruja.intervalo * Math.pow(0.9, lv(levels, 'conjuro')),
+      rayos: BASE.bruja.rayos + lv(levels, 'rayos'),
+      ancho: BASE.bruja.ancho * (1 + 0.2 * lv(levels, 'sombra')),
+      maldicion: BASE.bruja.maldicion * lv(levels, 'maldicion'),
+      dura: BASE.bruja.dura,
+    },
+    elemento,
   };
 }

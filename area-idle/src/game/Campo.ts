@@ -7,7 +7,7 @@ import { ENEMIES, levelConfig, type EnemyKind, type ZoneId } from '../core/datos
 import { formatNum } from '../core/format';
 import { crearFuenteNumeros, NUMEROS } from './numeros';
 import { tierDe } from '../core/equipo';
-import { ALLY_ROW, archerSpots, autoAiming, circleActive, FIELD_W, hidden, priestSpot, wizardSpot, type Forma, type Run, type RunEvent } from '../core/run';
+import { ALLY_ROW, archerSpots, autoAiming, circleActive, FIELD_W, hidden, priestSpot, witchSpot, wizardSpot, type Forma, type Run, type RunEvent } from '../core/run';
 
 const URLS = import.meta.glob<string>('../assets/arte/*.png', { eager: true, query: '?url', import: 'default' });
 
@@ -18,7 +18,10 @@ const MAGO = { px: 150, alto: 46 };
 const ARQUERO = { px: 120, alto: 34 };
 const CABALLERO = { px: 130, alto: 40 };
 const SACERDOTE = { px: 130, alto: 38 };
+const BRUJA = { px: 130, alto: 40 };
 const VERDE_CURA = 0x7fe07a;
+/** El color de tu círculo, tus flechas y su destello según el elemento que elegiste (físico: el amarillo de siempre). */
+const COLOR_ELEMENTO: Record<string, number> = { fisico: 0xffd23f, fuego: 0xff8a2a, hielo: 0x9fe2ff, energia: 0x5ce1e6, muerte: 0x9a6ad8, luz: 0xfff3a0 };
 const FLECHA_PX = 72;
 /** Cuántas cosas a la vez, como máximo (con cientos de slimes no caben todas). */
 const MAX_NUMEROS = 70;
@@ -79,6 +82,8 @@ interface SlimeVisual {
   /** El jefe en el aire: cuánto lleva del brinco y cuánto dura (0: en el piso). */
   salto: number;
   saltoDura: number;
+  /** Si se está dibujando maldito (morado). */
+  maldito?: boolean;
 }
 
 interface Numero {
@@ -110,6 +115,7 @@ export class Campo extends Phaser.Scene {
   private cursorR = 0;
   /** Si el círculo se dibujó en modo autoapuntado (azul). */
   private cursorAuto = false;
+  private cursorElemento = 'fisico';
   private readonly cursorPos = { x: FIELD_W / 2, y: 280 };
   private mago!: Phaser.GameObjects.Image;
   private arqueros: Phaser.GameObjects.Image[] = [];
@@ -118,6 +124,8 @@ export class Campo extends Phaser.Scene {
   private barraCaballero!: Phaser.GameObjects.Graphics;
   private tajo = 0;
   private sacerdote!: Phaser.GameObjects.Image;
+  /** La bruja, flotando delante de la muralla. */
+  private bruja!: Phaser.GameObjects.Image;
   /** La telaraña sobre cada arquero enredado. */
   private telas: (Phaser.GameObjects.Image | null)[] = [];
   private flechas!: Phaser.GameObjects.Graphics;
@@ -172,6 +180,7 @@ export class Campo extends Phaser.Scene {
     this.barraMuro = this.add.graphics().setDepth(D.muro + 0.1);
     this.mago = this.add.image(0, 0, 'mago').setOrigin(0.5, 1).setScale(MAGO.alto / MAGO.px).setDepth(D.aliado).setVisible(false);
     this.sacerdote = this.add.image(0, 0, 'sacerdote').setOrigin(0.5, 1).setScale(SACERDOTE.alto / SACERDOTE.px).setDepth(D.aliado).setVisible(false);
+    this.bruja = this.add.image(0, 0, 'bruja').setOrigin(0.5, 1).setScale(BRUJA.alto / BRUJA.px).setDepth(D.aliado).setVisible(false);
     this.caballero = this.add.image(0, 0, 'caballero').setOrigin(0.5, 1).setScale(CABALLERO.alto / CABALLERO.px).setDepth(D.slime + 0.5).setVisible(false);
     this.barraCaballero = this.add.graphics().setDepth(D.numero - 0.5);
 
@@ -332,6 +341,8 @@ export class Campo extends Phaser.Scene {
     this.mago.setVisible(run.stats.mago.activo).setPosition(m.x, m.y).clearTint().setAngle(0).setAlpha(1);
     const p = priestSpot(run);
     this.sacerdote.setVisible(run.stats.sacerdote.activo).setPosition(p.x, p.y).clearTint().setAngle(0).setAlpha(1);
+    const b = witchSpot(run);
+    this.bruja.setVisible(run.stats.bruja.activo).setPosition(b.x, b.y).clearTint().setAngle(0).setAlpha(1);
     const c = run.caballero;
     this.caballero.setVisible(!!c).setAngle(0).setAlpha(1).clearTint();
     if (c) this.caballero.setPosition(c.x, c.y);
@@ -368,6 +379,7 @@ export class Campo extends Phaser.Scene {
       this.mago.setVisible(false);
       this.sacerdote.setVisible(false);
       this.caballero.setVisible(false);
+      this.bruja.setVisible(false);
       this.cursor.setVisible(false);
       this.arqueros.forEach((a) => a.destroy());
       this.arqueros = [];
@@ -406,7 +418,7 @@ export class Campo extends Phaser.Scene {
     this.aplicarEquipo();
     const run = this.juego.run;
     // En guardia, si compraste tropas, se acomodan.
-    if (run?.guardia && (this.arqueros.length !== run.stats.arqueros.cantidad || this.mago.visible !== run.stats.mago.activo || this.sacerdote.visible !== run.stats.sacerdote.activo || this.caballero.visible !== !!run.caballero)) this.colocarTropas(run);
+    if (run?.guardia && (this.arqueros.length !== run.stats.arqueros.cantidad || this.mago.visible !== run.stats.mago.activo || this.sacerdote.visible !== run.stats.sacerdote.activo || this.bruja.visible !== run.stats.bruja.activo || this.caballero.visible !== !!run.caballero)) this.colocarTropas(run);
     // La cámara sube (pantalla principal) o baja (un nivel) suave; en guardia, los enemigos no pasean bajo el oro.
     const objetivo = this.levanteObjetivo();
     if (Math.abs(objetivo - this.levante) > 0.05) {
@@ -421,6 +433,8 @@ export class Campo extends Phaser.Scene {
       this.dibujarPiedras(run);
       this.dibujarBarraMuro(run);
       this.dibujarCaballero(run, dt);
+      // La bruja flota (sube y baja despacio).
+      if (this.bruja.visible) this.bruja.setY(witchSpot(run).y - 3 - Math.sin(this.tiempo * 2.2) * 3);
     } else {
       this.caballero.setVisible(false);
       this.barraCaballero.clear();
@@ -437,6 +451,7 @@ export class Campo extends Phaser.Scene {
     const base = t.base(ENEMIES[kind].radio);
     if (v) {
       v.img.setTexture(t.key).setOrigin(0.5, t.origenY).clearTint().setVisible(true);
+      v.maldito = false;
       v.sombra.setVisible(true);
       v.base = base;
       v.salto = 0;
@@ -482,7 +497,14 @@ export class Campo extends Phaser.Scene {
       }
       // Los que vuelan van arriba de su sombra, aleteando.
       if (ENEMIES[e.kind].vuela) alto += 18 + Math.sin(this.tiempo * 6 + v.fase) * 3;
-      if (jefe) v.img.setTint(run.jefe!.furia && Math.sin(this.tiempo * 12) > 0 ? 0xff8a80 : 0xffffff);
+      // Maldito por la bruja: morado (los jefes, además, rojizos en furia).
+      const maldito = (e.maldito ?? 0) > run.t;
+      if (jefe) v.img.setTint(run.jefe!.furia && Math.sin(this.tiempo * 12) > 0 ? 0xff8a80 : maldito ? 0xd6b8ff : 0xffffff);
+      else if (maldito !== v.maldito) {
+        v.maldito = maldito;
+        if (maldito) v.img.setTint(0xd6b8ff);
+        else v.img.clearTint();
+      }
       // Bajo la arena (escorpión) apenas se ve; a media teletransportación (Esqueleto Mago), nada.
       const oculto = hidden(run, e);
       const alfa = !oculto ? 1 : jefe ? 0 : 0.18;
@@ -550,10 +572,10 @@ export class Campo extends Phaser.Scene {
         case 'shot':
           if (e.fuente === 'mago') this.bolaDeFuego(e.x, e.y, e.demora);
           else if (e.fuente === 'sacerdote') this.columnaDeLuz(e.x, e.y, e.forma.tipo === 'circulo' ? e.forma.r : 18, e.demora);
-          else if (e.forma.tipo === 'circulo') this.lluvia(e.x, e.y, e.forma.r, e.demora);
+          else if (e.forma.tipo === 'circulo') this.lluvia(e.x, e.y, e.forma.r, e.demora, run.stats.elemento === 'fisico' ? null : COLOR_ELEMENTO[run.stats.elemento]!);
           break;
         case 'impact':
-          this.impacto(e.x, e.y, e.forma, e.fuente === 'mago', e.fuente === 'sacerdote');
+          this.impacto(e.x, e.y, e.forma, e.fuente === 'mago', e.fuente === 'sacerdote', e.fuente === 'jugador' ? COLOR_ELEMENTO[run.stats.elemento] : undefined);
           break;
         case 'knightHit': {
           // Un tajo: se inclina hacia el blanco y queda una media luna blanca.
@@ -564,6 +586,17 @@ export class Campo extends Phaser.Scene {
           arco.lineStyle(4, 0xffffff, 0.95).beginPath().arc(e.x, e.y - 14, 18, ang - 1.1, ang + 1.1).strokePath();
           arco.lineStyle(2, AMARILLO, 0.9).beginPath().arc(e.x, e.y - 14, 22, ang - 0.9, ang + 0.9).strokePath();
           this.tweens.add({ targets: arco, alpha: 0, duration: 200, ease: 'Quad.out', onComplete: () => arco.destroy() });
+          break;
+        }
+        case 'darkRay': {
+          // Un rayo de oscuridad: morado oscuro con el centro claro; se desvanece rápido.
+          const g = this.add.graphics().setDepth(D.destello);
+          g.lineStyle(e.ancho + 6, 0x2e1a46, 0.35).lineBetween(e.x0, e.y0, e.x1, e.y1);
+          g.lineStyle(e.ancho, 0x7a3fb8, 0.85).lineBetween(e.x0, e.y0, e.x1, e.y1);
+          g.lineStyle(Math.max(2, e.ancho * 0.3), 0xe0c8ff, 1).lineBetween(e.x0, e.y0, e.x1, e.y1);
+          this.tweens.add({ targets: g, alpha: 0, duration: 260, ease: 'Quad.in', onComplete: () => g.destroy() });
+          const orbe = this.add.image(e.x0, e.y0, 'disco').setTint(0x7a3fb8).setAlpha(0.9).setScale(0.12).setDepth(D.destello);
+          this.tweens.add({ targets: orbe, scale: 0.26, alpha: 0, duration: 240, onComplete: () => orbe.destroy() });
           break;
         }
         case 'knightDown':
@@ -920,7 +953,7 @@ export class Campo extends Phaser.Scene {
   }
 
   /** Tu disparo: caen flechas del cielo a puntos al azar dentro del círculo. */
-  private lluvia(x: number, y: number, r: number, demora: number): void {
+  private lluvia(x: number, y: number, r: number, demora: number, tinte: number | null = null): void {
     const n = Phaser.Math.Clamp(Math.round(r / 5), 5, 12);
     const alto = 46;
     for (let i = 0; i < n; i++) {
@@ -932,6 +965,7 @@ export class Campo extends Phaser.Scene {
         .setScale(14 / FLECHA_PX)
         .setVisible(true)
         .setAlpha(1)
+        .setTint(tinte ?? 0xffffff)
         .setPosition(tx + 6, ty - alto);
       const retraso = Math.random() * demora * 0.35;
       this.tweens.add({
@@ -1012,10 +1046,10 @@ export class Campo extends Phaser.Scene {
   }
 
   /** Aterriza un disparo: destello en la forma (círculo amarillo o rectángulo de fuego; la luz del sacerdote, blanca y dorada). */
-  private impacto(x: number, y: number, forma: Forma, mago: boolean, luz = false): void {
+  private impacto(x: number, y: number, forma: Forma, mago: boolean, luz = false, colorCirculo?: number): void {
     if (forma.tipo === 'circulo') {
       const escala = (forma.r * 2) / 128;
-      const color = luz ? 0xfff6c0 : AMARILLO;
+      const color = luz ? 0xfff6c0 : (colorCirculo ?? AMARILLO);
       if (luz) this.emisores.aparece.explode(10, x, y - 4);
       const disco = this.add.image(x, y, 'disco').setTint(color).setAlpha(luz ? 0.6 : 0.45).setScale(escala).setDepth(D.destello);
       const anillo = this.add.image(x, y, 'anillo').setTint(color).setAlpha(0.9).setScale(escala * 0.7).setDepth(D.destello);
@@ -1110,10 +1144,11 @@ export class Campo extends Phaser.Scene {
     const r = run.stats.radio;
     // Cuando apunta solo (Autoapuntado), el círculo se pone azul: así se nota que no es tu dedo.
     const auto = autoAiming(run);
-    if (r !== this.cursorR || auto !== this.cursorAuto) {
+    if (r !== this.cursorR || auto !== this.cursorAuto || run.stats.elemento !== this.cursorElemento) {
+      this.cursorElemento = run.stats.elemento;
       this.cursorR = r;
       this.cursorAuto = auto;
-      const color = auto ? AZUL_AUTO : AMARILLO;
+      const color = auto ? AZUL_AUTO : (COLOR_ELEMENTO[run.stats.elemento] ?? AMARILLO);
       const g = this.cursor.clear();
       g.fillStyle(color, 0.16).fillCircle(0, 0, r);
       g.lineStyle(2.4, CAFE, 0.85).strokeCircle(0, 0, r);

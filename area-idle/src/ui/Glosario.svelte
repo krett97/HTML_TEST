@@ -6,22 +6,26 @@
   import { t } from '../i18n';
   import { useJuego } from './context';
   import Icon from './Icon.svelte';
+  import { IMAGEN } from './enemigosImg';
   import { artUrl } from './icons';
 
   let { cerrar }: { cerrar: () => void } = $props();
   const view = useJuego().view;
 
   /** Quién hace qué tipo de daño (con el ícono de su sección). */
-  const QUIEN = [
-    { id: 'jugador', icono: 'lluvia', tipo: DAMAGE_TYPE_OF.jugador },
+  const QUIEN = $derived([
+    { id: 'jugador', icono: 'lluvia', tipo: $view.meta.elemento },
     { id: 'arqueros', icono: 'arquero', tipo: DAMAGE_TYPE_OF.arquero },
     { id: 'mago', icono: 'mago', tipo: DAMAGE_TYPE_OF.mago },
-  ] as const;
+    { id: 'caballero', icono: 'caballero', tipo: DAMAGE_TYPE_OF.caballero },
+    { id: 'sacerdote', icono: 'sacerdote', tipo: DAMAGE_TYPE_OF.sacerdote },
+    { id: 'bruja', icono: 'bruja', tipo: DAMAGE_TYPE_OF.bruja },
+  ]);
   /** Los comunes, agrupados por la zona donde salen; los jefes aparte. Cada uno con su dibujo. */
   const COMUNES = ENEMY_KINDS.filter((k) => !ENEMIES[k].jefe && !ENEMIES[k].cria).sort((a, b) => DESDE[a] - DESDE[b]);
   const POR_ZONA = (['campo', 'batalla', 'pradera', 'desierto', 'montana'] as const).map((z) => ({ zona: z, kinds: COMUNES.filter((k) => zoneOf(DESDE[k]) === z) }));
   const JEFES_KINDS = ENEMY_KINDS.filter((k) => ENEMIES[k].jefe).sort((a, b) => DESDE[a] - DESDE[b]);
-  const IMAGEN: Record<EnemyKind, string> = { verde: 'slime_verde', azul: 'slime_azul', rojo: 'slime_rojo', rey: 'jefe_rey', goblin: 'goblin', lobo: 'lobo', orco: 'orco', orcoArquero: 'orcoArquero', loboBlanco: 'loboBlanco', arana: 'arana', esqueleto: 'esqueleto', loboNegro: 'loboNegro', bandido: 'bandido', esqueletoMago: 'esqueletoMago', escorpion: 'escorpion', bandidoDesierto: 'bandidoDesierto', minotauro: 'minotauro', ciclope: 'ciclope', liderBandido: 'liderBandido', golem: 'golem', golemito: 'golemito', guerreroHierro: 'guerreroHierro', arqueroHierro: 'arqueroHierro', dragoncito: 'dragoncito', dragonAcero: 'dragonAcero' };
+  // Cada enemigo, con su dibujo (también lo usa la ventana del elemento).
   const MECANICAS: Partial<Record<EnemyKind, string[]>> = { rey: ['invoca', 'esquiva', 'aturdido', 'furia'], loboBlanco: ['aulla', 'embiste', 'hoz', 'furia'], esqueletoMago: ['invocaEsqueletos', 'teletransporte', 'bolaFuego', 'rearma'], liderBandido: ['llamaBandidos', 'embiste', 'abanico', 'esquivaMucho'], dragonAcero: ['invocaDragones', 'vuelo', 'llamaradas', 'escamas'] };
 
   const visto = (kind: EnemyKind) => $view.meta.nivel >= DESDE[kind];
