@@ -139,7 +139,6 @@ export type RunEvent =
   /** Supervivencia: empieza una oleada (con `jefes` jefes), se aguantó una (y cuántas Runas suma), o se escaparon los que quedaban. */
   | { type: 'wave'; ola: number; total: number; jefes: number }
   | { type: 'waveClear'; ola: number; runas: number }
-  | { type: 'escape'; cuantos: number; danio: number }
   /** Se le cayó la armadura (ya recibe todo el daño). */
   | { type: 'armorBreak'; id: number; x: number; y: number }
   /** Un minotauro empezó a embestir la muralla. */
@@ -208,12 +207,17 @@ export interface Oleadas {
 }
 
 /**
- * Supervivencia: cada oleada trae `base + porOla × ola` enemigos (hasta `max`), llegan en `llegada` s y hay
- * `duracion` s para reventarlos (con jefes, `duracionJefe`); los que queden se escapan y golpean la
- * muralla. Cada 5 oleadas, jefes: 1, y uno más cada 10 (2 en la 10, 3 en la 20…), con `jefeVida` de su vida
- * y `jefeGolpe` de su golpe. Limpiar una oleada repara `cura` de la muralla.
+ * Supervivencia: cada oleada trae `base + porOla × ola` enemigos (hasta `max`) que salen arriba en `llegada`
+ * s y **marchan hacia abajo**: su velocidad (entre `pasoMin` y `pasoMax`) × `paso`. Los que llegan a la
+ * muralla se quedan golpeándola (su ataque, al menos `golpe`, cada `cadaGolpe` s o su ritmo); si cae, se
+ * acaba. Si no limpias la oleada en `duracion` s (con jefes, `duracionJefe`), llega la siguiente igual y se
+ * juntan. Cada 5 oleadas, jefes: 1, y uno más cada 10 (2 en la 10, 3 en la 20…), con `jefeVida` de su vida
+ * y `jefeGolpe` de su golpe; también bajan. Limpiar una oleada repara `cura` de la muralla.
  */
-export const OLEADAS = { duracion: 30, duracionJefe: 45, pausa: 3, llegada: 6, base: 10, porOla: 4, max: 220, jefeVida: 0.35, escape: 2, cura: 0.15, jefeGolpe: 0.5 } as const;
+export const OLEADAS = { duracion: 30, duracionJefe: 45, pausa: 3, llegada: 6, base: 10, porOla: 4, max: 220, jefeVida: 0.35, golpe: 2, cadaGolpe: 2.5, paso: 3, pasoMin: 8, pasoMax: 20, cura: 0.15, jefeGolpe: 0.5 } as const;
+
+/** Qué tan rápido baja hacia la muralla un enemigo en la Supervivencia. */
+export const pasoOleada = (velocidad: number): number => Math.min(OLEADAS.pasoMax, Math.max(OLEADAS.pasoMin, velocidad)) * OLEADAS.paso;
 export const jefesOla = (ola: number): number => (ola % 5 === 0 ? 1 + Math.floor(ola / 10) : 0);
 /** Runas por aguantar la oleada: 1, y 2 por cada jefe. */
 export const runasOla = (ola: number): number => 1 + 2 * jefesOla(ola);
@@ -297,7 +301,8 @@ function startWave(run: Run, events: RunEvent[]): void {
     const kind = ORDEN_JEFES[(o.ola / 5 - 1 + i) % ORDEN_JEFES.length]!;
     const vida = Math.round(3 * (15 + 8 * (n - 1)) * vidaNivel(n) * JEFE.vida * (JEFES[kind]?.vida ?? 1) * OLEADAS.jefeVida);
     const x = run.w * (jefes === 1 ? 0.5 : 0.2 + (0.6 * i) / (jefes - 1));
-    spawnBoss(run, kind, vida, x, run.arriba + (bottom(run) - run.arriba) * 0.3, i === 0 && !run.jefe, events);
+    // Salen arriba, como todos, y bajan hacia la muralla.
+    spawnBoss(run, kind, vida, x, run.arriba + 16, i === 0 && !run.jefe, events);
   }
 }
 
@@ -332,24 +337,12 @@ function stepWaves(run: Run, step: number, events: RunEvent[]): void {
     return;
   }
   if (o.restante <= 0) {
-    // Se acabó el tiempo: los que quedan (y los que no alcanzaron a salir) se escapan y golpean la muralla.
-    const faltan = run.nivel.total - run.salieron;
-    let danio = faltan * OLEADAS.escape * run.nivel.ataque;
-    for (const e of quedan) danio += (ENEMIES[e.kind].jefe ? 10 : Math.max(OLEADAS.escape, ENEMIES[e.kind].ataque)) * run.nivel.ataque;
-    events.push({ type: 'escape', cuantos: quedan.length + faltan, danio });
-    run.enemies = [];
-    run.piedras = [];
-    run.jefe = null;
-    hitWall(run, run.w / 2, run.h - ALLY_ROW + 14, danio, events);
-    if (run.muro.caido) {
-      run.terminada = true;
-      events.push({ type: 'end', gano: false });
-      return;
-    }
+    // Se acabó el tiempo de la oleada: la aguantaste, pero llega la siguiente aunque queden enemigos
+    // (los que siguen vivos siguen bajando o golpeando la muralla).
     o.superadas = o.ola;
     o.bote += runasOla(o.ola);
     events.push({ type: 'waveClear', ola: o.ola, runas: runasOla(o.ola) });
-    o.pausa = OLEADAS.pausa;
+    startWave(run, events);
   }
 }
 
@@ -484,7 +477,8 @@ function spawn(run: Run, events: RunEvent[]): void {
   }
   const def = ENEMIES[kind];
   const x0 = between(run.rng, MARGIN, run.w - MARGIN);
-  const y0 = between(run.rng, run.arriba, bottom(run));
+  // En la Supervivencia salen todos arriba (y bajan); en un nivel, en cualquier lugar del campo.
+  const y0 = run.oleadas ? between(run.rng, run.arriba, run.arriba + 30) : between(run.rng, run.arriba, bottom(run));
   // Los que salen en manada (lobos negros) llegan juntos, uno al lado del otro.
   const cuantos = Math.max(1, def.manada ?? 1);
   for (let i = 0; i < cuantos && (i === 0 || (run.salieron < run.nivel.total && run.enemies.length < MAX_VIVOS) || !!run.guardia); i++) {
@@ -510,7 +504,8 @@ function spawnOne(run: Run, kind: EnemyKind, x: number, y: number, events: RunEv
     vida,
     vidaMax: vida,
     giro: between(run.rng, ...(def.giro ?? [1, 3])),
-    ...(def.tiro ? { tiro: def.tiro * between(run.rng, 0.6, 1.1) } : {}),
+    // En la Supervivencia todos golpean la muralla al llegar, también los que no tiran nada.
+    ...(def.tiro ? { tiro: def.tiro * between(run.rng, 0.6, 1.1) } : run.oleadas ? { tiro: OLEADAS.cadaGolpe * between(run.rng, 0.6, 1.1) } : {}),
   };
   run.enemies.push(enemy);
   events.push({ type: 'spawn', id: enemy.id, kind, x: enemy.x, y: enemy.y });
@@ -654,8 +649,8 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
         }
       }
     }
-    // En guardia nadie marcha hacia la muralla: todos pasean.
-    if (def.marcha && !run.guardia) {
+    // En guardia nadie marcha hacia la muralla: todos pasean. En la Supervivencia marchan todos.
+    if ((def.marcha || run.oleadas) && !run.guardia) {
       // Marchan hacia la muralla (bamboleándose un poco) y al llegar se quedan golpeándola. Los que
       // embisten (minotauros), pasando la mitad del campo van mucho más rápido.
       const embiste = !!def.carga && e.y > (run.arriba + bottom(run)) / 2;
@@ -663,7 +658,8 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
         e.cargando = true;
         events.push({ type: 'charge', id: e.id, x: e.x, y: e.y });
       }
-      const vel = def.velocidad * (embiste ? def.carga! : 1) * (def.armadura && e.sinArmadura ? 1.8 : 1);
+      const base = run.oleadas ? pasoOleada(def.velocidad) : def.velocidad;
+      const vel = base * (embiste ? def.carga! : 1) * (def.armadura && e.sinArmadura ? 1.8 : 1);
       if (e.y >= bottom(run)) {
         e.vx = 0;
         e.vy = 0;
@@ -740,7 +736,8 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
       j.brinco += jd.cada * ritmo;
       const r = ENEMIES[boss.kind].radio;
       const tx = between(run.rng, r + MARGIN, run.w - r - MARGIN);
-      const ty = between(run.rng, run.arriba + r * 0.5, bottom(run) - r * 0.5);
+      // En la Supervivencia cada brinco lo acerca a la muralla.
+      const ty = run.oleadas ? Math.min(bottom(run) - r * 0.3, boss.y + between(run.rng, 40, 90)) : between(run.rng, run.arriba + r * 0.5, bottom(run) - r * 0.5);
       // El Rey brinca en arco; el Lobo embiste por el piso (la escena lo dibuja distinto).
       j.salto = { tx, ty, falta: jd.dura };
       events.push({ type: 'bossJump', id: boss.id, x: boss.x, y: boss.y, tx, ty, dura: jd.dura });
@@ -833,15 +830,17 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
     // En guardia no atacan la muralla.
     if (e.tiro === undefined || e.vida <= 0 || run.muro.caido || run.guardia) continue;
     const def = ENEMIES[e.kind];
-    if (def.marcha && e.y < bottom(run)) continue;
+    // Los que marchan (en la Supervivencia, todos menos los jefes de más) solo pegan al llegar a la muralla.
+    const golpea = def.marcha || (!!run.oleadas && !e.elite);
+    if (golpea && e.y < bottom(run)) continue;
     // Los jefes de más (Supervivencia) le tiran lo suyo a la muralla.
     const jd = e.elite ? JEFES[e.kind] : undefined;
     e.tiro -= step;
     if (e.tiro > 0) continue;
-    e.tiro += (jd ? jd.lanza : def.tiro ?? 3) * between(run.rng, 0.8, 1.2);
-    const danio = (jd ? jd.golpe * OLEADAS.jefeGolpe : def.ataque) * run.nivel.ataque;
+    e.tiro += (jd ? jd.lanza : (def.tiro ?? (run.oleadas ? OLEADAS.cadaGolpe : 3))) * between(run.rng, 0.8, 1.2);
+    const danio = (jd ? jd.golpe * OLEADAS.jefeGolpe : run.oleadas && golpea ? Math.max(OLEADAS.golpe, def.ataque) : def.ataque) * run.nivel.ataque;
     const ty = run.h - ALLY_ROW + 14;
-    if (def.marcha) {
+    if (golpea) {
       events.push({ type: 'sling', id: e.id, x: e.x, y: e.y, tipo: 'golpe' });
       hitWall(run, e.x, ty, danio, events);
       continue;

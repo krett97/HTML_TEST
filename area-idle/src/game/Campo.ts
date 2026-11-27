@@ -632,24 +632,6 @@ export class Campo extends Phaser.Scene {
           // Oleada aguantada: confeti.
           for (let i = 0; i < 3; i++) this.time.delayedCall(i * 90, () => this.emisores.confeti.explode(12, 80 + i * 100, this.alto - 70));
           break;
-        case 'escape': {
-          // Se acabó el tiempo de la oleada: los que quedaban se escapan y golpean la muralla.
-          // Los que se escaparon ya no están en la partida: se quitan sus dibujos.
-          for (const [id, v] of this.slimes) {
-            if (run.enemies.some((x) => x.id === id)) continue;
-            this.emisores.polvo.explode(3, v.img.x, v.img.y);
-            this.soltar(v);
-            this.slimes.delete(id);
-          }
-          if (!e.cuantos) break;
-          for (let i = 0; i < 6; i++) this.emisores.piedra.explode(6, 30 + i * 60, this.alto - ALLY_ROW + 10);
-          for (const img of [this.muralla, this.torre]) img.setTint(0xff8a80);
-          this.time.delayedCall(200, () => {
-            if (!this.juego.run?.muro.caido) for (const img of [this.muralla, this.torre]) img.clearTint();
-          });
-          this.sacudir(220, 0.004);
-          break;
-        }
         case 'armorBreak': {
           // Se le cae la armadura: chispas grises y un destello.
           const v = this.slimes.get(e.id);

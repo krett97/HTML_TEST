@@ -283,7 +283,6 @@ export class Juego {
       else if (e.type === 'armorBreak') this.audio.play('critico');
       else if (e.type === 'wave') this.audio.play(e.jefes ? 'furia' : 'invoca');
       else if (e.type === 'waveClear') this.audio.play('gema');
-      else if (e.type === 'escape') this.audio.play('derrumbe');
       else if (e.type === 'bossStun') this.audio.play('aturde');
       else if (e.type === 'bossSummon') this.audio.play(run.jefe?.def.escolta === 'lobo' ? 'aullido' : 'invoca');
       else if (e.type === 'bossThrow') this.audio.play('lanza');

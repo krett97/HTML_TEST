@@ -477,7 +477,13 @@ async function flow(name, browser, fn, opts) {
     await page.waitForTimeout(2500);
     check((await page.getByTestId('oleada-actual').textContent()).includes('Oleada'), 'no se ve la oleada');
     check(await page.getByTestId('bote-runas').count(), 'no se ven las Runas juntadas');
-    await page.waitForTimeout(6000);
+    // Salen arriba y bajan hacia la muralla.
+    const pos = await page.evaluate(() => Object.fromEntries(window.juego.run.enemies.filter((e) => !e.elite).map((e) => [e.id, e.y])));
+    check(Object.keys(pos).length > 0, 'no salió nadie en la oleada');
+    await page.waitForTimeout(1500);
+    const bajaron = await page.evaluate((pos) => window.juego.run.enemies.filter((e) => pos[e.id] !== undefined).map((e) => e.y > pos[e.id]), pos);
+    check(bajaron.length > 0 && bajaron.every(Boolean), 'los de la oleada no bajan hacia la muralla');
+    await page.waitForTimeout(4500);
     const bote = await page.evaluate(() => window.juego.run.oleadas.bote);
     await page.getByTestId('terminar').click();
     await page.waitForTimeout(300);

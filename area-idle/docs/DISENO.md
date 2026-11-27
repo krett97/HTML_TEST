@@ -243,14 +243,21 @@ hacia el 57).
 **Supervivencia** (se abre en el **nivel 26**; botón azul junto a "¡Jugar!"):
 - Oleadas seguidas hasta que **cae la muralla**. Cada oleada trae 10 + 4 × oleada enemigos (hasta 220) del
   nivel *más alto abierto − 10 + oleada* (uno más difícil cada vez), de una zona al azar entre las abiertas.
-- Cada oleada tiene **30 s** (45 con jefes); los que queden **se escapan y golpean la muralla**. Limpiar una
-  oleada repara 15 % de la muralla.
+- **Todos salen arriba y bajan hacia la muralla** (desde 0.18.0): a su velocidad (entre 8 y 20) × 3, o sea
+  un slime cruza en unos 25 s y un lobo en unos 10. Los que llegan se quedan **golpeándola** (su ataque, al
+  menos 2, cada 2.5 s o a su ritmo); no tiran desde lejos. Si la muralla cae, se acaba.
+- Cada oleada tiene **30 s** (45 con jefes): si no la limpias, cuenta como aguantada pero **llega la
+  siguiente igual** y se juntan (antes, al acabarse el tiempo los que quedaban "se escapaban" y golpeaban la
+  muralla de un jalón). Limpiar una oleada repara 15 % de la muralla.
 - **Jefes** cada 5 oleadas (Rey, Lobo, Esqueleto Mago, Líder, Dragón, en orden), uno más cada 10: **varios a
-  la vez** (2 en la 10, 3 en la 20). El primero con todo su comportamiento; los demás pasean y le tiran a la
-  muralla. Con 35 % de su vida y la mitad de su golpe.
+  la vez** (2 en la 10, 3 en la 20). También salen arriba: el primero, con todo su comportamiento, se
+  acerca a la muralla con cada brinco; los demás bajan caminando. Todos le tiran lo suyo a la muralla. Con
+  35 % de su vida y la mitad de su golpe.
 - Premio: **Runas** por oleada aguantada (1, y +2 por cada jefe; antes de 0.15.0, 1 + 1 cada 5 oleadas + 3 por jefe) y el oro de lo que revientas.
 - **3 entradas**; vuelve una cada **8 h**.
 - Simulador (jugador que toca bien): 19–23 oleadas y unas 25–40 Runas por partida (0.15.0; antes 64–88).
+  Con la marcha (0.18.0), igual: 20–22 oleadas y 36–38 Runas (lo que decide es que cada oleada es un nivel
+  más difícil; la velocidad casi no cambia el resultado).
 
 **Herrería** (desde la ventana de Supervivencia): 9 piezas de +0 a +10.
 

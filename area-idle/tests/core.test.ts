@@ -1436,17 +1436,50 @@ describe('Supervivencia: oleadas que dan Runas', () => {
     expect(run.oleadas!.bote).toBe([1, 2, 3, 4, 5, 6, 7, 8, 9].reduce((t, o) => t + runasOla(o), 0));
     expect(ev.filter((e) => e.type === 'waveClear')).toHaveLength(9);
   });
-  it('si se acaba el tiempo, los que quedan se escapan y golpean la muralla; si cae, se acaba', () => {
-    // Slimes verdes (no atacan): la muralla solo cae por los que se escapan.
+  it('todos salen arriba y bajan hacia la muralla; los que llegan la golpean y, si cae, se acaba', () => {
+    // Slimes verdes (no tiran nada): igual golpean la muralla al llegar.
     const run = createSurvivalRun(computeStats({}), 600, 1, 1, 2);
     run.cursor = { x: -999, y: -999 };
     const ev: RunEvent[] = [];
-    for (let i = 0; i < 6000 && !run.terminada; i++) ev.push(...stepRun(run, 0.05));
-    expect(ev.some((e) => e.type === 'escape' && e.cuantos > 0)).toBe(true);
+    for (let i = 0; i < 50; i++) ev.push(...stepRun(run, 0.05));
+    const salen = ev.filter((e): e is Extract<RunEvent, { type: 'spawn' }> => e.type === 'spawn');
+    expect(salen.length).toBeGreaterThan(0);
+    for (const e of salen) expect(e.y).toBeLessThanOrEqual(run.arriba + 30 + 14);
+    const antes = new Map(run.enemies.map((e) => [e.id, e.y]));
+    for (let i = 0; i < 40; i++) ev.push(...stepRun(run, 0.05));
+    for (const e of run.enemies) if (antes.has(e.id)) expect(e.y).toBeGreaterThan(antes.get(e.id)!);
+    for (let i = 0; i < 8000 && !run.terminada; i++) ev.push(...stepRun(run, 0.05));
+    expect(ev.some((e) => e.type === 'sling' && e.tipo === 'golpe')).toBe(true);
+    expect(ev.filter((e) => e.type === 'wallHit').every((e) => e.danio >= OLEADAS.golpe * levelConfig(1).ataque - 1e-9)).toBe(true);
     expect(run.muro.caido).toBe(true);
     expect(run.terminada).toBe(true);
     expect(ev.at(-1)).toEqual({ type: 'end', gano: false });
-    expect(OLEADAS.duracion).toBe(30);
+  });
+  it('si no limpias la oleada a tiempo, cuenta como aguantada y llega la siguiente: se juntan', () => {
+    const run = createSurvivalRun(computeStats({ muralla: 20 }), 600, 1, 1, 3);
+    run.cursor = { x: -999, y: -999 };
+    run.muro.max = run.muro.vida = 1e9;
+    let vivosAlLlegar = -1;
+    for (let i = 0; i < 2000 && vivosAlLlegar < 0; i++) {
+      const vivos = run.enemies.length;
+      for (const e of stepRun(run, 0.05)) if (e.type === 'wave' && e.ola === 2) vivosAlLlegar = vivos;
+    }
+    expect(vivosAlLlegar).toBeGreaterThan(0);
+    expect(run.oleadas!.superadas).toBe(1);
+    expect(run.oleadas!.bote).toBe(runasOla(1));
+  });
+  it('los jefes también salen arriba y bajan', () => {
+    const run = createSurvivalRun(computeStats({ muralla: 20 }), 600, 20, 30, 4);
+    run.cursor = { x: -999, y: -999 };
+    run.muro.max = run.muro.vida = 1e9;
+    run.oleadas!.ola = 4;
+    let jefe: { id: number; y: number } | null = null;
+    for (let i = 0; i < 200 && !jefe; i++) for (const e of stepRun(run, 0.05)) if (e.type === 'spawn' && ENEMIES[e.kind].jefe) jefe = { id: e.id, y: e.y };
+    expect(jefe).not.toBeNull();
+    expect(jefe!.y).toBeLessThanOrEqual(run.arriba + 20);
+    for (let i = 0; i < 400; i++) stepRun(run, 0.05);
+    const ahora = run.enemies.find((e) => e.id === jefe!.id);
+    expect(ahora && ahora.y).toBeGreaterThan(jefe!.y + 40);
   });
 });
 
