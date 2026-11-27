@@ -37,6 +37,12 @@
     {:else}
       <p class="nota">{$t('fin.seQueda')}</p>
     {/if}
+    {#if $view.abrioSacerdote}
+      <div class="nuevo" data-testid="nuevo-sacerdote"><Icon name="sacerdote" size={36} /><span>{$t('fin.nuevoSacerdote')}</span></div>
+    {/if}
+    {#if $view.abrioCaballero}
+      <div class="nuevo" data-testid="nuevo-caballero"><Icon name="caballero" size={36} /><span>{$t('fin.nuevoCaballero')}</span></div>
+    {/if}
     {#if $view.abrioSupervivencia}
       <div class="nuevo" data-testid="nuevo-supervivencia"><Icon name="oleadas" size={36} /><span>{$t('oleadas.nuevo')}</span></div>
     {/if}

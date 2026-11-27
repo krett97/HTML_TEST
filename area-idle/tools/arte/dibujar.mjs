@@ -363,6 +363,57 @@ function arquero(t = 0) {
 }
 scene('arquero', arquero(0));
 for (const t of [1, 2, 3]) scene(`arquero_${t}`, arquero(t));
+
+// ---- El caballero (110 × 130): armadura plateada, capa azul de líder, penacho rojo, espada y escudo ----
+function caballero() {
+  let s = '';
+  // Capa
+  s += o('M28 54 C18 84 14 110 14 124 H86 C86 110 82 84 72 54 Z', '#2f56a0', 5) + f('M60 58 C70 84 76 106 78 122 H86 C86 108 82 84 72 54 Z', '#244786');
+  // Botas
+  s += rect(34, 108, 12, 18, 3, '#7a8396', 4) + rect(52, 108, 12, 18, 3, '#7a8396', 4);
+  // Armadura con cinturón
+  s += o('M30 62 C28 82 28 100 30 112 H68 C70 100 70 82 68 62 Z', '#c9d0dc', 6) + f('M49 64 V112 H58 C57 96 56 80 55 64 Z', '#9aa3b4');
+  s += line('M36 76 C44 80 54 80 62 76', '#9aa3b4', 3) + brillo(40, 72, 5, 3, 0.6);
+  s += rect(28, 94, 42, 7, 3, P.maderaS, 4) + rect(44, 93, 9, 9, 2, P.oro, 3);
+  // Espada levantada (la mano a la derecha)
+  s += line('M90 56 L100 8', K, 10) + line('M90 56 L100 8', '#eef3fb', 5) + line('M95 32 L99 12', P.blanco, 2);
+  s += line('M82 52 L98 58', K, 8) + line('M82 52 L98 58', P.oro, 4) + line('M90 56 L87 66', K, 7) + line('M90 56 L87 66', P.maderaS, 3) + circ(86, 68, 3.5, P.oro, 3);
+  s += o('M64 70 C72 66 80 62 86 56 l6 7 C86 72 76 78 68 82 Z', '#c9d0dc', 5) + circ(90, 60, 6, '#9aa3b4', 4);
+  // Escudo al frente
+  s += o('M6 66 H34 V84 C34 98 26 106 20 110 C14 106 6 98 6 84 Z', '#2f56a0', 5) + line('M6 66 H34', P.oro, 3) + line('M20 66 V108', '#244786', 3);
+  s += o('M20 74 l3 6 l6 1 l-4.5 4 l1 6 l-5.5 -3 l-5.5 3 l1 -6 l-4.5 -4 l6 -1 z', P.oro, 2.5);
+  // Yelmo con visera y penacho
+  s += o('M50 22 C58 10 70 6 78 9 C72 13 66 19 64 28 Z', P.rojo, 4);
+  s += circ(50, 44, 19, '#c9d0dc', 6) + f('M50 26 C60 28 66 36 68 46 C62 40 56 38 50 38 Z', '#dfe5ee');
+  s += rect(35, 40, 30, 9, 3, '#3d4560', 3) + circ(43, 44.5, 2.4, '#bff4ff', 0) + circ(57, 44.5, 2.4, '#bff4ff', 0);
+  s += line('M50 26 V40', '#9aa3b4', 3) + line('M38 56 H62', '#9aa3b4', 3);
+  return svg(110, 130, s);
+}
+scene('caballero', caballero());
+
+// ---- El sacerdote (100 × 130): túnica blanca con dorado, capucha, aureola y bastón con un sol ----
+function sacerdote() {
+  let s = '';
+  // Bastón con el sol
+  s += line('M84 38 L80 126', K, 10) + line('M84 38 L80 126', P.maderaC, 5);
+  for (let i = 0; i < 8; i++) {
+    const a = (i * Math.PI) / 4;
+    s += line(`M${84 + Math.cos(a) * 11} ${26 + Math.sin(a) * 11} L${84 + Math.cos(a) * 17} ${26 + Math.sin(a) * 17}`, P.oro, 4);
+  }
+  s += circ(84, 26, 9, P.amarillo, 4) + circ(82, 24, 3.5, P.blanco, 0);
+  // Túnica
+  s += o('M28 62 C24 92 18 118 14 128 H82 C78 118 72 92 68 62 Z', P.blanco, 6) + f('M48 64 V128 H58 C56 106 54 84 52 64 Z', '#e3ddd0');
+  s += line('M16 122 H80', P.oro, 4) + o('M44 64 H54 L56 126 H42 Z', P.oro, 3) + circ(49, 84, 5, P.blanco, 2.5);
+  // Brazo al bastón
+  s += o('M60 78 C68 76 74 72 80 70 l3 9 C76 86 68 88 62 90 Z', P.blanco, 5) + circ(82, 76, 6, P.crema, 4);
+  // Capucha y cara (tranquila, ojos cerrados)
+  s += o('M28 52 C26 32 36 22 48 22 C60 22 70 32 68 52 C64 68 58 72 48 72 C38 72 32 68 28 52 Z', '#efe6d2', 6);
+  s += circ(48, 50, 15, P.crema, 5) + line('M40 49 q3 2.5 6 0 M51 49 q3 2.5 6 0', K, 3) + line('M44 57 q4 3 8 0', K, 3) + circ(39, 55, 2.5, P.rosa, 0) + circ(57, 55, 2.5, P.rosa, 0);
+  // Aureola
+  s += `<ellipse cx="48" cy="14" rx="18" ry="5.5" fill="none" stroke="${K}" stroke-width="7"/><ellipse cx="48" cy="14" rx="18" ry="5.5" fill="none" stroke="${P.oro}" stroke-width="3.5"/>`;
+  return svg(100, 130, s);
+}
+scene('sacerdote', sacerdote());
 // La flecha que cae del cielo (vertical, punta abajo) y la de los arqueros (horizontal, punta a la derecha).
 scene('flecha', svg(16, 72, line('M8 4 V58', K, 7) + line('M8 4 V58', P.madera, 3.5) + o('M2 54 L8 70 L14 54 Z', P.grisS, 3.5) + o('M8 4 l-6 -2 v12 l6 4 z M8 4 l6 -2 v12 l-6 4 z', P.blanco, 3)));
 
@@ -579,6 +630,31 @@ icon('arbol', I(line('M32 14 V30 M32 30 L14 46 M32 30 V46 M32 30 L50 46', K, 5) 
 icon('jugar', I(o('M20 10 L54 32 L20 54 Z', P.blanco, 6)));
 // Anuncio: una pantallita con el botón de play y una moneda (ver un anuncio para ganar oro).
 icon('anuncio', I(rect(4, 12, 46, 34, 7, '#3d4560', 5) + rect(10, 18, 34, 22, 3, P.azulC, 0) + o('M22 22 L33 29 L22 36 Z', P.rojo, 2.5) + line('M18 54 H36 M27 46 V54', K, 5) + g('translate(30 26) scale(0.55)', `<circle cx="32" cy="32" r="26" fill="${P.oro}" stroke="${K}" stroke-width="7"/><circle cx="32" cy="32" r="15" fill="none" stroke="${P.oroS}" stroke-width="5"/>`)));
+// Caballero y sacerdote: sus secciones y sus talentos.
+const yelmo = (x, y, k = 1) => g(`translate(${x} ${y}) scale(${k})`, o('M32 8 C40 0 50 -2 56 0 C50 4 46 8 44 14 Z', P.rojo, 4) + circ(32, 30, 20, '#c9d0dc', 5) + rect(16, 26, 32, 9, 3, '#3d4560', 3) + circ(25, 30.5, 2.4, '#bff4ff', 0) + circ(39, 30.5, 2.4, '#bff4ff', 0) + line('M32 10 V26', '#9aa3b4', 3));
+const espadaI = (rot, x = 32, y = 32) => g(`rotate(${rot} ${x} ${y})`, line(`M${x} ${y - 26} V${y + 10}`, K, 9) + line(`M${x} ${y - 26} V${y + 10}`, '#eef3fb', 5) + line(`M${x - 10} ${y + 10} H${x + 10}`, K, 8) + line(`M${x - 10} ${y + 10} H${x + 10}`, P.oro, 4) + line(`M${x} ${y + 12} V${y + 22}`, K, 7) + line(`M${x} ${y + 12} V${y + 22}`, P.maderaS, 3) + circ(x, y + 25, 3.5, P.oro, 3));
+const sol = (x, y, r) => {
+  let s = '';
+  for (let i = 0; i < 8; i++) {
+    const a = (i * Math.PI) / 4;
+    s += line(`M${x + Math.cos(a) * (r + 3)} ${y + Math.sin(a) * (r + 3)} L${x + Math.cos(a) * (r + 10)} ${y + Math.sin(a) * (r + 10)}`, P.oro, 4);
+  }
+  return s + circ(x, y, r, P.amarillo, 4) + circ(x - 3, y - 3, r * 0.35, P.blanco, 0);
+};
+icon('caballero', I(yelmo(0, 6)));
+icon('espada', I(espadaI(35)));
+icon('tajo', I(espadaI(20, 36, 30) + line('M6 24 C10 16 16 12 22 10 M4 36 C8 28 14 24 20 22 M8 48 C12 40 18 36 24 34', P.azulS, 4)));
+icon('coraza', I(o('M14 12 C22 6 42 6 50 12 L56 24 L48 28 L46 56 H18 L16 28 L8 24 Z', '#c9d0dc', 5) + line('M32 10 V54 M18 32 C26 36 38 36 46 32', '#9aa3b4', 3) + brillo(22, 18, 5, 3, 0.6) + o('M28 22 h8 v6 h6 v8 h-6 v6 h-8 v-6 h-6 v-8 h6 z', P.rojo, 2.5)));
+icon('barrido', I(line('M8 44 C16 14 48 14 56 44', P.azulS, 7) + line('M8 44 C16 14 48 14 56 44', P.blanco, 3) + espadaI(-50, 30, 40) + circ(10, 54, 5, P.limo, 3) + circ(54, 54, 5, P.limo, 3)));
+icon('regreso', I(o('M32 6 A26 26 0 1 1 8 40', 'none', 6) + o('M2 34 L10 46 L18 34 Z', P.pasto, 3) + line('M32 6 A26 26 0 1 1 8 40', P.pasto, 4) + yelmo(15, 16, 0.55)));
+// Mando: el estandarte del líder (bandera azul con corona) y un brillo de "+".
+icon('mando', I(line('M14 4 V62', P.maderaS, 6) + circ(14, 4, 4, P.oro, 3) + o('M16 8 H54 L46 22 L54 36 H16 Z', '#2f56a0', 5) + o('M24 28 L26 16 L31 22 L35 13 L39 22 L44 16 L46 28 Z', P.oro, 2.5) + o('M44 44 h6 v6 h6 v6 h-6 v6 h-6 v-6 h-6 v-6 h6 z', P.rojo, 2.5)));
+icon('sacerdote', I(sol(32, 34, 13) + `<ellipse cx="32" cy="9" rx="16" ry="5" fill="none" stroke="${K}" stroke-width="6"/><ellipse cx="32" cy="9" rx="16" ry="5" fill="none" stroke="${P.oro}" stroke-width="3"/>`));
+icon('luz', I(o('M22 2 H42 L48 54 H16 Z', '#fff3a0', 4) + f('M28 2 H36 L38 54 H26 Z', P.blanco, 'opacity=".9"') + `<ellipse cx="32" cy="56" rx="22" ry="6" fill="${P.amarillo}" stroke="${K}" stroke-width="4"/>` + circ(12, 20, 2.5, P.oro, 0) + circ(52, 14, 2.5, P.oro, 0)));
+icon('plegaria', I(o('M6 18 C16 14 26 16 32 22 C38 16 48 14 58 18 V52 C48 48 38 50 32 56 C26 50 16 48 6 52 Z', P.crema, 5) + line('M32 22 V56', P.cremaS, 3) + line('M12 28 H26 M12 36 H26 M38 28 H52 M38 36 H52', P.grisS, 3) + circ(32, 10, 6, P.amarillo, 3)));
+icon('sanar', I(o('M32 58 C10 44 4 32 8 20 C12 8 26 8 32 18 C38 8 52 8 56 20 C60 32 54 44 32 58 Z', '#ff8fa8', 5) + o('M27 20 h10 v9 h9 v10 h-9 v9 h-10 v-9 h-9 v-10 h9 z', P.pasto, 3)));
+icon('halo', I(`<ellipse cx="32" cy="34" rx="26" ry="14" fill="${P.amarillo}" fill-opacity=".35" stroke="${K}" stroke-width="7"/><ellipse cx="32" cy="34" rx="26" ry="14" fill="none" stroke="${P.oro}" stroke-width="4"/>` + line('M32 8 V18 M12 14 l5 7 M52 14 l-5 7', P.oro, 4)));
+icon('bendicion', I(o('M4 58 V26 H12 V18 H22 V26 H28 V18 H38 V26 H44 V18 H54 V26 H60 V58 Z', '#c9c0b2', 5) + line('M4 44 H60', '#8a7f70', 3) + o('M27 30 h10 v8 h8 v10 h-8 v8 h-10 v-8 h-8 v-10 h8 z', P.pasto, 3) + circ(52, 10, 3, P.amarillo, 0) + circ(10, 8, 2.5, P.amarillo, 0)));
 // Mejorar: una persona (capucha azul) con una flecha verde hacia arriba a su lado.
 icon('mejorar', I(o('M4 60 C4 44 12 37 24 37 C36 37 44 44 44 60 Z', P.azul, 5) + line('M24 40 V60', P.azulS, 3) + circ(24, 22, 11, P.crema, 5) + circ(20.5, 21, 1.8, K, 0) + circ(27.5, 21, 1.8, K, 0) + line('M21 26.5 q3 2.5 6 0', K, 2) + o('M50 4 L63 21 H56 V48 H44 V21 H37 Z', P.pasto, 4) + f('M50 9 L58 19 H53 V44 H48 V19 Z', P.pastoC, 'opacity=".7"')));
 icon('ajustes', I(o('M32 6 l6 2 l2 8 l8 4 l8 -2 l4 6 l-5 6 l0 8 l5 6 l-4 6 l-8 -2 l-8 4 l-2 8 l-6 2 l-6 -2 l-2 -8 l-8 -4 l-8 2 l-4 -6 l5 -6 l0 -8 l-5 -6 l4 -6 l8 2 l8 -4 l2 -8 z', P.grisS, 5) + circ(32, 34, 9, P.piedra, 5)));

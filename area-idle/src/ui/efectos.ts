@@ -30,6 +30,17 @@ const VALOR: Partial<Record<TalentId, (s: Stats, l: Levels) => string>> = {
   multiflecha: (s) => String(s.arqueros.objetivos),
   arcoRapido: (s) => uno(1 / s.arqueros.intervalo),
   arcoDanio: (s) => formatNum(s.arqueros.danio),
+  espada: (s) => formatNum(s.caballero.danio),
+  tajo: (s) => uno(s.caballero.intervalo),
+  coraza: (s) => formatNum(s.caballero.vida),
+  barrido: (s) => String(s.caballero.objetivos),
+  regreso: (s) => uno(s.caballero.regreso),
+  mando: (_, l) => `+${5 * ((l.caballero ?? 0) > 0 ? (l.mando ?? 0) : 0)}%`,
+  luz: (s) => formatNum(s.sacerdote.danio),
+  plegaria: (s) => uno(s.sacerdote.intervalo),
+  sanar: (s) => `${Math.round(s.sacerdote.curaCaballero * 100)}%`,
+  halo: (s) => uno(s.sacerdote.radio),
+  bendicion: (s) => `${(Math.round(s.sacerdote.curaMuro * 1000) / 10).toString()}%`,
 };
 
 export function effectValues(id: TalentId, levels: Levels): { a: string; b: string } {

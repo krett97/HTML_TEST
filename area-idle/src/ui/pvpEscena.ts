@@ -16,6 +16,9 @@ export interface Puesto {
 export interface Puestos {
   arqueros: Puesto[];
   mago: Puesto | null;
+  /** El caballero, delante de su muralla (en la batalla avanza a pelear al centro), y el sacerdote en la muralla. */
+  caballero: Puesto | null;
+  sacerdote: Puesto | null;
   torre: { x: number; y: number; w: number; h: number };
   /** La franja de la muralla (arriba y alto). */
   muro: { y: number; h: number };
@@ -31,22 +34,29 @@ export function puestos(e: Ejercito, lado: Lado, W: number, F: number, B: number
   const arqueroH = 0.3 * B;
   const magoH = 0.36 * B;
   const n = e.arqueros;
+  const caballeroH = 0.38 * B;
+  // Con sacerdote, el último lugar de la muralla es suyo (a la derecha en el tuyo, a la izquierda en el del rival).
+  const hueco = e.sacerdote ? 26 : 0;
   if (lado === 'abajo') {
     const desde = torreW + 10;
-    const hasta = W - 16;
+    const hasta = W - 16 - hueco;
     return {
       arqueros: Array.from({ length: n }, (_, i) => ({ x: desde + ((i + 0.5) / n) * (hasta - desde), y: F - 0.3 * B, h: arqueroH })),
       mago: e.mago ? { x: torreW * 0.48, y: F - 0.64 * B, h: magoH } : null,
+      caballero: e.caballero ? { x: W * 0.5, y: F - muroH - 6, h: caballeroH } : null,
+      sacerdote: e.sacerdote ? { x: W - 20, y: F - 0.3 * B, h: arqueroH * 1.05 } : null,
       torre: { x: 0, y: F - torreH, w: torreW, h: torreH },
       muro: { y: F - muroH, h: muroH },
       blanco: { x0: W * 0.12, x1: W * 0.88, y: F - muroH * 0.55 },
     };
   }
-  const desde = 16;
+  const desde = 16 + hueco;
   const hasta = W - torreW - 10;
   return {
     arqueros: Array.from({ length: n }, (_, i) => ({ x: desde + ((i + 0.5) / n) * (hasta - desde), y: 0.62 * B, h: arqueroH })),
     mago: e.mago ? { x: W - torreW * 0.48, y: 0.98 * B, h: magoH } : null,
+    caballero: e.caballero ? { x: W * 0.5, y: muroH + caballeroH + 0.2 * B, h: caballeroH } : null,
+    sacerdote: e.sacerdote ? { x: 20, y: 0.62 * B, h: arqueroH * 1.05 } : null,
     torre: { x: W - torreW, y: 0, w: torreW, h: torreH },
     muro: { y: 0, h: muroH },
     blanco: { x0: W * 0.12, x1: W * 0.88, y: muroH * 0.55 },

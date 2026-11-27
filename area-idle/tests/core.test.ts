@@ -13,6 +13,8 @@ import { autoAiming, circleActive, createGuardRun, guardLevel, startGuardRun, up
 import { AUTOAPUNTAR } from '../src/core/datos';
 import { CURVA, GUARDIA, ORO_TALENTOS } from '../src/core/datos';
 import { ALLY_ROW, archerSpots, bossOf, createRun, DAMAGE_TYPE_OF, FIELD_W, moveCursor, startRun, stepRun, type Run, type RunEvent } from '../src/core/run';
+import { KNIGHT_R, priestSpot } from '../src/core/run';
+import { BASE, CABALLERO_DESDE, SACERDOTE_DESDE } from '../src/core/datos';
 import { computeStats } from '../src/core/stats';
 import { BONO_DIARIO, claimableCount, claimBonus, claimMission, dailyProgress, dayKey, DIARIAS, DIARIAS_POR_DIA, MISSION_BY_ID, msUntilReset, permanentProgress, rollDaily } from '../src/core/misiones';
 import { MISIONES_DESDE, PVP_DESDE, RANKING_DESDE } from '../src/core/datos';
@@ -1557,16 +1559,113 @@ describe('PvP: poder fácil de leer y los dos ejércitos', () => {
     m.talentos = { arqueros: 1, masArqueros: 2, mago: 1 };
     m.equipo.niveles = { baculo: 5, tunica: 5, sombrero: 3 };
     const mio = myArmy(m);
-    expect(mio).toMatchObject({ arqueros: 3, mago: true, etapas: { mago: 2, arqueros: 0, base: 0 } });
+    expect(mio).toMatchObject({ arqueros: 3, mago: true, caballero: false, sacerdote: false, etapas: { mago: 2, arqueros: 0, base: 0 } });
     const fuerte = rivalArmy(mio, 2.5, 5, 'r1');
     const flojo = rivalArmy(mio, 0.4, 0, 'r1');
     expect(fuerte.arqueros).toBeGreaterThan(flojo.arqueros);
     expect(fuerte.etapas.base).toBeGreaterThan(flojo.etapas.base);
     expect(rivalArmy(mio, 1, 2, 'r7')).toEqual(rivalArmy(mio, 1, 2, 'r7'));
     for (const id of ['r1', 'r2', 'r3', 'r4']) {
-      const e = rivalArmy({ arqueros: 0, mago: false, etapas: { mago: 0, arqueros: 0, base: 0 } }, 1, 0, id);
+      const e = rivalArmy({ arqueros: 0, mago: false, caballero: false, sacerdote: false, etapas: { mago: 0, arqueros: 0, base: 0 } }, 1, 0, id);
       expect(e.arqueros).toBeGreaterThanOrEqual(1);
       expect(e.arqueros).toBeLessThanOrEqual(6);
     }
+  });
+});
+
+describe('caballero y sacerdote', () => {
+  const quieto = (run: Run) => {
+    run.stats = { ...run.stats, ritmo: 0 };
+    run.cursor = { x: -999, y: -999 };
+    run.disparo = Infinity;
+  };
+  it('se compran desde el nivel 21 y 31, cada uno con su sección (7 y 6 mejoras)', () => {
+    const m = createMeta();
+    m.oro = 1e12;
+    m.nivel = CABALLERO_DESDE - 1;
+    expect(talentState(m, TALENT_BY_ID.caballero)).toBe('bloqueado');
+    m.nivel = CABALLERO_DESDE;
+    expect(buyTalent(m, 'caballero')).toBe(true);
+    expect(talentState(m, TALENT_BY_ID.sacerdote)).toBe('bloqueado');
+    m.nivel = SACERDOTE_DESDE;
+    expect(buyTalent(m, 'sacerdote')).toBe(true);
+    expect(TALENTS.filter((t) => t.seccion === 'caballero')).toHaveLength(7);
+    expect(TALENTS.filter((t) => t.seccion === 'sacerdote')).toHaveLength(6);
+    const s = computeStats({ caballero: 1, sacerdote: 1 });
+    expect(s.caballero.activo && s.sacerdote.activo).toBe(true);
+    expect(computeStats({ caballero: 1, espada: 4 }).caballero.danio).toBeCloseTo(s.caballero.danio * 3);
+    expect(computeStats({ caballero: 1, coraza: 5 }).caballero.vida).toBeCloseTo(s.caballero.vida * 3);
+    expect(computeStats({ sacerdote: 1, sanar: 2 }).sacerdote.curaCaballero).toBeGreaterThan(s.sacerdote.curaCaballero);
+  });
+  it('el caballero camina hasta un enemigo, le da tajos y lo revienta (daño físico)', () => {
+    const run = createRun(computeStats({ danio: 10, caballero: 1 }), 600, 22, 1);
+    quieto(run);
+    const c = run.caballero!;
+    expect(c).not.toBeNull();
+    run.enemies.push({ id: 900, kind: 'verde', x: 100, y: 200, vx: 0, vy: 0, vida: 50, vidaMax: 50, giro: 99 });
+    const y0 = c.y;
+    const ev: RunEvent[] = [];
+    for (let i = 0; i < 200 && run.enemies.some((e) => e.id === 900); i++) ev.push(...stepRun(run, 0.05));
+    expect(c.y).toBeLessThan(y0);
+    expect(ev.some((e) => e.type === 'knightHit')).toBe(true);
+    expect(ev.some((e) => e.type === 'kill' && e.id === 900 && e.fuente === 'caballero')).toBe(true);
+  });
+  it('los que lo tocan le pegan; si se queda sin vida cae y vuelve con toda su vida (en guardia, no le pegan)', () => {
+    const run = createRun(computeStats({ caballero: 1 }), 600, 30, 2);
+    quieto(run);
+    const c = run.caballero!;
+    for (let i = 0; i < 4; i++) run.enemies.push({ id: 910 + i, kind: 'minotauro', x: c.x + (i - 1.5) * 6, y: c.y - 6, vx: 0, vy: 0, vida: 1e9, vidaMax: 1e9, giro: 99 });
+    const ev: RunEvent[] = [];
+    for (let i = 0; i < 2000 && !ev.some((e) => e.type === 'knightDown'); i++) ev.push(...stepRun(run, 0.05));
+    expect(ev.some((e) => e.type === 'knightDown')).toBe(true);
+    expect(c.caido).toBeGreaterThan(0);
+    run.enemies = [];
+    for (let i = 0; i < 400 && !ev.some((e) => e.type === 'knightUp'); i++) ev.push(...stepRun(run, 0.05));
+    expect(ev.some((e) => e.type === 'knightUp')).toBe(true);
+    expect(c.vida).toBe(c.max);
+    const g = createGuardRun(computeStats({ caballero: 1 }), 600, 30, 1, 3);
+    const k = g.caballero!;
+    g.enemies.push({ id: 920, kind: 'minotauro', x: k.x, y: k.y - 6, vx: 0, vy: 0, vida: 1e9, vidaMax: 1e9, giro: 99 });
+    for (let i = 0; i < 200; i++) stepRun(g, 0.05);
+    expect(k.vida).toBe(k.max);
+  });
+  it('en la Supervivencia frena a los que marchan: se quedan peleando con él', () => {
+    const run = createSurvivalRun(computeStats({ caballero: 1, coraza: 15 }), 600, 5, 10, 4);
+    run.cursor = { x: -999, y: -999 };
+    const c = run.caballero!;
+    run.enemies.push({ id: 930, kind: 'orco', x: c.x, y: c.y - 40, vx: 0, vy: 0, vida: 1e9, vidaMax: 1e9, giro: 99, tiro: 99 });
+    for (let i = 0; i < 100; i++) stepRun(run, 0.05);
+    const o = run.enemies.find((e) => e.id === 930)!;
+    expect(o.y).toBeLessThan(c.y);
+    expect(Math.hypot(o.x - c.x, o.y - c.y)).toBeLessThan(ENEMIES.orco.radio + KNIGHT_R + 6);
+  });
+  it('el sacerdote tira columnas de luz (daño de luz: a los esqueletos les duele más) al de más vida', () => {
+    const run = createRun(computeStats({ danio: 10, sacerdote: 1 }), 600, 32, 5);
+    quieto(run);
+    run.enemies.push({ id: 940, kind: 'esqueleto', x: 120, y: 200, vx: 0, vy: 0, vida: 1e6, vidaMax: 1e6, giro: 99 });
+    run.enemies.push({ id: 941, kind: 'verde', x: 250, y: 200, vx: 0, vy: 0, vida: 10, vidaMax: 10, giro: 99 });
+    const ev: RunEvent[] = [];
+    for (let i = 0; i < 80; i++) ev.push(...stepRun(run, 0.05));
+    const luz = ev.filter((e): e is Extract<RunEvent, { type: 'hit' }> => e.type === 'hit' && e.fuente === 'sacerdote');
+    expect(luz.length).toBeGreaterThan(0);
+    expect(luz[0]!.id).toBe(940);
+    expect(luz[0]!.efecto).toBe('debil');
+    expect(DAMAGE_TYPE_OF.sacerdote).toBe('luz');
+  });
+  it('el sacerdote cura al caballero y a la muralla, de a poco', () => {
+    const run = createRun(computeStats({ caballero: 1, sacerdote: 1 }), 600, 32, 6);
+    quieto(run);
+    run.caballero!.vida = run.caballero!.max * 0.5;
+    run.muro.vida = run.muro.max * 0.5;
+    const ev: RunEvent[] = [];
+    for (let i = 0; i < Math.ceil((BASE.sacerdote.cadaCura + 0.1) / 0.05); i++) ev.push(...stepRun(run, 0.05));
+    expect(ev.filter((e) => e.type === 'heal').map((e) => (e as { a: string }).a).sort()).toEqual(['caballero', 'muro']);
+    expect(run.caballero!.vida).toBeCloseTo(run.caballero!.max * (0.5 + BASE.sacerdote.curaCaballero));
+    expect(run.muro.vida).toBeCloseTo(run.muro.max * (0.5 + BASE.sacerdote.curaMuro));
+  });
+  it('con sacerdote, los arqueros dejan libre el último hueco de la muralla', () => {
+    const run = createRun(computeStats({ arqueros: 1, masArqueros: 5, sacerdote: 1 }), 600, 32, 7);
+    const xs = archerSpots(run).map((p) => p.x);
+    expect(Math.max(...xs)).toBeLessThan(priestSpot(run).x);
   });
 });

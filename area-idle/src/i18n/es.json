@@ -24,7 +24,9 @@
     "reintentar": "Reintentar nivel {n}",
     "anterior": "Nivel {n}",
     "ganoJefe": "¡Venciste al {nombre}!",
-    "leQuedo": "Le quedó {pct}%"
+    "leQuedo": "Le quedó {pct}%",
+    "nuevoCaballero": "¡Nuevo! El Caballero: pelea cuerpo a cuerpo y frena a los enemigos (en el árbol).",
+    "nuevoSacerdote": "¡Nuevo! El Sacerdote: luz sagrada y cura al caballero y a la muralla (en el árbol)."
   },
   "arbol": {
     "jugar": "Jugar nivel",
@@ -145,6 +147,58 @@
     "autoapuntar": {
       "nombre": "Autoapuntado",
       "efecto": "Si no tocas, tu círculo va solo hacia los enemigos, despacio: {a} → {b}"
+    },
+    "caballero": {
+      "nombre": "Caballero",
+      "efecto": "Pelea cuerpo a cuerpo en el campo y frena a los enemigos"
+    },
+    "espada": {
+      "nombre": "Espada",
+      "efecto": "Daño del tajo {a} → {b}"
+    },
+    "tajo": {
+      "nombre": "Tajo veloz",
+      "efecto": "Un tajo cada {a} s → {b} s"
+    },
+    "coraza": {
+      "nombre": "Coraza",
+      "efecto": "Vida del caballero {a} → {b}"
+    },
+    "barrido": {
+      "nombre": "Barrido",
+      "efecto": "Enemigos por tajo {a} → {b}"
+    },
+    "regreso": {
+      "nombre": "De pie otra vez",
+      "efecto": "Si cae, vuelve en {a} s → {b} s"
+    },
+    "sacerdote": {
+      "nombre": "Sacerdote",
+      "efecto": "Columnas de luz y cura al caballero y a la muralla"
+    },
+    "luz": {
+      "nombre": "Luz sagrada",
+      "efecto": "Daño de luz {a} → {b}"
+    },
+    "plegaria": {
+      "nombre": "Plegaria",
+      "efecto": "Una columna cada {a} s → {b} s"
+    },
+    "sanar": {
+      "nombre": "Sanar",
+      "efecto": "Cura al caballero {a} → {b} de su vida"
+    },
+    "halo": {
+      "nombre": "Halo",
+      "efecto": "Radio de la luz {a} → {b}"
+    },
+    "bendicion": {
+      "nombre": "Bendición",
+      "efecto": "Cura a la muralla {a} → {b} de su vida"
+    },
+    "mando": {
+      "nombre": "Mando",
+      "efecto": "Todo el daño (tuyo y de tus aliados) {a} → {b}"
     }
   },
   "ajustes": {
@@ -174,7 +228,9 @@
     "jugador": "Jugador",
     "mago": "Mago",
     "arqueros": "Arqueros",
-    "reliquias": "Reliquias"
+    "reliquias": "Reliquias",
+    "caballero": "Caballero",
+    "sacerdote": "Sacerdote"
   },
   "glosario": {
     "titulo": "Glosario",

@@ -24,7 +24,9 @@
     "reintentar": "Retry level {n}",
     "anterior": "Level {n}",
     "ganoJefe": "You beat the {nombre}!",
-    "leQuedo": "{pct}% left"
+    "leQuedo": "{pct}% left",
+    "nuevoCaballero": "New! The Knight: fights hand to hand and holds enemies back (in the tree).",
+    "nuevoSacerdote": "New! The Priest: holy light; heals the knight and the wall (in the tree)."
   },
   "arbol": {
     "jugar": "Play level",
@@ -145,6 +147,58 @@
     "autoapuntar": {
       "nombre": "Auto-aim",
       "efecto": "If you don't tap, your circle drifts toward enemies, slowly: {a} → {b}"
+    },
+    "caballero": {
+      "nombre": "Knight",
+      "efecto": "Fights hand to hand on the field and holds enemies back"
+    },
+    "espada": {
+      "nombre": "Sword",
+      "efecto": "Slash damage {a} → {b}"
+    },
+    "tajo": {
+      "nombre": "Quick slash",
+      "efecto": "A slash every {a} s → {b} s"
+    },
+    "coraza": {
+      "nombre": "Breastplate",
+      "efecto": "Knight health {a} → {b}"
+    },
+    "barrido": {
+      "nombre": "Sweep",
+      "efecto": "Enemies per slash {a} → {b}"
+    },
+    "regreso": {
+      "nombre": "Back on his feet",
+      "efecto": "If he falls, returns in {a} s → {b} s"
+    },
+    "sacerdote": {
+      "nombre": "Priest",
+      "efecto": "Columns of light; heals the knight and the wall"
+    },
+    "luz": {
+      "nombre": "Holy light",
+      "efecto": "Light damage {a} → {b}"
+    },
+    "plegaria": {
+      "nombre": "Prayer",
+      "efecto": "A column every {a} s → {b} s"
+    },
+    "sanar": {
+      "nombre": "Heal",
+      "efecto": "Heals the knight {a} → {b} of his health"
+    },
+    "halo": {
+      "nombre": "Halo",
+      "efecto": "Light radius {a} → {b}"
+    },
+    "bendicion": {
+      "nombre": "Blessing",
+      "efecto": "Heals the wall {a} → {b} of its health"
+    },
+    "mando": {
+      "nombre": "Command",
+      "efecto": "All damage (yours and your allies') {a} → {b}"
     }
   },
   "ajustes": {
@@ -174,7 +228,9 @@
     "jugador": "Player",
     "mago": "Wizard",
     "arqueros": "Archers",
-    "reliquias": "Relics"
+    "reliquias": "Relics",
+    "caballero": "Knight",
+    "sacerdote": "Priest"
   },
   "glosario": {
     "titulo": "Glossary",

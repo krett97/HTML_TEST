@@ -7,7 +7,7 @@ import { ENEMIES, levelConfig, type EnemyKind, type ZoneId } from '../core/datos
 import { formatNum } from '../core/format';
 import { crearFuenteNumeros, NUMEROS } from './numeros';
 import { tierDe } from '../core/equipo';
-import { ALLY_ROW, archerSpots, autoAiming, circleActive, FIELD_W, hidden, wizardSpot, type Forma, type Run, type RunEvent } from '../core/run';
+import { ALLY_ROW, archerSpots, autoAiming, circleActive, FIELD_W, hidden, priestSpot, wizardSpot, type Forma, type Run, type RunEvent } from '../core/run';
 
 const URLS = import.meta.glob<string>('../assets/arte/*.png', { eager: true, query: '?url', import: 'default' });
 
@@ -16,6 +16,9 @@ const D = { pasto: 0, deco: 1, mancha: 2, fuego: 3, sombra: 3.5, slime: 4, aliad
 /** Medidas de los PNG (px) y cómo se ven en el campo (unidades). */
 const MAGO = { px: 150, alto: 46 };
 const ARQUERO = { px: 120, alto: 34 };
+const CABALLERO = { px: 130, alto: 40 };
+const SACERDOTE = { px: 130, alto: 38 };
+const VERDE_CURA = 0x7fe07a;
 const FLECHA_PX = 72;
 /** Cuántas cosas a la vez, como máximo (con cientos de slimes no caben todas). */
 const MAX_NUMEROS = 70;
@@ -110,6 +113,11 @@ export class Campo extends Phaser.Scene {
   private readonly cursorPos = { x: FIELD_W / 2, y: 280 };
   private mago!: Phaser.GameObjects.Image;
   private arqueros: Phaser.GameObjects.Image[] = [];
+  /** El caballero (en el campo), su barra de vida y su tajo; el sacerdote (en la muralla). */
+  private caballero!: Phaser.GameObjects.Image;
+  private barraCaballero!: Phaser.GameObjects.Graphics;
+  private tajo = 0;
+  private sacerdote!: Phaser.GameObjects.Image;
   /** La telaraña sobre cada arquero enredado. */
   private telas: (Phaser.GameObjects.Image | null)[] = [];
   private flechas!: Phaser.GameObjects.Graphics;
@@ -163,6 +171,9 @@ export class Campo extends Phaser.Scene {
     this.piedrasG = this.add.graphics().setDepth(D.flecha);
     this.barraMuro = this.add.graphics().setDepth(D.muro + 0.1);
     this.mago = this.add.image(0, 0, 'mago').setOrigin(0.5, 1).setScale(MAGO.alto / MAGO.px).setDepth(D.aliado).setVisible(false);
+    this.sacerdote = this.add.image(0, 0, 'sacerdote').setOrigin(0.5, 1).setScale(SACERDOTE.alto / SACERDOTE.px).setDepth(D.aliado).setVisible(false);
+    this.caballero = this.add.image(0, 0, 'caballero').setOrigin(0.5, 1).setScale(CABALLERO.alto / CABALLERO.px).setDepth(D.slime + 0.5).setVisible(false);
+    this.barraCaballero = this.add.graphics().setDepth(D.numero - 0.5);
 
     const particulas = (tint: number, extra: Phaser.Types.GameObjects.Particles.ParticleEmitterConfig = {}) =>
       this.add
@@ -319,6 +330,11 @@ export class Campo extends Phaser.Scene {
   private colocarTropas(run: Run): void {
     const m = wizardSpot(run);
     this.mago.setVisible(run.stats.mago.activo).setPosition(m.x, m.y).clearTint().setAngle(0).setAlpha(1);
+    const p = priestSpot(run);
+    this.sacerdote.setVisible(run.stats.sacerdote.activo).setPosition(p.x, p.y).clearTint().setAngle(0).setAlpha(1);
+    const c = run.caballero;
+    this.caballero.setVisible(!!c).setAngle(0).setAlpha(1).clearTint();
+    if (c) this.caballero.setPosition(c.x, c.y);
     this.muralla.clearTint();
     this.torre.clearTint();
     this.arqueros.forEach((a) => a.destroy());
@@ -350,6 +366,8 @@ export class Campo extends Phaser.Scene {
     if (!run?.guardia) {
       this.decorar(levelConfig(this.juego.meta.jugando).zona);
       this.mago.setVisible(false);
+      this.sacerdote.setVisible(false);
+      this.caballero.setVisible(false);
       this.cursor.setVisible(false);
       this.arqueros.forEach((a) => a.destroy());
       this.arqueros = [];
@@ -388,7 +406,7 @@ export class Campo extends Phaser.Scene {
     this.aplicarEquipo();
     const run = this.juego.run;
     // En guardia, si compraste tropas, se acomodan.
-    if (run?.guardia && (this.arqueros.length !== run.stats.arqueros.cantidad || this.mago.visible !== run.stats.mago.activo)) this.colocarTropas(run);
+    if (run?.guardia && (this.arqueros.length !== run.stats.arqueros.cantidad || this.mago.visible !== run.stats.mago.activo || this.sacerdote.visible !== run.stats.sacerdote.activo || this.caballero.visible !== !!run.caballero)) this.colocarTropas(run);
     // La cámara sube (pantalla principal) o baja (un nivel) suave; en guardia, los enemigos no pasean bajo el oro.
     const objetivo = this.levanteObjetivo();
     if (Math.abs(objetivo - this.levante) > 0.05) {
@@ -402,6 +420,10 @@ export class Campo extends Phaser.Scene {
       this.dibujarFlechas(run);
       this.dibujarPiedras(run);
       this.dibujarBarraMuro(run);
+      this.dibujarCaballero(run, dt);
+    } else {
+      this.caballero.setVisible(false);
+      this.barraCaballero.clear();
     }
     this.moverNumeros(dt);
     this.moverFuegos(dt);
@@ -527,10 +549,47 @@ export class Campo extends Phaser.Scene {
         }
         case 'shot':
           if (e.fuente === 'mago') this.bolaDeFuego(e.x, e.y, e.demora);
+          else if (e.fuente === 'sacerdote') this.columnaDeLuz(e.x, e.y, e.forma.tipo === 'circulo' ? e.forma.r : 18, e.demora);
           else if (e.forma.tipo === 'circulo') this.lluvia(e.x, e.y, e.forma.r, e.demora);
           break;
         case 'impact':
-          this.impacto(e.x, e.y, e.forma, e.fuente === 'mago');
+          this.impacto(e.x, e.y, e.forma, e.fuente === 'mago', e.fuente === 'sacerdote');
+          break;
+        case 'knightHit': {
+          // Un tajo: se inclina hacia el blanco y queda una media luna blanca.
+          this.tajo = 0.2;
+          this.caballero.setFlipX(e.tx < e.x);
+          const ang = Math.atan2(e.ty - e.y + 14, e.tx - e.x);
+          const arco = this.add.graphics().setDepth(D.destello);
+          arco.lineStyle(4, 0xffffff, 0.95).beginPath().arc(e.x, e.y - 14, 18, ang - 1.1, ang + 1.1).strokePath();
+          arco.lineStyle(2, AMARILLO, 0.9).beginPath().arc(e.x, e.y - 14, 22, ang - 0.9, ang + 0.9).strokePath();
+          this.tweens.add({ targets: arco, alpha: 0, duration: 200, ease: 'Quad.out', onComplete: () => arco.destroy() });
+          break;
+        }
+        case 'knightDown':
+          // Cae (queda tirado y transparente) hasta que vuelve a la muralla.
+          this.emisores.polvo.explode(10, e.x, e.y);
+          this.tweens.killTweensOf(this.caballero);
+          this.tweens.add({ targets: this.caballero, angle: this.caballero.flipX ? -85 : 85, alpha: 0.35, duration: 260, ease: 'Quad.in' });
+          break;
+        case 'knightUp':
+          this.tweens.killTweensOf(this.caballero);
+          this.caballero.setAngle(0).setAlpha(1).setPosition(e.x, e.y);
+          this.emisores.aparece.explode(14, e.x, e.y - 16);
+          break;
+        case 'heal':
+          // La cura del sacerdote: destellos verdes y "+N" en el caballero o a lo largo de la muralla.
+          if (e.a === 'caballero') {
+            this.emisores.aparece.explode(8, e.x, e.y - 20);
+            this.numero(e.x, e.y - 44, e.n, VERDE_CURA, 8, '+');
+          } else {
+            for (const img of [this.muralla, this.torre]) img.setTint(0xc8f5b8);
+            this.time.delayedCall(220, () => {
+              if (!this.juego.run?.muro.caido) for (const img of [this.muralla, this.torre]) img.clearTint();
+            });
+            for (let i = 0; i < 4; i++) this.emisores.aparece.explode(3, 50 + i * 85, this.alto - ALLY_ROW + 6);
+            this.numero(e.x, e.y - 40, e.n, VERDE_CURA, 8, '+');
+          }
           break;
         case 'fire': {
           const img = this.add.image(e.x, e.y, 'cuadro').setTint(0x5a240c).setAlpha(0.4).setScale(e.w / 128, e.h / 128).setDepth(D.fuego);
@@ -712,6 +771,7 @@ export class Campo extends Phaser.Scene {
       this.tweens.add({ targets: img, angle: 24 * lado, y: img.y + 6, alpha: 0.75, duration: 280, ease: 'Quad.in' });
     };
     if (this.mago.visible) caer(this.mago, -1);
+    if (this.sacerdote.visible) caer(this.sacerdote, 1);
     this.arqueros.forEach((a, i) => caer(a, i % 2 ? 1 : -1));
     void run;
   }
@@ -911,12 +971,54 @@ export class Campo extends Phaser.Scene {
     this.tweens.add({ targets: this.mago, y: base - 4, duration: 90, yoyo: true, ease: 'Quad.out' });
   }
 
-  /** Aterriza un disparo: destello en la forma (círculo amarillo o rectángulo de fuego). */
-  private impacto(x: number, y: number, forma: Forma, mago: boolean): void {
+  /** La columna de luz del sacerdote: un rayo que baja del cielo sobre el blanco (cae en `demora` s). */
+  private columnaDeLuz(x: number, y: number, r: number, demora: number): void {
+    const alto = 120;
+    const rayo = this.add.image(x, y, 'rectangulo').setOrigin(0.5, 1).setTint(0xfff3a0).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0).setDepth(D.destello);
+    rayo.setScale((r * 1.1) / 128, alto / 48);
+    this.tweens.add({ targets: rayo, alpha: 0.75, duration: demora * 1000, ease: 'Quad.in', onComplete: () => this.tweens.add({ targets: rayo, alpha: 0, scaleX: rayo.scaleX * 0.3, duration: 220, onComplete: () => rayo.destroy() }) });
+    // El sacerdote levanta su bastón.
+    const p = this.juego.run ? priestSpot(this.juego.run) : { y: this.sacerdote.y };
+    this.tweens.killTweensOf(this.sacerdote);
+    this.sacerdote.setY(p.y);
+    this.tweens.add({ targets: this.sacerdote, y: p.y - 4, duration: 110, yoyo: true, ease: 'Quad.out' });
+    this.emisores.aparece.explode(4, this.sacerdote.x + 10, this.sacerdote.y - SACERDOTE.alto);
+  }
+
+  /** El caballero: sigue a su lugar en la partida, mira hacia donde camina, se inclina al dar un tajo y lleva su barra de vida. */
+  private dibujarCaballero(run: Run, dt: number): void {
+    const c = run.caballero;
+    const g = this.barraCaballero.clear();
+    if (!c) {
+      this.caballero.setVisible(false);
+      return;
+    }
+    if (!this.caballero.visible) this.caballero.setVisible(true).setPosition(c.x, c.y);
+    if (c.caido > 0) return;
+    const dx = c.x - this.caballero.x;
+    if (Math.abs(dx) > 0.4) this.caballero.setFlipX(dx < 0);
+    this.caballero.setPosition(c.x, c.y);
+    this.tajo = Math.max(0, this.tajo - dt);
+    this.caballero.setAngle(this.tajo > 0 ? (this.caballero.flipX ? -1 : 1) * 16 * Math.sin((this.tajo / 0.2) * Math.PI) : 0);
+    this.caballero.setDepth(D.slime + 0.5 + c.y / 10000);
+    // Su vida, encima de la cabeza (verde, amarilla o roja).
+    const parte = c.max > 0 ? c.vida / c.max : 0;
+    const w = 24;
+    const x = c.x - w / 2;
+    const y = c.y - CABALLERO.alto - 5;
+    g.fillStyle(CAFE).fillRoundedRect(x - 1, y - 1, w + 2, 5, 2);
+    g.fillStyle(0x5a3a2a).fillRoundedRect(x, y, w, 3, 1.5);
+    if (parte > 0) g.fillStyle(parte > 0.5 ? 0x7fd36a : parte > 0.25 ? 0xffd23f : 0xef5a4c).fillRoundedRect(x, y, Math.max(3, w * parte), 3, 1.5);
+  }
+
+  /** Aterriza un disparo: destello en la forma (círculo amarillo o rectángulo de fuego; la luz del sacerdote, blanca y dorada). */
+  private impacto(x: number, y: number, forma: Forma, mago: boolean, luz = false): void {
     if (forma.tipo === 'circulo') {
       const escala = (forma.r * 2) / 128;
-      const disco = this.add.image(x, y, 'disco').setTint(AMARILLO).setAlpha(0.45).setScale(escala).setDepth(D.destello);
-      const anillo = this.add.image(x, y, 'anillo').setTint(AMARILLO).setAlpha(0.9).setScale(escala * 0.7).setDepth(D.destello);
+      const color = luz ? 0xfff6c0 : AMARILLO;
+      if (luz) this.emisores.aparece.explode(10, x, y - 4);
+      const disco = this.add.image(x, y, 'disco').setTint(color).setAlpha(luz ? 0.6 : 0.45).setScale(escala).setDepth(D.destello);
+      const anillo = this.add.image(x, y, 'anillo').setTint(color).setAlpha(0.9).setScale(escala * 0.7).setDepth(D.destello);
       this.tweens.add({ targets: disco, alpha: 0, scale: escala * 1.05, duration: 180, ease: 'Quad.out', onComplete: () => disco.destroy() });
       this.tweens.add({ targets: anillo, alpha: 0, scale: escala * 1.08, duration: 220, ease: 'Quad.out', onComplete: () => anillo.destroy() });
       this.emisores.polvo.explode(6, x, y);

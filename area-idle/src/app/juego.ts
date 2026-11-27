@@ -10,7 +10,7 @@ import { createSurvivalRun } from '../core/run';
 import { mejorar, type Intento, type PiezaId } from '../core/equipo';
 import { ENTRADAS_MAX, msHastaEntrada, nivelBaseOlas, refillEntradas, survivalUnlocked, usarEntrada } from '../core/supervivencia';
 import { bossOf, createGuardRun, createRun, moveCursor, startGuardRun, startRun, stepRun, updateGuardRun, type Run, type RunEvent } from '../core/run';
-import { ENEMIES, GUARDIA, levelConfig, type EnemyKind, type ZoneId } from '../core/datos';
+import { CABALLERO_DESDE, ENEMIES, GUARDIA, levelConfig, SACERDOTE_DESDE, type EnemyKind, type ZoneId } from '../core/datos';
 import { locale, detectLocale } from '../i18n';
 import type { AudioEngine, SoundId } from '../services/audio';
 import { buyShop, endWeek, fight, INTENTOS_MAX, pvpUnlocked, syncPvp, type FightResult, type ShopId } from '../core/pvp';
@@ -66,6 +66,9 @@ export interface Vista {
   /** Supervivencia (desde el nivel 26): si ya se abrió, entradas, cuánto falta para la siguiente y récord. */
   supervivencia: { abierto: boolean; entradas: number; max: number; espera: number; record: number };
   abrioSupervivencia: boolean;
+  /** Se acaba de abrir el Caballero (nivel 21) o el Sacerdote (nivel 31). */
+  abrioCaballero: boolean;
+  abrioSacerdote: boolean;
   /** En una partida de Supervivencia: la oleada, su tiempo, cuántos van y las Runas juntadas. */
   oleada: { ola: number; restante: number; duracion: number; total: number; muertos: number; bote: number; pausa: boolean; jefes: number } | null;
   /** Cómo te fue en la Supervivencia que acaba de terminar. */
@@ -103,6 +106,8 @@ export class Juego {
   private abrioRanking = false;
   private abrioPvp = false;
   private abrioSupervivencia = false;
+  private abrioCaballero = false;
+  private abrioSacerdote = false;
   /** Lo que empieza con el siguiente "¡Jugar!": un nivel o la Supervivencia. */
   private siguiente: 'nivel' | 'oleadas' = 'nivel';
   private finOleadas: Vista['finOleadas'] = null;
@@ -275,7 +280,10 @@ export class Juego {
       if (e.type === 'spawn' && run.t > 0) this.audio.play('aparece');
       else if (e.type === 'kill' && ENEMIES[e.kind].jefe) this.audio.play('jefeCae');
       else if (e.type === 'kill') this.audio.play(e.kind === 'azul' ? 'popGrande' : 'pop');
-      else if (e.type === 'impact') this.audio.play(e.fuente === 'mago' ? 'magia' : 'disparo');
+      else if (e.type === 'impact') this.audio.play(e.fuente === 'mago' ? 'magia' : e.fuente === 'sacerdote' ? 'gema' : 'disparo');
+      else if (e.type === 'knightHit') this.audio.play('lanza');
+      else if (e.type === 'knightDown') this.audio.play('aturde');
+      else if (e.type === 'knightUp') this.audio.play('repara');
       else if (e.type === 'volley') this.audio.play('arco');
       else if (e.type === 'sling') this.audio.play(e.tipo === 'golpe' ? 'golpeMuro' : e.tipo === 'flecha' ? 'arco' : e.tipo === 'lanza' || e.tipo === 'cimitarra' || e.tipo === 'roca' ? 'lanza' : 'resortera');
       else if (e.type === 'bossJump') this.audio.play(run.jefe?.def.mueve === 'embestida' ? 'embiste' : run.jefe?.def.mueve === 'teletransporte' ? 'magia' : 'brinco');
@@ -352,12 +360,15 @@ export class Juego {
     const rankingAntes = rankingUnlocked(this.meta);
     const pvpAntes = pvpUnlocked(this.meta);
     const supervivenciaAntes = survivalUnlocked(this.meta);
+    const nivelAntes = this.meta.nivel;
     this.premio = finishRun(this.meta, { oro: run.oro, reventados: run.reventados, gano, nivel: run.nivel.nivel, porTipo: run.porTipo, muroCaido: run.muro.caido, jefe: run.nivel.jefe?.kind ?? null, segundos: run.t });
     this.abrioInactivo = !antes && idleUnlocked(this.meta);
     this.abrioMisiones = !misionesAntes && missionsUnlocked(this.meta);
     this.abrioRanking = !rankingAntes && rankingUnlocked(this.meta);
     this.abrioPvp = !pvpAntes && pvpUnlocked(this.meta);
     this.abrioSupervivencia = !supervivenciaAntes && survivalUnlocked(this.meta);
+    this.abrioCaballero = nivelAntes < CABALLERO_DESDE && this.meta.nivel >= CABALLERO_DESDE;
+    this.abrioSacerdote = nivelAntes < SACERDOTE_DESDE && this.meta.nivel >= SACERDOTE_DESDE;
     if (!this.meta.vistos.includes('primera')) this.meta.vistos.push('primera');
     this.fase = 'fin';
     this.audio.play(gano ? 'fin' : 'pierde');
@@ -683,6 +694,8 @@ export class Juego {
       abrioRanking: this.abrioRanking && this.fase === 'fin',
       abrioPvp: this.abrioPvp && this.fase === 'fin',
       abrioSupervivencia: this.abrioSupervivencia && this.fase === 'fin',
+      abrioCaballero: this.abrioCaballero && this.fase === 'fin',
+      abrioSacerdote: this.abrioSacerdote && this.fase === 'fin',
       supervivencia: { abierto: survivalUnlocked(this.meta), entradas: this.meta.supervivencia.entradas, max: ENTRADAS_MAX, espera: msHastaEntrada(this.meta.supervivencia, Date.now()), record: this.meta.supervivencia.record },
       oleada: run?.oleadas && this.fase === 'jugando' ? (() => {
         const o = run.oleadas!;

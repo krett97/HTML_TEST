@@ -2,7 +2,7 @@
   // El árbol de talentos (se abre con "Mejorar" encima del campo de la pantalla principal), en secciones
   // (pestañas arriba): Jugador, Mago, Arqueros y Reliquias. Cada nodo muestra su ícono, su nivel y su
   // precio; al tocarlo se abre abajo el detalle con el botón de compra.
-  import { SECCIONES, TALENT_BY_ID, TALENTS, type Seccion, type TalentDef, type TalentId } from '../core/datos';
+  import { CABALLERO_DESDE, SACERDOTE_DESDE, SECCIONES, TALENT_BY_ID, TALENTS, type Seccion, type TalentDef, type TalentId } from '../core/datos';
   import { formatNum } from '../core/format';
   import { costOf, levelOf, talentState, talentVisible } from '../core/meta';
   import { t } from '../i18n';
@@ -15,14 +15,16 @@
   let { cerrar }: { cerrar: () => void } = $props();
   const juego = useJuego();
   const view = juego.view;
-  const ICONO: Record<Seccion, string> = { jugador: 'lluvia', mago: 'mago', arqueros: 'arquero', reliquias: 'gema' };
+  const ICONO: Record<Seccion, string> = { jugador: 'lluvia', mago: 'mago', arqueros: 'arquero', caballero: 'caballero', sacerdote: 'sacerdote', reliquias: 'gema' };
 
   let seccion = $state<Seccion>('jugador');
   let elegido = $state<TalentId | null>(null);
   /** El tipo de daño de cada sección (marca en la esquina de su pestaña). */
-  const TIPO: Partial<Record<Seccion, string>> = { jugador: DAMAGE_TYPE_OF.jugador, mago: DAMAGE_TYPE_OF.mago, arqueros: DAMAGE_TYPE_OF.arquero };
-  /** Las Reliquias (con gemas) se ven desde que se abren las misiones. */
-  const secciones = $derived(SECCIONES.filter((s) => s !== 'reliquias' || $view.misiones.abiertas));
+  const TIPO: Partial<Record<Seccion, string>> = { jugador: DAMAGE_TYPE_OF.jugador, mago: DAMAGE_TYPE_OF.mago, arqueros: DAMAGE_TYPE_OF.arquero, caballero: DAMAGE_TYPE_OF.caballero, sacerdote: DAMAGE_TYPE_OF.sacerdote };
+  /** Las Reliquias (con gemas) se ven desde que se abren las misiones; el Caballero y el Sacerdote, desde su nivel. */
+  const secciones = $derived(
+    SECCIONES.filter((s) => (s !== 'reliquias' || $view.misiones.abiertas) && (s !== 'caballero' || $view.meta.nivel >= CABALLERO_DESDE) && (s !== 'sacerdote' || $view.meta.nivel >= SACERDOTE_DESDE)),
+  );
 
   const meta = $derived($view.meta);
   const nodos = $derived(TALENTS.filter((d) => d.seccion === seccion && talentVisible(meta, d)));

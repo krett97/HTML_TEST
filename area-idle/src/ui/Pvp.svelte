@@ -98,6 +98,8 @@
           <span title={$t('secciones.jugador')}><Icon name="lluvia" size={16} />{formatNum(Math.round(poder.jugador))}</span>
           {#if poder.mago > 0}<span title={$t('secciones.mago')}><Icon name="mago" size={16} />{formatNum(Math.round(poder.mago))}</span>{/if}
           {#if poder.arqueros > 0}<span title={$t('secciones.arqueros')}><Icon name="arquero" size={16} />{formatNum(Math.round(poder.arqueros))}</span>{/if}
+          {#if poder.caballero > 0}<span title={$t('secciones.caballero')}><Icon name="caballero" size={16} />{formatNum(Math.round(poder.caballero))}</span>{/if}
+          {#if poder.sacerdote > 0}<span title={$t('secciones.sacerdote')}><Icon name="sacerdote" size={16} />{formatNum(Math.round(poder.sacerdote))}</span>{/if}
         </span>
       </div>
     </div>

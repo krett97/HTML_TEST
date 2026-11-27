@@ -37,10 +37,12 @@ export const LIGAS: LeagueDef[] = [
 // Poder: una cifra que junta lo que hacen tus tres árboles (y las Reliquias).
 
 export interface Power {
-  /** Lo que pone cada parte (suman el total): tu círculo, el mago y los arqueros. */
+  /** Lo que pone cada parte (suman el total): tu círculo, el mago, los arqueros, el caballero y el sacerdote. */
   jugador: number;
   mago: number;
   arqueros: number;
+  caballero: number;
+  sacerdote: number;
   /** Multiplica todo (en bruto): tiempo por nivel, muralla (y Albañil). */
   mult: number;
   total: number;
@@ -61,12 +63,17 @@ export function powerOf(s: Stats, estandarte = 0): Power {
   const fuego = s.fuego.activo ? s.fuego.dps * s.fuego.duracion : 0;
   const mago = s.mago.activo ? (40 * area * (s.mago.danio + fuego)) / s.mago.intervalo : 0;
   const arqueros = (10 * s.arqueros.cantidad * s.arqueros.objetivos * s.arqueros.danio) / s.arqueros.intervalo;
-  const mult = Math.sqrt(s.duracion / 20) * (s.muro.vida / 100) ** 0.25 * (1 + 0.25 * s.muro.reparar);
-  const suma = jugador + mago + arqueros;
+  // El caballero: sus tajos (y aguanta más con más vida); el sacerdote: su luz en área; sus curas a la muralla suben el multiplicador.
+  const c = s.caballero;
+  const caballero = c.activo ? ((10 * c.danio * c.objetivos) / c.intervalo) * (1 + c.vida / 400) : 0;
+  const z = s.sacerdote;
+  const sacerdote = z.activo ? (40 * (z.radio / 30) ** 2 * z.danio) / z.intervalo : 0;
+  const mult = Math.sqrt(s.duracion / 20) * (s.muro.vida / 100) ** 0.25 * (1 + 0.25 * s.muro.reparar) * (z.activo ? 1 + 3 * z.curaMuro : 1);
+  const suma = jugador + mago + arqueros + caballero + sacerdote;
   // El Estandarte de la tienda: +5 % al número que se ve.
   const total = Math.max(1, Math.round((Math.sqrt(suma * mult) / PODER.escala) * (1 + ESTANDARTE.porNivel * estandarte)));
   const parte = (x: number) => (suma > 0 ? (total * x) / suma : 0);
-  return { jugador: parte(jugador), mago: parte(mago), arqueros: parte(arqueros), mult, total };
+  return { jugador: parte(jugador), mago: parte(mago), arqueros: parte(arqueros), caballero: parte(caballero), sacerdote: parte(sacerdote), mult, total };
 }
 
 /** Un poder guardado en bruto (antes de 0.19.0) llevado a la escala de ahora. */
@@ -130,6 +137,9 @@ export const pvpUnlocked = (m: { nivel: number }): boolean => m.nivel >= PVP_DES
 export interface Ejercito {
   arqueros: number;
   mago: boolean;
+  /** El caballero (delante de la muralla) y el sacerdote (en la muralla). */
+  caballero: boolean;
+  sacerdote: boolean;
   etapas: { mago: 0 | 1 | 2 | 3; arqueros: 0 | 1 | 2 | 3; base: 0 | 1 | 2 | 3 };
 }
 
@@ -137,7 +147,7 @@ export interface Ejercito {
 export function myArmy(m: PvpHost): Ejercito {
   const s = computeStats(m.talentos, m.equipo?.niveles);
   const n = m.equipo?.niveles ?? {};
-  return { arqueros: s.arqueros.cantidad, mago: s.mago.activo, etapas: { mago: tierDe(n, 'mago'), arqueros: tierDe(n, 'arqueros'), base: tierDe(n, 'base') } };
+  return { arqueros: s.arqueros.cantidad, mago: s.mago.activo, caballero: s.caballero.activo, sacerdote: s.sacerdote.activo, etapas: { mago: tierDe(n, 'mago'), arqueros: tierDe(n, 'arqueros'), base: tierDe(n, 'base') } };
 }
 
 /**
@@ -149,9 +159,12 @@ export function rivalArmy(mio: Ejercito, ratio: number, liga: number, id: string
   const r = Math.max(0.1, ratio);
   const arqueros = Math.min(6, Math.max(1, Math.round(Math.max(1, mio.arqueros) * Math.sqrt(r)) + ((h % 3) - 1)));
   const mago = mio.mago || r > 1.1 || h % 4 === 0;
+  // Los que van más adelantados que tú ya tienen caballero (y, mucho más, sacerdote).
+  const caballero = mio.caballero || r > 1.3;
+  const sacerdote = mio.sacerdote || r > 1.6;
   const porLiga = [0, 0, 1, 1, 2, 3][liga] ?? 0;
   const etapa = (mia: number) => Math.min(3, Math.max(0, Math.round((porLiga + mia) / 2 + (r > 1.25 ? 1 : r < 0.75 ? -1 : 0)))) as 0 | 1 | 2 | 3;
-  return { arqueros, mago, etapas: { mago: etapa(mio.etapas.mago), arqueros: etapa(mio.etapas.arqueros), base: etapa(mio.etapas.base) } };
+  return { arqueros, mago, caballero, sacerdote, etapas: { mago: etapa(mio.etapas.mago), arqueros: etapa(mio.etapas.arqueros), base: etapa(mio.etapas.base) } };
 }
 export const myPower = (m: PvpHost): Power => powerOf(computeStats(m.talentos, m.equipo?.niveles), m.pvp.estandarte);
 

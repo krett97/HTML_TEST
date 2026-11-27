@@ -4,7 +4,7 @@
 /** Tipos de daño. Por ahora hay físico (tus flechas y los arqueros) y fuego (el mago); los demás llegan después. */
 export type DamageType = 'fisico' | 'fuego' | 'hielo' | 'energia' | 'muerte' | 'luz';
 export const DAMAGE_TYPES: DamageType[] = ['fisico', 'fuego', 'hielo', 'energia', 'muerte', 'luz'];
-export const DAMAGE_TYPES_EN_JUEGO: DamageType[] = ['fisico', 'fuego'];
+export const DAMAGE_TYPES_EN_JUEGO: DamageType[] = ['fisico', 'fuego', 'luz'];
 /** Cuánto reciben los enemigos del tipo al que son débiles y del que son fuertes. */
 export const EFFECTIVENESS = { debil: 1.5, fuerte: 0.5 } as const;
 
@@ -149,7 +149,22 @@ export const BASE = {
   muro: { vida: 100 },
   /** Cada arquero: una flecha a cada uno de sus `objetivos` cada `intervalo` s, con `danio` veces tu daño. */
   arqueros: { intervalo: 1.2, objetivos: 1, danio: 2 },
+  /**
+   * El caballero (desde el nivel 21): camina por el campo y pega cuerpo a cuerpo cada `intervalo` s con
+   * `danio` veces tu daño, a `objetivos` enemigos a su `alcance`. Tiene `vida`; los que lo tocan le pegan y,
+   * si se la acaban, cae y vuelve a la muralla en `regreso` s. Frena a los que marchan.
+   */
+  caballero: { danio: 8, intervalo: 1, objetivos: 1, alcance: 14, vida: 60, velocidad: 46, regreso: 8 },
+  /**
+   * El sacerdote (desde el nivel 31), en la muralla: una columna de luz (daño de luz, `danio` veces tu daño,
+   * en un círculo de `radio`) cada `intervalo` s; y cada `cadaCura` s cura al caballero (`curaCaballero` de
+   * su vida) y a la muralla (`curaMuro` de su vida).
+   */
+  sacerdote: { danio: 4, intervalo: 2.5, radio: 18, cadaCura: 3, curaCaballero: 0.08, curaMuro: 0.01 },
 } as const;
+
+/** Qué tanto le pegan al caballero los que lo tocan: su ataque (al menos 1; los jefes, su golpe × `jefe`) × esto, por segundo. */
+export const CONTACTO = { mult: 0.5, jefe: 0.3, radio: 9 } as const;
 
 /**
  * Zonas: cada 10 niveles cambia el campo, lo que hay tirado y quién sale. La primera (Campo verde) tiene
@@ -368,9 +383,12 @@ export const RANKING_DESDE = 17;
 export const PVP_DESDE = 19;
 /** La Supervivencia (oleadas que dan Runas para el equipo) se abre al llegar a este nivel. */
 export const SUPERVIVENCIA_DESDE = 26;
+/** El caballero y el sacerdote: desde qué nivel se pueden comprar (y se ve su pestaña en el árbol). */
+export const CABALLERO_DESDE = 21;
+export const SACERDOTE_DESDE = 31;
 
-export type Seccion = 'jugador' | 'mago' | 'arqueros' | 'reliquias';
-export const SECCIONES: Seccion[] = ['jugador', 'mago', 'arqueros', 'reliquias'];
+export type Seccion = 'jugador' | 'mago' | 'arqueros' | 'caballero' | 'sacerdote' | 'reliquias';
+export const SECCIONES: Seccion[] = ['jugador', 'mago', 'arqueros', 'caballero', 'sacerdote', 'reliquias'];
 
 export type TalentId =
   // Jugador
@@ -398,6 +416,21 @@ export type TalentId =
   | 'arcoRapido'
   | 'arcoDanio'
   | 'muralla'
+  // Caballero
+  | 'caballero'
+  | 'espada'
+  | 'tajo'
+  | 'coraza'
+  | 'barrido'
+  | 'regreso'
+  | 'mando'
+  // Sacerdote
+  | 'sacerdote'
+  | 'luz'
+  | 'plegaria'
+  | 'sanar'
+  | 'halo'
+  | 'bendicion'
   // Reliquias (se pagan con gemas moradas)
   | 'poder'
   | 'critico'
@@ -453,6 +486,24 @@ export const TALENTS: TalentDef[] = [
   { id: 'arcoRapido', seccion: 'arqueros', icono: 'arcoRapido', max: 10, costo: { base: 30, crece: 1.9 }, requiere: { id: 'arqueros', nivel: 1 }, pos: [1, 1] },
   { id: 'muralla', seccion: 'arqueros', icono: 'muralla', max: 20, costo: { base: 50, crece: 1.9, tarde: { desde: 10, crece: 1.5 } }, requiere: { id: 'masArqueros', nivel: 1 }, pos: [-1, 2] },
   { id: 'arcoDanio', seccion: 'arqueros', icono: 'arcoDanio', max: 15, costo: { base: 40, crece: 1.8 }, requiere: { id: 'multiflecha', nivel: 1 }, pos: [0, 2] },
+
+  // ---- Caballero: pelea cuerpo a cuerpo en el campo (desde el nivel 21) ----
+  { id: 'caballero', seccion: 'caballero', icono: 'caballero', max: 1, costo: { base: 15_000, crece: 1 }, requiere: null, raiz: true, nivelMin: CABALLERO_DESDE, pos: [0, 0] },
+  { id: 'tajo', seccion: 'caballero', icono: 'tajo', max: 5, costo: { base: 3_000, crece: 1.8 }, requiere: { id: 'caballero', nivel: 1 }, pos: [-1, 1] },
+  { id: 'espada', seccion: 'caballero', icono: 'espada', max: 10, costo: { base: 4_000, crece: 1.7 }, requiere: { id: 'caballero', nivel: 1 }, pos: [0, 1] },
+  { id: 'coraza', seccion: 'caballero', icono: 'coraza', max: 10, costo: { base: 3_000, crece: 1.7 }, requiere: { id: 'caballero', nivel: 1 }, pos: [1, 1] },
+  { id: 'barrido', seccion: 'caballero', icono: 'barrido', max: 3, costo: { base: 20_000, crece: 3 }, requiere: { id: 'espada', nivel: 2 }, pos: [0, 2] },
+  { id: 'regreso', seccion: 'caballero', icono: 'regreso', max: 3, costo: { base: 8_000, crece: 2 }, requiere: { id: 'coraza', nivel: 2 }, pos: [1, 2] },
+  // El líder: +5 % a todo el daño (el tuyo y el de todos tus aliados) por nivel.
+  { id: 'mando', seccion: 'caballero', icono: 'mando', max: 5, costo: { base: 25_000, crece: 2.4 }, requiere: { id: 'tajo', nivel: 2 }, pos: [-1, 2] },
+
+  // ---- Sacerdote: luz desde la muralla y curas (desde el nivel 31) ----
+  { id: 'sacerdote', seccion: 'sacerdote', icono: 'sacerdote', max: 1, costo: { base: 150_000, crece: 1 }, requiere: null, raiz: true, nivelMin: SACERDOTE_DESDE, pos: [0, 0] },
+  { id: 'plegaria', seccion: 'sacerdote', icono: 'plegaria', max: 5, costo: { base: 30_000, crece: 1.8 }, requiere: { id: 'sacerdote', nivel: 1 }, pos: [-1, 1] },
+  { id: 'luz', seccion: 'sacerdote', icono: 'luz', max: 10, costo: { base: 40_000, crece: 1.6 }, requiere: { id: 'sacerdote', nivel: 1 }, pos: [0, 1] },
+  { id: 'sanar', seccion: 'sacerdote', icono: 'sanar', max: 5, costo: { base: 30_000, crece: 1.8 }, requiere: { id: 'sacerdote', nivel: 1 }, pos: [1, 1] },
+  { id: 'halo', seccion: 'sacerdote', icono: 'halo', max: 5, costo: { base: 40_000, crece: 1.9 }, requiere: { id: 'plegaria', nivel: 2 }, pos: [-1, 2] },
+  { id: 'bendicion', seccion: 'sacerdote', icono: 'bendicion', max: 5, costo: { base: 60_000, crece: 1.9 }, requiere: { id: 'sanar', nivel: 2 }, pos: [1, 2] },
 
   // ---- Reliquias: mejoras que el oro no da; se pagan con gemas moradas (misiones) ----
   { id: 'poder', seccion: 'reliquias', icono: 'poder', max: 10, costo: { base: 5, crece: 1.35 }, moneda: 'gemas', requiere: null, raiz: true, nivelMin: MISIONES_DESDE, pos: [0, 0] },

@@ -1,7 +1,7 @@
 // Una partida: el campo, los enemigos que aparecen y pasean, tu círculo donde caen flechas, el mago
 // con sus explosiones de fuego cuadradas y los arqueros que tiran a un objetivo a la vez. Lógica pura: la escena
 // llama a stepRun cada cuadro (a través del controlador) y dibuja los eventos.
-import { AUTOAPUNTAR, damageMultiplier, effectiveness, ENEMIES, GUARDIA, JEFE, JEFES, levelConfig, ORDEN_JEFES, vidaNivel, LLEGADA, MAX_VIVOS, PRIMERA_OLA, type BossDef, type DamageType, type EnemyKind, type LevelConfig, type ProjectileKind } from './datos';
+import { AUTOAPUNTAR, CONTACTO, damageMultiplier, effectiveness, ENEMIES, GUARDIA, JEFE, JEFES, levelConfig, ORDEN_JEFES, vidaNivel, LLEGADA, MAX_VIVOS, PRIMERA_OLA, type BossDef, type DamageType, type EnemyKind, type LevelConfig, type ProjectileKind } from './datos';
 import { between, createRng, type Rng } from './rng';
 import type { Stats } from './stats';
 
@@ -75,10 +75,13 @@ const PROJECTILE_SPEED: Record<ProjectileKind, number> = { piedra: 170, lanza: 2
 
 export type Forma = { tipo: 'circulo'; r: number } | { tipo: 'rect'; w: number; h: number };
 
-export type Source = 'jugador' | 'mago' | 'fuego' | 'arquero';
+export type Source = 'jugador' | 'mago' | 'fuego' | 'arquero' | 'caballero' | 'sacerdote';
 
-/** Qué tipo de daño hace cada quien: tus flechas y los arqueros, físico; el mago y su fuego, fuego. */
-export const DAMAGE_TYPE_OF: Record<Source, DamageType> = { jugador: 'fisico', arquero: 'fisico', mago: 'fuego', fuego: 'fuego' };
+/** Qué tipo de daño hace cada quien: tus flechas, los arqueros y el caballero, físico; el mago y su fuego, fuego; el sacerdote, luz. */
+export const DAMAGE_TYPE_OF: Record<Source, DamageType> = { jugador: 'fisico', arquero: 'fisico', mago: 'fuego', fuego: 'fuego', caballero: 'fisico', sacerdote: 'luz' };
+
+/** Lo que tarda en caer la columna de luz del sacerdote. */
+export const LUZ_DEMORA = 0.35;
 
 interface Impact {
   x: number;
@@ -145,6 +148,12 @@ export type RunEvent =
   | { type: 'charge'; id: number; x: number; y: number }
   /** Una telaraña enredó a un arquero: no tira por `dura` s. */
   | { type: 'web'; arquero: number; dura: number }
+  /** El caballero dio un tajo (desde x, y hacia tx, ty) y le pegó a `n` enemigos; cayó; volvió a la muralla. */
+  | { type: 'knightHit'; x: number; y: number; tx: number; ty: number; n: number }
+  | { type: 'knightDown'; x: number; y: number }
+  | { type: 'knightUp'; x: number; y: number }
+  /** El sacerdote curó al caballero o a la muralla. */
+  | { type: 'heal'; a: 'caballero' | 'muro'; x: number; y: number; n: number }
   /** Se acabó: `gano` si se reventaron todos los slimes del nivel antes de que se acabara el tiempo. */
   | { type: 'end'; gano: boolean };
 
@@ -192,6 +201,10 @@ export interface Run {
   guardia: { oroPorBaja: number; falta: number } | null;
   /** Supervivencia: oleada actual, tiempo que le queda, pausa entre oleadas, oleadas aguantadas y Runas juntadas. */
   oleadas: Oleadas | null;
+  /** El caballero (si lo tienes): dónde está, su vida, lo que le falta para el siguiente tajo y, si cayó, para volver. */
+  caballero: { x: number; y: number; vida: number; max: number; golpe: number; caido: number } | null;
+  /** El sacerdote (si lo tienes): lo que le falta para la siguiente columna de luz y para la siguiente cura. */
+  sacerdote: { disparo: number; cura: number } | null;
 }
 
 export interface Oleadas {
@@ -261,6 +274,8 @@ export function createRun(base: Stats, h: number, nivel = 1, seed = Date.now(), 
     rng: createRng(seed),
     guardia: null,
     oleadas: null,
+    caballero: stats.caballero.activo ? nuevoCaballero(stats, alto) : null,
+    sacerdote: stats.sacerdote.activo ? { disparo: stats.sacerdote.intervalo * 0.6, cura: stats.sacerdote.cadaCura } : null,
   };
 }
 
@@ -382,6 +397,16 @@ export function updateGuardRun(run: Run, base: Stats, oroPorBaja: number): void 
   run.enredos.length = run.arcos.length;
   while (run.inmunes.length < run.arcos.length) run.inmunes.push(0);
   run.inmunes.length = run.arcos.length;
+  // El caballero y el sacerdote: si los acabas de comprar, llegan; si ya estaban, toman lo nuevo.
+  if (run.stats.caballero.activo) {
+    if (!run.caballero) run.caballero = nuevoCaballero(run.stats, run.h);
+    else {
+      const k = run.stats.caballero.vida / run.caballero.max;
+      run.caballero.max = run.stats.caballero.vida;
+      run.caballero.vida = Math.min(run.caballero.max, run.caballero.vida * k);
+    }
+  }
+  if (run.stats.sacerdote.activo && !run.sacerdote) run.sacerdote = { disparo: run.stats.sacerdote.intervalo * 0.6, cura: run.stats.sacerdote.cadaCura };
 }
 
 /** Los primeros enemigos de la guardia. */
@@ -402,8 +427,142 @@ export function wizardSpot(run: Run): { x: number; y: number } {
  */
 export function archerSpots(run: Run): { x: number; y: number }[] {
   const n = run.stats.arqueros.cantidad;
-  const huecos = Array.from({ length: 8 }, (_, i) => 60 + 40 * i);
-  return Array.from({ length: n }, (_, i) => ({ x: huecos[Math.min(7, Math.round(((i + 0.5) * 8) / n - 0.5))]!, y: run.h - ALLY_ROW + 12 }));
+  // Con sacerdote, el último hueco (a la derecha) es suyo.
+  const m = run.stats.sacerdote.activo ? 7 : 8;
+  const huecos = Array.from({ length: m }, (_, i) => 60 + 40 * i);
+  return Array.from({ length: n }, (_, i) => ({ x: huecos[Math.min(m - 1, Math.round(((i + 0.5) * m) / n - 0.5))]!, y: run.h - ALLY_ROW + 12 }));
+}
+
+/** Dónde está parado el sacerdote: en el último hueco de la muralla, a la derecha. */
+export function priestSpot(run: Run): { x: number; y: number } {
+  return { x: 60 + 40 * 7, y: run.h - ALLY_ROW + 12 };
+}
+
+/** Adónde vuelve el caballero (y de dónde sale): delante de la muralla, al centro. */
+export const knightHome = (h: number): { x: number; y: number } => ({ x: FIELD_W / 2, y: h - ALLY_ROW - MARGIN - 4 });
+/** Lo que mide el caballero para chocar con los enemigos. */
+export const KNIGHT_R = CONTACTO.radio;
+
+function nuevoCaballero(stats: Stats, h: number): NonNullable<Run['caballero']> {
+  const casa = knightHome(h);
+  return { x: casa.x, y: casa.y, vida: stats.caballero.vida, max: stats.caballero.vida, golpe: 0.4, caido: 0 };
+}
+
+/** ¿El caballero está en pie? */
+export const knightUp = (run: Run): boolean => !!run.caballero && run.caballero.caido <= 0;
+
+/** ¿Este enemigo está chocando con el caballero (y lo tiene delante, rumbo a la muralla)? Ahí se queda peleando. */
+function blockedByKnight(run: Run, e: Enemy): boolean {
+  const c = run.caballero;
+  if (!c || c.caido > 0 || inAir(run, e) || hidden(run, e)) return false;
+  return e.y <= c.y + 4 && Math.hypot(e.x - c.x, e.y - c.y) < ENEMIES[e.kind].radio + KNIGHT_R + 2;
+}
+
+/**
+ * El caballero: va hacia el enemigo más adelantado de los cercanos (no alcanza a los que vuelan ni a los
+ * enterrados), le da tajos (a varios si tiene Barrido) y, mientras lo tocan, recibe golpes (en guardia,
+ * no). Si se queda sin vida cae y vuelve a la muralla al rato, con toda su vida.
+ */
+function stepKnight(run: Run, step: number, events: RunEvent[]): void {
+  const c = run.caballero;
+  const s = run.stats.caballero;
+  if (!c || !s.activo) return;
+  if (c.caido > 0) {
+    c.caido -= step;
+    if (c.caido <= 0) {
+      const casa = knightHome(run.h);
+      Object.assign(c, { x: casa.x, y: casa.y, vida: c.max, caido: 0, golpe: 0.3 });
+      events.push({ type: 'knightUp', x: c.x, y: c.y });
+    }
+    return;
+  }
+  c.golpe = Math.max(0, c.golpe - step);
+  const vivos = run.enemies.filter((e) => e.vida > 0 && !hidden(run, e) && !inAir(run, e));
+  let blanco: Enemy | undefined;
+  let mejor = Infinity;
+  for (const e of vivos) {
+    // Cerca de él y, sobre todo, los que ya van llegando a la muralla.
+    const valor = Math.hypot(e.x - c.x, e.y - c.y) - 0.6 * (e.y - run.arriba);
+    if (valor < mejor) {
+      mejor = valor;
+      blanco = e;
+    }
+  }
+  const casa = knightHome(run.h);
+  const destino = blanco ?? casa;
+  const alcance = s.alcance + KNIGHT_R + (blanco ? ENEMIES[blanco.kind].radio : 0);
+  const d = Math.hypot(destino.x - c.x, destino.y - c.y);
+  if (d > (blanco ? alcance * 0.85 : 2)) {
+    const paso = Math.min(d, s.velocidad * step);
+    c.x = Math.min(run.w - MARGIN, Math.max(MARGIN, c.x + ((destino.x - c.x) / d) * paso));
+    c.y = Math.min(casa.y, Math.max(run.arriba, c.y + ((destino.y - c.y) / d) * paso));
+  }
+  if (blanco && c.golpe <= 0 && Math.hypot(blanco.x - c.x, blanco.y - c.y) <= alcance) {
+    c.golpe = s.intervalo;
+    // Barrido: también a los que estén a su alcance, los más cercanos primero.
+    const otros = vivos
+      .filter((e) => e !== blanco && Math.hypot(e.x - c.x, e.y - c.y) <= s.alcance + KNIGHT_R + ENEMIES[e.kind].radio)
+      .sort((a, b) => Math.hypot(a.x - c.x, a.y - c.y) - Math.hypot(b.x - c.x, b.y - c.y));
+    const golpeados = [blanco, ...otros].slice(0, s.objetivos);
+    events.push({ type: 'knightHit', x: c.x, y: c.y, tx: blanco.x, ty: blanco.y, n: golpeados.length });
+    for (const e of golpeados) damage(run, e, s.danio, 'caballero', events);
+  }
+  if (run.guardia) return;
+  // Los que lo tocan le pegan.
+  let dps = 0;
+  for (const e of run.enemies) {
+    if (e.vida <= 0 || hidden(run, e) || inAir(run, e)) continue;
+    const def = ENEMIES[e.kind];
+    if (Math.hypot(e.x - c.x, e.y - c.y) >= def.radio + KNIGHT_R + 4) continue;
+    const jd = def.jefe ? JEFES[e.kind] : undefined;
+    dps += (jd ? jd.golpe * CONTACTO.jefe : Math.max(1, def.ataque)) * CONTACTO.mult * run.nivel.ataque;
+  }
+  if (dps <= 0) return;
+  c.vida -= dps * step;
+  if (c.vida <= 0) {
+    c.vida = 0;
+    c.caido = s.regreso;
+    events.push({ type: 'knightDown', x: c.x, y: c.y });
+  }
+}
+
+/**
+ * El sacerdote (en la muralla; si cae, deja de ayudar como los demás): una columna de luz sobre el enemigo
+ * con más vida, y cada tanto cura al caballero y a la muralla (en guardia la muralla no recibe golpes).
+ */
+function stepPriest(run: Run, step: number, events: RunEvent[]): void {
+  const p = run.sacerdote;
+  const s = run.stats.sacerdote;
+  if (!p || !s.activo || run.muro.caido) return;
+  p.disparo -= step;
+  while (p.disparo <= 0) {
+    p.disparo += s.intervalo;
+    let blanco: Enemy | undefined;
+    for (const e of run.enemies) if (e.vida > 0 && !hidden(run, e) && (!blanco || e.vida > blanco.vida)) blanco = e;
+    if (!blanco) {
+      // Nadie a quien pegarle: espera un poco (no junta disparos).
+      p.disparo = Math.max(p.disparo, 0.3);
+      break;
+    }
+    const forma: Forma = { tipo: 'circulo', r: s.radio };
+    events.push({ type: 'shot', x: blanco.x, y: blanco.y, forma, fuente: 'sacerdote', demora: LUZ_DEMORA });
+    run.impacts.push({ x: blanco.x, y: blanco.y, forma, danio: s.danio, fuente: 'sacerdote', falta: LUZ_DEMORA });
+  }
+  p.cura -= step;
+  if (p.cura > 0) return;
+  p.cura = s.cadaCura;
+  const c = run.caballero;
+  if (c && c.caido <= 0 && c.vida < c.max) {
+    const n = Math.min(c.max - c.vida, c.max * s.curaCaballero);
+    c.vida += n;
+    events.push({ type: 'heal', a: 'caballero', x: c.x, y: c.y, n });
+  }
+  if (run.muro.vida < run.muro.max) {
+    const n = Math.min(run.muro.max - run.muro.vida, run.muro.max * s.curaMuro);
+    run.muro.vida += n;
+    const yo = priestSpot(run);
+    events.push({ type: 'heal', a: 'muro', x: yo.x, y: yo.y, n });
+  }
 }
 
 /** Los enemigos del principio. Devuelve sus eventos para que la escena los dibuje. */
@@ -657,6 +816,12 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
       if (embiste && !e.cargando) {
         e.cargando = true;
         events.push({ type: 'charge', id: e.id, x: e.x, y: e.y });
+      }
+      // El caballero los frena: se quedan peleando con él.
+      if (blockedByKnight(run, e)) {
+        e.vx = 0;
+        e.vy = 0;
+        continue;
       }
       const base = run.oleadas ? pasoOleada(def.velocidad) : def.velocidad;
       const vel = base * (embiste ? def.carga! : 1) * (def.armadura && e.sinArmadura ? 1.8 : 1);
@@ -925,6 +1090,9 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
       }
     }
   });
+  stepPriest(run, step, events);
+  stepKnight(run, step, events);
+
   const porId = new Map(run.enemies.map((e) => [e.id, e]));
   for (const a of run.arrows) {
     const blanco = porId.get(a.objetivo);

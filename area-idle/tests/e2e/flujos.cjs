@@ -433,6 +433,49 @@ async function flow(name, browser, fn, opts) {
     check(!(await page.getByTestId('enemigo-golemito').count()), 'la piedrita sale en el glosario');
   });
 
+  await flow('caballero (nivel 21) y sacerdote (nivel 31): sus pestañas, pelea en el campo y cura la muralla', browser, async (page) => {
+    await page.getByTestId('terminar').click();
+    await page.getByTestId('mejorar').click();
+    check(!(await page.getByTestId('seccion-caballero').count()), 'la pestaña del caballero se ve antes del nivel 21');
+    await page.getByTestId('abrir-ajustes').click();
+    for (let i = 0; i < 20; i++) await page.getByTestId('mas-nivel').click();
+    await page.mouse.click(4, 4);
+    check(await page.getByTestId('seccion-caballero').count(), 'no sale la pestaña del caballero en el 21');
+    check(!(await page.getByTestId('seccion-sacerdote').count()), 'la del sacerdote sale antes del 31');
+    await page.oro(1000000);
+    await page.getByTestId('seccion-caballero').click();
+    await page.getByTestId('talento-caballero').click();
+    await page.getByTestId('comprar').click();
+    check(await page.getByTestId('talento-espada').count() && (await page.getByTestId('talento-tajo').count()) && (await page.getByTestId('talento-coraza').count()), 'comprar el caballero no abre sus mejoras');
+    await page.getByTestId('talento-espada').click();
+    await page.getByTestId('comprar').click();
+    check((await page.getByTestId('detalle').textContent()).includes('1/10'), 'no se compró Espada');
+    check(await page.evaluate(() => !!window.juego.run?.caballero), 'el caballero no está en la pantalla principal');
+    // En un nivel: camina y le da tajos al que tenga cerca.
+    await page.getByTestId('jugar').click();
+    await page.waitForTimeout(600);
+    // Solo él y un slime que no se muere (sin que salgan más).
+    await page.evaluate(() => { const r = window.juego.run; const k = r.caballero; r.enemies = []; r.salieron = r.nivel.total; r.enemies.push({ id: 99999, kind: 'verde', x: k.x + 30, y: k.y - 40, vx: 0, vy: 0, vida: 1e9, vidaMax: 1e9, giro: 99 }); });
+    await page.waitForTimeout(2500);
+    check(await page.evaluate(() => { const e = window.juego.run.enemies.find((x) => x.id === 99999); return !!e && e.vida < 1e9; }), 'el caballero no le pegó al enemigo de enfrente');
+    await page.getByTestId('terminar').click();
+    await page.getByTestId('mejorar').click();
+    // El sacerdote, en el 31: en la pantalla principal cura la muralla.
+    await page.getByTestId('abrir-ajustes').click();
+    for (let i = 0; i < 10; i++) await page.getByTestId('mas-nivel').click();
+    await page.mouse.click(4, 4);
+    await page.oro(1000000);
+    await page.getByTestId('seccion-sacerdote').click();
+    await page.getByTestId('talento-sacerdote').click();
+    await page.getByTestId('comprar').click();
+    check(await page.getByTestId('talento-luz').count(), 'comprar el sacerdote no abre sus mejoras');
+    await page.waitForTimeout(300);
+    check(await page.evaluate(() => !!window.juego.run?.sacerdote), 'el sacerdote no está en la pantalla principal');
+    await page.evaluate(() => { const r = window.juego.run; r.muro.vida = r.muro.max * 0.5; });
+    await page.waitForTimeout(3600);
+    check((await page.evaluate(() => window.juego.run.muro.vida / window.juego.run.muro.max)) > 0.5, 'el sacerdote no curó la muralla');
+  });
+
   await flow('Supervivencia (nivel 26) y Herrería: oleadas, Runas y mejoras que a veces fallan', browser, async (page) => {
     await page.getByTestId('terminar').click();
     await page.getByTestId('mejorar').click();

@@ -44,6 +44,8 @@ Nivel 5") y el oro. Ahí arriba no aparecen ni pasean slimes, para que nada qued
 | **Jugador** | Tu círculo: lluvia de flechas en el área | Físico | Daño (raíz), Área, Atraer slimes (llegan más rápido), Cadencia, Tiempo, Botín (premio por nivel), Ganancia de oro (todo el oro), Oro inactivo, Bolsa grande, Autoapuntado (5i) |
 | **Mago** | Bola de fuego que revienta en un **cuadrado** (40 × 40) donde hay alguien | Fuego | Mago (raíz), Mago veloz, Fuego mágico, Explosión grande, Suelo en llamas (tierra quemada con borde de brasas), Fuego intenso |
 | **Arqueros** | Flechas a **un objetivo a la vez**; con Flechas múltiples, a 2, 3… 5 | Físico | Arquero (raíz), Más arqueros (hasta 6), Flechas múltiples, Arco veloz, Puntas de acero, Muralla reforzada |
+| **Caballero** (desde el nivel 21) | Tajos **cuerpo a cuerpo**: camina por el campo y **frena** a los que marchan | Físico | Caballero (raíz), Tajo veloz, Espada, Coraza, Barrido, De pie otra vez, Mando (ver 5m) |
+| **Sacerdote** (desde el nivel 31) | **Columna de luz** en un círculo sobre el de más vida; **cura** al caballero y a la muralla | Luz | Sacerdote (raíz), Plegaria, Luz sagrada, Sanar, Halo, Bendición (ver 5m) |
 | **Reliquias** (desde el nivel 11, con **gemas**) | — | — | Poder ancestral (raíz), Golpes críticos, Carcaj encantado, Albañil (ver 5e) |
 
 - Al principio solo se ve **Daño**; cada compra muestra lo que sale de ahí. Las raíces del Mago y los
@@ -320,6 +322,55 @@ pueda adelantar:
 - Por ahora es un **anuncio de prueba** (cuenta regresiva de 3 s, en el navegador y en el APK de prueba):
   `src/services/ads.ts` tiene la misma interfaz que el juego del gato, lista para AdMob cuando exista la app
   con Capacitor (con los IDs fuera del repo). Modo pruebas: **Anuncios: sin espera**.
+
+## 5m. Caballero y Sacerdote (desde 0.20.0)
+
+Dos aliados nuevos con su sección del árbol (la pestaña sale al llegar a su nivel; en el fin de la partida,
+un aviso de "¡Nuevo!"). Como el mago y los arqueros, pegan en proporción a tu daño.
+
+**Caballero** (nivel **21**; 15 mil de oro): el líder. Sale delante de la muralla, al centro, y camina hacia
+el enemigo más adelantado de los que tiene cerca (no alcanza a los que vuelan ni a los enterrados). Da un
+**tajo** cada 1 s: 8× tu daño, físico, a quien tenga a su alcance. Tiene **vida** (60, más con Coraza y con
+la muralla): los que lo tocan le pegan (su ataque, al menos 1, × 0.5 por segundo; los jefes, su golpe × 0.15).
+Si se queda sin vida **cae** y vuelve a la muralla en 8 s con toda su vida. Los que **marchan** (orcos,
+gólems, minotauros… y todos en la Supervivencia) se quedan **peleando con él** en vez de llegar a la muralla.
+En la pantalla principal (guardia) también pelea, sin recibir golpes. Se ve con su barra de vida encima, se
+inclina en cada tajo (media luna blanca) y se queda tirado mientras vuelve.
+
+| Talento | Qué hace | Máx. | Precio |
+|---|---|---|---|
+| Tajo veloz | ×0.9 el tiempo entre tajos | 5 | 3 mil, ×1.8 |
+| Espada | +50 % daño del tajo | 10 | 4 mil, ×1.7 |
+| Coraza | +40 % vida | 10 | 3 mil, ×1.7 |
+| Barrido | +1 enemigo por tajo (y más alcance) | 3 | 20 mil, ×3 |
+| De pie otra vez | ×0.85 lo que tarda en volver | 3 | 8 mil, ×2 |
+| **Mando** | **+5 % a todo el daño** (tuyo y de todos tus aliados) | 5 | 25 mil, ×2.4 |
+
+**Sacerdote** (nivel **31**; 150 mil): en el último hueco de la muralla (a la derecha; los arqueros le dejan
+ese lugar). Cada 2.5 s baja una **columna de luz** sobre el enemigo con más vida: 4× tu daño en un círculo
+de 18, daño de **luz** (a los slimes rojos, los esqueletos, el Esqueleto Mago y los cíclopes les duele ×1.5). Cada 3 s
+**cura** al caballero (8 % de su vida) y a la **muralla** (1 % de la suya). Si cae la muralla, deja de
+ayudar como los demás.
+
+| Talento | Qué hace | Máx. | Precio |
+|---|---|---|---|
+| Plegaria | ×0.9 el tiempo entre columnas | 5 | 30 mil, ×1.8 |
+| Luz sagrada | +50 % daño de luz | 10 | 40 mil, ×1.6 |
+| Sanar | +3 % de vida al caballero por cura | 5 | 30 mil, ×1.8 |
+| Halo | +10 % radio de la luz | 5 | 40 mil, ×1.9 |
+| Bendición | +0.4 % de vida a la muralla por cura | 5 | 60 mil, ×1.9 |
+
+**Balance** (simulador): con sus primeras versiones (más niveles, cada uno valía poco) el jugador simulado
+gastaba todo en ellos y se atoraba en el 39 más de dos horas (Daño 40, que duplica todo el daño, siempre
+quedaba un poco más caro). Con árboles cortos, niveles que valen más y **Mando**, jugando sin parar llega
+al 49 a los 180–210 min (antes 240), con el muro del 39–40 parecido al de antes; por días, 39 el primer
+día, 55 el segundo y 66 el quinto (antes 38, 52 y 59). Supervivencia: 19–24 oleadas.
+
+**PvP:** cuentan para el poder (el caballero por sus tajos y su vida; el sacerdote por su luz, y sus curas
+suben el multiplicador) y se ven en los castillos: el caballero delante de la muralla y el sacerdote en su
+extremo. En la batalla los dos caballeros salen al centro y se dan de espadazos, y el sacerdote baja una
+columna de luz en la muralla de enfrente y cura la suya (cruces verdes). Los rivales tienen caballero si tú
+lo tienes o si son bastante más fuertes (×1.3), y sacerdote igual (×1.6).
 
 ## 5e. Misiones, gemas moradas y Reliquias (desde 0.6.0)
 

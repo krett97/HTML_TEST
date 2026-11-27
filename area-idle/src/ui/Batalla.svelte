@@ -43,9 +43,11 @@
   let alto = $state(460);
   const banda = $derived(Math.min(180, alto * 0.32));
 
+  // Los caballeros salen a pelear al centro un momento después de empezar.
+  let avanzan = $state(false);
   interface Disparo {
     id: number;
-    tipo: 'flecha' | 'bola' | 'aro';
+    tipo: 'flecha' | 'bola' | 'aro' | 'luz' | 'cura';
     x0: number;
     y0: number;
     x1: number;
@@ -75,6 +77,14 @@
     // El círculo de cada jugador: cae en un lugar de la muralla de enfrente.
     const x = azar(b.x0 + 30, b.x1 - 30);
     nuevos.push({ id: id++, tipo: 'aro', x0: x, y0: b.y, x1: x, y1: b.y, ang: 0 });
+    // El sacerdote: una columna de luz en la muralla de enfrente y una cura en la suya.
+    if (p.sacerdote) {
+      const xl = azar(b.x0 + 20, b.x1 - 20);
+      nuevos.push({ id: id++, tipo: 'luz', x0: xl, y0: b.y, x1: xl, y1: b.y, ang: 0 });
+      const propia = puestos(lado === 'yo' ? mio : suyo, desde, ancho, alto, banda).blanco;
+      const xc = azar(propia.x0 + 20, propia.x1 - 20);
+      nuevos.push({ id: id++, tipo: 'cura', x0: xc, y0: propia.y, x1: xc, y1: propia.y, ang: 0 });
+    }
     disparos = [...disparos, ...nuevos];
     juego.sonar(p.arqueros.length ? 'arco' : 'disparo');
     if (p.mago) juego.sonar('magia');
@@ -93,6 +103,7 @@
     );
   }
 
+  timers.push(setTimeout(() => (avanzan = true), 120));
   for (let i = 0; i < GOLPES; i++) {
     const ultimo = i === GOLPES - 1;
     // Tú atacas primero; el último golpe siempre es del que gana.
@@ -141,8 +152,8 @@
   </div>
 
   <div class="campo" style:background-image="url({artUrl(SUELO[$view.zona] ?? 'pasto')})" bind:clientWidth={ancho} bind:clientHeight={alto} data-testid="campo-batalla">
-    <Castillo ejercito={suyo} lado="arriba" {ancho} {alto} {banda} recibe={golpe === 'el'} cae={fin && r.gano} festeja={fin && !r.gano} testid="castillo-rival" />
-    <Castillo ejercito={mio} lado="abajo" {ancho} {alto} {banda} recibe={golpe === 'yo'} cae={fin && !r.gano} festeja={fin && r.gano} testid="castillo-tuyo" />
+    <Castillo ejercito={suyo} lado="arriba" {ancho} {alto} {banda} recibe={golpe === 'el'} cae={fin && r.gano} festeja={fin && !r.gano} avanza={avanzan} testid="castillo-rival" />
+    <Castillo ejercito={mio} lado="abajo" {ancho} {alto} {banda} recibe={golpe === 'yo'} cae={fin && !r.gano} festeja={fin && r.gano} avanza={avanzan} testid="castillo-tuyo" />
     {#each disparos as d (d.id)}
       <span
         class="disparo {d.tipo}"
@@ -162,7 +173,8 @@
       <span class="num cifra" style:left="{n.x}px" style:top="{n.y}px">-{formatNum(n.n)}</span>
     {/each}
     {#if !fin}
-      <span class="vs" style:--color={liga.color}>VS</span>
+      <!-- Si hay caballeros, pelean al centro: el VS se hace a un lado. -->
+      <span class="vs" class:aparte={mio.caballero || suyo.caballero} style:--color={liga.color}>VS</span>
     {:else}
       <div class="final" class:gano={r.gano} data-testid={r.gano ? 'pvp-gano' : 'pvp-perdio'}>
         <h2>{r.gano ? $t('pvp.ganaste') : $t('pvp.perdiste')}</h2>
@@ -319,6 +331,59 @@
     box-shadow: 0 0 0 2px #8a5a2b;
     animation: aro var(--vuelo) ease-in forwards;
   }
+  /* La columna de luz del sacerdote: baja del cielo sobre la muralla de enfrente. */
+  .disparo.luz {
+    animation: none;
+    translate: var(--x1) var(--y1);
+  }
+  .disparo.luz::before {
+    content: '';
+    display: block;
+    width: 26px;
+    height: 120px;
+    translate: -13px -112px;
+    border-radius: 13px 13px 50% 50%;
+    background: linear-gradient(rgba(255, 246, 192, 0), rgba(255, 246, 192, 0.95) 60%, #fff);
+    box-shadow: 0 0 16px 6px rgba(255, 226, 122, 0.7);
+    animation: baja var(--vuelo) ease-in forwards;
+  }
+  @keyframes baja {
+    from {
+      scale: 1 0.2;
+      transform-origin: bottom;
+      opacity: 0;
+    }
+    to {
+      scale: 1 1;
+      opacity: 1;
+    }
+  }
+  /* Su cura: una cruz verde que sube en su propia muralla. */
+  .disparo.cura {
+    animation: none;
+    translate: var(--x1) var(--y1);
+  }
+  .disparo.cura::before {
+    content: '+';
+    display: block;
+    translate: -50% -50%;
+    color: #7fe07a;
+    font-size: 30px;
+    font-weight: 700;
+    -webkit-text-stroke: 2px #2a5a22;
+    paint-order: stroke fill;
+    animation: curita var(--vuelo) ease-out forwards;
+  }
+  @keyframes curita {
+    from {
+      translate: -50% 0;
+      opacity: 0;
+    }
+    to {
+      translate: -50% -60%;
+      opacity: 1;
+    }
+  }
   @keyframes aro {
     from {
       scale: 1.6;
@@ -364,6 +429,10 @@
     -webkit-text-stroke: 1px var(--line);
     paint-order: stroke fill;
     box-shadow: 0 3px 0 var(--line);
+  }
+  .vs.aparte {
+    left: 16%;
+    font-size: 20px;
   }
   .final {
     position: absolute;

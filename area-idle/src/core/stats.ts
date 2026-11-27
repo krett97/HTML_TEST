@@ -32,6 +32,10 @@ export interface Stats {
   autoapuntar: { velocidad: number };
   /** Arqueros: cuántos, cada cuánto tiran, a cuántos objetivos a la vez y cuánto pega cada flecha. */
   arqueros: { cantidad: number; intervalo: number; objetivos: number; danio: number };
+  /** El caballero: cuánto pega, cada cuánto, a cuántos, su alcance, su vida, qué tan rápido camina y en cuánto vuelve si cae. */
+  caballero: { activo: boolean; danio: number; intervalo: number; objetivos: number; alcance: number; vida: number; velocidad: number; regreso: number };
+  /** El sacerdote: su columna de luz (daño, cada cuánto, radio) y sus curas (cada cuánto y qué parte de la vida del caballero y de la muralla). */
+  sacerdote: { activo: boolean; danio: number; intervalo: number; radio: number; cadaCura: number; curaCaballero: number; curaMuro: number };
 }
 
 const lv = (levels: Levels, id: TalentId) => levels[id] ?? 0;
@@ -43,7 +47,9 @@ export function computeStats(levels: Levels, equipo: EquipoNiveles = {}): Stats 
   const slimes = lv(levels, 'slimes');
   // Daño: +1 por nivel y se duplica cada 10 niveles. El mago, el fuego y los arqueros pegan en proporción.
   // Poder ancestral (Reliquia): +10 % a todo el daño por nivel.
-  const golpe = (BASE.danio + danio) * Math.pow(2, Math.floor(danio / 10)) * (1 + 0.1 * lv(levels, 'poder')) * eq.danio;
+  // Mando (el caballero, el líder): +5 % a todo el daño por nivel (solo si tienes al caballero).
+  const mando = lv(levels, 'caballero') > 0 ? 1 + 0.05 * lv(levels, 'mando') : 1;
+  const golpe = (BASE.danio + danio) * Math.pow(2, Math.floor(danio / 10)) * (1 + 0.1 * lv(levels, 'poder')) * eq.danio * mando;
   const area = (1 + 0.1 * lv(levels, 'magoArea')) * eq.magoArea;
   return {
     danio: golpe,
@@ -76,6 +82,26 @@ export function computeStats(levels: Levels, equipo: EquipoNiveles = {}): Stats 
       intervalo: BASE.arqueros.intervalo * Math.pow(0.88, lv(levels, 'arcoRapido')) * eq.arcoIntervalo,
       objetivos: BASE.arqueros.objetivos + lv(levels, 'multiflecha') + lv(levels, 'carcaj') + eq.arcoObjetivos,
       danio: golpe * BASE.arqueros.danio * (1 + 0.5 * lv(levels, 'arcoDanio')) * eq.arcoDanio,
+    },
+    caballero: {
+      activo: lv(levels, 'caballero') > 0,
+      danio: golpe * BASE.caballero.danio * (1 + 0.5 * lv(levels, 'espada')),
+      intervalo: BASE.caballero.intervalo * Math.pow(0.9, lv(levels, 'tajo')),
+      objetivos: BASE.caballero.objetivos + lv(levels, 'barrido'),
+      alcance: BASE.caballero.alcance + 2 * lv(levels, 'barrido'),
+      // Su vida crece con la Coraza y con la de la muralla (Muralla reforzada y el equipo de la base).
+      vida: BASE.caballero.vida * (1 + 0.4 * lv(levels, 'coraza')) * (1 + 0.1 * lv(levels, 'muralla')) * eq.muroVida,
+      velocidad: BASE.caballero.velocidad,
+      regreso: BASE.caballero.regreso * Math.pow(0.85, lv(levels, 'regreso')),
+    },
+    sacerdote: {
+      activo: lv(levels, 'sacerdote') > 0,
+      danio: golpe * BASE.sacerdote.danio * (1 + 0.5 * lv(levels, 'luz')),
+      intervalo: BASE.sacerdote.intervalo * Math.pow(0.9, lv(levels, 'plegaria')),
+      radio: BASE.sacerdote.radio * (1 + 0.1 * lv(levels, 'halo')),
+      cadaCura: BASE.sacerdote.cadaCura,
+      curaCaballero: BASE.sacerdote.curaCaballero + 0.03 * lv(levels, 'sanar'),
+      curaMuro: BASE.sacerdote.curaMuro + 0.004 * lv(levels, 'bendicion'),
     },
   };
 }
