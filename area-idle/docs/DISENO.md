@@ -382,10 +382,21 @@ estaba dicho:
   puntos que va juntando durante la semana). Ligas: Bronce, Plata, Oro, Platino, Diamante y Campeón.
 - **Poder:** una cifra que junta tus árboles: tu círculo (daño × área ÷ cadencia, con críticos), el mago
   (explosión y fuego × área ÷ cadencia), los arqueros (cuántos × objetivos × daño ÷ cadencia), todo por un
-  multiplicador de tiempo, muralla, Albañil y Estandarte. Se ve con su desglose.
+  multiplicador de tiempo, muralla y Albañil. Desde 0.19.0 se muestra **la raíz de eso entre 6** (y luego
+  +5 % por nivel del Estandarte): ~100 al abrir el PvP en el nivel 19, ~460 en el 30 y ~3 mil en el 50
+  (antes se veía en bruto: 360 mil al abrir y 310 millones en el 50). Los guardados de antes convierten la
+  base de los rivales a la escala nueva. Se ve con lo que pone cada parte (suman el total).
+- **Tu ejército** (0.19.0): en la ventana del PvP, una franja de campo con **tu castillo**: la muralla, la
+  torre con el mago y tus arqueros, con el aspecto de tu equipo de la Herrería, y tu poder en un cartel.
 - **Batalla:** gana el de más poder con más probabilidad, no siempre: p⁴ / (p⁴ + q⁴) (con 1.5× de poder,
-  84 %). Se cuenta en ~5 s con dos barras de vida (se puede saltar). Cada rival dice si es Fácil, Parejo
-  o Difícil y cuántos puntos da.
+  84 %). Cada rival dice si es Fácil, Parejo o Difícil y cuántos puntos da. Desde 0.19.0 se ve en un
+  **campo de batalla** con el suelo de tu zona: el **castillo del rival arriba** (su muralla volteada, su
+  torre a la derecha, su mago y sus arqueros) y **el tuyo abajo**. Se turnan: los arqueros disparan
+  flechas, el mago una bola de fuego y el círculo de cada uno cae como un aro dorado sobre la muralla de
+  enfrente, que tiembla y pierde vida (barras arriba y abajo con nombre y poder). La muralla del que pierde
+  se **derrumba** (se hunde, queda gris y sus tropas caen) y las tropas del que gana festejan. Dura ~6 s
+  (se puede saltar). El ejército del rival se arma parecido al tuyo: más arqueros si es más fuerte y mejor
+  equipo en las ligas altas (siempre el mismo para el mismo rival).
 - **Puntos:** ganar da 6–40 (16 contra alguien con tus mismos puntos; más si tiene más); perder quita
   2–10 (menos si tenía más que tú), sin bajar de 0.
 - **Intentos:** 5 como máximo; uno vuelve cada 2 h (mientras estás lleno, no corre el reloj).

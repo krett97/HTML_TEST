@@ -4,9 +4,11 @@
   // de abajo bajan al terminar la semana.
   import { onDestroy } from 'svelte';
   import { formatDuration, formatNum } from '../core/format';
-  import { BAJAN, INTENTOS_MAX, JUGADORES, LIGAS, leagueTable, msUntilNextAttempt, msUntilWeekEnd, myPower, pointsFor, positionOf, SUBEN, winChance, type FightResult } from '../core/pvp';
+  import { BAJAN, INTENTOS_MAX, JUGADORES, LIGAS, leagueTable, msUntilNextAttempt, msUntilWeekEnd, myArmy, myPower, pointsFor, positionOf, SUBEN, winChance, type FightResult } from '../core/pvp';
   import { t } from '../i18n';
   import Batalla from './Batalla.svelte';
+  import Castillo from './Castillo.svelte';
+  import { SUELO } from './pvpEscena';
   import { useJuego } from './context';
   import Icon from './Icon.svelte';
   import { artUrl } from './icons';
@@ -33,6 +35,9 @@
   const p = $derived(meta.pvp);
   const liga = $derived(LIGAS[p.liga]!);
   const poder = $derived(myPower(meta));
+  const ejercito = $derived(myArmy(meta));
+  // La franja de tu castillo (se mide para acomodar a tus tropas).
+  let anchoMini = $state(320);
   // La tabla se recalcula cuando cambia algo tuyo o pasa un minuto (los rivales también juntan puntos).
   const minuto = $derived(Math.floor(ahora / 60_000));
   const tabla = $derived(leagueTable(meta, minuto * 60_000));
@@ -81,15 +86,21 @@
     </div>
   </div>
 
-  <div class="poder" data-testid="mi-poder">
-    <span class="titulo">{$t('pvp.tuPoder')}</span>
-    <strong class="cifra">{formatNum(poder.total)}</strong>
-    <span class="desglose">
-      <span><Icon name="lluvia" size={18} />{formatNum(poder.jugador)}</span>
-      <span><Icon name="mago" size={18} />{formatNum(poder.mago)}</span>
-      <span><Icon name="arquero" size={18} />{formatNum(poder.arqueros)}</span>
-      <span class="cifra">×{poder.mult.toFixed(2)}</span>
-    </span>
+  <!-- Tu castillo con tus tropas (como se ven en la batalla) y tu poder. -->
+  <div class="ejercito" data-testid="mi-poder">
+    <div class="mini" bind:clientWidth={anchoMini} style:background-image="url({artUrl(SUELO[$view.zona] ?? 'pasto')})">
+      <!-- Las tropas, en lo que deja libre el cartel del poder (la muralla sí va de lado a lado). -->
+      <Castillo {ejercito} lado="abajo" ancho={Math.max(170, anchoMini - 150)} alto={112} banda={104} testid="mi-castillo" />
+      <div class="poder">
+        <span class="titulo">{$t('pvp.tuPoder')}</span>
+        <strong class="cifra" data-testid="mi-poder-total"><Icon name="pvp" size={22} />{formatNum(poder.total)}</strong>
+        <span class="desglose cifra">
+          <span title={$t('secciones.jugador')}><Icon name="lluvia" size={16} />{formatNum(Math.round(poder.jugador))}</span>
+          {#if poder.mago > 0}<span title={$t('secciones.mago')}><Icon name="mago" size={16} />{formatNum(Math.round(poder.mago))}</span>{/if}
+          {#if poder.arqueros > 0}<span title={$t('secciones.arqueros')}><Icon name="arquero" size={16} />{formatNum(Math.round(poder.arqueros))}</span>{/if}
+        </span>
+      </div>
+    </div>
   </div>
 
   <div class="barra">
@@ -219,29 +230,48 @@
   .lugar strong {
     font-size: 22px;
   }
+  /* Tu castillo en una franja de campo, con el poder en un cartel arriba a la derecha. */
+  .ejercito {
+    border: var(--borde);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 3px 0 var(--line);
+  }
+  .mini {
+    position: relative;
+    height: 112px;
+    background-color: #5ec47a;
+    background-size: 110px 110px;
+  }
   .poder {
+    position: absolute;
+    top: 8px;
+    right: 8px;
     display: grid;
-    grid-template-columns: auto 1fr;
-    align-items: center;
-    gap: 0 10px;
-    padding: 6px 12px;
-    border: 2px solid var(--line);
+    justify-items: end;
+    gap: 1px;
+    padding: 4px 10px;
+    border: var(--borde);
     border-radius: 14px;
-    background: #fff;
+    background: rgba(255, 248, 234, 0.95);
+    box-shadow: 0 2px 0 var(--line);
+    line-height: 1.05;
   }
   .poder .titulo {
     color: var(--muted);
-    font-size: 13px;
+    font-size: 12px;
   }
   .poder strong {
-    grid-row: span 2;
-    font-size: 26px;
-    order: -1;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 24px;
   }
   .desglose {
     display: flex;
     flex-wrap: wrap;
-    gap: 2px 10px;
+    justify-content: flex-end;
+    gap: 2px 8px;
     font-size: 12px;
   }
   .desglose span {

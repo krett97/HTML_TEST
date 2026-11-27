@@ -16,6 +16,7 @@ import { ALLY_ROW, archerSpots, bossOf, createRun, DAMAGE_TYPE_OF, FIELD_W, move
 import { computeStats } from '../src/core/stats';
 import { BONO_DIARIO, claimableCount, claimBonus, claimMission, dailyProgress, dayKey, DIARIAS, DIARIAS_POR_DIA, MISSION_BY_ID, msUntilReset, permanentProgress, rollDaily } from '../src/core/misiones';
 import { MISIONES_DESDE, PVP_DESDE, RANKING_DESDE } from '../src/core/datos';
+import { comprimirPoder, myArmy, PODER, rivalArmy } from '../src/core/pvp';
 import { buyShop, emptyPvp, endWeek, ESTANDARTE, fight, INTENTOS_MAX, leagueTable, LIGAS, loadPvp, msUntilWeekEnd, pointsFor, positionOf, powerOf, RECARGA_MS, refill, rivalsOf, shopCost, syncPvp, weekKey, winChance } from '../src/core/pvp';
 import { formatDuration } from '../src/core/format';
 import { cleanName, MAX_NAME, rankingEntry, rankingUnlocked, readRow, sortRows } from '../src/core/ranking';
@@ -810,7 +811,8 @@ describe('PvP', () => {
     expect(conMago.mago).toBeGreaterThan(0);
     expect(conMago.arqueros).toBe(0);
     expect(powerOf(computeStats({ arqueros: 1 })).arqueros).toBeGreaterThan(0);
-    const s = computeStats({ danio: 8, arqueros: 1 });
+    const s = computeStats({ danio: 40, radio: 8, arqueros: 1, masArqueros: 3, arcoDanio: 8 });
+    expect(powerOf(s, 0).total).toBeGreaterThan(50);
     expect(powerOf(s, 4).total / powerOf(s, 0).total).toBeCloseTo(1.2, 1);
   });
   it('gana el más fuerte casi siempre, pero no siempre', () => {
@@ -1531,5 +1533,40 @@ describe('oro por ver un anuncio', () => {
     expect(GUARDIA.eficiencia).toBe(0.1);
     expect(INACTIVO.eficiencia).toBe(0.05);
     expect(computeStats({ inactivo: TALENT_BY_ID.inactivo.max }).inactivo.eficiencia).toBeCloseTo(0.05 + 0.01 * TALENT_BY_ID.inactivo.max);
+  });
+});
+
+describe('PvP: poder fácil de leer y los dos ejércitos', () => {
+  it('el poder es la raíz del bruto entre la escala: ~cientos al abrir el PvP; las partes suman el total', () => {
+    const s = computeStats({ danio: 20, radio: 5, cadencia: 5, mago: 1, magoDanio: 5, arqueros: 1, masArqueros: 3, arcoDanio: 5 });
+    const p = powerOf(s);
+    expect(p.total).toBeLessThan(5000);
+    expect(p.jugador + p.mago + p.arqueros).toBeCloseTo(p.total, 0);
+    // 4× más en bruto (todo ×4) → el doble de poder.
+    const doble = powerOf({ ...s, danio: s.danio * 4, mago: { ...s.mago, danio: s.mago.danio * 4 }, arqueros: { ...s.arqueros, danio: s.arqueros.danio * 4 }, fuego: { ...s.fuego, dps: s.fuego.dps * 4 } });
+    expect(doble.total / p.total).toBeCloseTo(2, 1);
+    expect(comprimirPoder(PODER.escala ** 2 * 10_000)).toBeCloseTo(100);
+  });
+  it('los guardados de antes convierten la base de los rivales a la escala nueva', () => {
+    expect(loadPvp({ base: 360_000 }).base).toBeCloseTo(Math.sqrt(360_000) / PODER.escala);
+    expect(loadPvp({ base: 120, escala: 2 }).base).toBe(120);
+    expect(emptyPvp().escala).toBe(2);
+  });
+  it('tu ejército sale de tu árbol y tu equipo; el del rival se parece, con más arqueros si es más fuerte', () => {
+    const m = { ...createMeta(), nivel: 30 };
+    m.talentos = { arqueros: 1, masArqueros: 2, mago: 1 };
+    m.equipo.niveles = { baculo: 5, tunica: 5, sombrero: 3 };
+    const mio = myArmy(m);
+    expect(mio).toMatchObject({ arqueros: 3, mago: true, etapas: { mago: 2, arqueros: 0, base: 0 } });
+    const fuerte = rivalArmy(mio, 2.5, 5, 'r1');
+    const flojo = rivalArmy(mio, 0.4, 0, 'r1');
+    expect(fuerte.arqueros).toBeGreaterThan(flojo.arqueros);
+    expect(fuerte.etapas.base).toBeGreaterThan(flojo.etapas.base);
+    expect(rivalArmy(mio, 1, 2, 'r7')).toEqual(rivalArmy(mio, 1, 2, 'r7'));
+    for (const id of ['r1', 'r2', 'r3', 'r4']) {
+      const e = rivalArmy({ arqueros: 0, mago: false, etapas: { mago: 0, arqueros: 0, base: 0 } }, 1, 0, id);
+      expect(e.arqueros).toBeGreaterThanOrEqual(1);
+      expect(e.arqueros).toBeLessThanOrEqual(6);
+    }
   });
 });

@@ -7,7 +7,7 @@ import { PVP_DESDE, type TalentId } from './datos';
 import { dayKey } from './misiones';
 import { createRng } from './rng';
 import { computeStats, type Stats } from './stats';
-import type { EquipoNiveles } from './equipo';
+import { tierDe, type EquipoNiveles } from './equipo';
 
 export const INTENTOS_MAX = 5;
 export const RECARGA_MS = 2 * 3600_000;
@@ -37,28 +37,40 @@ export const LIGAS: LeagueDef[] = [
 // Poder: una cifra que junta lo que hacen tus tres árboles (y las Reliquias).
 
 export interface Power {
-  /** Tu círculo: daño × área ÷ tiempo entre disparos, con los críticos. */
+  /** Lo que pone cada parte (suman el total): tu círculo, el mago y los arqueros. */
   jugador: number;
-  /** El mago: explosión (y suelo en llamas) × área ÷ tiempo entre explosiones. */
   mago: number;
-  /** Los arqueros: cuántos × objetivos × daño ÷ tiempo entre flechas. */
   arqueros: number;
-  /** Multiplica todo: tiempo por nivel, muralla (y Albañil) y el Estandarte de la tienda. */
+  /** Multiplica todo (en bruto): tiempo por nivel, muralla (y Albañil). */
   mult: number;
   total: number;
 }
 
+/**
+ * Para que el poder se lea fácil: la raíz del poder en bruto entre `escala` (≈100 al abrir el PvP en el
+ * nivel 19, ≈3 mil en el 50; antes de 0.19.0 se mostraba en bruto: 360 mil → 310 millones). Las ventajas
+ * se ven más chicas, así que la probabilidad usa K = 4 sobre este número (los rivales se arman igual).
+ */
+export const PODER = { escala: 6 } as const;
+
 export function powerOf(s: Stats, estandarte = 0): Power {
   const critico = 1 + s.critico.prob * (s.critico.mult - 1);
-  // Tu círculo y el mago pegan a varios a la vez: cuentan como 4 objetivos por área base.
+  // En bruto. Tu círculo y el mago pegan a varios a la vez: cuentan como 4 objetivos por área base.
   const jugador = (40 * s.danio * (s.radio / 30) ** 2 * critico) / s.intervalo;
   const area = (s.mago.lado / 40) ** 2;
   const fuego = s.fuego.activo ? s.fuego.dps * s.fuego.duracion : 0;
   const mago = s.mago.activo ? (40 * area * (s.mago.danio + fuego)) / s.mago.intervalo : 0;
   const arqueros = (10 * s.arqueros.cantidad * s.arqueros.objetivos * s.arqueros.danio) / s.arqueros.intervalo;
-  const mult = Math.sqrt(s.duracion / 20) * (s.muro.vida / 100) ** 0.25 * (1 + 0.25 * s.muro.reparar) * (1 + ESTANDARTE.porNivel * estandarte);
-  return { jugador, mago, arqueros, mult, total: Math.max(1, Math.round((jugador + mago + arqueros) * mult)) };
+  const mult = Math.sqrt(s.duracion / 20) * (s.muro.vida / 100) ** 0.25 * (1 + 0.25 * s.muro.reparar);
+  const suma = jugador + mago + arqueros;
+  // El Estandarte de la tienda: +5 % al número que se ve.
+  const total = Math.max(1, Math.round((Math.sqrt(suma * mult) / PODER.escala) * (1 + ESTANDARTE.porNivel * estandarte)));
+  const parte = (x: number) => (suma > 0 ? (total * x) / suma : 0);
+  return { jugador: parte(jugador), mago: parte(mago), arqueros: parte(arqueros), mult, total };
 }
+
+/** Un poder guardado en bruto (antes de 0.19.0) llevado a la escala de ahora. */
+export const comprimirPoder = (bruto: number): number => Math.max(1, Math.sqrt(Math.max(0, bruto)) / PODER.escala);
 
 export const winChance = (mio: number, suyo: number): number => mio ** K / (mio ** K + suyo ** K);
 
@@ -96,9 +108,11 @@ export interface PvpState {
   estandarte: number;
   /** Cómo te fue la semana que acaba de terminar (se muestra una vez). */
   resultado: WeekResult | null;
+  /** En qué escala está `base`: 2 desde 0.19.0 (poder comprimido); sin esto, en bruto. */
+  escala: number;
 }
 
-export const emptyPvp = (): PvpState => ({ semana: '', ronda: 0, liga: 0, puntos: 0, peleas: 0, ganadas: 0, base: 1, dia: '', intentos: INTENTOS_MAX, desde: 0, medallas: 0, estandarte: 0, resultado: null });
+export const emptyPvp = (): PvpState => ({ semana: '', ronda: 0, liga: 0, puntos: 0, peleas: 0, ganadas: 0, base: 1, dia: '', intentos: INTENTOS_MAX, desde: 0, medallas: 0, estandarte: 0, resultado: null, escala: 2 });
 
 export interface PvpHost {
   nivel: number;
@@ -111,6 +125,34 @@ export interface PvpHost {
 }
 
 export const pvpUnlocked = (m: { nivel: number }): boolean => m.nivel >= PVP_DESDE;
+
+/** Lo que se ve de cada lado en la batalla: los arqueros en la muralla, el mago en la torre y su equipo (0–3). */
+export interface Ejercito {
+  arqueros: number;
+  mago: boolean;
+  etapas: { mago: 0 | 1 | 2 | 3; arqueros: 0 | 1 | 2 | 3; base: 0 | 1 | 2 | 3 };
+}
+
+/** Tu ejército: lo que compraste en el árbol y cómo se ve con tu equipo de la Herrería. */
+export function myArmy(m: PvpHost): Ejercito {
+  const s = computeStats(m.talentos, m.equipo?.niveles);
+  const n = m.equipo?.niveles ?? {};
+  return { arqueros: s.arqueros.cantidad, mago: s.mago.activo, etapas: { mago: tierDe(n, 'mago'), arqueros: tierDe(n, 'arqueros'), base: tierDe(n, 'base') } };
+}
+
+/**
+ * El ejército de un rival (siempre el mismo para el mismo rival): parecido al tuyo, con más arqueros si es más
+ * fuerte que tú (`ratio` = su poder ÷ el tuyo) y mejor equipo en las ligas altas.
+ */
+export function rivalArmy(mio: Ejercito, ratio: number, liga: number, id: string): Ejercito {
+  const h = hash(id);
+  const r = Math.max(0.1, ratio);
+  const arqueros = Math.min(6, Math.max(1, Math.round(Math.max(1, mio.arqueros) * Math.sqrt(r)) + ((h % 3) - 1)));
+  const mago = mio.mago || r > 1.1 || h % 4 === 0;
+  const porLiga = [0, 0, 1, 1, 2, 3][liga] ?? 0;
+  const etapa = (mia: number) => Math.min(3, Math.max(0, Math.round((porLiga + mia) / 2 + (r > 1.25 ? 1 : r < 0.75 ? -1 : 0)))) as 0 | 1 | 2 | 3;
+  return { arqueros, mago, etapas: { mago: etapa(mio.etapas.mago), arqueros: etapa(mio.etapas.arqueros), base: etapa(mio.etapas.base) } };
+}
 export const myPower = (m: PvpHost): Power => powerOf(computeStats(m.talentos, m.equipo?.niveles), m.pvp.estandarte);
 
 /** Tolera guardados viejos o dañados. */
@@ -128,7 +170,8 @@ export function loadPvp(raw: unknown): PvpState {
     puntos: ent(r.puntos, 0),
     peleas: ent(r.peleas, 0),
     ganadas: ent(r.ganadas, 0),
-    base: Math.max(1, n(r.base, 1)),
+    // Guardados de antes de 0.19.0: la base de los rivales estaba en bruto.
+    base: r.escala === 2 ? Math.max(1, n(r.base, 1)) : comprimirPoder(n(r.base, 1)),
     dia: typeof r.dia === 'string' ? r.dia : '',
     intentos: Math.min(INTENTOS_MAX, ent(r.intentos, INTENTOS_MAX)),
     desde: n(r.desde, 0),
@@ -138,6 +181,7 @@ export function loadPvp(raw: unknown): PvpState {
       res && typeof res === 'object'
         ? { liga: Math.min(LIGAS.length - 1, ent(res.liga, 0)), nueva: Math.min(LIGAS.length - 1, ent(res.nueva, 0)), posicion: Math.max(1, ent(res.posicion, 1)), medallas: ent(res.medallas, 0) }
         : null,
+    escala: 2,
   };
 }
 

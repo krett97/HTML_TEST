@@ -673,8 +673,21 @@ async function flow(name, browser, fn, opts) {
     check((await page.locator('[data-testid="pvp-rival"]').count()) === 99, 'no hay 99 rivales');
     check((await page.locator('[data-testid="pvp-tuyo"]').count()) === 1, 'no está tu fila');
     check(/\d/.test(await page.getByTestId('mi-poder').textContent()), 'no se ve tu poder');
+    // Números chicos (antes eran cientos de miles al abrir el PvP) y tu castillo con tus tropas.
+    const poder = Number((await page.getByTestId('mi-poder-total').textContent()).replace(/\D/g, ''));
+    check(poder > 0 && poder < 2000, `el poder se ve muy grande al empezar (${poder})`);
+    check(await page.getByTestId('mi-castillo').count(), 'no se ve tu castillo en el PvP');
     await page.locator('[data-testid^="pelear-"]').nth(50).click();
     check(await page.getByTestId('batalla').count(), 'no abre la batalla');
+    // El campo de batalla: el castillo del rival arriba y el tuyo abajo, con sus tropas; vuelan disparos.
+    check(await page.getByTestId('castillo-rival').count() && (await page.getByTestId('castillo-tuyo').count()), 'no están los dos castillos');
+    const rivalArqueros = Number(await page.getByTestId('castillo-rival').getAttribute('data-arqueros'));
+    check(rivalArqueros >= 1 && rivalArqueros <= 6, `el rival no tiene arqueros (${rivalArqueros})`);
+    const yArriba = (await page.getByTestId('castillo-rival').locator('.torre').boundingBox()).y;
+    const yAbajo = (await page.getByTestId('castillo-tuyo').locator('.torre').boundingBox()).y;
+    check(yArriba < yAbajo, 'el castillo del rival no está arriba del tuyo');
+    await page.waitForTimeout(700);
+    check((await page.locator('.disparo').count()) > 0, 'no vuelan disparos en la batalla');
     await page.getByTestId('batalla-saltar').click();
     check((await page.getByTestId('pvp-gano').count()) + (await page.getByTestId('pvp-perdio').count()) === 1, 'no sale el resultado');
     await page.getByTestId('batalla-ok').click();
