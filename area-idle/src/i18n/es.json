@@ -629,5 +629,12 @@
     "fuertes": "lo aguantan",
     "nadie": "Nadie de los que has visto es débil o fuerte a este",
     "chip": "cambiar"
+  },
+  "auto": {
+    "titulo": "Ver un anuncio: media hora con tu círculo apuntando solo",
+    "boton": "Auto 30 min",
+    "gratis": "anuncio",
+    "activo": "Auto {t}",
+    "renovar": "renovar"
   }
 }

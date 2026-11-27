@@ -1,6 +1,7 @@
 // Oro por ver un anuncio (desde el nivel 3): un botón en la pantalla principal que da lo que ganas en
 // unos minutos jugando. Uno cada 10 min y como mucho 6 al día (el día cambia a medianoche, hora local).
 // También, al volver, el oro de app cerrada se puede cobrar ×2 viendo un anuncio (no cuenta para el tope).
+import { AUTO_ANUNCIO } from './datos';
 import { activeGoldPerMinute } from './inactivo';
 import type { Meta } from './meta';
 import { dayKey } from './misiones';
@@ -69,4 +70,16 @@ export function loadAnuncios(raw: unknown): AnunciosState {
   const r = raw as Partial<AnunciosState>;
   const n = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : 0);
   return { dia: typeof r.dia === 'string' ? r.dia : '', vistos: Math.floor(n(r.vistos)), ultimo: n(r.ultimo) };
+}
+
+// ---- Autoapuntado por anuncio: media hora (de reloj) con tu círculo yendo solo y rápido ----
+
+/** Milisegundos que le quedan al autoapuntado del anuncio (0: no está andando). */
+export const autoBoostLeft = (meta: Meta, ahora: number): number => Math.max(0, Math.min(meta.autoHasta - ahora, AUTO_ANUNCIO.minutos * 60_000));
+
+/** Se vio el anuncio: la media hora empieza (o vuelve a empezar) desde ahora. Se abre con el oro por anuncio. */
+export function claimAutoBoost(meta: Meta, ahora: number): boolean {
+  if (meta.nivel < ANUNCIO.desde) return false;
+  meta.autoHasta = ahora + AUTO_ANUNCIO.minutos * 60_000;
+  return true;
 }

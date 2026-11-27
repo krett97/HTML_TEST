@@ -248,6 +248,32 @@ async function flow(name, browser, fn, opts) {
     check(inactivo > 0 && cobrado >= 2 * inactivo - 2, `no cobró el doble (${inactivo} → ${cobrado})`);
   });
 
+  await flow('autoapuntado por anuncio: media hora con el círculo apuntando solo (también en un nivel)', browser, async (page) => {
+    await page.getByTestId('terminar').click();
+    await page.getByTestId('mejorar').click();
+    await page.getByTestId('cerrar-arbol').click();
+    check(!(await page.getByTestId('anuncio-auto').count()), 'el autoapuntado por anuncio sale antes del nivel 3');
+    await page.getByTestId('abrir-ajustes').click();
+    for (let i = 0; i < 2; i++) await page.getByTestId('mas-nivel').click();
+    await page.mouse.click(4, 4);
+    await page.waitForTimeout(200);
+    await page.getByTestId('anuncio-auto').click();
+    check(await page.getByTestId('anuncio-prueba').count(), 'no pide el anuncio');
+    await page.waitForTimeout(3300);
+    await page.getByTestId('cerrar-anuncio').click();
+    await page.waitForTimeout(300);
+    const resta = await page.getByTestId('auto-restante').textContent();
+    check(/(29|30):\d\d/.test(resta), `no dice la media hora (${resta})`);
+    await page.getByTestId('jugar').click();
+    await page.waitForTimeout(600);
+    check(await page.getByTestId('hud-auto').count(), 'en el nivel no se ve lo que le queda');
+    // Sin tocar: el círculo se va solo, rápido, a donde están los slimes.
+    const inicio = await page.evaluate(() => { const r = window.juego.run; r.salieron = r.nivel.total; r.enemies = r.enemies.slice(0, 4); for (const e of r.enemies) { e.x = 310; e.y = 120; e.vx = 0; e.vy = 0; e.giro = 99; e.vida = e.vidaMax = 1e12; } r.cursor = { x: 60, y: 400 }; r.manual = 99; r.auto.falta = 0; return { ...r.cursor }; });
+    await page.waitForTimeout(1500);
+    const luego = await page.evaluate(() => ({ ...window.juego.run.cursor }));
+    check(Math.hypot(luego.x - 310, luego.y - 120) < 40 && Math.hypot(luego.x - inicio.x, luego.y - inicio.y) > 80, `el círculo no fue solo y rápido (${JSON.stringify(luego)})`);
+  });
+
   await flow('glosario: tipos de daño y enemigos (el azul, oculto hasta abrirlo)', browser, async (page) => {
     await page.getByTestId('terminar').click();
     await page.getByTestId('mejorar').click();

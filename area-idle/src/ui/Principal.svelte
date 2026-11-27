@@ -93,28 +93,45 @@
     {#if $view.mejorando}
       <Arbol cerrar={() => juego.toggleTree(false)} />
     {:else}
-      {#if anuncio.abierto && anuncio.quedan > 0}
-        <!-- Ver un anuncio para ganar oro: lo que ganas en unos minutos jugando. Uno cada 10 min, 6 al día. -->
-        <button
-          type="button"
-          class="anuncio"
-          class:espera={anuncio.espera > 0}
-          disabled={anuncio.espera > 0 || anuncio.viendo}
-          title={$t('anuncio.titulo')}
-          onclick={verAnuncio}
-          data-testid="anuncio-oro"
-        >
-          <Icon name="anuncio" size={34} />
-          <span class="anuncio-txt">
-            {#if anuncio.espera > 0}
-              <span class="cifra" data-testid="anuncio-espera">{$t('anuncio.espera', { t: formatClock(anuncio.espera / 1000) })}</span>
-            {:else}
-              <span class="cifra oro-anuncio"><Icon name="moneda" size={16} />+{formatNum(anuncio.oro)}</span>
-            {/if}
-            <small class="cifra">{$t('anuncio.quedan', { n: anuncio.quedan })}</small>
-          </span>
-        </button>
-      {/if}
+      <div class="anuncios">
+        {#if anuncio.abierto && anuncio.quedan > 0}
+          <!-- Ver un anuncio para ganar oro: lo que ganas en unos minutos jugando. Uno cada 10 min, 6 al día. -->
+          <button
+            type="button"
+            class="anuncio"
+            class:espera={anuncio.espera > 0}
+            disabled={anuncio.espera > 0 || anuncio.viendo}
+            title={$t('anuncio.titulo')}
+            onclick={verAnuncio}
+            data-testid="anuncio-oro"
+          >
+            <Icon name="anuncio" size={34} />
+            <span class="anuncio-txt">
+              {#if anuncio.espera > 0}
+                <span class="cifra" data-testid="anuncio-espera">{$t('anuncio.espera', { t: formatClock(anuncio.espera / 1000) })}</span>
+              {:else}
+                <span class="cifra oro-anuncio"><Icon name="moneda" size={16} />+{formatNum(anuncio.oro)}</span>
+              {/if}
+              <small class="cifra">{$t('anuncio.quedan', { n: anuncio.quedan })}</small>
+            </span>
+          </button>
+        {/if}
+        {#if $view.auto.abierto}
+          <!-- Media hora de autoapuntado rápido por un anuncio (si ya anda, se ve lo que le queda y se puede renovar). -->
+          <button type="button" class="anuncio auto" class:activo={$view.auto.restante > 0} disabled={anuncio.viendo} title={$t('auto.titulo')} onclick={() => juego.watchAdAuto()} data-testid="anuncio-auto">
+            <Icon name="autoapuntar" size={32} />
+            <span class="anuncio-txt">
+              {#if $view.auto.restante > 0}
+                <span class="cifra" data-testid="auto-restante">{$t('auto.activo', { t: formatClock($view.auto.restante / 1000) })}</span>
+                <small>{$t('auto.renovar')}</small>
+              {:else}
+                <span class="cifra auto-txt">{$t('auto.boton')}</span>
+                <small class="con-anuncio"><Icon name="anuncio" size={14} />{$t('auto.gratis')}</small>
+              {/if}
+            </span>
+          </button>
+        {/if}
+      </div>
       {#if ganado > 0}
         <p class="ganado cifra" data-testid="anuncio-ganado"><Icon name="moneda" size={26} />{$t('anuncio.gano', { n: formatNum(ganado) })}</p>
       {/if}
@@ -270,10 +287,34 @@
     padding: 10px 10px 8px;
   }
   /* El botón del anuncio, arriba a la izquierda del campo: verde cuando se puede, gris con la espera. */
-  .anuncio {
+  /* Los botones de anuncio, arriba a la izquierda del campo: el del oro y el del autoapuntado. */
+  .anuncios {
     position: absolute;
     top: 10px;
     left: 12px;
+    display: grid;
+    justify-items: start;
+    gap: 8px;
+  }
+  .anuncio.auto {
+    background: linear-gradient(#e2f4ff, #9fd6f5);
+    animation: none;
+  }
+  .anuncio.auto.activo {
+    background: linear-gradient(#bfe6ff, #5cb8ef);
+  }
+  .auto-txt {
+    font-size: 15px;
+  }
+  .anuncio.auto small {
+    color: #1f5a86;
+  }
+  .con-anuncio {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+  .anuncio {
     display: flex;
     align-items: center;
     gap: 6px;
@@ -322,8 +363,9 @@
   /* "+45K de oro" al cobrar el anuncio. */
   .ganado {
     position: absolute;
-    top: 64px;
-    left: 14px;
+    top: 14px;
+    left: 50%;
+    translate: -50% 0;
     display: flex;
     align-items: center;
     gap: 4px;

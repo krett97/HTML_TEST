@@ -18,7 +18,7 @@ import { activeGoldPerMinute } from '../core/inactivo';
 import { clearRaw, loadRaw, saveRaw } from '../services/storage';
 import { RankingService } from '../services/ranking';
 import { cleanName, rankingEntry, rankingUnlocked } from '../core/ranking';
-import { adStatus, canWatchAd, claimAdGold, type EstadoAnuncio } from '../core/anuncios';
+import { adStatus, autoBoostLeft, canWatchAd, claimAdGold, claimAutoBoost, ANUNCIO, type EstadoAnuncio } from '../core/anuncios';
 import { createAds, type AdsService } from '../services/ads';
 
 export type Fase = 'jugando' | 'fin' | 'arbol';
@@ -43,6 +43,8 @@ export interface Vista {
   inactivo: { segundos: number; oro: number; tope: boolean } | null;
   /** Oro por ver un anuncio (desde el nivel 3): cuánto da, cuántos quedan hoy, la espera y si se está viendo uno. */
   anuncio: EstadoAnuncio & { viendo: boolean };
+  /** El autoapuntado por anuncio: si ya se puede (nivel 3) y cuánto le queda (ms; 0: apagado). */
+  auto: { abierto: boolean; restante: number };
   /** Oro por minuto sin jugar y hasta cuántas horas (null si aún no se abre). */
   ritmoInactivo: { porMinuto: number; horas: number } | null;
   /** Esta partida abrió el oro por inactividad (aviso en el fin). */
@@ -187,6 +189,23 @@ export class Juego {
     return r.rewarded;
   }
 
+  /** Ver un anuncio para tener media hora de autoapuntado rápido (si ya andaba, vuelve a empezar la media hora). */
+  async watchAdAuto(): Promise<boolean> {
+    if (this.viendoAnuncio || this.meta.nivel < ANUNCIO.desde || !this.ads.isReady('auto')) return false;
+    this.viendoAnuncio = true;
+    this.publish();
+    const r = await this.ads.showRewarded('auto');
+    this.viendoAnuncio = false;
+    const ok = r.rewarded && claimAutoBoost(this.meta, Date.now());
+    if (ok) {
+      this.audio.play('compra');
+      this.save();
+      if (this.run) this.run.autoBoost = true;
+    }
+    this.publish();
+    return ok;
+  }
+
   /** Cobra lo juntado mientras no jugabas, ×2 si ves un anuncio completo (si no, se queda la ventana). */
   async collectIdleDouble(): Promise<number> {
     if (this.viendoAnuncio || !this.pendiente || !this.ads.isReady('doble')) return 0;
@@ -299,6 +318,8 @@ export class Juego {
   step(dt: number): RunEvent[] {
     const run = this.run;
     if (!run) return [];
+    // El autoapuntado del anuncio anda mientras dure su media hora (se acaba solo, aunque sea a media partida).
+    run.autoBoost = this.meta.autoHasta > Date.now();
     if (run.guardia) return this.stepGuard(run, dt);
     if (this.fase !== 'jugando') return [];
     const events = stepRun(run, dt);
@@ -707,6 +728,7 @@ export class Juego {
       premio: this.premio,
       inactivo: this.pendiente,
       anuncio: { ...adStatus(this.meta, Date.now()), viendo: this.viendoAnuncio },
+      auto: { abierto: this.meta.nivel >= ANUNCIO.desde, restante: autoBoostLeft(this.meta, Date.now()) },
       muro: run ? { ...run.muro } : null,
       jefe: run?.nivel.jefe
         ? (() => {

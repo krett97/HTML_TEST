@@ -406,6 +406,19 @@ glosario dice qué elemento llevas.
 más (la bruja se lleva parte del oro del 41 al 50). Por días: 39, 59, 59, 69 (antes 39, 55, 59, 59): más
 rápido después del 50, donde todavía no está la mazmorra. El simulador no cambia de elemento.
 
+## 5o. Autoapuntado por anuncio (desde 0.22.0)
+
+Debajo del botón del oro por anuncio (desde el **nivel 3**) hay otro azul con una mira: **"Auto 30 min"**.
+Viendo un anuncio completo, durante **media hora de reloj** tu círculo **apunta solo y rápido**: cada 0.4 s
+elige el lugar con más enemigos (el mismo cálculo del simulador) y va a 260 unidades por segundo. Si tocas,
+manda tu dedo; 1.2 s después vuelve a ir solo. Funciona aunque no tengas el talento Autoapuntado (que es lento
+a propósito, 12–36) y también en la **pantalla principal** (ahí el círculo aparece donde hay enemigos y
+dispara sin tocar; el oro de la guardia sigue con su tope del 10 %). Mientras dura, el círculo es azul, el
+botón dice cuánto le queda ("Auto 24:31", y se puede **renovar** a media hora con otro anuncio, sin juntar
+más de 30 min) y en los niveles sale una cuenta regresiva bajo el reloj. Si la media hora se acaba a mitad de
+una partida, el círculo se queda donde estaba. No tiene tope por día. El simulador ya apunta perfecto, así que
+no cambia el balance.
+
 ## 5e. Misiones, gemas moradas y Reliquias (desde 0.6.0)
 
 Al pasar el nivel 10 (al vencer al Rey Slime) se abren las **misiones**, que dan **gemas moradas**, la

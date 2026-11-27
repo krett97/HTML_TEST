@@ -47,10 +47,12 @@ export interface Meta {
   anuncios: AnunciosState;
   /** El elemento de tu círculo (desde el nivel 45 se cambia viendo un anuncio). */
   elemento: DamageType;
+  /** Hasta cuándo (hora del reloj) dura el autoapuntado del anuncio; 0: no lo has visto. */
+  autoHasta: number;
 }
 
 export function createMeta(): Meta {
-  return { version: SAVE_VERSION, oro: 0, talentos: {}, partidas: 0, nivel: 1, jugando: 1, mejor: 0, reventados: 0, ajustes: { sonido: true, idioma: null }, gemas: 0, cuenta: emptyCounters(), misiones: emptyMissions(), ultimaVez: 0, oroMinuto: 0, vistos: [], nombre: '', pvp: emptyPvp(), runas: 0, equipo: emptyEquipo(), supervivencia: emptySupervivencia(), anuncios: emptyAnuncios(), elemento: 'fisico' };
+  return { version: SAVE_VERSION, oro: 0, talentos: {}, partidas: 0, nivel: 1, jugando: 1, mejor: 0, reventados: 0, ajustes: { sonido: true, idioma: null }, gemas: 0, cuenta: emptyCounters(), misiones: emptyMissions(), ultimaVez: 0, oroMinuto: 0, vistos: [], nombre: '', pvp: emptyPvp(), runas: 0, equipo: emptyEquipo(), supervivencia: emptySupervivencia(), anuncios: emptyAnuncios(), elemento: 'fisico', autoHasta: 0 };
 }
 
 export const levelOf = (meta: Meta, id: TalentId): number => meta.talentos[id] ?? 0;
@@ -198,6 +200,7 @@ export function loadMeta(raw: unknown): Meta {
     supervivencia: loadSupervivencia(r.supervivencia),
     anuncios: loadAnuncios(r.anuncios),
     elemento: DAMAGE_TYPES.includes(r.elemento as DamageType) ? (r.elemento as DamageType) : 'fisico',
+    autoHasta: num(r.autoHasta, 0),
   };
 }
 

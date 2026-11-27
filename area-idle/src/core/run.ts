@@ -1,7 +1,7 @@
 // Una partida: el campo, los enemigos que aparecen y pasean, tu círculo donde caen flechas, el mago
 // con sus explosiones de fuego cuadradas y los arqueros que tiran a un objetivo a la vez. Lógica pura: la escena
 // llama a stepRun cada cuadro (a través del controlador) y dibuja los eventos.
-import { AUTOAPUNTAR, CONTACTO, damageMultiplier, effectiveness, ENEMIES, GUARDIA, JEFE, JEFES, levelConfig, ORDEN_JEFES, vidaNivel, LLEGADA, MAX_VIVOS, PRIMERA_OLA, type BossDef, type DamageType, type EnemyKind, type LevelConfig, type ProjectileKind } from './datos';
+import { AUTO_ANUNCIO, AUTOAPUNTAR, CONTACTO, damageMultiplier, effectiveness, ENEMIES, GUARDIA, JEFE, JEFES, levelConfig, ORDEN_JEFES, vidaNivel, LLEGADA, MAX_VIVOS, PRIMERA_OLA, type BossDef, type DamageType, type EnemyKind, type LevelConfig, type ProjectileKind } from './datos';
 import { between, createRng, type Rng } from './rng';
 import type { Stats } from './stats';
 
@@ -217,6 +217,8 @@ export interface Run {
   sacerdote: { disparo: number; cura: number } | null;
   /** La bruja (si la tienes): lo que le falta para el siguiente rayo. */
   bruja: { rayo: number } | null;
+  /** El autoapuntado del anuncio está andando (lo pone el juego mientras dura la media hora). */
+  autoBoost: boolean;
 }
 
 export interface Oleadas {
@@ -289,6 +291,7 @@ export function createRun(base: Stats, h: number, nivel = 1, seed = Date.now(), 
     caballero: stats.caballero.activo ? nuevoCaballero(stats, alto) : null,
     sacerdote: stats.sacerdote.activo ? { disparo: stats.sacerdote.intervalo * 0.6, cura: stats.sacerdote.cadaCura } : null,
     bruja: stats.bruja.activo ? { rayo: stats.bruja.intervalo * 0.4 } : null,
+    autoBoost: false,
   };
 }
 
@@ -396,7 +399,7 @@ export function createGuardRun(base: Stats, h: number, nivel: number, oroPorBaja
 }
 
 /** ¿Tu círculo está disparando? En un nivel, siempre; en guardia, solo un rato después de tocar. */
-export const circleActive = (run: Run): boolean => !run.guardia || run.manual < GUARDIA.reposo;
+export const circleActive = (run: Run): boolean => !run.guardia || run.manual < GUARDIA.reposo || (run.autoBoost && run.enemies.length > 0);
 
 /** Al comprar algo con la guardia andando: mismas tropas, nuevas estadísticas (y el oro por baja). */
 export function updateGuardRun(run: Run, base: Stats, oroPorBaja: number): void {
@@ -692,7 +695,8 @@ export function moveCursor(run: Run, x: number, y: number): void {
 }
 
 /** ¿El círculo se está moviendo solo? (tienes Autoapuntado y no has tocado en un rato) */
-export const autoAiming = (run: Run): boolean => run.stats.autoapuntar.velocidad > 0 && !run.guardia && run.manual >= AUTOAPUNTAR.espera;
+export const autoAiming = (run: Run): boolean =>
+  run.autoBoost ? run.manual >= AUTO_ANUNCIO.espera : run.stats.autoapuntar.velocidad > 0 && !run.guardia && run.manual >= AUTOAPUNTAR.espera;
 
 const bottom = (run: Run) => run.h - ALLY_ROW - MARGIN;
 
@@ -1032,21 +1036,25 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
   }
 
   // Autoapuntado: si no has tocado en un rato, el círculo se va solo (despacio) a donde hay más enemigos.
+  // Con el del anuncio, rápido y eligiendo más seguido.
   run.manual += step;
   if (autoAiming(run)) {
     run.auto.falta -= step;
     if (run.auto.falta <= 0) {
-      run.auto.falta = AUTOAPUNTAR.cada;
+      run.auto.falta = run.autoBoost ? AUTO_ANUNCIO.cada : AUTOAPUNTAR.cada;
       if (run.enemies.length) {
         const b = bestSpot(run);
         run.auto.tx = b.x;
         run.auto.ty = b.y;
+        // En la pantalla principal el círculo descansa fuera del campo: aparece directo donde va.
+        if (run.cursor.x < 0) run.cursor = { x: b.x, y: b.y };
       }
     }
     const dx = run.auto.tx - run.cursor.x;
     const dy = run.auto.ty - run.cursor.y;
     const d = Math.hypot(dx, dy);
-    const k = d > 0.01 ? Math.min(1, (s.autoapuntar.velocidad * step) / d) : 0;
+    const vel = run.autoBoost ? Math.max(AUTO_ANUNCIO.velocidad, s.autoapuntar.velocidad) : s.autoapuntar.velocidad;
+    const k = d > 0.01 ? Math.min(1, (vel * step) / d) : 0;
     run.cursor.x += dx * k;
     run.cursor.y += dy * k;
   }

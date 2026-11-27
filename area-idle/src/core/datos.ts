@@ -380,6 +380,12 @@ export const GUARDIA = { cada: 2.5, max: 12, eficiencia: 0.1, iniciales: 3, repo
  * Es lento a propósito (el campo mide 360 de ancho): tocar siempre es mejor.
  */
 export const AUTOAPUNTAR = { velocidad: 12, porNivel: 6, espera: 2.5, cada: 1 } as const;
+/**
+ * Autoapuntado por anuncio: viendo un anuncio, por `minutos` minutos (de reloj) tu círculo se va solo y
+ * rápido (`velocidad`) a donde hay más enemigos, eligiendo cada `cada` s; si tocas, vuelve a ir solo
+ * `espera` s después. Mucho mejor que el talento (que es lento a propósito). También en la pantalla principal.
+ */
+export const AUTO_ANUNCIO = { minutos: 30, velocidad: 260, espera: 1.2, cada: 0.4 } as const;
 
 /** Desde qué nivel se abren las misiones (diarias y permanentes), las gemas moradas y las Reliquias. */
 export const MISIONES_DESDE = 11;

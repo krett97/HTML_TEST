@@ -38,6 +38,10 @@
     </div>
   {/if}
   <div class="fila">
+    {#if $view.auto.restante > 0}
+      <!-- El autoapuntado del anuncio: cuánto le queda. -->
+      <div class="auto-hud cifra" data-testid="hud-auto"><Icon name="autoapuntar" size={18} />{formatClock($view.auto.restante / 1000)}</div>
+    {/if}
     <div class="pill reloj" class:prisa data-testid="reloj">
       <Icon name="reloj" size={24} />
       <span class="cifra">{formatClock(restante)}</span>
@@ -87,7 +91,7 @@
     <strong>{$t('oleadas.ola', { n: ol.ola + 1 })}</strong>
   </div>
 {/if}
-{#if !$view.toco && $view.meta.partidas < 3}
+{#if !$view.toco && $view.meta.partidas < 3 && !$view.auto.restante}
   <div class="pista" data-testid="pista"><Icon name="mano" size={30} /> {$t('hud.pista')}</div>
 {/if}
 {#if __PRUEBAS__}
@@ -95,6 +99,20 @@
 {/if}
 
 <style>
+  .auto-hud {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 12px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    padding: 1px 8px 1px 4px;
+    border: 2px solid var(--line);
+    border-radius: 999px;
+    background: #bfe6ff;
+    font-size: 13px;
+    pointer-events: none;
+  }
   .progreso.oleada .hecho {
     background: linear-gradient(#9ad0ff, #4a90e2);
   }

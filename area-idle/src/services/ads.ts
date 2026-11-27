@@ -3,7 +3,7 @@
 // navegador y en el APK de prueba). Cuando exista la app con Capacitor, aquí entra AdMob (con los IDs
 // fuera del repo, en variables de entorno) sin tocar el resto del juego.
 
-export type RewardedPlacement = 'oro' | 'doble' | 'elemento';
+export type RewardedPlacement = 'oro' | 'doble' | 'elemento' | 'auto';
 
 export interface AdResult {
   /** true solo si el jugador vio el anuncio completo y debe recibir la recompensa. */
@@ -16,7 +16,7 @@ export interface AdsService {
   showRewarded(placement: RewardedPlacement): Promise<AdResult>;
 }
 
-const TEXTO: Record<RewardedPlacement, string> = { oro: 'Oro', doble: 'Oro ×2', elemento: 'Cambiar elemento' };
+const TEXTO: Record<RewardedPlacement, string> = { oro: 'Oro', doble: 'Oro ×2', elemento: 'Cambiar elemento', auto: 'Autoapuntado 30 min' };
 
 class MockAds implements AdsService {
   readonly name = 'prueba';

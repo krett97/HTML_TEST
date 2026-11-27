@@ -629,5 +629,12 @@
     "fuertes": "resist it",
     "nadie": "None of the enemies you've seen are weak or strong to this",
     "chip": "change"
+  },
+  "auto": {
+    "titulo": "Watch an ad: half an hour with your circle aiming by itself",
+    "boton": "Auto 30 min",
+    "gratis": "ad",
+    "activo": "Auto {t}",
+    "renovar": "renew"
   }
 }

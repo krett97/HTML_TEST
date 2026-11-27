@@ -8,7 +8,9 @@ import { ARMADURA, bestSpot as mejorLugar, hidden, inAir, createSurvivalRun, jef
 import { EQUIPO, baseChance, bonosEquipo, chanceOf, costoPieza, emptyEquipo, loadEquipo, mejorar, NIVEL_MAX, SUERTE_POR_FALLO, tierDe } from '../src/core/equipo';
 import { ENTRADAS_MAX, RECARGA_ENTRADA_MS, emptySupervivencia, nivelBaseOlas, refillEntradas, survivalUnlocked, usarEntrada } from '../src/core/supervivencia';
 import { SUPERVIVENCIA_DESDE } from '../src/core/datos';
-import { ANUNCIO, adGold, adStatus, canWatchAd, claimAdGold, loadAnuncios } from '../src/core/anuncios';
+import { ANUNCIO, adGold, adStatus, autoBoostLeft, canWatchAd, claimAdGold, claimAutoBoost, loadAnuncios } from '../src/core/anuncios';
+import { AUTO_ANUNCIO } from '../src/core/datos';
+import { circleActive as circuloActivo } from '../src/core/run';
 import { autoAiming, circleActive, createGuardRun, guardLevel, startGuardRun, updateGuardRun } from '../src/core/run';
 import { AUTOAPUNTAR } from '../src/core/datos';
 import { CURVA, GUARDIA, ORO_TALENTOS } from '../src/core/datos';
@@ -1733,5 +1735,51 @@ describe('bruja y elemento de tu círculo', () => {
     const golpe = ev.find((x): x is Extract<RunEvent, { type: 'hit' }> => x.type === 'hit' && x.fuente === 'jugador');
     expect(golpe!.efecto).toBe('debil');
     expect(ELEMENTO_DESDE).toBeGreaterThan(BRUJA_DESDE);
+  });
+});
+
+describe('autoapuntado por anuncio (media hora)', () => {
+  it('se abre con el oro por anuncio; dura media hora de reloj y verlo otra vez la vuelve a empezar', () => {
+    const m = createMeta();
+    const t0 = 1_000_000;
+    expect(claimAutoBoost(m, t0)).toBe(false);
+    m.nivel = ANUNCIO.desde;
+    expect(claimAutoBoost(m, t0)).toBe(true);
+    expect(autoBoostLeft(m, t0)).toBe(AUTO_ANUNCIO.minutos * 60_000);
+    expect(autoBoostLeft(m, t0 + 10 * 60_000)).toBe(20 * 60_000);
+    expect(autoBoostLeft(m, t0 + 31 * 60_000)).toBe(0);
+    claimAutoBoost(m, t0 + 25 * 60_000);
+    expect(autoBoostLeft(m, t0 + 25 * 60_000)).toBe(30 * 60_000);
+    expect(loadMeta(JSON.parse(JSON.stringify(m))).autoHasta).toBe(m.autoHasta);
+    expect(loadMeta({}).autoHasta).toBe(0);
+  });
+  it('con él, tu círculo va solo y rápido a donde hay más (aunque no tengas el talento), y tocar lo deja un momento', () => {
+    const run = createRun(computeStats({}), 600, 5, 21);
+    run.stats = { ...run.stats, ritmo: 0 };
+    run.enemies = [];
+    for (let i = 0; i < 5; i++) run.enemies.push({ id: 990 + i, kind: 'verde', x: 300 + (i % 2) * 6, y: 120 + i * 4, vx: 0, vy: 0, vida: 1e9, vidaMax: 1e9, giro: 99 });
+    expect(autoAiming(run)).toBe(false);
+    run.autoBoost = true;
+    expect(autoAiming(run)).toBe(true);
+    const x0 = run.cursor.x;
+    for (let i = 0; i < 20; i++) stepRun(run, 0.05);
+    // En 1 s llega (el talento al máximo apenas avanzaría 36).
+    expect(Math.hypot(run.cursor.x - 303, run.cursor.y - 128)).toBeLessThan(25);
+    expect(run.cursor.x - x0).toBeGreaterThan(80);
+    moveCursor(run, 50, 300);
+    expect(autoAiming(run)).toBe(false);
+    for (let i = 0; i < Math.ceil(AUTO_ANUNCIO.espera / 0.05) + 1; i++) stepRun(run, 0.05);
+    expect(autoAiming(run)).toBe(true);
+  });
+  it('en la pantalla principal también: el círculo aparece donde hay enemigos y dispara sin tocar', () => {
+    const run = createGuardRun(computeStats({ danio: 20 }), 600, 5, 1, 22);
+    startGuardRun(run);
+    expect(circuloActivo(run)).toBe(false);
+    run.autoBoost = true;
+    expect(circuloActivo(run)).toBe(true);
+    const ev: RunEvent[] = [];
+    for (let i = 0; i < 40; i++) ev.push(...stepRun(run, 0.05));
+    expect(run.cursor.x).toBeGreaterThanOrEqual(0);
+    expect(ev.some((e) => e.type === 'shot' && e.fuente === 'jugador')).toBe(true);
   });
 });
