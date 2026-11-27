@@ -206,6 +206,14 @@ export class Juego {
     return ok;
   }
 
+  /** Prende o apaga las flechas de hielo de tus arqueros (si tienes el talento); gratis. */
+  toggleIceArrows(): void {
+    this.meta.flechasHielo = !this.meta.flechasHielo;
+    this.save();
+    if (this.run?.guardia) updateGuardRun(this.run, stats(this.meta), this.oroGuardia());
+    this.publish();
+  }
+
   /** Cobra lo juntado mientras no jugabas, ×2 si ves un anuncio completo (si no, se queda la ventana). */
   async collectIdleDouble(): Promise<number> {
     if (this.viendoAnuncio || !this.pendiente || !this.ads.isReady('doble')) return 0;

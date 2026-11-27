@@ -82,8 +82,8 @@ interface SlimeVisual {
   /** El jefe en el aire: cuánto lleva del brinco y cuánto dura (0: en el piso). */
   salto: number;
   saltoDura: number;
-  /** Si se está dibujando maldito (morado). */
-  maldito?: boolean;
+  /** El color con que se está dibujando (maldito: morado; frenado: celeste; normal: blanco). */
+  tinte?: number;
 }
 
 interface Numero {
@@ -451,7 +451,7 @@ export class Campo extends Phaser.Scene {
     const base = t.base(ENEMIES[kind].radio);
     if (v) {
       v.img.setTexture(t.key).setOrigin(0.5, t.origenY).clearTint().setVisible(true);
-      v.maldito = false;
+      v.tinte = 0xffffff;
       v.sombra.setVisible(true);
       v.base = base;
       v.salto = 0;
@@ -497,12 +497,14 @@ export class Campo extends Phaser.Scene {
       }
       // Los que vuelan van arriba de su sombra, aleteando.
       if (ENEMIES[e.kind].vuela) alto += 18 + Math.sin(this.tiempo * 6 + v.fase) * 3;
-      // Maldito por la bruja: morado (los jefes, además, rojizos en furia).
+      // Maldito por la bruja: morado; frenado por el hielo: celeste (los jefes, además, rojizos en furia).
       const maldito = (e.maldito ?? 0) > run.t;
-      if (jefe) v.img.setTint(run.jefe!.furia && Math.sin(this.tiempo * 12) > 0 ? 0xff8a80 : maldito ? 0xd6b8ff : 0xffffff);
-      else if (maldito !== v.maldito) {
-        v.maldito = maldito;
-        if (maldito) v.img.setTint(0xd6b8ff);
+      const frio = !!e.lento && e.lento.hasta > run.t;
+      const tinte = maldito ? 0xd6b8ff : frio ? 0xb8e8ff : 0xffffff;
+      if (jefe) v.img.setTint(run.jefe!.furia && Math.sin(this.tiempo * 12) > 0 ? 0xff8a80 : tinte);
+      else if (tinte !== v.tinte) {
+        v.tinte = tinte;
+        if (tinte !== 0xffffff) v.img.setTint(tinte);
         else v.img.clearTint();
       }
       // Bajo la arena (escorpión) apenas se ve; a media teletransportación (Esqueleto Mago), nada.
@@ -1082,15 +1084,18 @@ export class Campo extends Phaser.Scene {
   /** Las flechas de los arqueros en el aire (una raya con punta, hacia su blanco). */
   private dibujarFlechas(run: Run): void {
     const g = this.flechas.clear();
+    // Las de hielo: celestes, con punta de hielo y un halito frío.
+    const hielo = run.stats.arqueros.hielo > 0;
     for (const a of run.arrows) {
       const cx = Math.cos(a.angulo);
       const cy = Math.sin(a.angulo);
       const largo = 9;
       const x0 = a.x - cx * largo;
       const y0 = a.y - cy * largo;
+      if (hielo) g.lineStyle(4, 0x9fe2ff, 0.45).lineBetween(x0, y0, a.x, a.y);
       g.lineStyle(2.2, CAFE, 1).lineBetween(x0, y0, a.x, a.y);
-      g.lineStyle(1, 0xd9a066, 1).lineBetween(x0, y0, a.x, a.y);
-      g.fillStyle(0x8d93aa).fillTriangle(a.x + cx * 3, a.y + cy * 3, a.x - cy * 1.8, a.y + cx * 1.8, a.x + cy * 1.8, a.y - cx * 1.8);
+      g.lineStyle(1, hielo ? 0xdff4ff : 0xd9a066, 1).lineBetween(x0, y0, a.x, a.y);
+      g.fillStyle(hielo ? 0x6cc8f5 : 0x8d93aa).fillTriangle(a.x + cx * 3, a.y + cy * 3, a.x - cy * 1.8, a.y + cx * 1.8, a.x + cy * 1.8, a.y - cx * 1.8);
       g.fillStyle(0xffffff).fillTriangle(x0, y0, x0 - cx * 3 - cy * 2, y0 - cy * 3 + cx * 2, x0 - cx * 3 + cy * 2, y0 - cy * 3 - cx * 2);
     }
   }

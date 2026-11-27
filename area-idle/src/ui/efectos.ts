@@ -1,6 +1,6 @@
 // Qué cambia al subir un talento: el valor de ahora y el del siguiente nivel, para el texto
 // "Daño 3 → 4" del árbol.
-import type { TalentId } from '../core/datos';
+import { HIELO, type TalentId } from '../core/datos';
 import { formatNum } from '../core/format';
 import { computeStats, type Levels, type Stats } from '../core/stats';
 
@@ -30,6 +30,7 @@ const VALOR: Partial<Record<TalentId, (s: Stats, l: Levels) => string>> = {
   multiflecha: (s) => String(s.arqueros.objetivos),
   arcoRapido: (s) => uno(1 / s.arqueros.intervalo),
   arcoDanio: (s) => formatNum(s.arqueros.danio),
+  flechaHielo: (_, l) => `${Math.round(100 * ((l.flechaHielo ?? 0) > 0 ? HIELO.lento + HIELO.porNivel * ((l.flechaHielo ?? 0) - 1) : 0))}%`,
   espada: (s) => formatNum(s.caballero.danio),
   tajo: (s) => uno(s.caballero.intervalo),
   coraza: (s) => formatNum(s.caballero.vida),

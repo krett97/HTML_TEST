@@ -1,7 +1,7 @@
 // Una partida: el campo, los enemigos que aparecen y pasean, tu círculo donde caen flechas, el mago
 // con sus explosiones de fuego cuadradas y los arqueros que tiran a un objetivo a la vez. Lógica pura: la escena
 // llama a stepRun cada cuadro (a través del controlador) y dibuja los eventos.
-import { AUTO_ANUNCIO, AUTOAPUNTAR, CONTACTO, damageMultiplier, effectiveness, ENEMIES, GUARDIA, JEFE, JEFES, levelConfig, ORDEN_JEFES, vidaNivel, LLEGADA, MAX_VIVOS, PRIMERA_OLA, type BossDef, type DamageType, type EnemyKind, type LevelConfig, type ProjectileKind } from './datos';
+import { AUTO_ANUNCIO, AUTOAPUNTAR, CONTACTO, HIELO, damageMultiplier, effectiveness, ENEMIES, GUARDIA, JEFE, JEFES, levelConfig, ORDEN_JEFES, vidaNivel, LLEGADA, MAX_VIVOS, PRIMERA_OLA, type BossDef, type DamageType, type EnemyKind, type LevelConfig, type ProjectileKind } from './datos';
 import { between, createRng, type Rng } from './rng';
 import type { Stats } from './stats';
 
@@ -49,6 +49,8 @@ export interface Enemy {
   sinArmadura?: boolean;
   /** Maldito por la bruja hasta este momento de la partida (le entra más daño de todo). */
   maldito?: number;
+  /** Frenado por una flecha de hielo hasta este momento: camina y ataca a `f` de su rapidez. */
+  lento?: { hasta: number; f: number };
   /** Salió de otro al partirse (piedritas del gólem): no cuenta para el nivel. */
   cria?: boolean;
   /** Jefe de más en una oleada de Supervivencia: pasea y le tira a la muralla, sin brincos ni invocaciones. */
@@ -396,6 +398,12 @@ export function createGuardRun(base: Stats, h: number, nivel: number, oroPorBaja
   run.guardia = { oroPorBaja, falta: GUARDIA.cada };
   run.cursor = { x: -999, y: -999 };
   return run;
+}
+
+/** Qué tan rápido va (y ataca) un enemigo: 1 normal; menos si lo frenó una flecha de hielo (a los jefes, la mitad del freno). */
+export function slowFactor(run: Run, e: Enemy): number {
+  if (!e.lento || e.lento.hasta <= run.t) return 1;
+  return ENEMIES[e.kind].jefe ? 1 - (1 - e.lento.f) / 2 : e.lento.f;
 }
 
 /** ¿Tu círculo está disparando? En un nivel, siempre; en guardia, solo un rato después de tocar. */
@@ -765,8 +773,8 @@ export function inside(e: Enemy, x: number, y: number, forma: Forma): boolean {
 }
 
 function damage(run: Run, e: Enemy, base: number, fuente: Source, events: RunEvent[]): void {
-  // Tus flechas son del elemento que elegiste; los demás, del suyo.
-  const tipo = fuente === 'jugador' ? run.stats.elemento : DAMAGE_TYPE_OF[fuente];
+  // Tus flechas son del elemento que elegiste; las de los arqueros, de hielo si las tienen; los demás, del suyo.
+  const tipo = fuente === 'jugador' ? run.stats.elemento : fuente === 'arquero' && run.stats.arqueros.hielo > 0 ? 'hielo' : DAMAGE_TYPE_OF[fuente];
   // Maldito por la bruja: le entra más daño de todo.
   const maldito = (e.maldito ?? 0) > run.t ? 1 + run.stats.bruja.maldicion : 1;
   // El jefe aturdido (recién caído de un brinco) recibe doble.
@@ -874,6 +882,8 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
   for (const e of run.enemies) {
     if (run.jefe && e.id === run.jefe.id) continue;
     const def = ENEMIES[e.kind];
+    // Frenado por el hielo: todo lo que camina va más despacio.
+    const paso = step * slowFactor(run, e);
     // Los escorpiones se meten bajo la arena un rato (ahí no se les puede pegar) y salen más adelante.
     if (def.entierra) {
       if ((e.bajoTierra ?? 0) > 0) {
@@ -912,8 +922,8 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
         e.vy = vel;
         e.vx = embiste ? 0 : Math.sin(run.t * 2 + e.id) * def.velocidad * 0.4;
       }
-      e.x = Math.min(run.w - MARGIN, Math.max(MARGIN, e.x + e.vx * step));
-      e.y = Math.min(bottom(run), e.y + e.vy * step);
+      e.x = Math.min(run.w - MARGIN, Math.max(MARGIN, e.x + e.vx * paso));
+      e.y = Math.min(bottom(run), e.y + e.vy * paso);
       continue;
     }
     // Los bandidos se apartan de tu círculo cuando lo tienen cerca.
@@ -936,8 +946,8 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
       e.vy = Math.sin(angle) * speed;
       e.giro = between(run.rng, ...(def.giro ?? [1, 3]));
     }
-    e.x += e.vx * step;
-    e.y += e.vy * step;
+    e.x += e.vx * paso;
+    e.y += e.vy * paso;
     if (e.x < MARGIN || e.x > run.w - MARGIN) e.vx = -e.vx;
     if (e.y < run.arriba || e.y > bottom(run)) e.vy = -e.vy;
     e.x = Math.min(run.w - MARGIN, Math.max(MARGIN, e.x));
@@ -994,7 +1004,7 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
       const dy = boss.y - run.cursor.y;
       const d = Math.hypot(dx, dy);
       if (d < s.radio + r + jd.alerta) {
-        const v = jd.esquiva * (j.furia ? 1.4 : 1) * step;
+        const v = jd.esquiva * (j.furia ? 1.4 : 1) * step * slowFactor(run, boss);
         const ang = d > 0.01 ? Math.atan2(dy, dx) : run.rng() * Math.PI * 2;
         boss.vx = Math.cos(ang) * jd.esquiva;
         boss.vy = Math.sin(ang) * jd.esquiva;
@@ -1084,7 +1094,8 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
     if (golpea && e.y < bottom(run)) continue;
     // Los jefes de más (Supervivencia) le tiran lo suyo a la muralla.
     const jd = e.elite ? JEFES[e.kind] : undefined;
-    e.tiro -= step;
+    // Frenado, también tira (o golpea) más despacio.
+    e.tiro -= step * slowFactor(run, e);
     if (e.tiro > 0) continue;
     e.tiro += (jd ? jd.lanza : (def.tiro ?? (run.oleadas ? OLEADAS.cadaGolpe : 3))) * between(run.rng, 0.8, 1.2);
     const danio = (jd ? jd.golpe * OLEADAS.jefeGolpe : run.oleadas && golpea ? Math.max(OLEADAS.golpe, def.ataque) : def.ataque) * run.nivel.ataque;
@@ -1194,7 +1205,12 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
       a.x = a.tx;
       a.y = a.ty;
       // Si el blanco ya reventó, la flecha se clava en el pasto.
-      if (blanco && blanco.vida > 0 && !hidden(run, blanco)) damage(run, blanco, a.danio, 'arquero', events);
+      if (blanco && blanco.vida > 0 && !hidden(run, blanco)) {
+        damage(run, blanco, a.danio, 'arquero', events);
+        // La flecha de hielo lo frena un rato (si ya estaba frenado, se renueva).
+        const h = s.arqueros.hielo;
+        if (h > 0 && blanco.vida > 0) blanco.lento = { hasta: run.t + HIELO.dura, f: 1 - h };
+      }
       a.objetivo = -1;
     } else {
       a.x += (dx / d) * paso;

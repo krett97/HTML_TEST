@@ -1,5 +1,5 @@
 // Las estadísticas de una partida, calculadas de los niveles de los talentos.
-import { AUTOAPUNTAR, BASE, INACTIVO, ORO_TALENTOS, type DamageType, type TalentId } from './datos';
+import { AUTOAPUNTAR, BASE, HIELO, INACTIVO, ORO_TALENTOS, type DamageType, type TalentId } from './datos';
 import { bonosEquipo, type EquipoNiveles } from './equipo';
 
 export type Levels = Partial<Record<TalentId, number>>;
@@ -31,7 +31,8 @@ export interface Stats {
   /** Autoapuntado: qué tan rápido se mueve solo tu círculo (0: no lo tienes). */
   autoapuntar: { velocidad: number };
   /** Arqueros: cuántos, cada cuánto tiran, a cuántos objetivos a la vez y cuánto pega cada flecha. */
-  arqueros: { cantidad: number; intervalo: number; objetivos: number; danio: number };
+  /** `hielo`: cuánto frenan sus flechas de hielo (0: flechas de siempre, físicas). */
+  arqueros: { cantidad: number; intervalo: number; objetivos: number; danio: number; hielo: number };
   /** El caballero: cuánto pega, cada cuánto, a cuántos, su alcance, su vida, qué tan rápido camina y en cuánto vuelve si cae. */
   caballero: { activo: boolean; danio: number; intervalo: number; objetivos: number; alcance: number; vida: number; velocidad: number; regreso: number };
   /** El sacerdote: su columna de luz (daño, cada cuánto, radio) y sus curas (cada cuánto y qué parte de la vida del caballero y de la muralla). */
@@ -45,7 +46,7 @@ export interface Stats {
 const lv = (levels: Levels, id: TalentId) => levels[id] ?? 0;
 
 /** Las estadísticas: el árbol (`levels`), si se da, el equipo de la Herrería (multiplica encima) y el elemento de tu círculo. */
-export function computeStats(levels: Levels, equipo: EquipoNiveles = {}, elemento: DamageType = 'fisico'): Stats {
+export function computeStats(levels: Levels, equipo: EquipoNiveles = {}, elemento: DamageType = 'fisico', flechasHielo = true): Stats {
   const eq = bonosEquipo(equipo);
   const danio = lv(levels, 'danio');
   const slimes = lv(levels, 'slimes');
@@ -85,7 +86,9 @@ export function computeStats(levels: Levels, equipo: EquipoNiveles = {}, element
       cantidad: lv(levels, 'arqueros') > 0 ? 1 + lv(levels, 'masArqueros') : 0,
       intervalo: BASE.arqueros.intervalo * Math.pow(0.88, lv(levels, 'arcoRapido')) * eq.arcoIntervalo,
       objetivos: BASE.arqueros.objetivos + lv(levels, 'multiflecha') + lv(levels, 'carcaj') + eq.arcoObjetivos,
-      danio: golpe * BASE.arqueros.danio * (1 + 0.5 * lv(levels, 'arcoDanio')) * eq.arcoDanio,
+      // Las flechas de hielo pegan menos (a cambio frenan y son de hielo).
+      danio: golpe * BASE.arqueros.danio * (1 + 0.5 * lv(levels, 'arcoDanio')) * eq.arcoDanio * (flechasHielo && lv(levels, 'flechaHielo') > 0 ? HIELO.danio : 1),
+      hielo: flechasHielo && lv(levels, 'flechaHielo') > 0 ? HIELO.lento + HIELO.porNivel * (lv(levels, 'flechaHielo') - 1) : 0,
     },
     caballero: {
       activo: lv(levels, 'caballero') > 0,

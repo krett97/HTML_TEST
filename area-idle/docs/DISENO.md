@@ -43,7 +43,7 @@ Nivel 5") y el oro. Ahí arriba no aparecen ni pasean slimes, para que nada qued
 |---|---|---|---|
 | **Jugador** | Tu círculo: lluvia de flechas en el área | Físico | Daño (raíz), Área, Atraer slimes (llegan más rápido), Cadencia, Tiempo, Botín (premio por nivel), Ganancia de oro (todo el oro), Oro inactivo, Bolsa grande, Autoapuntado (5i) |
 | **Mago** | Bola de fuego que revienta en un **cuadrado** (40 × 40) donde hay alguien | Fuego | Mago (raíz), Mago veloz, Fuego mágico, Explosión grande, Suelo en llamas (tierra quemada con borde de brasas), Fuego intenso |
-| **Arqueros** | Flechas a **un objetivo a la vez**; con Flechas múltiples, a 2, 3… 5 | Físico | Arquero (raíz), Más arqueros (hasta 6), Flechas múltiples, Arco veloz, Puntas de acero, Muralla reforzada |
+| **Arqueros** | Flechas a **un objetivo a la vez**; con Flechas múltiples, a 2, 3… 5 | Físico | Arquero (raíz), Más arqueros (hasta 6), Flechas múltiples, Arco veloz, Puntas de acero, Muralla reforzada, Flechas de hielo (desde el 12, ver 5p) |
 | **Caballero** (desde el nivel 21) | Tajos **cuerpo a cuerpo**: camina por el campo y **frena** a los que marchan | Físico | Caballero (raíz), Tajo veloz, Espada, Coraza, Barrido, De pie otra vez, Mando (ver 5m) |
 | **Sacerdote** (desde el nivel 31) | **Columna de luz** en un círculo sobre el de más vida; **cura** al caballero y a la muralla | Luz | Sacerdote (raíz), Plegaria, Luz sagrada, Sanar, Halo, Bendición (ver 5m) |
 | **Bruja** (desde el nivel 41) | **Rayos de oscuridad** que atraviesan a todos los de su línea; Maldición | Muerte | Bruja (raíz), Conjuro rápido, Rayo oscuro, Sombra ancha, Rayos gemelos, Maldición (ver 5n) |
@@ -418,6 +418,25 @@ botón dice cuánto le queda ("Auto 24:31", y se puede **renovar** a media hora 
 más de 30 min) y en los niveles sale una cuenta regresiva bajo el reloj. Si la media hora se acaba a mitad de
 una partida, el círculo se queda donde estaba. No tiene tope por día. El simulador ya apunta perfecto, así que
 no cambia el balance.
+
+## 5p. Flechas de hielo (desde 0.23.0)
+
+Nuevo talento de los Arqueros, **Flechas de hielo** (debajo de Arco veloz; pide Arco veloz 2 y sale desde el
+**nivel 12**): 5 niveles, 300 de oro ×2.4. Con al menos un nivel, las flechas de los arqueros son de **hielo**:
+pegan **daño de hielo** al **75 %** de su daño normal, pero **frenan** al que tocan durante **2 s**: se mueve y
+ataca (lanzas, piedras, flechas) un **25 %** más lento con el nivel 1 y hasta un **45 %** con el 5. Los jefes se
+frenan la mitad. Los congelados se ven celestes y las flechas, azul claro.
+
+Es un cambio, no solo una mejora: el hielo duele ×1.5 a quien es débil (escorpiones, gólems, dragones…) y
+×0.5 a quien lo resiste (arañas, el Lobo Blanco). Por eso en la pestaña de los Arqueros hay un botón **Flechas
+de hielo / Flechas normales** que cambia gratis y cuando quieras (sin anuncio); por defecto, de hielo.
+En el PvP, el freno suma poder (×(1 + 0.4 × freno)).
+
+**Balance** (simulador, que siempre las deja de hielo): jugando sin parar 29 a la hora, 39 a las 2, 47–49 a las
+3 y 49 a las 4: un poco más lento en la Pradera y contra el Esqueleto Mago (sus arañas
+resisten), y la muralla aguanta bastante más en el Desierto y la Montaña. Por días, igual: 39, 59, 59, 69.
+Supervivencia: 24–28 oleadas (antes 20–24). La primera versión pegaba el 100 % y era demasiado fuerte (59 a
+las 4 horas); por eso el 75 %.
 
 ## 5e. Misiones, gemas moradas y Reliquias (desde 0.6.0)
 

@@ -22,7 +22,8 @@
   let elegido = $state<TalentId | null>(null);
   /** El tipo de daño de cada sección (marca en la esquina de su pestaña). */
   // El de tu sección es el elemento que elegiste para tu círculo.
-  const TIPO = $derived<Partial<Record<Seccion, string>>>({ jugador: $view.meta.elemento, mago: DAMAGE_TYPE_OF.mago, arqueros: DAMAGE_TYPE_OF.arquero, caballero: DAMAGE_TYPE_OF.caballero, sacerdote: DAMAGE_TYPE_OF.sacerdote, bruja: DAMAGE_TYPE_OF.bruja });
+  const hielo = $derived(levelOf($view.meta, 'flechaHielo') > 0 && $view.meta.flechasHielo);
+  const TIPO = $derived<Partial<Record<Seccion, string>>>({ jugador: $view.meta.elemento, mago: DAMAGE_TYPE_OF.mago, arqueros: hielo ? 'hielo' : DAMAGE_TYPE_OF.arquero, caballero: DAMAGE_TYPE_OF.caballero, sacerdote: DAMAGE_TYPE_OF.sacerdote, bruja: DAMAGE_TYPE_OF.bruja });
   /** La ventana para cambiar el elemento de tu círculo (desde el nivel 45). */
   let elemento = $state(false);
   /** Las Reliquias (con gemas) se ven desde que se abren las misiones; el Caballero y el Sacerdote, desde su nivel. */
@@ -76,6 +77,12 @@
 
   <!-- Si no cabe (pantallas chicas), el árbol se desliza hacia arriba y abajo. -->
   <div class="lienzo" data-testid="lienzo-arbol">
+  {#if seccion === 'arqueros' && levelOf($view.meta, 'flechaHielo') > 0}
+    <!-- Flechas de hielo o las de siempre (gratis, cuando quieras). -->
+    <button type="button" class="elemento-chip" class:frio={hielo} onclick={() => juego.toggleIceArrows()} data-testid="flechas-modo">
+      <Icon name={hielo ? 'tipo_hielo' : 'tipo_fisico'} size={22} /><span>{hielo ? $t('flechas.hielo') : $t('flechas.normales')}</span><small>{$t('flechas.cambiar')}</small>
+    </button>
+  {/if}
   {#if seccion === 'jugador' && $view.meta.nivel >= ELEMENTO_DESDE}
     <!-- El elemento de tu círculo (cambiarlo pide un anuncio). -->
     <button type="button" class="elemento-chip" onclick={() => (elemento = true)} data-testid="abrir-elemento">
@@ -250,6 +257,9 @@
     background: var(--panel);
     box-shadow: 0 2px 0 var(--line);
     font-size: 13px;
+  }
+  .elemento-chip.frio {
+    background: #dff4ff;
   }
   .elemento-chip small {
     color: var(--muted);

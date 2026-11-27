@@ -15,7 +15,7 @@
   /** Quién hace qué tipo de daño (con el ícono de su sección). */
   const QUIEN = $derived([
     { id: 'jugador', icono: 'lluvia', tipo: $view.meta.elemento },
-    { id: 'arqueros', icono: 'arquero', tipo: DAMAGE_TYPE_OF.arquero },
+    { id: 'arqueros', icono: 'arquero', tipo: ($view.meta.talentos.flechaHielo ?? 0) > 0 && $view.meta.flechasHielo ? 'hielo' : DAMAGE_TYPE_OF.arquero },
     { id: 'mago', icono: 'mago', tipo: DAMAGE_TYPE_OF.mago },
     { id: 'caballero', icono: 'caballero', tipo: DAMAGE_TYPE_OF.caballero },
     { id: 'sacerdote', icono: 'sacerdote', tipo: DAMAGE_TYPE_OF.sacerdote },

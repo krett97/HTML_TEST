@@ -688,6 +688,8 @@ icon('conjuro', I(o('M8 16 C18 12 26 14 32 20 C38 14 46 12 56 16 V52 C46 48 38 5
 icon('maldicion', I(o('M32 6 C46 6 56 16 56 30 C56 40 50 46 44 48 V56 H20 V48 C14 46 8 40 8 30 C8 16 18 6 32 6 Z', '#c9a9f5', 5) + circ(22, 30, 6, '#2e1a46', 0) + circ(42, 30, 6, '#2e1a46', 0) + circ(22, 30, 2, '#3ed4a0', 0) + circ(42, 30, 2, '#3ed4a0', 0) + o('M32 36 l-3 6 h6 z', '#2e1a46', 2) + line('M24 52 V56 M32 52 V56 M40 52 V56', '#2e1a46', 3)));
 icon('sombra', I(o('M4 22 L60 10 L60 30 L4 42 Z', '#5b2f8f', 4) + f('M8 28 L56 18 L56 22 L8 34 Z', '#c9a9f5', 'opacity=".75"') + line('M10 52 H54', '#5b2f8f', 4) + o('M4 52 l8 -5 v10 z M60 52 l-8 -5 v10 z', '#5b2f8f', 2)));
 
+// Flechas de hielo: una flecha celeste con punta de hielo y un copo de nieve.
+icon('flechaHielo', I(g('rotate(-35 32 32)', line('M6 32 H50', K, 8) + line('M6 32 H50', '#dff4ff', 4) + o('M48 24 L62 32 L48 40 L51 32 Z', '#6cc8f5', 4) + o('M6 26 L14 32 L6 38 L2 32 Z', '#9fe2ff', 3)) + line('M44 46 V62 M36 54 H52 M38 48 L50 60 M50 48 L38 60', '#3f9bd6', 3.5) + circ(44, 54, 3, '#dff4ff', 2.5)));
 // Mando: el estandarte del líder (bandera azul con corona) y un brillo de "+".
 icon('mando', I(line('M14 4 V62', P.maderaS, 6) + circ(14, 4, 4, P.oro, 3) + o('M16 8 H54 L46 22 L54 36 H16 Z', '#2f56a0', 5) + o('M24 28 L26 16 L31 22 L35 13 L39 22 L44 16 L46 28 Z', P.oro, 2.5) + o('M44 44 h6 v6 h6 v6 h-6 v6 h-6 v-6 h-6 v-6 h6 z', P.rojo, 2.5)));
 icon('sacerdote', I(sol(32, 34, 13) + `<ellipse cx="32" cy="9" rx="16" ry="5" fill="none" stroke="${K}" stroke-width="6"/><ellipse cx="32" cy="9" rx="16" ry="5" fill="none" stroke="${P.oro}" stroke-width="3"/>`));

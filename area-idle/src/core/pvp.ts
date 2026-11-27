@@ -72,7 +72,8 @@ export function powerOf(s: Stats, estandarte = 0): Power {
   // La bruja: sus rayos atraviesan a varios (más con un rayo ancho) y la Maldición sube lo que les entra.
   const w = s.bruja;
   const bruja = w.activo ? ((12 * w.danio * w.rayos * (w.ancho / 10)) / w.intervalo) * (1 + w.maldicion) : 0;
-  const mult = Math.sqrt(s.duracion / 20) * (s.muro.vida / 100) ** 0.25 * (1 + 0.25 * s.muro.reparar) * (z.activo ? 1 + 3 * z.curaMuro : 1);
+  // Las flechas de hielo frenan: aguantas más (sube el multiplicador).
+  const mult = Math.sqrt(s.duracion / 20) * (s.muro.vida / 100) ** 0.25 * (1 + 0.25 * s.muro.reparar) * (z.activo ? 1 + 3 * z.curaMuro : 1) * (1 + 0.4 * s.arqueros.hielo);
   const suma = jugador + mago + arqueros + caballero + sacerdote + bruja;
   // El Estandarte de la tienda: +5 % al número que se ve.
   const total = Math.max(1, Math.round((Math.sqrt(suma * mult) / PODER.escala) * (1 + ESTANDARTE.porNivel * estandarte)));

@@ -225,6 +225,10 @@
     "sombra": {
       "nombre": "Wide shadow",
       "efecto": "Ray width {a} → {b}"
+    },
+    "flechaHielo": {
+      "nombre": "Ice arrows",
+      "efecto": "Ice damage and slow {a} → {b} for 2 s"
     }
   },
   "ajustes": {
@@ -636,5 +640,10 @@
     "gratis": "ad",
     "activo": "Auto {t}",
     "renovar": "renew"
+  },
+  "flechas": {
+    "hielo": "Ice arrows",
+    "normales": "Normal arrows",
+    "cambiar": "switch"
   }
 }

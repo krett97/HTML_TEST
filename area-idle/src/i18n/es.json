@@ -225,6 +225,10 @@
     "sombra": {
       "nombre": "Sombra ancha",
       "efecto": "Ancho del rayo {a} → {b}"
+    },
+    "flechaHielo": {
+      "nombre": "Flechas de hielo",
+      "efecto": "Daño de hielo y frenan {a} → {b} por 2 s"
     }
   },
   "ajustes": {
@@ -636,5 +640,10 @@
     "gratis": "anuncio",
     "activo": "Auto {t}",
     "renovar": "renovar"
+  },
+  "flechas": {
+    "hielo": "Flechas de hielo",
+    "normales": "Flechas normales",
+    "cambiar": "cambiar"
   }
 }

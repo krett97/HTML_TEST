@@ -15,8 +15,8 @@ import { autoAiming, circleActive, createGuardRun, guardLevel, startGuardRun, up
 import { AUTOAPUNTAR } from '../src/core/datos';
 import { CURVA, GUARDIA, ORO_TALENTOS } from '../src/core/datos';
 import { ALLY_ROW, archerSpots, bossOf, createRun, DAMAGE_TYPE_OF, FIELD_W, moveCursor, startRun, stepRun, type Run, type RunEvent } from '../src/core/run';
-import { KNIGHT_R, priestSpot, witchSpot } from '../src/core/run';
-import { BASE, BRUJA_DESDE, CABALLERO_DESDE, ELEMENTO_DESDE, SACERDOTE_DESDE } from '../src/core/datos';
+import { KNIGHT_R, priestSpot, slowFactor, witchSpot } from '../src/core/run';
+import { BASE, BRUJA_DESDE, CABALLERO_DESDE, ELEMENTO_DESDE, HIELO, SACERDOTE_DESDE } from '../src/core/datos';
 import { computeStats } from '../src/core/stats';
 import { BONO_DIARIO, claimableCount, claimBonus, claimMission, dailyProgress, dayKey, DIARIAS, DIARIAS_POR_DIA, MISSION_BY_ID, msUntilReset, permanentProgress, rollDaily } from '../src/core/misiones';
 import { MISIONES_DESDE, PVP_DESDE, RANKING_DESDE } from '../src/core/datos';
@@ -1781,5 +1781,59 @@ describe('autoapuntado por anuncio (media hora)', () => {
     for (let i = 0; i < 40; i++) ev.push(...stepRun(run, 0.05));
     expect(run.cursor.x).toBeGreaterThanOrEqual(0);
     expect(ev.some((e) => e.type === 'shot' && e.fuente === 'jugador')).toBe(true);
+  });
+});
+
+describe('flechas de hielo de los arqueros', () => {
+  it('desde el nivel 12, con Arco veloz 2; frenan más con cada nivel y se pueden apagar', () => {
+    const m = createMeta();
+    m.oro = 1e9;
+    m.talentos = { danio: 3, arqueros: 1, arcoRapido: 2 };
+    m.nivel = HIELO.desde - 1;
+    expect(talentState(m, TALENT_BY_ID.flechaHielo)).toBe('bloqueado');
+    m.nivel = HIELO.desde;
+    expect(buyTalent(m, 'flechaHielo')).toBe(true);
+    expect(computeStats({ arqueros: 1, flechaHielo: 1 }).arqueros.hielo).toBeCloseTo(HIELO.lento);
+    expect(computeStats({ arqueros: 1, flechaHielo: 5 }).arqueros.hielo).toBeCloseTo(HIELO.lento + 4 * HIELO.porNivel);
+    expect(computeStats({ arqueros: 1, flechaHielo: 5 }, {}, 'fisico', false).arqueros.hielo).toBe(0);
+    expect(computeStats({ arqueros: 1 }).arqueros.hielo).toBe(0);
+    expect(loadMeta({}).flechasHielo).toBe(true);
+    expect(loadMeta({ flechasHielo: false }).flechasHielo).toBe(false);
+  });
+  it('hacen daño de hielo (a los escorpiones les duele más, a las arañas menos) y frenan al que le pegan', () => {
+    const run = createRun(computeStats({ danio: 5, arqueros: 1, flechaHielo: 1 }), 600, 32, 31);
+    run.stats = { ...run.stats, ritmo: 0 };
+    run.cursor = { x: -999, y: -999 };
+    run.disparo = Infinity;
+    run.enemies.push({ id: 1001, kind: 'escorpion', x: 150, y: 200, vx: 0, vy: 0, vida: 1e9, vidaMax: 1e9, giro: 99, entierro: 99 });
+    const ev: RunEvent[] = [];
+    for (let i = 0; i < 60 && !run.enemies[0]!.lento; i++) ev.push(...stepRun(run, 0.05));
+    const golpe = ev.find((e): e is Extract<RunEvent, { type: 'hit' }> => e.type === 'hit' && e.fuente === 'arquero');
+    expect(golpe!.efecto).toBe('debil');
+    expect(run.enemies[0]!.lento!.f).toBeCloseTo(1 - HIELO.lento);
+    expect(run.enemies[0]!.lento!.hasta).toBeCloseTo(run.t + HIELO.dura, 1);
+    const otra = createRun(computeStats({ danio: 5, arqueros: 1, flechaHielo: 1 }), 600, 22, 32);
+    otra.cursor = { x: -999, y: -999 };
+    otra.disparo = Infinity;
+    otra.stats = { ...otra.stats, ritmo: 0 };
+    otra.enemies = [{ id: 1002, kind: 'arana', x: 150, y: 200, vx: 0, vy: 0, vida: 1e9, vidaMax: 1e9, giro: 99, tiro: 99 }];
+    const ev2: RunEvent[] = [];
+    for (let i = 0; i < 60; i++) ev2.push(...stepRun(otra, 0.05));
+    expect(ev2.find((e): e is Extract<RunEvent, { type: 'hit' }> => e.type === 'hit' && e.fuente === 'arquero')!.efecto).toBe('fuerte');
+  });
+  it('frenado camina y ataca más despacio; a los jefes, la mitad del freno', () => {
+    const run = createRun(computeStats({}), 600, 15, 33);
+    run.stats = { ...run.stats, ritmo: 0 };
+    run.cursor = { x: -999, y: -999 };
+    run.disparo = Infinity;
+    const libre: Run['enemies'][number] = { id: 1010, kind: 'orco', x: 100, y: 150, vx: 0, vy: 0, vida: 1e9, vidaMax: 1e9, giro: 99, tiro: 99 };
+    const frio: Run['enemies'][number] = { id: 1011, kind: 'orco', x: 250, y: 150, vx: 0, vy: 0, vida: 1e9, vidaMax: 1e9, giro: 99, tiro: 99, lento: { hasta: 999, f: 0.6 } };
+    run.enemies.push(libre, frio);
+    for (let i = 0; i < 20; i++) stepRun(run, 0.05);
+    expect(frio.y - 150).toBeCloseTo((libre.y - 150) * 0.6, 1);
+    expect(99 - frio.tiro!).toBeCloseTo((99 - libre.tiro!) * 0.6, 1);
+    const jefe = { id: 1, kind: 'rey' as const, x: 0, y: 0, vx: 0, vy: 0, vida: 1, vidaMax: 1, giro: 0, lento: { hasta: 999, f: 0.6 } };
+    expect(slowFactor(run, jefe)).toBeCloseTo(0.8);
+    expect(slowFactor(run, { ...jefe, kind: 'verde', lento: { hasta: run.t - 1, f: 0.6 } })).toBe(1);
   });
 });

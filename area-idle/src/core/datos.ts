@@ -169,6 +169,13 @@ export const BASE = {
   bruja: { danio: 5, intervalo: 2.2, rayos: 1, ancho: 10, maldicion: 0.1, dura: 3 },
 } as const;
 
+/**
+ * Flechas de hielo (talento de los arqueros, desde el nivel `desde`): daño de hielo, pero `danio` del de
+ * siempre; a quien le pegan lo frenan `lento` (+`porNivel` por nivel) por `dura` s: camina y ataca más
+ * despacio. A los jefes, la mitad. Convienen contra los débiles al hielo; contra los demás, mejor apagarlas.
+ */
+export const HIELO = { desde: 12, lento: 0.25, porNivel: 0.05, dura: 2, danio: 0.75 } as const;
+
 /** Qué tanto le pegan al caballero los que lo tocan: su ataque (al menos 1; los jefes, su golpe × `jefe`) × esto, por segundo. */
 export const CONTACTO = { mult: 0.5, jefe: 0.3, radio: 9 } as const;
 
@@ -431,6 +438,7 @@ export type TalentId =
   | 'arcoRapido'
   | 'arcoDanio'
   | 'muralla'
+  | 'flechaHielo'
   // Caballero
   | 'caballero'
   | 'espada'
@@ -508,6 +516,8 @@ export const TALENTS: TalentDef[] = [
   { id: 'arcoRapido', seccion: 'arqueros', icono: 'arcoRapido', max: 10, costo: { base: 30, crece: 1.9 }, requiere: { id: 'arqueros', nivel: 1 }, pos: [1, 1] },
   { id: 'muralla', seccion: 'arqueros', icono: 'muralla', max: 20, costo: { base: 50, crece: 1.9, tarde: { desde: 10, crece: 1.5 } }, requiere: { id: 'masArqueros', nivel: 1 }, pos: [-1, 2] },
   { id: 'arcoDanio', seccion: 'arqueros', icono: 'arcoDanio', max: 15, costo: { base: 40, crece: 1.8 }, requiere: { id: 'multiflecha', nivel: 1 }, pos: [0, 2] },
+  // Flechas de hielo: hacen daño de hielo y frenan (se pueden apagar para volver a las de siempre).
+  { id: 'flechaHielo', seccion: 'arqueros', icono: 'flechaHielo', max: 5, costo: { base: 300, crece: 2.4 }, requiere: { id: 'arcoRapido', nivel: 2 }, nivelMin: HIELO.desde, pos: [1, 2] },
 
   // ---- Caballero: pelea cuerpo a cuerpo en el campo (desde el nivel 21) ----
   { id: 'caballero', seccion: 'caballero', icono: 'caballero', max: 1, costo: { base: 15_000, crece: 1 }, requiere: null, raiz: true, nivelMin: CABALLERO_DESDE, pos: [0, 0] },

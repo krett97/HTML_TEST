@@ -35,7 +35,7 @@ async function fresh(browser, opts = {}) {
   page.tap = async (x = 0.5, y = 0.45) => { const box = await page.getByTestId('campo').boundingBox(); await page.mouse.click(box.x + box.width * x, box.y + box.height * y); };
   page.oro = async (n) => { await page.getByTestId('abrir-ajustes').click(); await page.getByTestId(`oro-${n}`).click(); await page.mouse.click(4, 4); await page.waitForTimeout(150); };
   page.comprar = async (id, veces = 1) => {
-    const seccion = await page.evaluate((id) => ({ danio: 'jugador', radio: 'jugador', slimes: 'jugador', cadencia: 'jugador', botin: 'jugador', tiempo: 'jugador', oro: 'jugador', inactivo: 'jugador', autoapuntar: 'jugador', mago: 'mago', arqueros: 'arqueros', multiflecha: 'arqueros', poder: 'reliquias', critico: 'reliquias', carcaj: 'reliquias', albanil: 'reliquias' })[id], id);
+    const seccion = await page.evaluate((id) => ({ flechaHielo: 'arqueros', arcoRapido: 'arqueros', danio: 'jugador', radio: 'jugador', slimes: 'jugador', cadencia: 'jugador', botin: 'jugador', tiempo: 'jugador', oro: 'jugador', inactivo: 'jugador', autoapuntar: 'jugador', mago: 'mago', arqueros: 'arqueros', multiflecha: 'arqueros', poder: 'reliquias', critico: 'reliquias', carcaj: 'reliquias', albanil: 'reliquias' })[id], id);
     await page.getByTestId(`seccion-${seccion}`).click();
     await page.getByTestId(`talento-${id}`).click();
     for (let i = 0; i < veces; i++) await page.getByTestId('comprar').click();
@@ -272,6 +272,34 @@ async function flow(name, browser, fn, opts) {
     await page.waitForTimeout(1500);
     const luego = await page.evaluate(() => ({ ...window.juego.run.cursor }));
     check(Math.hypot(luego.x - 310, luego.y - 120) < 40 && Math.hypot(luego.x - inicio.x, luego.y - inicio.y) > 80, `el círculo no fue solo y rápido (${JSON.stringify(luego)})`);
+  });
+
+  await flow('flechas de hielo (nivel 12): frenan, son de hielo y se pueden apagar', browser, async (page) => {
+    await page.getByTestId('terminar').click();
+    await page.getByTestId('mejorar').click();
+    await page.getByTestId('abrir-ajustes').click();
+    for (let i = 0; i < 11; i++) await page.getByTestId('mas-nivel').click();
+    await page.mouse.click(4, 4);
+    await page.oro(1000000);
+    await page.comprar('danio', 3);
+    await page.comprar('arqueros', 1);
+    await page.comprar('arcoRapido', 2);
+    await page.comprar('flechaHielo', 1);
+    check((await page.getByTestId('detalle').textContent()).includes('1/5'), 'no se compró Flechas de hielo');
+    check((await page.getByTestId('flechas-modo').textContent()).includes('hielo'), 'no dice que son de hielo');
+    check(await page.evaluate(() => window.juego.run.stats.arqueros.hielo > 0), 'las tropas de la pantalla principal no las usan');
+    // En un nivel: frenan a quien le pegan.
+    await page.getByTestId('jugar').click();
+    await page.waitForTimeout(400);
+    await page.evaluate(() => { const r = window.juego.run; r.salieron = r.nivel.total; r.enemies = r.enemies.slice(0, 1); const e = r.enemies[0]; Object.assign(e, { x: 180, y: 250, vida: 1e12, vidaMax: 1e12 }); r.cursor = { x: -999, y: -999 }; });
+    await page.waitForTimeout(2500);
+    check(await page.evaluate(() => { const r = window.juego.run; const e = r.enemies[0]; return !!e.lento && e.lento.hasta > r.t; }), 'la flecha de hielo no lo frenó');
+    await page.getByTestId('terminar').click();
+    await page.getByTestId('mejorar').click();
+    await page.getByTestId('seccion-arqueros').click();
+    await page.getByTestId('flechas-modo').click();
+    check((await page.getByTestId('flechas-modo').textContent()).includes('normales'), 'no se apagan');
+    check(await page.evaluate(() => window.juego.run.stats.arqueros.hielo === 0 && window.juego.meta.flechasHielo === false), 'apagarlas no vuelve a las de siempre');
   });
 
   await flow('glosario: tipos de daño y enemigos (el azul, oculto hasta abrirlo)', browser, async (page) => {
