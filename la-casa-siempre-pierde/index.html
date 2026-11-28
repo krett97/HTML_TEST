@@ -1,0 +1,1457 @@
+<title>La Casa Siempre Pierde</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Rubik:wght@400;500;700&family=Silkscreen&display=swap">
+<style>
+/* Layout: one narrow casino cabinet — the boss on top, the machine in the middle, the back room (Taller, Retos, Duelo, Pagos) below. Single night-casino look by choice. */
+:root{
+  --velvet:#1f0d19; --velvet-2:#2e1426; --velvet-3:#45203a; --cabinet:#140710;
+  --brass:#e3b45c; --brass-dim:#8f6d36;
+  --cream:#f7ecd6; --cream-dim:#cdb99d;
+  --ink:#2a1220;
+  --led:#ff4b5c; --led-dim:#4a1822; --led-deep:#d42638; --led-hi:#ff9a9a; --led-shadow:#6e0e1c;
+  --mint:#7fdcc4; --mint-deep:#2f8c76;
+  --reel-bg:#fbf4e6; --own-bg:#e8f7f1;
+  --line:rgba(227,180,92,.24);
+  --glow:rgba(227,180,92,.13); --carpet:rgba(227,180,92,.035);
+  --reel-shade:rgba(42,18,32,.38); --reel-veil:rgba(251,244,230,.42);
+  --win-tint:rgba(227,180,92,.20); --scrim:rgba(10,3,8,.76); --lens-dim:rgba(10,3,8,.5);
+  --font-display:'Bungee','Arial Black',Impact,sans-serif;
+  --font-body:'Rubik',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --font-led:'Silkscreen',ui-monospace,'Courier New',monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{background:var(--velvet)}
+body{
+  margin:0;
+  background-color:var(--velvet);
+  background-image:
+    radial-gradient(ellipse at 50% -10%, var(--glow) 0, transparent 55%),
+    repeating-linear-gradient(45deg, var(--carpet) 0 2px, transparent 2px 22px),
+    repeating-linear-gradient(-45deg, var(--carpet) 0 2px, transparent 2px 22px);
+  color:var(--cream);
+  font:15px/1.45 var(--font-body);
+  padding-left:max(16px, env(safe-area-inset-left,0px));
+  padding-right:max(16px, env(safe-area-inset-right,0px));
+  padding-block:0 40px;
+  -webkit-tap-highlight-color:transparent;
+}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--velvet)}
+button{font-family:inherit;cursor:pointer;touch-action:manipulation}
+button:focus-visible{outline:3px solid var(--mint);outline-offset:2px}
+.cab{max-width:460px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+
+/* Top bar */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:6;display:flex;align-items:center;justify-content:space-between;gap:10px;padding-block:10px;background:var(--velvet);border-bottom:1px solid var(--line)}
+.brand{display:flex;flex-direction:column;min-width:0}
+.marquee{font-family:var(--font-display);font-size:15px;line-height:1.1;color:var(--brass);letter-spacing:.02em}
+.room{font-size:12px;color:var(--cream-dim)}
+.wallet{display:flex;gap:6px;flex-shrink:0}
+.chip{display:flex;flex-direction:column;align-items:flex-end;padding:4px 9px;border-radius:9px;background:var(--velvet-2);border:1px solid var(--line);min-width:70px}
+.chip .lbl{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--cream-dim)}
+.chip .num{font-family:var(--font-led);font-size:17px;line-height:1.1;font-variant-numeric:tabular-nums}
+.chip.coins .num{color:var(--brass)}
+.chip.rencor .num{color:var(--led)}
+.chip.bump{animation:bump .4s ease-out}
+@keyframes bump{30%{transform:scale(1.12)}100%{transform:scale(1)}}
+
+/* Boss */
+.boss{display:grid;grid-template-columns:110px minmax(0,1fr);gap:14px;align-items:center;padding:12px;border-radius:16px;background:var(--velvet-2);border:1px solid var(--line)}
+.head{display:flex;flex-direction:column;align-items:center;gap:5px;padding:9px 6px 7px;border-radius:14px 14px 8px 8px;background:var(--cabinet);border:2px solid var(--brass-dim)}
+#face{width:96px;height:48px;display:block}
+.nameplate{font-family:var(--font-led);font-size:9px;letter-spacing:.06em;color:var(--brass);white-space:nowrap}
+.speech{position:relative;min-width:0;background:var(--cream);color:var(--ink);border-radius:12px;padding:10px 12px;min-height:68px;display:flex;flex-direction:column;justify-content:center;gap:2px}
+.speech::before{content:"";position:absolute;left:-8px;top:50%;margin-top:-8px;border:8px solid transparent;border-left:0;border-right-color:var(--cream)}
+.speech p{margin:0;font-size:14px;line-height:1.35}
+.bonus{font-size:12px;font-weight:700;color:var(--led-deep)}
+
+/* Machine */
+.machine{position:relative;padding:12px;border-radius:20px;background:linear-gradient(var(--velvet-3),var(--velvet-2));border:2px solid var(--brass-dim);box-shadow:inset 0 0 0 4px var(--velvet)}
+.hud{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px 10px;margin-bottom:10px;padding:8px 10px;border-radius:10px;background:var(--velvet);border:1px dashed var(--brass-dim);font-size:13px}
+.hud b{font-family:var(--font-display);font-weight:400;color:var(--brass);font-size:13px}
+.hud .goal{flex-basis:100%;color:var(--cream-dim);font-size:12px}
+.hud .quit{padding:4px 10px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--cream-dim);font-size:12px}
+.her-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:8px 10px;border-radius:10px;background:var(--cabinet);border:1px solid var(--led-dim)}
+.her-row .who{font-family:var(--font-led);font-size:10px;color:var(--led);width:58px;line-height:1.2}
+.minis{display:flex;gap:5px}
+.mini{--cell:40px;width:40px;height:40px;border-radius:7px;background:var(--reel-bg);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.her-row .what{font-size:12px;color:var(--cream);min-width:0}
+.reels{--cell:62px;position:relative;display:grid;grid-template-columns:repeat(var(--n,3),minmax(0,1fr));gap:8px}
+.reels[data-n="4"]{--cell:54px}
+.reel{position:relative;height:calc(var(--cell) * 3);overflow:hidden;border-radius:10px;background:var(--reel-bg);box-shadow:inset 0 12px 14px -8px var(--reel-shade),inset 0 -12px 14px -8px var(--reel-shade)}
+.reel.own{background:var(--own-bg);box-shadow:inset 0 0 0 2px var(--mint),inset 0 12px 14px -8px var(--reel-shade),inset 0 -12px 14px -8px var(--reel-shade)}
+.reel.held{box-shadow:inset 0 0 0 3px var(--mint-deep),inset 0 12px 14px -8px var(--reel-shade)}
+.reel::before,.reel::after{content:"";position:absolute;left:0;right:0;height:var(--cell);background:var(--reel-veil);z-index:1;pointer-events:none}
+.reel::before{top:0}.reel::after{bottom:0}
+.strip{position:absolute;left:0;right:0;top:0;will-change:transform}
+.cell{height:var(--cell);display:flex;align-items:center;justify-content:center}
+.payline{position:absolute;left:-6px;right:-6px;top:var(--cell);height:var(--cell);border-block:2px solid var(--brass);border-radius:4px;pointer-events:none;z-index:2;transition:box-shadow .2s,background .2s}
+.payline.win{background:var(--win-tint);box-shadow:0 0 20px var(--brass)}
+.sym{font-size:calc(var(--cell) * .54);line-height:1}
+.sym-S{font-family:var(--font-display);font-size:calc(var(--cell) * .66);color:var(--led-deep);-webkit-text-stroke:1px var(--ink)}
+.sym-R{font-family:var(--font-display);font-size:calc(var(--cell) * .25);background:var(--ink);color:var(--cream);padding:.28em .4em;border-radius:4px;letter-spacing:.04em}
+.nz{position:absolute;left:3px;right:3px;height:calc(var(--cell) - 6px);z-index:3;border:0;border-radius:8px;background:transparent;display:none;color:var(--mint-deep);font:700 12px var(--font-body)}
+.nz.up{top:3px}.nz.down{bottom:3px}
+.can-nudge .nz{display:block;outline:2px dashed var(--mint-deep);outline-offset:-2px}
+.nz span{position:absolute;right:4px;font-size:11px;background:var(--mint);color:var(--ink);border-radius:999px;padding:0 6px}
+.nz.up span{top:3px}.nz.down span{bottom:3px}
+.holds{display:grid;grid-template-columns:repeat(var(--n,3),minmax(0,1fr));gap:8px;margin-top:8px}
+.hold{padding:8px 0;border-radius:8px;border:1px solid var(--line);background:var(--velvet);color:var(--cream-dim);font:600 11px var(--font-body);letter-spacing:.07em;text-transform:uppercase}
+.hold[aria-pressed="true"]{background:var(--mint);border-color:var(--mint);color:var(--ink)}
+.hold:disabled{opacity:.4}
+.result{margin-top:10px;text-align:center;font-family:var(--font-display);font-size:16px;line-height:1.25;min-height:40px;text-wrap:balance}
+.result .sub{display:block;margin-top:2px;font-family:var(--font-body);font-size:12px;color:var(--cream-dim)}
+.result .good{color:var(--brass)}
+.machine.replay-on .reels{filter:sepia(.7) contrast(1.05)}
+.replay-tag{position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:6;font:11px var(--font-led);color:var(--cream);background:var(--led-deep);padding:3px 8px;border-radius:4px;white-space:nowrap;animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:.35}}
+.lens{position:absolute;z-index:5;border:3px solid var(--mint);border-radius:14px;pointer-events:none;box-shadow:0 0 0 999px var(--lens-dim)}
+.lens span{position:absolute;left:50%;bottom:-30px;transform:translateX(-50%);white-space:nowrap;font:600 13px var(--font-body);color:var(--ink);background:var(--mint);padding:2px 8px;border-radius:6px}
+.stamp{position:absolute;inset:0;z-index:7;display:flex;align-items:center;justify-content:center;pointer-events:none;font:52px var(--font-display);color:var(--brass);text-shadow:0 4px 0 var(--ink),0 0 26px var(--brass);transform:rotate(-8deg);animation:stamp .5s cubic-bezier(.2,1.6,.4,1)}
+@keyframes stamp{from{transform:rotate(-8deg) scale(2.4);opacity:0}to{transform:rotate(-8deg) scale(1);opacity:1}}
+.clank{position:absolute;z-index:6;top:50%;left:50%;transform:translate(-50%,-50%) rotate(6deg);font:22px var(--font-display);color:var(--mint);text-shadow:0 2px 0 var(--ink);pointer-events:none;animation:stamp .35s cubic-bezier(.2,1.6,.4,1)}
+
+/* Controls */
+.controls{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"bets spin" "charges spin";gap:8px 14px;align-items:center}
+.bets{grid-area:bets;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.bets .lbl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--cream-dim);width:100%}
+.bet{min-width:46px;padding:8px 10px;border-radius:999px;border:1px solid var(--line);background:var(--velvet-2);color:var(--cream);font:14px var(--font-led)}
+.bet[aria-pressed="true"]{background:var(--brass);border-color:var(--brass);color:var(--ink)}
+.bet:disabled{opacity:.35}
+.side{grid-area:spin;display:flex;flex-direction:column;align-items:center;gap:8px}
+.spin{width:100px;height:100px;border-radius:50%;border:0;background:radial-gradient(circle at 35% 30%,var(--led-hi),var(--led) 42%,var(--led-deep));color:var(--cream);font:21px var(--font-display);line-height:1;box-shadow:0 6px 0 var(--led-shadow),0 0 0 4px var(--brass-dim);transition:transform .08s,box-shadow .08s}
+.spin small{display:block;margin-top:4px;font:600 11px var(--font-body);letter-spacing:.02em}
+.spin:active:not(:disabled){transform:translateY(4px);box-shadow:0 2px 0 var(--led-shadow),0 0 0 4px var(--brass-dim)}
+.spin:disabled{filter:grayscale(.75) brightness(.7);cursor:default}
+.spin.floor{background:radial-gradient(circle at 35% 30%,var(--cream),var(--brass) 55%,var(--brass-dim));color:var(--ink);font-size:13px}
+.stand{padding:9px 14px;border-radius:12px;border:1px solid var(--brass);background:var(--brass);color:var(--ink);font:15px var(--font-display)}
+.own-toggle{padding:7px 10px;border-radius:10px;border:1px solid var(--mint);background:transparent;color:var(--mint);font:600 12px var(--font-body)}
+.own-toggle[aria-pressed="true"]{background:var(--mint);color:var(--ink)}
+.charges{grid-area:charges;display:flex;gap:6px;flex-wrap:wrap}
+.pill{font-size:12px;padding:3px 9px;border-radius:999px;background:var(--velvet-2);border:1px solid var(--line);color:var(--cream-dim);white-space:nowrap}
+.pill b{color:var(--mint);font-weight:700}
+.pill.red b{color:var(--led)}
+.flaco{display:flex;gap:10px;align-items:center;justify-content:space-between;font-size:13px;color:var(--cream-dim);padding:8px 12px;border-radius:10px;background:var(--velvet-2);border:1px solid var(--line)}
+.flaco b{color:var(--cream);font-weight:600}
+.flaco .fl-line{display:flex;gap:4px;align-items:center;--cell:26px}
+.flaco .sym-R{font-size:8px}
+
+/* Tabs + panels */
+.tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;padding:4px;border-radius:12px;background:var(--velvet-2);border:1px solid var(--line)}
+.tab{position:relative;padding:10px 4px;border:0;border-radius:9px;background:transparent;color:var(--cream-dim);font:600 13px var(--font-body)}
+.tab[aria-selected="true"]{background:var(--velvet-3);color:var(--cream)}
+.tab.ping::after{content:"";position:absolute;top:6px;right:8px;width:8px;height:8px;border-radius:50%;background:var(--led);box-shadow:0 0 8px var(--led)}
+.panel{display:flex;flex-direction:column;gap:8px}
+.note{margin:0;font-size:13px;color:var(--cream-dim)}
+.note b{color:var(--cream)}
+.item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 12px;align-items:center;padding:12px;border-radius:12px;background:var(--velvet-2);border:1px solid var(--line)}
+.item h3{margin:0;grid-column:1;font:600 15px var(--font-body);color:var(--cream)}
+.item p{margin:0;grid-column:1;font-size:13px;color:var(--cream-dim)}
+.item .tag{grid-column:1;font:10px var(--font-led);color:var(--mint);letter-spacing:.04em}
+.item .act{grid-column:2;grid-row:1 / span 3}
+.item.locked{border-style:dashed;opacity:.62}
+.item.hot{border-color:var(--brass);box-shadow:0 0 0 1px var(--brass) inset}
+.item.won{opacity:.7}
+.buy{padding:9px 12px;border-radius:10px;border:1px solid var(--brass);background:transparent;color:var(--brass);font:600 13px var(--font-body);white-space:nowrap}
+.buy.r{border-color:var(--led);color:var(--led)}
+.buy.go{background:var(--brass);color:var(--ink)}
+.buy:disabled{opacity:.4;cursor:default}
+.paytable{width:100%;border-collapse:collapse;font-size:14px}
+.paytable th{font:600 11px var(--font-body);letter-spacing:.08em;text-transform:uppercase;color:var(--cream-dim);text-align:right;padding:6px 8px;border-bottom:1px solid var(--line)}
+.paytable th:first-child,.paytable td:first-child{text-align:left}
+.paytable td{padding:6px 8px;text-align:right;font-family:var(--font-led);font-variant-numeric:tabular-nums;border-bottom:1px solid var(--line);--cell:30px}
+.paytable td:first-child{font-family:var(--font-body)}
+.paytable .sym-R{font-size:9px}
+.edge{padding:12px;border-radius:12px;background:var(--cabinet);border:1px solid var(--line)}
+.edge .big{font:22px var(--font-display);color:var(--brass)}
+.edge .big.lose{color:var(--mint)}
+.meter{height:10px;border-radius:999px;background:var(--velvet-3);overflow:hidden;margin:8px 0 4px}
+.meter i{display:block;height:100%;background:var(--led)}
+.meter i.lose{background:var(--mint)}
+.dev{display:flex;flex-wrap:wrap;gap:6px}
+.dev button{padding:7px 10px;border-radius:9px;border:1px dashed var(--line);background:transparent;color:var(--cream-dim);font-size:12px}
+.knows{margin:0;padding-left:18px;font-size:13px;color:var(--cream-dim)}
+.knows li+li{margin-top:3px}
+.knows .new{color:var(--cream)}
+
+/* Modal + toast */
+.modal-wrap{position:fixed;inset:0;z-index:20;display:flex;align-items:flex-end;justify-content:center;background:var(--scrim);padding:16px max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+@media (min-height:620px){.modal-wrap{align-items:center}}
+.modal{width:100%;max-width:440px;max-height:86vh;overflow:auto;background:var(--velvet-2);border:2px solid var(--brass-dim);border-radius:18px;padding:18px}
+.modal h2{margin:0 0 10px;font:20px/1.15 var(--font-display);color:var(--brass);text-wrap:balance}
+.modal p{margin:0 0 10px;font-size:14px}
+.modal .gain{color:var(--led);font-weight:700}
+.modal .muted{color:var(--cream-dim);font-size:13px}
+.acts{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:14px}
+.btn{padding:10px 16px;border-radius:12px;border:1px solid var(--line);background:var(--velvet-3);color:var(--cream);font:600 14px var(--font-body)}
+.btn.primary{background:var(--brass);border-color:var(--brass);color:var(--ink)}
+.ed-reel{margin-top:12px}
+.ed-head{font-size:12px;color:var(--cream-dim);margin-bottom:6px}
+.ed-syms{display:flex;flex-wrap:wrap;gap:5px;--cell:40px}
+.ed-sym{width:42px;height:42px;padding:0;border-radius:8px;border:1px solid var(--line);background:var(--reel-bg);display:flex;align-items:center;justify-content:center}
+.ed-sym:disabled{opacity:.35;cursor:default}
+.ed-sym .sym-R{font-size:9px}
+.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:30;max-width:min(420px,calc(100% - 32px));padding:10px 14px;border-radius:12px;background:var(--cream);color:var(--ink);font-size:14px;font-weight:500;box-shadow:0 8px 24px var(--scrim);text-align:center}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+@media (max-width:370px){.boss{grid-template-columns:96px minmax(0,1fr)}.spin{width:86px;height:86px;font-size:18px}.marquee{font-size:13px}}
+</style>
+
+<div class="cab">
+  <header class="bar">
+    <div class="brand">
+      <span class="marquee">La Casa Siempre Pierde</span>
+      <span class="room">Sala 1 · Doña Tragona</span>
+    </div>
+    <div class="wallet">
+      <div class="chip coins" id="chipCoins"><span class="lbl">Monedas</span><span class="num" id="coins">20</span></div>
+      <div class="chip rencor" id="chipRencor"><span class="lbl">Rencor</span><span class="num" id="rencor">0</span></div>
+    </div>
+  </header>
+
+  <section class="boss" aria-label="Doña Tragona">
+    <div class="head">
+      <canvas id="face" width="96" height="48" aria-hidden="true"></canvas>
+      <div class="nameplate">DOÑA TRAGONA</div>
+    </div>
+    <div class="speech" aria-live="polite">
+      <p id="speechText">Bienvenido a mi casino. Tu dinero ya es mío; solo falta que lo metas.</p>
+      <span class="bonus" id="speechBonus" hidden></span>
+    </div>
+  </section>
+
+  <section class="machine" id="machine" aria-label="Tragamonedas">
+    <div class="hud" id="hud" hidden></div>
+    <div class="her-row" id="herRow" hidden>
+      <span class="who">MÁQUINA DE TRAGONA</span>
+      <div class="minis" id="minis"></div>
+      <span class="what" id="herWhat"></span>
+    </div>
+    <div class="reels" id="reels"></div>
+    <div class="holds" id="holds"></div>
+    <div class="result" id="result" aria-live="polite">Toca TIRAR.<span class="sub">Tres 7 en la línea del centro pagan ×100.</span></div>
+    <div class="replay-tag" id="replayTag" hidden>REPETICIÓN · CÁMARA LENTA</div>
+  </section>
+
+  <section class="controls" aria-label="Controles">
+    <div class="bets" id="bets" role="group" aria-label="Apuesta"></div>
+    <div class="side">
+      <button class="spin" id="spin" type="button">TIRAR</button>
+      <button class="stand" id="stand" type="button" hidden>PLANTARSE</button>
+      <button class="own-toggle" id="ownToggle" type="button" aria-pressed="false" hidden>Usar tu rodillo</button>
+    </div>
+    <div class="charges" id="charges"></div>
+  </section>
+
+  <div class="flaco" id="flaco" hidden></div>
+
+  <nav class="tabs" role="tablist" aria-label="Trastienda">
+    <button class="tab" role="tab" id="tab-taller" data-tab="taller" type="button">Taller</button>
+    <button class="tab" role="tab" id="tab-retos" data-tab="retos" type="button">Retos</button>
+    <button class="tab" role="tab" id="tab-duelo" data-tab="duelo" type="button">Duelo</button>
+    <button class="tab" role="tab" id="tab-pagos" data-tab="pagos" type="button">Pagos</button>
+  </nav>
+  <section class="panel" id="panel" role="tabpanel"></section>
+</div>
+
+<div class="modal-wrap" id="modal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <h2 id="modalTitle"></h2>
+    <div id="modalBody"></div>
+    <div class="acts" id="modalActs"></div>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+(function () {
+'use strict';
+
+// ===== ENGINE START =====
+// Pure rules of the machine. Shared by the game and by the balance simulation.
+var SYM = {
+  L: { v: 1, name: 'Limón', plural: 'limones', glyph: '🍋' },
+  C: { v: 2, name: 'Cereza', plural: 'cerezas', glyph: '🍒' },
+  B: { v: 3, name: 'Campana', plural: 'campanas', glyph: '🔔' },
+  R: { v: 4, name: 'BAR', plural: 'BAR', glyph: 'BAR' },
+  S: { v: 5, name: 'Siete', plural: 'sietes', glyph: '7' }
+};
+var PAY = { tri: { L: 4, C: 8, B: 15, R: 30, S: 100 }, pair: { L: 0, C: 1, B: 1, R: 2, S: 3 }, quad: 3 };
+var STRIPS = { base: 'LLLLCCCBBRRS', exhibit: 'LLLCCBBRSSSL', own: 'LCCBRS', tragona: 'LCCBBRRRSS' };
+var MIN_STRIP = 6, MAX_SEVENS = 4;
+
+function mod(i, n) { return ((i % n) + n) % n; }
+function symAt(strip, i) { return strip[mod(i, strip.length)]; }
+function lineOf(strips, stops) { return strips.map(function (s, k) { return symAt(s, stops[k]); }); }
+function countOf(str, ch) { var n = 0; for (var i = 0; i < str.length; i++) if (str[i] === ch) n++; return n; }
+function evalLine(line) {
+  var cnt = {}, sym = null, n = 0;
+  line.forEach(function (s) { cnt[s] = (cnt[s] || 0) + 1; });
+  Object.keys(cnt).forEach(function (s) {
+    if (cnt[s] > n || (cnt[s] === n && SYM[s].v > SYM[sym].v)) { sym = s; n = cnt[s]; }
+  });
+  var mult = 0;
+  if (n >= 4) mult = PAY.tri[sym] * PAY.quad;
+  else if (n === 3) mult = PAY.tri[sym];
+  else if (n === 2) mult = PAY.pair[sym];
+  return { sym: sym, n: n, mult: mult, rank: n * 10 + SYM[sym].v, line: line };
+}
+function sevens(line) { return line.filter(function (s) { return s === 'S'; }).length; }
+// Tragona's trick: if the line would show three or more 7s, the rightmost 7 reel slips to the next non-7 symbol.
+function applySlip(strips, stops, calzo) {
+  var out = stops.slice(), slipped = [], steps = {};
+  if (sevens(lineOf(strips, out)) < 3) return { stops: out, slipped: slipped, steps: steps, blocked: false };
+  if (calzo) return { stops: out, slipped: slipped, steps: steps, blocked: true };
+  var guard = 0;
+  while (sevens(lineOf(strips, out)) >= 3 && guard++ < 8) {
+    var line = lineOf(strips, out), j = -1;
+    for (var k = line.length - 1; k >= 0; k--) if (line[k] === 'S' && slipped.indexOf(k) < 0) { j = k; break; }
+    if (j < 0) break;
+    var st = strips[j], t = out[j], n = 0;
+    do { t++; n++; } while (symAt(st, t) === 'S' && n < st.length);
+    slipped.push(j);
+    if (symAt(st, t) === 'S') continue;
+    out[j] = mod(t, st.length); steps[j] = n;
+  }
+  return { stops: out, slipped: slipped.filter(function (k) { return steps[k]; }), steps: steps, blocked: false };
+}
+// Exact return per coin bet for honest random stops, the slip included.
+function evStats(strips, calzo) {
+  var ev = 0, loss = 0, total = 1, n = strips.length, idx = [];
+  strips.forEach(function (s) { total *= s.length; idx.push(0); });
+  (function rec(k) {
+    if (k === n) {
+      var r = applySlip(strips, idx, calzo), e = evalLine(lineOf(strips, r.stops));
+      ev += e.mult; if (e.mult === 0) loss++;
+      return;
+    }
+    for (var i = 0; i < strips[k].length; i++) { idx[k] = i; rec(k + 1); }
+  })(0);
+  return { ev: ev / total, ploss: loss / total };
+}
+function randInt(n, rng) { return Math.floor((rng || Math.random)() * n); }
+// Ranks for the duel: more equal symbols wins; same count, the higher symbol wins; a full tie goes to the house.
+function beats(a, b) { return a.rank > b.rank; }
+function hideSeven(strip) { var i = strip.indexOf('S'); return i < 0 ? strip : strip.slice(0, i) + strip.slice(i + 1); }
+// ===== ENGINE END =====
+
+var $ = function (s) { return document.querySelector(s); };
+var sleep = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+var fmt = function (n) { return String(Math.floor(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); };
+var reduced = function () { return !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); };
+
+// ---------- Tuning ----------
+var SAVE_KEY = 'lcsp-sala1-v1';
+var BETS = [1, 5, 25, 100];
+var RENCOR_BY_BET = { 1: 1, 5: 2, 25: 3, 100: 5 };
+var COST = {
+  retener: 12, holdUp: [30, 60], calzo: 15, nudgeUp: [35, 70], cuarto: 15,
+  lima: function (n) { return Math.round(8 * Math.pow(1.35, n)); },
+  pintura: function (n) { return Math.round(30 * Math.pow(1.5, n)); },
+  flaco: 40, flacoSpeed: [100, 300, 900], flacoBet: [150, 500, 1500]
+};
+var FLACO_MS = [4000, 3000, 2000, 1200], FLACO_BET = [1, 3, 10, 30];
+var RECHARGE = { hold: 4, nudge: 6 };
+var NEAR_AT = [3, 7, 12];
+var FOURTH_SPINS = 10;
+var RETO = {
+  r1: { name: 'La máquina de exhibición', entry: 20, spins: 25, coins: 100, fail: 10, start: 'r1Start',
+        goal: 'Saca un 7-7-7 en 25 tiradas.',
+        detail: 'Juegas en la máquina de exhibición de Tragona: tres 7 por rodillo. Pero el resbalón sigue ahí.',
+        reward: 'Empujón y 100 monedas', unlock: 'empujon' },
+  r2: { name: 'Tres de tres', entry: 60, spins: 15, coins: 200, fail: 20, start: 'r2Start', extraNudge: 3,
+        goal: 'Saca 3 tríos en 15 tiradas.',
+        detail: 'Con tus propios rodillos. Tragona te presta 3 empujones extra "porque igual no te van a servir".',
+        reward: 'Pintura dorada y 200 monedas', unlock: 'pintura' },
+  r3: { name: 'Sangría', entry: 100, spins: 10, chips: 30, coins: 300, fail: 30, start: 'r3Start', bare: true,
+        goal: 'Empiezas con 30 fichas. La apuesta sube cada tirada: 1, 2, 3… hasta 10. Termina con 30 o más.',
+        detail: 'Sin Retener ni Empujón: solo cuenta lo que devuelve tu máquina. Lima y pinta antes de entrar.',
+        reward: 'Tu rodillo y 300 monedas', unlock: 'cuarto' }
+};
+var DUEL = { entry: 1000, fail: 40 };
+
+// ---------- Lines ----------
+var LINES = {
+  welcome: ['Bienvenido a mi casino. Tu dinero ya es mío; solo falta que lo metas.'],
+  loss: ['¿Otra vez nada? Qué constante eres.', 'Gracias por tu donación.', 'Ñam. Tus monedas saben a desesperación.',
+    'Tranquilo, la próxima seguro tampoco.', 'Me encanta tu estrategia: perder.', 'Sigue así y me compro otra palanca.',
+    'Cada moneda que metes me pone más bonita.', 'Eres mi cliente favorito. Por razones obvias.',
+    'Perder también es un talento. Tú tienes mucho.', 'Mmm, delicioso. ¿Otra?', '¿Ves esa luz roja? Soy yo, riéndome.',
+    'No llores sobre mi bandeja, que se oxida.'],
+  nearMiss: ['¡Uyyy! ¡Casi! ¡Qué pena! Jajaja.', 'Siete, siete… ¡limón! El limón es mi favorito.',
+    'Estuviste TAN cerca. Bueno, no tanto.', 'Ese último rodillo tiene vida propia. Qué raro, ¿no?',
+    '"Casi" es mi palabra favorita. Me paga la luz.', 'Dos sietes y uno que se fue. Así se ve la esperanza.'],
+  laughFit: ['JAJAJAJA ¡cof! ¡cof! JAJA… ¡cof! ¡Se me trabó un engranaje de la risa!'],
+  win: ['Disfrútalo. No se repite.', 'Bah. Calderilla.', 'Te dejé ganar para que vuelvas.',
+    'Guarda eso, que te lo voy a quitar.', 'Una victoria pequeñita para alguien pequeñito.', 'Error de cálculo. Del universo, no mío.'],
+  bigWin: ['¡¿QUÉ?! ¡Eso no estaba en el plan!', 'Grrr. Mis engranajes. Mis pobres engranajes.',
+    '¡Seguridad! …Ah, verdad, la seguridad soy yo.', 'Revisa tus bolsillos. Seguro hay un truco.'],
+  jackpot: ['¡NO! ¡MIS SIETES! ¡Esos eran privados!', '¡Siete-siete-siete! ¡Esto es un atraco… con calzo!'],
+  broke: ['¿Sin monedas? Puedes buscar en el suelo. Ahí es donde perteneces.', 'Quebrado. Te queda precioso ese look.'],
+  floor: ['¿Recogiendo monedas del suelo? Qué dignidad.', 'Esa moneda era de alguien que también perdió.', 'Sigue buscando. Debajo de mí hay chicles.'],
+  buy: ['¿Compras cositas? Qué tierno.', 'Eso no te va a servir. Pero cómpralo, cómpralo.', 'Gastar Rencor… Yo lo fabrico gratis.'],
+  retener: ['¿Retener? Yo también retengo cosas. Tu dinero, por ejemplo.'],
+  lima: ['¿Me estás limando los limones? ¡Eran decorativos!', 'Deja mis rodillos en paz, vándalo.'],
+  pintura: ['¿Pintura dorada? ¡Ese 7 es falso! …Pero brilla bonito.', 'Eso es falsificación. Y además te quedó chueco.'],
+  nudge: ['¡Oye! ¡No empujes la máquina! Me ofende.', 'Empujar es de mal perdedor. Lo apruebo.', '¿Empujones? Esto no es el metro.'],
+  nudgeSlip: ['¡Ni lo intentes! Mis rodillos resbalan cuando quieren.'],
+  calzoBuy: ['¿Qué es eso? ¿Un calzo? Guárdalo. Te lo pido por las buenas.'],
+  calzoBlock: ['¡CLANK! ¿Qué tiene mi rodillo?', 'Mi rodillo… no se mueve… ¡Saca eso de ahí!', '¡Sabotaje! ¡Esto es sabotaje!'],
+  retoUnlock: ['Bien, listillo. Si quieres jugar sucio, juguemos a mis retos.'],
+  r1Start: ['Mi máquina de exhibición está llena de sietes. Llena. Igual no vas a ganar.'],
+  r2Start: ['Tres tríos en quince tiradas. Te presto empujones. Total, no te van a servir.'],
+  r3Start: ['La apuesta sube y sube. Como mi alegría cuando te quedes en cero.'],
+  retoFail: ['Perdiste el reto. Qué sorpresa. Para nadie.', 'Vuelve cuando seas mejor. O sea, nunca.', 'Me quedo con tu entrada. Gracias por participar.'],
+  retoWin: ['Eso fue suerte de principiante. Que te dura bastante, al parecer.', 'Bien. Toma tu premio. Y vete de mi vista un ratito.', 'No me mires así. Ya sé que ganaste.'],
+  fourthFirst: ['¡¿CUATRO RODILLOS?! ¡ESO ES TRAMPA!'],
+  fourth: ['Otra vez el rodillo ilegal. Llamaría a la policía si no fuera yo la ilegal.', 'Ese rodillo no es mío. No lo acerques.'],
+  flaco: ['¿Ese flacucho? Que no me toque la palanca con las manos pegajosas.'],
+  idleReturn: ['¿Volviste? Te extrañé. Bueno, a tus monedas.', 'Tu amigo el Flaco estuvo aquí. Huele a chicle.'],
+  back: ['Volviste. Mis rodillos te extrañaban. Bueno, tus monedas.'],
+  duelLocked: ['¿Un duelo conmigo? Junta mil monedas y hablamos. Ja.'],
+  duelIntro: ['¿Un duelo? Yo tiro primero, dos veces, y me quedo con la mejor. Y los empates son míos. Reglas de la casa.'],
+  round1: ['Primera ronda. Calentando rodillos.'],
+  round2: ['Segunda ronda. Escondí un par de cositas. No preguntes.'],
+  round3: ['Ronda tres. Mi ronda favorita.'],
+  her777: ['Siete, siete, siete. Qué suerte la mía. Siempre en la tercera.'],
+  duelSlip: ['Uy, ¿se resbaló? Qué cosa más rara.'],
+  duelRoundYou: ['Ese punto no cuenta. Bueno, sí cuenta, pero me duele.', 'Grrr. Disfrútalo mientras dure.', '¡Revisaré la grabación!'],
+  duelRoundHer: ['Punto para la casa. Como siempre.', 'Qué pena. Para ti.', 'La casa gana. Está en el nombre. Bueno, en el tuyo no.'],
+  duelTie: ['Empate… ah no, perdón: los empates son míos.'],
+  duelLose: ['Gané. Obviamente. Deja la entrada en la bandeja, gracias.', 'Otra victoria para la casa. Ya perdí la cuenta. Tú no, tú cuenta.'],
+  duelWin: ['No… no puede ser… mis luces… se apagan…'],
+  defeated: ['No me hables.', 'Sí, sí, ya ganaste. ¿Quieres un trofeo?', 'Estoy en mi etapa de reflexión.', 'Juega en silencio, por favor.'],
+  edgeFlip: ['¿Por qué mis números están en rojo? ¿Quién tocó mis rodillos?']
+};
+var bags = {};
+function pick(cat) {
+  var list = LINES[cat];
+  if (!bags[cat] || !bags[cat].length) {
+    var a = list.map(function (_, i) { return i; });
+    for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
+    bags[cat] = a;
+  }
+  return list[bags[cat].pop()];
+}
+
+// ---------- LED face ----------
+var EYES = {
+  dot: ['.###.', '.###.', '.....'], half: ['.....', '#####', '.###.'], squint: ['..#..', '.#.#.', '#...#'],
+  angryL: ['#....', '.##..', '.###.'], angryR: ['....#', '..##.', '.###.'], x: ['#...#', '..#..', '#...#'], wide: ['.###.', '#...#', '.###.']
+};
+var MOUTHS = {
+  flat: ['............', '############', '............', '............'],
+  smile: ['#..........#', '.#........#.', '..########..', '............'],
+  grin: ['############', '#..#..#..#.#', '############', '............'],
+  laugh: ['############', '#..........#', '.#........#.', '..########..'],
+  o: ['....####....', '...#....#...', '...#....#...', '....####....'],
+  frown: ['............', '..########..', '.#........#.', '#..........#'],
+  wavy: ['............', '.##..##..##.', '#..##..##..#', '............']
+};
+var EXPR = {
+  neutral: { eyes: ['dot', 'dot'], mouth: 'flat' }, smug: { eyes: ['half', 'half'], mouth: 'smile' },
+  happy: { eyes: ['dot', 'dot'], mouth: 'grin' }, laugh: { eyes: ['squint', 'squint'], mouth: 'laugh', alt: 'grin' },
+  angry: { eyes: ['angryL', 'angryR'], mouth: 'frown' }, shocked: { eyes: ['wide', 'wide'], mouth: 'o' },
+  defeated: { eyes: ['x', 'x'], mouth: 'wavy' }, sulky: { eyes: ['half', 'half'], mouth: 'frown' }
+};
+function drawFace(name, frame) {
+  var cv = $('#face'), g = cv.getContext('2d');
+  var dpr = Math.min(2, window.devicePixelRatio || 1), W = 96, H = 48;
+  if (cv.width !== W * dpr) { cv.width = W * dpr; cv.height = H * dpr; }
+  g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+  var cols = 20, rows = 10, c = W / cols, grid = [];
+  for (var r = 0; r < rows; r++) { grid.push([]); for (var q = 0; q < cols; q++) grid[r].push(0); }
+  var e = EXPR[name] || EXPR.neutral, mouth = (frame && e.alt) ? e.alt : e.mouth;
+  function put(bm, r0, c0) { bm.forEach(function (row, i) { for (var j = 0; j < row.length; j++) if (row[j] === '#') grid[r0 + i][c0 + j] = 1; }); }
+  put(EYES[e.eyes[0]], 1, 2); put(EYES[e.eyes[1]], 1, 13); put(MOUTHS[mouth], 5, 4);
+  var css = getComputedStyle(document.documentElement), on = css.getPropertyValue('--led').trim(), off = css.getPropertyValue('--led-dim').trim();
+  for (var y = 0; y < rows; y++) for (var x = 0; x < cols; x++) {
+    var lit = grid[y][x];
+    g.fillStyle = lit ? on : off; g.shadowColor = on; g.shadowBlur = lit ? 4 : 0;
+    g.beginPath(); g.arc(x * c + c / 2, y * c + c / 2, c * 0.36, 0, Math.PI * 2); g.fill();
+  }
+}
+var moodTimer = null, laughTimer = null;
+function restMood() { return state.duelWon ? 'sulky' : 'smug'; }
+function setMood(m) {
+  clearTimeout(moodTimer); clearInterval(laughTimer);
+  drawFace(m, 0);
+  if (m === 'laugh' && !reduced()) {
+    var f = 0; laughTimer = setInterval(function () { f ^= 1; drawFace('laugh', f); }, 170);
+  }
+  moodTimer = setTimeout(function () { clearInterval(laughTimer); drawFace(restMood(), 0); }, 2800);
+}
+function say(cat, mood, bonus) {
+  $('#speechText').textContent = LINES[cat] ? pick(cat) : cat;
+  var b = $('#speechBonus');
+  if (bonus > 0) { state.rencor += bonus; b.textContent = '+' + bonus + ' Rencor por la burla'; b.hidden = false; bump('rencor'); }
+  else b.hidden = true;
+  setMood(mood || 'smug');
+}
+
+// ---------- Sound (starts after the first tap) ----------
+var actx = null;
+function audio() {
+  if (!state.sound) return null;
+  try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === 'suspended') actx.resume(); return actx; } catch (e) { return null; }
+}
+function beep(freq, dur, type, vol, when) {
+  var a = audio(); if (!a) return;
+  try {
+    var o = a.createOscillator(), gn = a.createGain(), t = a.currentTime + (when || 0);
+    o.type = type || 'square'; o.frequency.value = freq;
+    gn.gain.setValueAtTime(vol || 0.04, t); gn.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(gn); gn.connect(a.destination); o.start(t); o.stop(t + dur + 0.03);
+  } catch (e) {}
+}
+var SFX = {
+  lever: function () { beep(180, 0.08, 'square', 0.03); },
+  stop: function () { beep(240, 0.05, 'square', 0.03); },
+  coin: function () { beep(1250, 0.06, 'triangle', 0.05); },
+  win: function () { [523, 659, 784].forEach(function (f, i) { beep(f, 0.12, 'triangle', 0.06, i * 0.09); }); },
+  big: function () { [523, 659, 784, 1046, 784, 1046].forEach(function (f, i) { beep(f, 0.14, 'triangle', 0.07, i * 0.08); }); },
+  lose: function () { beep(130, 0.18, 'sawtooth', 0.025); },
+  laugh: function () { [660, 600, 540, 480, 420].forEach(function (f, i) { beep(f, 0.07, 'square', 0.035, i * 0.1); }); },
+  clank: function () { beep(90, 0.12, 'square', 0.08); beep(1400, 0.05, 'square', 0.04, 0.02); },
+  slip: function () { beep(330, 0.05, 'square', 0.05); }
+};
+function buzz(ms) { try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) {} }
+
+// ---------- State ----------
+function freshState() {
+  return {
+    v: 1, coins: 20, rencor: 0, bet: 1, spins: 0,
+    strips: [STRIPS.base, STRIPS.base, STRIPS.base], own: STRIPS.own,
+    has: { retener: false, calzo: false, empujon: false, pintura: false, cuarto: false, flaco: false },
+    holdMax: 2, holdCharges: 2, holdTick: 0, holdUps: 0,
+    nudgeMax: 1, nudgeCharges: 1, nudgeTick: 0, nudgeUps: 0,
+    limas: 0, pinturas: 0, pinturaFree: 0, fourthTurns: 0, fourthSeen: false,
+    flacoSpeed: 0, flacoBet: 0, flacoSpins: 0,
+    nearMisses: 0, revealed: false, edgeFlipped: false,
+    retos: { r1: 'locked', r2: 'locked', r3: 'locked' },
+    knows: { r2: false, r3: false }, duelTries: 0, duelWon: false,
+    lastSeen: Date.now(), sound: true
+  };
+}
+var state = freshState();
+function load() {
+  try {
+    var raw = localStorage.getItem(SAVE_KEY); if (!raw) return;
+    var s = JSON.parse(raw); if (!s || s.v !== 1) return;
+    var f = freshState();
+    state = Object.assign(f, s, { has: Object.assign(f.has, s.has), retos: Object.assign(f.retos, s.retos), knows: Object.assign(f.knows, s.knows) });
+  } catch (e) {}
+}
+var saveT = null;
+function save() { clearTimeout(saveT); saveT = setTimeout(saveNow, 400); }
+function saveNow() { state.lastSeen = Date.now(); try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch (e) {} }
+
+// Runtime only
+var mode = 'free', ctx = null, busy = false, canNudge = false, last = { pay: 0, bet: 1 }, tab = 'taller';
+
+// ---------- Machine view ----------
+var M = { strips: [], stops: [], held: [], els: [], sig: '' };
+function symHTML(c) { return '<span class="sym sym-' + c + '">' + SYM[c].glyph + '</span>'; }
+function cellPx() { return parseFloat(getComputedStyle($('#reels')).getPropertyValue('--cell')) || 62; }
+function setMachine(strips) {
+  var sig = strips.join('|');
+  if (sig === M.sig) return;
+  var prev = M.stops.slice();
+  M.strips = strips.slice(); M.sig = sig;
+  M.stops = strips.map(function (s, k) { return prev[k] != null ? mod(prev[k], s.length) : randInt(s.length); });
+  M.held = strips.map(function () { return false; });
+  canNudge = false;
+  buildReels();
+}
+function buildReels() {
+  var wrap = $('#reels'), holds = $('#holds');
+  wrap.innerHTML = ''; holds.innerHTML = '';
+  wrap.dataset.n = M.strips.length; wrap.style.setProperty('--n', M.strips.length); holds.style.setProperty('--n', M.strips.length);
+  M.els = [];
+  M.strips.forEach(function (strip, k) {
+    var K = Math.max(5, Math.ceil(60 / strip.length));
+    var reel = document.createElement('div');
+    reel.className = 'reel' + (k === 3 ? ' own' : '');
+    var st = document.createElement('div'); st.className = 'strip';
+    var html = '';
+    for (var c = 0; c < K; c++) for (var i = 0; i < strip.length; i++) html += '<div class="cell">' + symHTML(strip[i]) + '</div>';
+    st.innerHTML = html; reel.appendChild(st);
+    var up = document.createElement('button'); up.type = 'button'; up.className = 'nz up';
+    up.setAttribute('aria-label', 'Empujar el rodillo ' + (k + 1) + ': bajar el símbolo de arriba a la línea');
+    up.innerHTML = '<span>▼</span>'; up.addEventListener('click', function () { nudge(k, -1); });
+    var dn = document.createElement('button'); dn.type = 'button'; dn.className = 'nz down';
+    dn.setAttribute('aria-label', 'Empujar el rodillo ' + (k + 1) + ': subir el símbolo de abajo a la línea');
+    dn.innerHTML = '<span>▲</span>'; dn.addEventListener('click', function () { nudge(k, 1); });
+    reel.appendChild(up); reel.appendChild(dn);
+    wrap.appendChild(reel);
+    var hb = document.createElement('button'); hb.type = 'button'; hb.className = 'hold'; hb.textContent = 'Retener';
+    hb.setAttribute('aria-pressed', 'false'); hb.addEventListener('click', function () { toggleHold(k); });
+    holds.appendChild(hb);
+    M.els.push({ reel: reel, st: st, K: K, hold: hb });
+  });
+  var pl = document.createElement('div'); pl.className = 'payline'; pl.id = 'payline'; wrap.appendChild(pl);
+  M.strips.forEach(function (_, k) { placeReel(k, M.stops[k]); });
+}
+function restAbs(k, stop) { var e = M.els[k]; return (e.K - 2) * M.strips[k].length + stop; }
+function setY(k, abs) { M.els[k].st.style.transform = 'translateY(' + (-(abs - 1) * cellPx()) + 'px)'; }
+function placeReel(k, stop) { var e = M.els[k]; e.st.style.transition = 'none'; setY(k, restAbs(k, stop)); }
+function animReel(k, fromAbs, toAbs, ms, ease) {
+  return new Promise(function (res) {
+    var e = M.els[k];
+    e.st.style.transition = 'none'; setY(k, fromAbs);
+    void e.st.offsetHeight;
+    e.st.style.transition = 'transform ' + ms + 'ms ' + ease; setY(k, toAbs);
+    setTimeout(res, ms + 30);
+  });
+}
+function flashWin(on) { var p = $('#payline'); if (p) p.classList.toggle('win', !!on); }
+function showClank() {
+  var el = document.createElement('div'); el.className = 'clank'; el.textContent = '¡CLANK!';
+  $('#machine').appendChild(el); setTimeout(function () { el.remove(); }, 900);
+}
+// Spins the reels that are not held. Returns the final line evaluation.
+function spinMachine(opts) {
+  opts = opts || {};
+  flashWin(false);
+  var n = M.strips.length;
+  var target = M.strips.map(function (s, k) { return M.held[k] ? M.stops[k] : randInt(s.length); });
+  if (opts.forced) target = opts.forced(target);
+  var pre = target.slice();
+  var slip = applySlip(M.strips, pre, !!opts.calzo);
+  var rm = reduced(), jobs = [];
+  for (var k = 0; k < n; k++) {
+    if (M.held[k]) continue;
+    (function (k) {
+      var len = M.strips[k].length;
+      jobs.push(animReel(k, restAbs(k, M.stops[k]), len + pre[k], rm ? 150 : 640 + k * 260, 'cubic-bezier(.18,.72,.26,1.04)').then(SFX.stop));
+    })(k);
+  }
+  return Promise.all(jobs).then(function () {
+    if (slip.blocked) { showClank(); SFX.clank(); buzz(40); }
+    var chain = Promise.resolve();
+    slip.slipped.forEach(function (k) {
+      chain = chain.then(function () {
+        var len = M.strips[k].length, from = M.held[k] ? restAbs(k, pre[k]) : len + pre[k];
+        return sleep(rm ? 40 : 170).then(function () { SFX.slip(); return animReel(k, from, from + slip.steps[k], rm ? 60 : 130, 'cubic-bezier(.3,1.6,.5,1)'); });
+      });
+    });
+    return chain;
+  }).then(function () {
+    M.stops = slip.stops.slice();
+    M.strips.forEach(function (_, k) { placeReel(k, M.stops[k]); });
+    var ev = evalLine(lineOf(M.strips, M.stops));
+    flashWin(ev.mult > 0 || mode === 'duel');
+    return { eval: ev, pre: pre, slip: slip };
+  });
+}
+
+// ---------- Helpers ----------
+function freeStrips() { return state.has.cuarto && state.fourthTurns > 0 ? state.strips.concat([state.own]) : state.strips.slice(); }
+function charges() { return mode === 'free' ? state : ctx; }
+function heldCount() { return M.held.filter(Boolean).length; }
+function tick(c) {
+  if (c.bare) return;
+  c.holdTick = (c.holdTick || 0) + 1;
+  if (c.holdTick >= RECHARGE.hold) { c.holdTick = 0; if (c.holdCharges < state.holdMax) c.holdCharges++; }
+  c.nudgeTick = (c.nudgeTick || 0) + 1;
+  if (c.nudgeTick >= RECHARGE.nudge) { c.nudgeTick = 0; if (c.nudgeCharges < state.nudgeMax) c.nudgeCharges++; }
+}
+function bump(which) {
+  var el = which === 'rencor' ? $('#chipRencor') : $('#chipCoins');
+  el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
+}
+function spend(cur, amt) {
+  if (state[cur] < amt) { toast(cur === 'rencor' ? 'Te falta Rencor: necesitas ' + amt + '.' : 'Te faltan monedas: necesitas ' + fmt(amt) + '.'); return false; }
+  state[cur] -= amt; bump(cur); return true;
+}
+var toastT = null;
+function toast(msg) { var t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(function () { t.hidden = true; }, 2600); }
+function describe(ev) {
+  var s = SYM[ev.sym];
+  if (ev.n >= 3 && ev.sym === 'S') return ev.n >= 4 ? '¡7-7-7-7!' : '¡7-7-7!';
+  if (ev.n >= 4) return 'Cuatro ' + s.plural;
+  if (ev.n === 3) return 'Trío de ' + s.plural;
+  if (ev.n === 2) return 'Par de ' + s.plural;
+  return 'Nada (' + s.name.toLowerCase() + ' alto)';
+}
+function describeShort(ev) { return ev.n >= 2 ? describe(ev) : 'Nada'; }
+function setResult(main, sub, good) {
+  $('#result').innerHTML = '<span class="' + (good ? 'good' : '') + '">' + main + '</span>' + (sub ? '<span class="sub">' + sub + '</span>' : '');
+}
+function edgeInfo() {
+  var st = evStats(state.strips, state.has.calzo);
+  return { back: Math.round(st.ev * 100), ploss: st.ploss };
+}
+function scrollToMachine() { try { $('#machine').scrollIntoView({ behavior: reduced() ? 'auto' : 'smooth', block: 'center' }); } catch (e) {} }
+
+// ---------- Free play ----------
+function scriptStops(kind) {
+  return function (t) {
+    var s = M.strips;
+    if (kind === 'lose') return [s[0].indexOf('L'), s[1].indexOf('C'), s[2].indexOf('B')];
+    if (kind === 'cherries') return [s[0].indexOf('C'), s[1].indexOf('C'), s[2].indexOf('C')];
+    if (kind === 'near') return [s[0].indexOf('S'), s[1].indexOf('S'), s[2].indexOf('S')];
+    return t;
+  };
+}
+function freeSpin() {
+  if (state.coins < 1) return floorCoins();
+  if (state.coins < state.bet && !heldCount()) {
+    state.bet = BETS.filter(function (b) { return b <= state.coins; }).pop() || 1;
+  }
+  if (state.coins < state.bet) { toast('No te alcanza para esa apuesta.'); return; }
+  var bet = state.bet, scripted = null;
+  if (!state.revealed && !heldCount() && M.strips.length === 3) {
+    var next = state.spins + 1;
+    if (next === 1) scripted = 'lose';
+    else if (next === 2) scripted = 'cherries';
+    else if (next >= (NEAR_AT[state.nearMisses] || Infinity)) scripted = 'near';
+  }
+  busy = true; canNudge = false;
+  state.coins -= bet; state.spins++;
+  state.holdCharges -= heldCount();
+  ui(); SFX.lever();
+  spinMachine({ calzo: state.has.calzo, forced: scripted ? scriptStops(scripted) : null }).then(function (r) {
+    M.held = M.held.map(function () { return false; });
+    var ev = r.eval, pay = ev.mult * bet, mult = RENCOR_BY_BET[bet] || 1;
+    state.coins += pay; last = { pay: pay, bet: bet };
+    if (pay) bump('coins');
+    tick(state);
+    if (state.fourthTurns > 0) state.fourthTurns--;
+    var sub = '';
+    if (r.slip.slipped.length) {
+      if (!state.revealed) state.nearMisses++;
+      var fit = !state.revealed && state.nearMisses >= NEAR_AT.length;
+      say(fit ? 'laughFit' : 'nearMiss', 'laugh', 5 * mult); SFX.laugh(); buzz(30);
+      sub = 'El tercer 7 se fue en el último segundo.';
+    } else if (r.slip.blocked) {
+      say('calzoBlock', 'shocked');
+    }
+    if (ev.mult === 0) {
+      state.rencor += mult; bump('rencor');
+      sub = sub || ('+' + mult + ' Rencor');
+      if (!r.slip.slipped.length && Math.random() < 0.35) say('loss', 'smug', 2 * mult);
+      SFX.lose();
+    } else if (ev.n >= 3 && ev.sym === 'S') { say('jackpot', 'angry'); SFX.big(); buzz([40, 40, 80]); }
+    else if (ev.mult >= 15) { say('bigWin', 'angry'); SFX.big(); }
+    else if (ev.mult >= 4) { if (Math.random() < 0.5) say('win', 'sulky'); SFX.win(); }
+    else if (pay) SFX.coin();
+    if (scripted === 'cherries') say('win', 'sulky');
+    if (scripted === 'lose' && state.spins === 1) say('Gracias por tu primera moneda. Le pondré tu nombre.', 'smug');
+    setResult(describe(ev) + (ev.mult ? ' ×' + ev.mult + ' · +' + fmt(pay) : ''), sub || (ev.mult === 1 ? 'Recuperas la apuesta.' : ''), ev.mult > 1);
+    busy = false;
+    if (state.has.empujon && state.nudgeCharges > 0) canNudge = true;
+    if (state.fourthTurns === 0 && M.strips.length === 4) { setMachine(freeStrips()); toast('Tu rodillo volvió al bolsillo.'); }
+    checkEdgeFlip();
+    ui(); save();
+    if (!state.revealed && state.nearMisses >= NEAR_AT.length) return reveal();
+  });
+}
+function floorCoins() {
+  state.coins += 10; bump('coins');
+  say('floor', 'laugh', 2); SFX.coin();
+  setResult('Encontraste 10 monedas', 'Debajo de una máquina. Con un chicle pegado.');
+  ui(); save();
+}
+function checkEdgeFlip() {
+  if (state.edgeFlipped) return;
+  if (edgeInfo().back > 100) { state.edgeFlipped = true; setTimeout(function () { say('edgeFlip', 'shocked'); }, 900); toast('Tu máquina ya devuelve más de lo que apuestas. La casa pierde.'); }
+}
+
+// ---------- The reveal ----------
+function reveal() {
+  busy = true; ui();
+  var k = 2, strip = M.strips[k], pre = strip.indexOf('S');
+  var lensEl = null;
+  return sleep(1300).then(function () {
+    $('#machine').classList.add('replay-on'); $('#replayTag').hidden = false;
+    placeReel(k, pre);
+    var rr = M.els[k].reel.getBoundingClientRect(), mr = $('#machine').getBoundingClientRect();
+    lensEl = document.createElement('div'); lensEl.className = 'lens';
+    lensEl.style.left = (rr.left - mr.left - 6) + 'px'; lensEl.style.top = (rr.top - mr.top - 6) + 'px';
+    lensEl.style.width = (rr.width + 12) + 'px'; lensEl.style.height = (rr.height + 12) + 'px';
+    $('#machine').appendChild(lensEl);
+    return sleep(900);
+  }).then(function () {
+    var steps = 1; while (symAt(strip, pre + steps) === 'S') steps++;
+    return animReel(k, restAbs(k, pre), restAbs(k, pre) + steps, reduced() ? 200 : 1500, 'ease-in-out');
+  }).then(function () {
+    lensEl.innerHTML = '<span>¡Se movió solo!</span>';
+    return sleep(900);
+  }).then(function () {
+    var st = document.createElement('div'); st.className = 'stamp'; st.id = 'stamp'; st.textContent = '¡TE VI!';
+    $('#machine').appendChild(st); SFX.clank(); buzz([30, 30, 60]);
+    return sleep(1300);
+  }).then(function () {
+    $('#machine').classList.remove('replay-on'); $('#replayTag').hidden = true;
+    lensEl.remove(); var st = $('#stamp'); if (st) st.remove();
+    placeReel(k, M.stops[k]);
+    state.revealed = true; state.rencor += 10; bump('rencor');
+    say('¿Qué? ¿Yo? Fue el viento. Las máquinas no hacemos trampa. Ninguna. Nunca.', 'shocked');
+    busy = false; ui(); save();
+    return modal('Descubriste el resbalón',
+      '<p>Cuando salen dos 7, el tercer rodillo de Tragona <b>resbala una posición</b> justo antes de parar. Por eso nunca ves el 7-7-7.</p>' +
+      '<p class="gain">+10 Rencor por pillarla.</p>' +
+      '<p><b>Nuevo en el Taller:</b> el Calzo, que bloquea el resbalón. Y el Flaco, un compinche que juega por ti.</p>',
+      [{ id: 'ok', label: 'Ir al Taller', primary: true }]);
+  }).then(function () { setTab('taller'); });
+}
+
+// ---------- Hold and nudge ----------
+function holdAllowed() {
+  if (busy || !state.has.retener) return false;
+  if (mode === 'free') return state.spins > 0;
+  if (mode === 'reto') return !RETO[ctx.id].bare && ctx.left < RETO[ctx.id].spins && ctx.left > 0;
+  if (mode === 'duel') return ctx.phase === 'after' && !ctx.respinUsed;
+  return false;
+}
+function toggleHold(k) {
+  if (!holdAllowed()) return;
+  var c = charges();
+  if (!M.held[k] && heldCount() >= c.holdCharges) { toast('No te quedan cargas de Retener.'); return; }
+  M.held[k] = !M.held[k];
+  if (mode === 'free' && heldCount()) state.bet = last.bet || state.bet;
+  if (M.held[k] && Math.random() < 0.25) say('retener', 'smug');
+  ui();
+}
+function nudge(k, dir) {
+  if (busy || !canNudge) return;
+  var c = charges(); if (c.nudgeCharges <= 0) return;
+  busy = true;
+  var len = M.strips[k].length, from = M.stops[k];
+  animReel(k, restAbs(k, from), restAbs(k, from) + dir, reduced() ? 60 : 170, 'ease-out').then(function () {
+    M.stops[k] = mod(from + dir, len); placeReel(k, M.stops[k]);
+    c.nudgeCharges--;
+    var slip = applySlip(M.strips, M.stops, state.has.calzo);
+    var chain = Promise.resolve();
+    if (slip.slipped.length) {
+      slip.slipped.forEach(function (j) {
+        chain = chain.then(function () { return animReel(j, restAbs(j, M.stops[j]), restAbs(j, M.stops[j]) + slip.steps[j], 130, 'cubic-bezier(.3,1.6,.5,1)'); });
+      });
+      chain = chain.then(function () { M.stops = slip.stops.slice(); M.strips.forEach(function (_, j) { placeReel(j, M.stops[j]); }); say('nudgeSlip', 'laugh', 3); });
+    } else if (slip.blocked) { showClank(); SFX.clank(); say('calzoBlock', 'shocked'); }
+    else if (Math.random() < 0.4) say('nudge', 'sulky');
+    return chain;
+  }).then(function () {
+    var ev = evalLine(lineOf(M.strips, M.stops));
+    flashWin(ev.mult > 0 || mode === 'duel');
+    if (mode === 'free') {
+      var pay = ev.mult * last.bet, diff = pay - last.pay;
+      state.coins = Math.max(0, state.coins + diff); last.pay = pay; if (diff > 0) bump('coins');
+      setResult(describe(ev) + (ev.mult ? ' ×' + ev.mult + ' · +' + fmt(pay) : ''), 'Empujón: ' + (diff > 0 ? 'ganaste ' + fmt(diff) + ' más' : diff < 0 ? 'perdiste ' + fmt(-diff) : 'sin cambio'), ev.mult > 1);
+      if (diff > 0) SFX.win();
+    } else if (mode === 'reto') {
+      retoAfterNudge(ev);
+    } else if (mode === 'duel') {
+      ctx.yourEval = ev; showDuelCompare();
+    }
+    busy = false;
+    if (c.nudgeCharges <= 0) canNudge = false;
+    ui(); save();
+    if (mode === 'reto' && (ctx.won || (ctx.left <= 0 && !canNudge))) endReto();
+  });
+}
+
+// ---------- Retos ----------
+function startReto(id) {
+  var R = RETO[id];
+  if (busy || mode !== 'free' || state.retos[id] !== 'open') return;
+  if (!spend('coins', R.entry)) return;
+  mode = 'reto';
+  ctx = { id: id, bare: !!R.bare, left: R.spins, trios: 0, counted: false, chips: R.chips || 0, step: 0, won: false, lastBet: 0, lastPay: 0,
+    holdCharges: state.has.retener && !R.bare ? state.holdMax : 0, holdTick: 0,
+    nudgeCharges: state.has.empujon && !R.bare ? state.nudgeMax + (R.extraNudge || 0) : 0, nudgeTick: 0 };
+  setMachine(id === 'r1' ? [STRIPS.exhibit, STRIPS.exhibit, STRIPS.exhibit] : state.strips.slice());
+  M.held = M.held.map(function () { return false; });
+  setResult('Reto: ' + R.name, R.goal);
+  say(R.start, 'smug');
+  ui(); save(); scrollToMachine();
+}
+function retoSpin() {
+  var R = RETO[ctx.id];
+  if (ctx.won || ctx.left <= 0) return endReto();
+  var bet = 0;
+  if (ctx.id === 'r3') {
+    bet = ctx.step + 1;
+    if (ctx.chips < bet) return endReto();
+    ctx.chips -= bet; ctx.step++;
+  }
+  ctx.left--; busy = true; canNudge = false;
+  ctx.holdCharges -= heldCount();
+  ui(); SFX.lever();
+  spinMachine({ calzo: state.has.calzo }).then(function (r) {
+    M.held = M.held.map(function () { return false; });
+    tick(ctx);
+    var ev = r.eval;
+    ctx.lastBet = bet; ctx.lastPay = ev.mult * bet; ctx.counted = false;
+    if (ctx.id === 'r3') ctx.chips += ctx.lastPay;
+    retoCheck(ev);
+    if (ev.mult === 0) { state.rencor += 1; bump('rencor'); }
+    if (r.slip.slipped.length) { say('nearMiss', 'laugh', 3); SFX.laugh(); }
+    else if (r.slip.blocked) say('calzoBlock', 'shocked');
+    else if (ev.mult === 0 && Math.random() < 0.3) say('loss', 'smug', 1);
+    if (ev.mult > 1) SFX.win(); else if (ev.mult === 0) SFX.lose();
+    retoResultText(ev);
+    busy = false;
+    if (state.has.empujon && ctx.nudgeCharges > 0 && !ctx.won) canNudge = true;
+    ui(); save();
+    if (ctx.won || (ctx.left <= 0 && !canNudge)) return endReto();
+  });
+}
+function retoCheck(ev) {
+  if (ctx.id === 'r1' && ev.n >= 3 && ev.sym === 'S') ctx.won = true;
+  if (ctx.id === 'r2') {
+    if (ev.n >= 3 && !ctx.counted) { ctx.trios++; ctx.counted = true; }
+    else if (ev.n < 3 && ctx.counted) { ctx.trios--; ctx.counted = false; }
+    if (ctx.trios >= 3) ctx.won = true;
+  }
+}
+function retoAfterNudge(ev) {
+  if (ctx.id === 'r3') { var pay = ev.mult * ctx.lastBet; ctx.chips += pay - ctx.lastPay; ctx.lastPay = pay; }
+  retoCheck(ev); retoResultText(ev);
+}
+function retoResultText(ev) {
+  var sub = '';
+  if (ctx.id === 'r1') sub = ctx.won ? '¡Lo lograste!' : 'Te quedan ' + ctx.left + ' tiradas.';
+  if (ctx.id === 'r2') sub = 'Tríos: ' + ctx.trios + ' de 3 · quedan ' + ctx.left + ' tiradas';
+  if (ctx.id === 'r3') sub = 'Fichas: ' + ctx.chips + ' · apostaste ' + ctx.lastBet + (ctx.lastPay ? ', ganaste ' + ctx.lastPay : '');
+  setResult(describe(ev) + (ctx.id === 'r3' && ev.mult ? ' ×' + ev.mult : ''), sub, ev.mult > 1);
+}
+function endReto(gaveUp) {
+  if (mode !== 'reto') return;
+  var id = ctx.id, R = RETO[id], c = ctx;
+  var won = !gaveUp && (id === 'r3' ? (c.left <= 0 && c.chips >= R.chips) : c.won);
+  mode = 'free'; ctx = null; canNudge = false; busy = false;
+  setMachine(freeStrips());
+  if (won) {
+    state.retos[id] = 'won'; state.coins += R.coins; bump('coins');
+    var html = '';
+    if (R.unlock === 'empujon') {
+      state.has.empujon = true; state.nudgeCharges = state.nudgeMax; state.retos.r2 = 'open';
+      html = '<p><b>Nueva habilidad: Empujón.</b> Después de tirar, toca el símbolo de arriba o de abajo de un rodillo para meterlo en la línea. Tienes 1 carga y se recarga cada 6 tiradas.</p>';
+    } else if (R.unlock === 'pintura') {
+      state.has.pintura = true; state.pinturaFree += 2; state.retos.r3 = 'open';
+      html = '<p><b>Nueva habilidad: Pintura dorada.</b> Convierte cualquier símbolo de tus rodillos en un 7. Tienes 2 usos gratis en el Taller.</p>';
+    } else if (R.unlock === 'cuarto') {
+      state.has.cuarto = true;
+      html = '<p><b>Nueva habilidad: Tu rodillo.</b> Un cuarto rodillo que armas tú. Actívalo en el Taller por 10 tiradas: con tres 7 de cuatro ya ganas, y cuatro iguales pagan el triple. En el duelo lo puedes usar en una ronda.</p>';
+    }
+    say('retoWin', 'sulky'); SFX.big();
+    modal('Reto superado: ' + R.name, html + '<p class="gain" style="color:var(--brass)">+' + fmt(R.coins) + ' monedas</p>', [{ id: 'ok', label: 'Seguir', primary: true }]);
+  } else {
+    state.rencor += R.fail; bump('rencor');
+    say('retoFail', 'laugh'); SFX.laugh();
+    var why = gaveUp ? 'Te rendiste.' : id === 'r1' ? 'No salió el 7-7-7.' : id === 'r2' ? 'Sacaste ' + c.trios + ' de 3 tríos.' : 'Terminaste con ' + c.chips + ' fichas.';
+    var tip = id === 'r1' ? (state.has.calzo ? 'Cuando veas dos 7 en la línea, retenlos y vuelve a tirar.' : 'Sin Calzo el tercer 7 siempre resbala.') :
+      id === 'r2' ? 'Mira los símbolos de arriba y abajo: un empujón convierte un par en trío.' :
+      'Aquí no hay Retener ni Empujón. Lima limones y pinta sietes antes de entrar; en Pagos ves cuánto devuelve tu máquina.';
+    modal('Reto perdido', '<p>' + why + ' La entrada de ' + R.entry + ' monedas se la queda Tragona.</p><p class="gain">+' + R.fail + ' Rencor</p><p class="muted">' + tip + '</p>',
+      [{ id: 'retry', label: 'Reintentar (' + R.entry + ')' }, { id: 'ok', label: 'Volver', primary: true }]).then(function (a) { if (a === 'retry') startReto(id); });
+  }
+  setResult('Toca TIRAR.', '');
+  ui(); save();
+}
+
+// ---------- Duel ----------
+function startDuel() {
+  if (busy || mode !== 'free') return;
+  if (!spend('coins', DUEL.entry)) { say('duelLocked', 'smug'); return; }
+  state.duelTries++;
+  mode = 'duel';
+  ctx = { round: 1, you: 0, her: 0, phase: 'her', ownUsed: false, useOwn: false, herEval: null, yourEval: null, respinUsed: false, holdCharges: 0, nudgeCharges: 0 };
+  say('duelIntro', 'smug');
+  ui(); save(); scrollToMachine();
+  sleep(1500).then(startRound);
+}
+function duelStrips() {
+  var s = state.strips.slice();
+  if (ctx.useOwn) s.push(state.own);
+  if (ctx.round === 2) s = s.map(hideSeven);
+  return s;
+}
+function startRound() {
+  ctx.phase = 'her'; ctx.respinUsed = false; ctx.yourEval = null; ctx.useOwn = false; ctx.herEval = null;
+  ctx.holdCharges = state.has.retener ? state.holdMax : 0;
+  ctx.nudgeCharges = state.has.empujon ? state.nudgeMax : 0;
+  canNudge = false;
+  setMachine(duelStrips()); M.held = M.held.map(function () { return false; });
+  flashWin(false);
+  say('round' + ctx.round, ctx.round === 3 ? 'smug' : 'neutral');
+  if (ctx.round === 2) state.knows.r2 = true;
+  setResult('Ronda ' + ctx.round, 'Tragona tira primero…');
+  busy = true; ui();
+  return herSpin().then(function () {
+    busy = false; ctx.phase = 'you';
+    setResult('Tu turno', 'Tienes que superar: ' + describeShort(ctx.herEval) + '.');
+    ui();
+  });
+}
+function renderMinis(line) { $('#minis').innerHTML = line.map(function (c) { return '<div class="mini">' + symHTML(c) + '</div>'; }).join(''); }
+function herSpin() {
+  var strip = STRIPS.tragona;
+  var roll = function () { return [0, 1, 2].map(function () { return symAt(strip, randInt(strip.length)); }); };
+  var line, other = null;
+  if (ctx.round === 3) line = ['S', 'S', 'S'];
+  else {
+    var a = roll(), b = roll();
+    if (evalLine(b).rank > evalLine(a).rank) { line = b; other = a; } else { line = a; other = b; }
+  }
+  var ticks = reduced() ? 1 : 9, i = 0;
+  $('#herWhat').textContent = 'tirando…';
+  return new Promise(function (res) {
+    (function step() {
+      if (i++ < ticks) {
+        renderMinis([0, 1, 2].map(function () { return symAt(strip, randInt(strip.length)); }));
+        SFX.stop(); setTimeout(step, 80);
+      } else res();
+    })();
+  }).then(function () {
+    renderMinis(line);
+    ctx.herEval = evalLine(line);
+    $('#herWhat').innerHTML = '<b>' + describeShort(ctx.herEval) + '</b>' + (other ? '<br>tiró dos veces; descartó: ' + describeShort(evalLine(other)) : '');
+    if (ctx.round === 3) { state.knows.r3 = true; say('her777', 'laugh'); SFX.laugh(); }
+  });
+}
+function showDuelCompare() {
+  if (!ctx.yourEval) return;
+  var ahead = beats(ctx.yourEval, ctx.herEval);
+  setResult('Tú: ' + describeShort(ctx.yourEval), 'Ella: ' + describeShort(ctx.herEval) + (ahead ? ' · vas ganando' : ' · vas perdiendo (los empates son de la casa)'), ahead);
+}
+function duelPrimary() {
+  if (ctx.phase === 'you') {
+    busy = true; canNudge = false;
+    if (ctx.useOwn) ctx.ownUsed = true;
+    ui(); SFX.lever();
+    spinMachine({ calzo: state.has.calzo }).then(function (r) { afterDuelSpin(r); });
+  } else if (ctx.phase === 'after' && !ctx.respinUsed) {
+    busy = true; canNudge = false; ctx.respinUsed = true;
+    ctx.holdCharges -= heldCount();
+    ui(); SFX.lever();
+    spinMachine({ calzo: state.has.calzo }).then(function (r) { M.held = M.held.map(function () { return false; }); afterDuelSpin(r); });
+  }
+}
+function afterDuelSpin(r) {
+  ctx.yourEval = r.eval; ctx.phase = 'after';
+  if (r.slip.slipped.length) { say('duelSlip', 'laugh'); SFX.laugh(); }
+  else if (r.slip.blocked) say('calzoBlock', 'shocked');
+  showDuelCompare();
+  busy = false;
+  canNudge = state.has.empujon && ctx.nudgeCharges > 0;
+  ui();
+}
+function stand() {
+  if (busy || mode !== 'duel' || ctx.phase !== 'after') return;
+  var win = beats(ctx.yourEval, ctx.herEval), tie = ctx.yourEval.rank === ctx.herEval.rank;
+  ctx.phase = 'done'; canNudge = false;
+  if (win) { ctx.you++; say('duelRoundYou', 'angry'); SFX.win(); }
+  else { ctx.her++; say(tie ? 'duelTie' : 'duelRoundHer', 'laugh'); SFX.lose(); }
+  setResult(win ? 'Ronda para ti' : 'Ronda para Tragona', 'Marcador: tú ' + ctx.you + ' – ' + ctx.her + ' Tragona', win);
+  busy = true; ui();
+  sleep(1700).then(function () {
+    busy = false;
+    if (ctx.you >= 2 || ctx.her >= 2) return endDuel(ctx.you >= 2);
+    ctx.round++; startRound();
+  });
+}
+function endDuel(won) {
+  var c = ctx; mode = 'free'; ctx = null; canNudge = false; busy = false;
+  setMachine(freeStrips()); flashWin(false);
+  if (won) {
+    state.duelWon = true;
+    say('duelWin', 'defeated'); SFX.big(); buzz([60, 40, 120]);
+    modal('¡Venciste a Doña Tragona!',
+      '<p>Ganaste el duelo ' + c.you + '–' + c.her + '. Sus luces parpadean y se apagan de a poco.</p>' +
+      '<p><b>Le robaste el Resbalón.</b> En la Sala 2 podrás hacer resbalar rodillos a tu favor.</p>' +
+      '<p class="muted">Sala 2, la mesa de blackjack, todavía no existe en este prototipo. Puedes seguir jugando aquí.</p>',
+      [{ id: 'ok', label: 'Seguir jugando', primary: true }]);
+  } else {
+    state.rencor += DUEL.fail; bump('rencor');
+    say('duelLose', 'laugh'); SFX.laugh();
+    var tip = state.knows.r3 ? 'Ya lo sabes: en la ronda 3 siempre saca 7-7-7. Gana las dos primeras, o guarda tu rodillo para la tercera: cuatro iguales le ganan a un 7-7-7.'
+      : state.knows.r2 ? 'En la ronda 2 te esconde un 7 de cada rodillo. Con más 7 pintados, te quedan sietes.'
+      : 'Tira, retén lo bueno y vuelve a tirar una vez. El empujón puede darte la ronda.';
+    modal('Tragona gana el duelo', '<p>Perdiste ' + c.you + '–' + c.her + '. La entrada de ' + fmt(DUEL.entry) + ' monedas es suya.</p><p class="gain">+' + DUEL.fail + ' Rencor</p><p class="muted">' + tip + '</p>',
+      [{ id: 'ok', label: 'Volver', primary: true }]);
+  }
+  $('#herRow').hidden = true;
+  setResult('Toca TIRAR.', '');
+  ui(); save();
+}
+function toggleOwn() {
+  if (busy || mode !== 'duel' || ctx.phase !== 'you' || ctx.ownUsed || !state.has.cuarto) return;
+  ctx.useOwn = !ctx.useOwn;
+  setMachine(duelStrips());
+  if (ctx.useOwn) say(state.fourthSeen ? 'fourth' : 'fourthFirst', 'angry');
+  state.fourthSeen = true;
+  ui();
+}
+
+// ---------- Taller ----------
+function limaCost() { return COST.lima(state.limas); }
+function pinturaCost() { return state.pinturaFree > 0 ? 0 : COST.pintura(state.pinturas); }
+function buy(id) {
+  if (busy) return;
+  var anyMode = ['flaco', 'flacoSpeed', 'flacoBet'].indexOf(id) >= 0;
+  if (mode !== 'free' && !anyMode) { toast('Termina el reto o el duelo primero.'); return; }
+  switch (id) {
+    case 'retener':
+      if (!spend('rencor', COST.retener)) return;
+      state.has.retener = true; state.holdCharges = state.holdMax;
+      say('retener', 'smug'); toast('Toca RETENER debajo de un rodillo antes de tirar.');
+      break;
+    case 'holdUp':
+      if (!spend('rencor', COST.holdUp[state.holdUps])) return;
+      state.holdUps++; state.holdMax++; state.holdCharges++; say('buy', 'smug');
+      break;
+    case 'calzo':
+      if (!spend('rencor', COST.calzo)) return;
+      state.has.calzo = true; state.retos.r1 = 'open';
+      say('calzoBuy', 'shocked'); SFX.clank();
+      setTimeout(function () { say('retoUnlock', 'angry'); }, 2900);
+      toast('Tragona te reta. Mira la pestaña Retos.');
+      break;
+    case 'nudgeUp':
+      if (!spend('rencor', COST.nudgeUp[state.nudgeUps])) return;
+      state.nudgeUps++; state.nudgeMax++; state.nudgeCharges++; say('buy', 'smug');
+      break;
+    case 'lima': openEditor('lima'); return;
+    case 'pintura': openEditor('pintura'); return;
+    case 'cuarto':
+      if (!spend('rencor', COST.cuarto)) return;
+      state.fourthTurns += FOURTH_SPINS;
+      setMachine(freeStrips());
+      say(state.fourthSeen ? 'fourth' : 'fourthFirst', 'angry'); state.fourthSeen = true;
+      scrollToMachine();
+      break;
+    case 'flaco':
+      if (!spend('coins', COST.flaco)) return;
+      state.has.flaco = true; flacoLast = performance.now(); say('flaco', 'sulky');
+      break;
+    case 'flacoSpeed':
+      if (!spend('coins', COST.flacoSpeed[state.flacoSpeed])) return;
+      state.flacoSpeed++; break;
+    case 'flacoBet':
+      if (!spend('coins', COST.flacoBet[state.flacoBet])) return;
+      state.flacoBet++; break;
+  }
+  checkEdgeFlip(); ui(); save();
+}
+function openEditor(tool) {
+  var acts = [{ id: 'done', label: 'Listo', primary: true }];
+  function bodyHTML() {
+    var strips = state.strips.concat(state.has.cuarto ? [state.own] : []);
+    var cost = tool === 'lima' ? limaCost() : pinturaCost();
+    var e = edgeInfo();
+    var h = '<p>' + (tool === 'lima' ? 'Toca un símbolo para <b>quitarlo</b> del rodillo. Los 7 no se liman y cada rodillo necesita al menos 6 símbolos.' :
+      'Toca un símbolo para <b>pintarlo de 7</b>. Máximo 4 sietes por rodillo.') + '</p>';
+    h += '<p class="muted">Cada uso: ' + (cost === 0 ? 'gratis (' + state.pinturaFree + ' restantes)' : cost + ' Rencor') + ' · Tienes ' + state.rencor + ' Rencor</p>';
+    strips.forEach(function (s, k) {
+      var sev = countOf(s, 'S');
+      h += '<div class="ed-reel"><div class="ed-head">' + (k === 3 ? 'Tu rodillo' : 'Rodillo ' + (k + 1)) + ' · ' + s.length + ' símbolos · 7: ' + sev + ' de ' + s.length + '</div><div class="ed-syms">';
+      for (var i = 0; i < s.length; i++) {
+        var c = s[i], off = c === 'S' || state.rencor < cost || (tool === 'lima' ? s.length <= MIN_STRIP : sev >= MAX_SEVENS);
+        h += '<button type="button" class="ed-sym" data-k="' + k + '" data-i="' + i + '"' + (off ? ' disabled' : '') + ' aria-label="' + SYM[c].name + ', rodillo ' + (k + 1) + '">' + symHTML(c) + '</button>';
+      }
+      h += '</div></div>';
+    });
+    h += '<p class="muted" style="margin-top:12px">Tu máquina devuelve <b>' + e.back + '</b> de cada 100 monedas apostadas.</p>';
+    return h;
+  }
+  var body = $('#modalBody');
+  function onTap(ev) {
+    var b = ev.target.closest('.ed-sym'); if (!b || b.disabled) return;
+    var k = +b.dataset.k, i = +b.dataset.i;
+    var s = k === 3 ? state.own : state.strips[k];
+    var cost = tool === 'lima' ? limaCost() : pinturaCost();
+    if (state.rencor < cost) return;
+    state.rencor -= cost; bump('rencor');
+    if (tool === 'lima') { s = s.slice(0, i) + s.slice(i + 1); state.limas++; }
+    else { s = s.slice(0, i) + 'S' + s.slice(i + 1); if (state.pinturaFree > 0) state.pinturaFree--; else state.pinturas++; }
+    if (k === 3) state.own = s; else state.strips[k] = s;
+    SFX.coin();
+    if (Math.random() < 0.5) say(tool, 'angry');
+    setMachine(freeStrips());
+    body.innerHTML = bodyHTML(); updateWallet(); checkEdgeFlip(); save();
+  }
+  body.addEventListener('click', onTap);
+  return modal(tool === 'lima' ? 'Lima' : 'Pintura dorada', bodyHTML(), acts).then(function () {
+    body.removeEventListener('click', onTap); ui();
+  });
+}
+
+// ---------- Flaco (idle) ----------
+var flacoLast = performance.now();
+function flacoSpin() {
+  var strips = state.strips, stops = strips.map(function (s) { return randInt(s.length); });
+  var sl = applySlip(strips, stops, state.has.calzo), line = lineOf(strips, sl.stops), ev = evalLine(line);
+  var b = FLACO_BET[state.flacoBet], pay = ev.mult * b;
+  state.coins += pay; if (ev.mult === 0) state.rencor += 1;
+  state.flacoSpins++;
+  $('#flaco').hidden = false;
+  $('#flaco').innerHTML = '<span><b>El Flaco</b> juega por ti</span><span class="fl-line">' + line.map(symHTML).join('') + '<span>' + (pay ? ' +' + fmt(pay) : ' +1 Rencor') + '</span></span>';
+  updateWallet(); refreshAfford(); updateControls(); save();
+}
+setInterval(function () {
+  if (!state.has.flaco) return;
+  var now = performance.now();
+  if (now - flacoLast < FLACO_MS[state.flacoSpeed]) return;
+  flacoLast = now; flacoSpin();
+}, 200);
+function offline() {
+  if (!state.has.flaco) return Promise.resolve();
+  var el = Math.min(Date.now() - (state.lastSeen || Date.now()), 4 * 3600e3);
+  if (el < 30e3) return Promise.resolve();
+  var n = Math.floor(el / FLACO_MS[state.flacoSpeed]), st = evStats(state.strips, state.has.calzo), b = FLACO_BET[state.flacoBet];
+  var coins = Math.round(n * st.ev * b), ren = Math.round(n * st.ploss);
+  state.coins += coins; state.rencor += ren;
+  say('idleReturn', 'smug');
+  return modal('Mientras no estabas', '<p>El Flaco tiró de la palanca <b>' + fmt(n) + ' veces</b>.</p><p>+' + fmt(coins) + ' monedas · <span class="gain">+' + fmt(ren) + ' Rencor</span></p><p class="muted">Se cuentan hasta 4 horas.</p>', [{ id: 'ok', label: 'Cobrar', primary: true }]);
+}
+
+// ---------- Modal ----------
+var modalResolve = null;
+function modal(title, html, actions) {
+  return new Promise(function (res) {
+    $('#modalTitle').textContent = title;
+    $('#modalBody').innerHTML = html;
+    var acts = $('#modalActs'); acts.innerHTML = '';
+    actions.forEach(function (a) {
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'btn' + (a.primary ? ' primary' : ''); b.textContent = a.label;
+      b.addEventListener('click', function () { $('#modal').hidden = true; res(a.id); });
+      acts.appendChild(b);
+    });
+    $('#modal').hidden = false;
+    var p = acts.querySelector('.primary'); if (p) try { p.focus({ preventScroll: true }); } catch (e) {}
+  });
+}
+
+// ---------- Rendering ----------
+function updateWallet() { $('#coins').textContent = fmt(state.coins); $('#rencor').textContent = fmt(state.rencor); }
+function buildBets() {
+  var el = $('#bets');
+  el.innerHTML = '<span class="lbl">Apuesta</span>' + BETS.map(function (b) { return '<button type="button" class="bet" data-bet="' + b + '" aria-pressed="false">' + b + '</button>'; }).join('');
+  el.addEventListener('click', function (e) {
+    var b = e.target.closest('.bet'); if (!b || b.disabled) return;
+    state.bet = +b.dataset.bet; updateControls(); save();
+  });
+}
+function updateControls() {
+  var spin = $('#spin'), standB = $('#stand'), own = $('#ownToggle'), bets = $('#bets');
+  bets.hidden = mode !== 'free';
+  var locked = mode !== 'free' || busy || heldCount() > 0;
+  bets.querySelectorAll('.bet').forEach(function (b) {
+    var v = +b.dataset.bet;
+    b.setAttribute('aria-pressed', String(v === state.bet));
+    b.disabled = locked || (v > state.coins && v !== state.bet);
+  });
+  spin.classList.remove('floor');
+  standB.hidden = true; own.hidden = true;
+  if (mode === 'free') {
+    if (state.coins < 1 && !busy) { spin.classList.add('floor'); spin.innerHTML = 'BUSCAR<small>en el suelo</small>'; }
+    else spin.innerHTML = 'TIRAR<small>' + state.bet + (state.bet === 1 ? ' moneda' : ' monedas') + '</small>';
+    spin.disabled = busy;
+  } else if (mode === 'reto') {
+    var done = ctx.left <= 0 || ctx.won;
+    spin.innerHTML = done ? 'FIN<small>terminar</small>' : 'TIRAR<small>quedan ' + ctx.left + '</small>';
+    spin.disabled = busy;
+  } else if (mode === 'duel') {
+    if (ctx.phase === 'you') { spin.innerHTML = 'TIRAR<small>tu turno</small>'; spin.disabled = busy; }
+    else if (ctx.phase === 'after') { spin.innerHTML = ctx.respinUsed ? 'TIRAR<small>ya usada</small>' : 'OTRA<small>vez (1)</small>'; spin.disabled = busy || ctx.respinUsed; }
+    else { spin.innerHTML = 'TIRAR<small>espera</small>'; spin.disabled = true; }
+    standB.hidden = ctx.phase !== 'after'; standB.disabled = busy;
+    own.hidden = !(state.has.cuarto && !ctx.ownUsed && ctx.phase === 'you');
+    own.setAttribute('aria-pressed', String(!!ctx.useOwn));
+    own.textContent = ctx.useOwn ? 'Tu rodillo: puesto' : 'Usar tu rodillo (1 vez)';
+  }
+  // charges
+  var c = charges(), pills = [];
+  if (state.has.retener) pills.push('<span class="pill">Retener <b>' + Math.max(0, c.holdCharges - heldCount()) + '/' + state.holdMax + '</b></span>');
+  if (state.has.empujon) pills.push('<span class="pill">Empujón <b>' + c.nudgeCharges + '/' + state.nudgeMax + '</b></span>');
+  if (state.has.calzo) pills.push('<span class="pill">Calzo <b>puesto</b></span>');
+  if (mode === 'free' && state.fourthTurns > 0) pills.push('<span class="pill">Tu rodillo <b>' + state.fourthTurns + '</b></span>');
+  if (!state.revealed && state.spins > 0) pills.push('<span class="pill red">Casi 7-7-7 <b>' + state.nearMisses + '</b></span>');
+  $('#charges').innerHTML = pills.join('');
+}
+function updateHolds() {
+  var allowed = holdAllowed(), c = charges();
+  $('#holds').hidden = !state.has.retener;
+  M.els.forEach(function (e, k) {
+    e.hold.setAttribute('aria-pressed', String(!!M.held[k]));
+    e.hold.textContent = M.held[k] ? 'Retenido' : 'Retener';
+    e.hold.disabled = !allowed || (!M.held[k] && heldCount() >= c.holdCharges);
+    e.reel.classList.toggle('held', !!M.held[k]);
+  });
+  var cn = canNudge && !busy && charges().nudgeCharges > 0 && state.has.empujon;
+  $('#reels').classList.toggle('can-nudge', cn);
+}
+function updateHud() {
+  var hud = $('#hud'), her = $('#herRow');
+  if (mode === 'reto') {
+    var R = RETO[ctx.id], prog = ctx.id === 'r1' ? (ctx.won ? '7-7-7 ✓' : 'Busca el 7-7-7') : ctx.id === 'r2' ? 'Tríos ' + ctx.trios + '/3' : 'Fichas ' + ctx.chips;
+    hud.innerHTML = '<b>Reto: ' + R.name + '</b><span>' + prog + ' · quedan ' + ctx.left + '</span><button type="button" class="quit" id="quit">Rendirse</button><span class="goal">' + R.goal + '</span>';
+    hud.hidden = false; her.hidden = true;
+    $('#quit').onclick = function () { if (!busy) endReto(true); };
+  } else if (mode === 'duel') {
+    var tips = { her: 'Tragona tira…', you: 'Tira. Después puedes retener y tirar otra vez una sola vez.', after: 'Retén y tira otra vez, empuja, o plántate.', done: '' };
+    hud.innerHTML = '<b>Duelo · Ronda ' + ctx.round + ' de 3</b><span>Tú ' + ctx.you + ' – ' + ctx.her + ' Tragona</span><span class="goal">' + (tips[ctx.phase] || '') + (ctx.round === 2 ? ' Ronda 2: te escondió un 7 de cada rodillo.' : '') + '</span>';
+    hud.hidden = false; her.hidden = false;
+  } else { hud.hidden = true; her.hidden = true; }
+}
+function setTab(t) { tab = t; ui(); }
+function updateTabs() {
+  document.querySelectorAll('.tab').forEach(function (b) {
+    var on = b.dataset.tab === tab;
+    b.setAttribute('aria-selected', String(on)); b.tabIndex = on ? 0 : -1;
+  });
+  $('#panel').setAttribute('aria-labelledby', 'tab-' + tab);
+  var pingRetos = ['r1', 'r2', 'r3'].some(function (r) { return state.retos[r] === 'open'; }) && tab !== 'retos';
+  $('#tab-retos').classList.toggle('ping', pingRetos);
+  $('#tab-duelo').classList.toggle('ping', state.coins >= DUEL.entry && !state.duelWon && tab !== 'duelo');
+  $('#tab-taller').classList.toggle('ping', !!(state.revealed && !state.has.calzo && tab !== 'taller'));
+}
+function btn(act, id, label, cur, cost, extra) {
+  return '<button type="button" class="buy act ' + (cur === 'rencor' ? 'r ' : '') + (extra || '') + '" data-act="' + act + '" data-id="' + id + '"' +
+    (cur ? ' data-cur="' + cur + '" data-cost="' + cost + '"' : '') + '>' + label + '</button>';
+}
+function item(o) {
+  return '<div class="item' + (o.cls ? ' ' + o.cls : '') + '">' + (o.tag ? '<span class="tag">' + o.tag + '</span>' : '') +
+    '<h3>' + o.name + '</h3><p>' + o.desc + '</p>' + (o.btn || '') + '</div>';
+}
+function renderTaller() {
+  var h = [];
+  if (mode !== 'free') h.push('<p class="note">Durante un reto o un duelo el Taller está cerrado, salvo el Flaco.</p>');
+  else h.push('<p class="note">Aquí gastas tu <b>Rencor</b>, que ganas cada vez que pierdes o Tragona se burla.</p>');
+  if (!state.has.retener) h.push(item({ name: 'Retener', desc: 'Congela rodillos para la siguiente tirada. Cada rodillo retenido gasta 1 carga; recuperas 1 cada 4 tiradas. La apuesta queda fija mientras retienes.', btn: btn('buy', 'retener', COST.retener + ' Rencor', 'rencor', COST.retener) }));
+  else if (state.holdUps < COST.holdUp.length) { var hc = COST.holdUp[state.holdUps]; h.push(item({ name: 'Retener: +1 carga', desc: 'Máximo ' + state.holdMax + ' → ' + (state.holdMax + 1) + ' cargas.', btn: btn('buy', 'holdUp', hc + ' Rencor', 'rencor', hc) })); }
+  if (state.revealed && !state.has.calzo) h.push(item({ cls: 'hot', tag: 'CONTRA-TRUCO', name: 'Calzo', desc: 'Una cuña para el tercer rodillo. Bloquea el resbalón de Tragona para siempre.', btn: btn('buy', 'calzo', COST.calzo + ' Rencor', 'rencor', COST.calzo) }));
+  h.push(item({ name: 'Lima', desc: 'Quita un símbolo de un rodillo. Menos limones, más premios. Tú decides cuál y de qué rodillo.', btn: btn('buy', 'lima', limaCost() + ' Rencor', 'rencor', limaCost()) }));
+  if (state.has.empujon && state.nudgeUps < COST.nudgeUp.length) { var nc = COST.nudgeUp[state.nudgeUps]; h.push(item({ name: 'Empujón: +1 carga', desc: 'Máximo ' + state.nudgeMax + ' → ' + (state.nudgeMax + 1) + ' cargas.', btn: btn('buy', 'nudgeUp', nc + ' Rencor', 'rencor', nc) })); }
+  if (state.has.pintura) { var pc = pinturaCost(); h.push(item({ name: 'Pintura dorada', desc: 'Convierte un símbolo de tus rodillos en 7.', btn: btn('buy', 'pintura', pc === 0 ? 'Gratis (' + state.pinturaFree + ')' : pc + ' Rencor', 'rencor', pc) })); }
+  if (state.has.cuarto) h.push(item({ cls: state.fourthTurns ? '' : 'hot', name: 'Tu rodillo', desc: 'Pon tu cuarto rodillo durante ' + FOURTH_SPINS + ' tiradas. Con tres 7 de cuatro ya ganas y cuatro iguales pagan el triple. ' + (state.fourthTurns ? 'Quedan ' + state.fourthTurns + '.' : ''), btn: btn('buy', 'cuarto', COST.cuarto + ' Rencor', 'rencor', COST.cuarto) }));
+  if (state.revealed && !state.has.flaco) h.push(item({ name: 'El Flaco', desc: 'Un compinche que tira de la palanca por ti, también cuando no estás. Juega con fichas que encuentra en el suelo.', btn: btn('buy', 'flaco', COST.flaco + ' monedas', 'coins', COST.flaco) }));
+  if (state.has.flaco) {
+    if (state.flacoSpeed < COST.flacoSpeed.length) { var fs = COST.flacoSpeed[state.flacoSpeed]; h.push(item({ name: 'Flaco más rápido', desc: 'Una tirada cada ' + FLACO_MS[state.flacoSpeed] / 1000 + ' s → ' + FLACO_MS[state.flacoSpeed + 1] / 1000 + ' s.', btn: btn('buy', 'flacoSpeed', fmt(fs) + ' monedas', 'coins', fs) })); }
+    if (state.flacoBet < COST.flacoBet.length) { var fb = COST.flacoBet[state.flacoBet]; h.push(item({ name: 'Flaco apuesta más', desc: 'Apuesta ' + FLACO_BET[state.flacoBet] + ' → ' + FLACO_BET[state.flacoBet + 1] + ' por tirada.', btn: btn('buy', 'flacoBet', fmt(fb) + ' monedas', 'coins', fb) })); }
+  }
+  if (!state.revealed) h.push(item({ cls: 'locked', name: '???', desc: 'Algo raro pasa con el tercer rodillo cuando salen dos 7. Sigue tirando y fíjate.' }));
+  if (!state.has.empujon) h.push(item({ cls: 'locked', name: 'Empujón', desc: 'Premio del reto 1.' }));
+  if (!state.has.pintura) h.push(item({ cls: 'locked', name: 'Pintura dorada', desc: 'Premio del reto 2.' }));
+  if (!state.has.cuarto) h.push(item({ cls: 'locked', name: 'Tu rodillo', desc: 'Premio del reto 3.' }));
+  return h.join('');
+}
+function renderRetos() {
+  if (!state.has.calzo) return '<p class="note">Tragona todavía no te reta. Primero descubre su trampa y consigue con qué defenderte.</p>' +
+    ['r1', 'r2', 'r3'].map(function (id) { return item({ cls: 'locked', name: RETO[id].name, desc: 'Premio: ' + RETO[id].reward + '.' }); }).join('');
+  return '<p class="note">Cada reto cuesta una entrada. Si pierdes, Tragona se la queda y tú ganas Rencor.</p>' + ['r1', 'r2', 'r3'].map(function (id) {
+    var R = RETO[id], st = state.retos[id];
+    if (st === 'won') return item({ cls: 'won', tag: 'SUPERADO', name: R.name, desc: R.goal + ' Premio: ' + R.reward + '.' });
+    if (st === 'locked') return item({ cls: 'locked', name: R.name, desc: 'Se abre al superar el reto anterior. Premio: ' + R.reward + '.' });
+    return item({ cls: 'hot', tag: 'ENTRADA ' + R.entry + ' MONEDAS', name: R.name, desc: R.goal + ' ' + R.detail + ' <b>Premio: ' + R.reward + '.</b>',
+      btn: mode === 'free' ? btn('reto', id, 'Jugar', 'coins', R.entry, 'go') : '' });
+  }).join('');
+}
+function renderDuelo() {
+  var h = [];
+  if (state.duelWon) {
+    h.push(item({ cls: 'won', tag: 'VENCIDA', name: 'Doña Tragona', desc: 'Le ganaste el duelo y le robaste el Resbalón. La Sala 2 llegará en otra versión del prototipo.' }));
+  }
+  h.push('<div class="item' + (state.coins >= DUEL.entry && !state.duelWon ? ' hot' : '') + '"><span class="tag">ENTRADA ' + fmt(DUEL.entry) + ' MONEDAS</span><h3>Duelo contra Tragona</h3>' +
+    '<p>Al mejor de 3 rondas. Ella tira primero (dos veces, se queda con la mejor) y tú tienes que superar su jugada. Puedes retener y volver a tirar una vez por ronda, empujar, y plantarte.</p>' +
+    (mode === 'free' ? btn('duel', 'duel', state.duelWon ? 'Revancha' : 'Retar', 'coins', DUEL.entry, 'go') : '') + '</div>');
+  h.push('<div class="item"><h3>Lo que sabes de Tragona</h3><ul class="knows">' +
+    '<li>Tira primero, dos veces, y se queda con la mejor.</li><li>Los empates son de la casa.</li>' +
+    '<li>Gana quien tenga más símbolos iguales; si empatan, el más alto: 7 › BAR › campana › cereza › limón. Cuatro limones le ganan a un 7-7-7.</li>' +
+    (state.knows.r2 ? '<li class="new">En la ronda 2 esconde un 7 de cada uno de tus rodillos.</li>' : '<li>Ronda 2: ???</li>') +
+    (state.knows.r3 ? '<li class="new">En la ronda 3 siempre saca 7-7-7.</li>' : '<li>Ronda 3: ???</li>') + '</ul></div>');
+  return h.join('');
+}
+function renderPagos() {
+  var e = edgeInfo(), lose = e.back > 100;
+  var rows = ['S', 'R', 'B', 'C', 'L'].map(function (s) {
+    return '<tr><td>' + symHTML(s) + ' ' + SYM[s].name + '</td><td>×' + PAY.tri[s] + '</td><td>' + (PAY.pair[s] ? '×' + PAY.pair[s] : '—') + '</td><td>×' + PAY.tri[s] * PAY.quad + '</td></tr>';
+  }).join('');
+  return '<div class="edge"><span class="tag" style="font:10px var(--font-led);color:var(--cream-dim)">VENTAJA DE LA CASA</span>' +
+    '<div class="big' + (lose ? ' lose' : '') + '">' + (lose ? 'La casa pierde ' + (e.back - 100) + '%' : 'La casa gana ' + (100 - e.back) + '%') + '</div>' +
+    '<div class="meter"><i class="' + (lose ? 'lose' : '') + '" style="width:' + Math.min(100, e.back / 1.5) + '%"></i></div>' +
+    '<p class="note">Con tus rodillos de ahora recuperas <b>' + e.back + '</b> de cada 100 monedas que apuestas, en promedio, sin contar Retener ni Empujón. Pierdes en ' + Math.round(e.ploss * 100) + '% de las tiradas.</p></div>' +
+    '<div class="item" style="display:block"><h3>Tabla de pagos</h3><p style="margin-bottom:6px">Paga la línea del centro. Se cuenta cuántos símbolos iguales hay, estén donde estén.</p>' +
+    '<div style="overflow-x:auto"><table class="paytable"><thead><tr><th>Símbolo</th><th>Trío</th><th>Par</th><th>Cuatro</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+    '<p style="margin-top:6px">Un par de cerezas o campanas te devuelve la apuesta. Cuatro iguales solo con tu rodillo.</p></div>' +
+    '<div class="item" style="display:block"><h3>Herramientas del prototipo</h3><p style="margin-bottom:8px">Para probar partes del juego sin jugar todo.</p><div class="dev">' +
+    '<button type="button" data-act="dev" data-id="coins">+500 monedas</button><button type="button" data-act="dev" data-id="rencor">+100 Rencor</button>' +
+    '<button type="button" data-act="dev" data-id="skip">Saltar al descubrimiento</button><button type="button" data-act="dev" data-id="sound">Sonido: ' + (state.sound ? 'sí' : 'no') + '</button>' +
+    '<button type="button" data-act="dev" data-id="reset" id="resetBtn">Reiniciar partida</button></div></div>';
+}
+function renderPanel() {
+  var p = $('#panel');
+  p.innerHTML = tab === 'taller' ? renderTaller() : tab === 'retos' ? renderRetos() : tab === 'duelo' ? renderDuelo() : renderPagos();
+  refreshAfford();
+}
+function refreshAfford() {
+  document.querySelectorAll('#panel [data-cur]').forEach(function (b) {
+    var cur = b.dataset.cur, cost = +b.dataset.cost;
+    var blockedByMode = mode !== 'free' && ['flaco', 'flacoSpeed', 'flacoBet'].indexOf(b.dataset.id) < 0;
+    b.disabled = busy || blockedByMode || state[cur] < cost;
+  });
+}
+function ui() { updateWallet(); updateControls(); updateHolds(); updateHud(); renderPanel(); updateTabs(); }
+
+var resetArm = 0;
+function dev(id) {
+  if (busy) return;
+  if (id === 'coins') { state.coins += 500; bump('coins'); }
+  if (id === 'rencor') { state.rencor += 100; bump('rencor'); }
+  if (id === 'skip' && !state.revealed) { state.revealed = true; state.nearMisses = NEAR_AT.length; state.spins = Math.max(state.spins, 12); state.rencor += 30; toast('Saltaste al descubrimiento del resbalón.'); }
+  if (id === 'sound') { state.sound = !state.sound; }
+  if (id === 'reset') {
+    if (Date.now() - resetArm > 3000) { resetArm = Date.now(); ui(); var rb = $('#resetBtn'); if (rb) rb.textContent = '¿Seguro? Toca otra vez'; return; }
+    if (mode !== 'free') { toast('Termina el reto o el duelo primero.'); return; }
+    state = freshState(); M.sig = ''; M.stops = []; setMachine(freeStrips()); last = { pay: 0, bet: 1 };
+    say('welcome', 'smug'); setResult('Toca TIRAR.', 'Tres 7 en la línea del centro pagan ×100.');
+    $('#flaco').hidden = true; resetArm = 0;
+  }
+  ui(); save();
+}
+
+// ---------- Wiring ----------
+$('#spin').addEventListener('click', function () {
+  audio();
+  if (busy) return;
+  if (mode === 'free') freeSpin(); else if (mode === 'reto') retoSpin(); else if (mode === 'duel') duelPrimary();
+});
+$('#stand').addEventListener('click', stand);
+$('#ownToggle').addEventListener('click', toggleOwn);
+$('#panel').addEventListener('click', function (e) {
+  var b = e.target.closest('[data-act]'); if (!b || b.disabled) return;
+  audio();
+  var act = b.dataset.act, id = b.dataset.id;
+  if (act === 'buy') buy(id); else if (act === 'reto') startReto(id); else if (act === 'duel') startDuel(); else if (act === 'dev') dev(id);
+});
+document.querySelectorAll('.tab').forEach(function (b) { b.addEventListener('click', function () { setTab(b.dataset.tab); }); });
+document.querySelector('.tabs').addEventListener('keydown', function (e) {
+  if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+  var order = ['taller', 'retos', 'duelo', 'pagos'], i = order.indexOf(tab) + (e.key === 'ArrowRight' ? 1 : -1);
+  setTab(order[(i + order.length) % order.length]); $('#tab-' + tab).focus();
+});
+window.addEventListener('resize', function () { M.strips.forEach(function (_, k) { placeReel(k, M.stops[k]); }); });
+document.addEventListener('visibilitychange', function () { if (document.hidden) saveNow(); });
+window.addEventListener('pagehide', saveNow);
+
+function boot() {
+  load();
+  buildBets();
+  setMachine(freeStrips());
+  drawFace(restMood(), 0);
+  if (state.spins === 0) say('welcome', 'smug');
+  else if (state.duelWon) say('defeated', 'sulky');
+  else say('back', 'smug');
+  if (state.has.flaco) { $('#flaco').hidden = false; $('#flaco').innerHTML = '<span><b>El Flaco</b> juega por ti</span><span>esperando…</span>'; }
+  ui();
+  offline().then(function () { ui(); save(); });
+  window.__lcsp = { get state() { return state; }, set state(s) { state = s; }, M: M, ui: ui, get mode() { return mode; }, get ctx() { return ctx; }, get busy() { return busy; } };
+}
+boot();
+})();
+</script>
