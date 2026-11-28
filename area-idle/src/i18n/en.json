@@ -60,7 +60,7 @@
     },
     "cadencia": {
       "nombre": "Fire rate",
-      "efecto": "{a} → {b} shots per second"
+      "efecto": "Faster and harder {a} → {b}"
     },
     "tiempo": {
       "nombre": "Time",
@@ -96,19 +96,19 @@
     },
     "arqueros": {
       "nombre": "Archer",
-      "efecto": "An ally who shoots one enemy at a time"
+      "efecto": "An ally on the wall who shoots enemies (with More arrows, several at once)"
     },
     "masArqueros": {
-      "nombre": "More archers",
-      "efecto": "Archers {a} → {b}"
+      "nombre": "More arrows",
+      "efecto": "Arrows per shot {a} → {b}"
     },
     "multiflecha": {
-      "nombre": "Multishot",
-      "efecto": "Targets at once {a} → {b}"
+      "nombre": "Ricochet",
+      "efecto": "Each arrow bounces to {a} → {b} more enemies"
     },
     "arcoRapido": {
       "nombre": "Quick bow",
-      "efecto": "{a} → {b} shots per second"
+      "efecto": "Faster and harder {a} → {b}"
     },
     "arcoDanio": {
       "nombre": "Steel tips",
@@ -140,7 +140,7 @@
     },
     "carcaj": {
       "nombre": "Enchanted quiver",
-      "efecto": "Targets per archer {a} → {b}"
+      "efecto": "Arrows per shot {a} → {b}"
     },
     "albanil": {
       "nombre": "Mason",
@@ -257,7 +257,7 @@
   "secciones": {
     "jugador": "Player",
     "mago": "Wizard",
-    "arqueros": "Archers",
+    "arqueros": "Archer",
     "reliquias": "Relics",
     "caballero": "Knight",
     "sacerdote": "Priest",
@@ -277,7 +277,7 @@
     "ocultoPista": "Shows up from level {n}",
     "quien": {
       "jugador": "Your arrows",
-      "arqueros": "Archers",
+      "arqueros": "Archer",
       "mago": "Wizard",
       "caballero": "Knight",
       "sacerdote": "Priest",
@@ -328,7 +328,7 @@
     },
     "rojo": {
       "nombre": "Red slime",
-      "texto": "Carries a slingshot and pelts your wall. If the wall falls, your wizard and archers stop attacking."
+      "texto": "Carries a slingshot and pelts your wall. If the wall falls, your wizard and archer stop attacking."
     },
     "rey": {
       "nombre": "King Slime",
@@ -356,7 +356,7 @@
     },
     "arana": {
       "nombre": "Giant spider",
-      "texto": "Spits web at an archer and leaves them tangled (not shooting) for 3 s. Fire burns it easily."
+      "texto": "Spits web at your archer and leaves them tangled (not shooting) for 3 s. Fire burns it easily."
     },
     "esqueleto": {
       "nombre": "Skeleton",
@@ -412,7 +412,7 @@
     },
     "dragoncito": {
       "nombre": "Small dragon",
-      "texto": "Flies and spits fire at the wall. Your rain of arrows can't reach it: only archers and the mage."
+      "texto": "Flies and spits fire at the wall. Your rain of arrows can't reach it: only the archer and the mage."
     },
     "dragonAcero": {
       "nombre": "Steel dragon",
@@ -569,7 +569,7 @@
     "titulo": "Forge",
     "grupos": {
       "mago": "Mage",
-      "arqueros": "Archers",
+      "arqueros": "Archer",
       "base": "Base"
     },
     "aspecto": "Look {n}/{max}",

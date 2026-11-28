@@ -35,7 +35,7 @@ async function fresh(browser, opts = {}) {
   page.tap = async (x = 0.5, y = 0.45) => { const box = await page.getByTestId('campo').boundingBox(); await page.mouse.click(box.x + box.width * x, box.y + box.height * y); };
   page.oro = async (n) => { await page.getByTestId('abrir-ajustes').click(); await page.getByTestId(`oro-${n}`).click(); await page.mouse.click(4, 4); await page.waitForTimeout(150); };
   page.comprar = async (id, veces = 1) => {
-    const seccion = await page.evaluate((id) => ({ flechaHielo: 'arqueros', arcoRapido: 'arqueros', danio: 'jugador', radio: 'jugador', slimes: 'jugador', cadencia: 'jugador', botin: 'jugador', tiempo: 'jugador', oro: 'jugador', inactivo: 'jugador', autoapuntar: 'jugador', mago: 'mago', arqueros: 'arqueros', multiflecha: 'arqueros', poder: 'reliquias', critico: 'reliquias', carcaj: 'reliquias', albanil: 'reliquias' })[id], id);
+    const seccion = await page.evaluate((id) => ({ flechaHielo: 'arqueros', arcoRapido: 'arqueros', danio: 'jugador', radio: 'jugador', slimes: 'jugador', cadencia: 'jugador', botin: 'jugador', tiempo: 'jugador', oro: 'jugador', inactivo: 'jugador', autoapuntar: 'jugador', mago: 'mago', arqueros: 'arqueros', multiflecha: 'arqueros', masArqueros: 'arqueros', poder: 'reliquias', critico: 'reliquias', carcaj: 'reliquias', albanil: 'reliquias' })[id], id);
     await page.getByTestId(`seccion-${seccion}`).click();
     await page.getByTestId(`talento-${id}`).click();
     for (let i = 0; i < veces; i++) await page.getByTestId('comprar').click();
@@ -95,17 +95,17 @@ async function flow(name, browser, fn, opts) {
     await page.getByTestId('mejorar').click();
     await page.oro(100);
     await page.comprar('danio', 2);
-    check((await page.getByTestId('efecto').textContent()).includes('3 → 4'), 'el efecto de Daño no dice 3 → 4');
+    check((await page.getByTestId('efecto').textContent()).includes('6 → 8'), 'el efecto de Daño no dice 6 → 8 (tu círculo pega el doble de la base)');
     check(await page.getByTestId('talento-radio').count(), 'no se abrió Área');
     await page.getByTestId('jugar').click();
     await page.waitForTimeout(300);
     const danio = await page.evaluate(() => window.juego.run.stats.danio);
-    check(danio === 3, `la partida no usa el daño comprado (${danio})`);
+    check(danio === 6, `la partida no usa el daño comprado (${danio}; 3 × 2 de tu círculo)`);
     check((await page.getByTestId('reloj').textContent()).includes('00:2'), 'el reloj no arrancó en 20 s');
 
   });
 
-  await flow('tres secciones: mago con explosiones cuadradas y arqueros con flechas', browser, async (page) => {
+  await flow('tres secciones: mago con explosiones cuadradas y un arquero que tira a varios y rebota', browser, async (page) => {
     await page.getByTestId('terminar').click();
     await page.getByTestId('mejorar').click();
     await page.oro(1000000);
@@ -113,12 +113,13 @@ async function flow(name, browser, fn, opts) {
     await page.comprar('cadencia', 3);
     await page.comprar('mago');
     await page.comprar('arqueros');
+    await page.comprar('masArqueros');
     await page.comprar('multiflecha');
     await page.getByTestId('jugar').click();
     await page.waitForTimeout(400);
     const stats = await page.evaluate(() => window.juego.run.stats);
     check(stats.mago.activo, 'el mago no está en la partida');
-    check(stats.arqueros.cantidad === 1 && stats.arqueros.objetivos === 2, 'arqueros mal configurados');
+    check(stats.arqueros.cantidad === 1 && stats.arqueros.objetivos === 2 && stats.arqueros.rebotes === 1, 'el arquero está mal configurado');
     let flechas = 0;
     let magia = 0;
     await page.evaluate(() => { window.__magia = 0; window.juego.onEvents((evs) => { for (const e of evs) if (e.type === 'impact' && e.fuente === 'mago' && e.forma.tipo === 'rect') window.__magia++; }); });
@@ -824,7 +825,7 @@ async function flow(name, browser, fn, opts) {
     // El campo de batalla: el castillo del rival arriba y el tuyo abajo, con sus tropas; vuelan disparos.
     check(await page.getByTestId('castillo-rival').count() && (await page.getByTestId('castillo-tuyo').count()), 'no están los dos castillos');
     const rivalArqueros = Number(await page.getByTestId('castillo-rival').getAttribute('data-arqueros'));
-    check(rivalArqueros >= 1 && rivalArqueros <= 6, `el rival no tiene arqueros (${rivalArqueros})`);
+    check(rivalArqueros === 1, `el rival no tiene su arquero (${rivalArqueros})`);
     const yArriba = (await page.getByTestId('castillo-rival').locator('.torre').boundingBox()).y;
     const yAbajo = (await page.getByTestId('castillo-tuyo').locator('.torre').boundingBox()).y;
     check(yArriba < yAbajo, 'el castillo del rival no está arriba del tuyo');

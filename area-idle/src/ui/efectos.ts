@@ -1,6 +1,6 @@
 // Qué cambia al subir un talento: el valor de ahora y el del siguiente nivel, para el texto
 // "Daño 3 → 4" del árbol.
-import { HIELO, type TalentId } from '../core/datos';
+import { BASE, HIELO, type TalentId } from '../core/datos';
 import { formatNum } from '../core/format';
 import { computeStats, type Levels, type Stats } from '../core/stats';
 
@@ -18,7 +18,7 @@ const VALOR: Partial<Record<TalentId, (s: Stats, l: Levels) => string>> = {
   carcaj: (s) => String(s.arqueros.objetivos),
   albanil: (s) => `${Math.round(s.muro.reparar * 100)}%`,
   radio: (s) => uno(s.radio),
-  cadencia: (s) => uno(1 / s.intervalo),
+  cadencia: (_, l) => `×${uno(Math.pow(1 / 0.9, l.cadencia ?? 0))}`,
   tiempo: (s) => String(s.duracion),
   oro: (s) => uno(s.oroMult),
   mago: (s) => uno(s.mago.intervalo),
@@ -26,9 +26,9 @@ const VALOR: Partial<Record<TalentId, (s: Stats, l: Levels) => string>> = {
   magoArea: (s) => `${Math.round(s.mago.lado)}×${Math.round(s.mago.lado)}`,
   magoDanio: (s) => formatNum(s.mago.danio),
   fuegoFuerte: (s) => formatNum(s.fuego.dps),
-  masArqueros: (s) => String(s.arqueros.cantidad),
-  multiflecha: (s) => String(s.arqueros.objetivos),
-  arcoRapido: (s) => uno(1 / s.arqueros.intervalo),
+  masArqueros: (s) => String(s.arqueros.objetivos),
+  multiflecha: (s) => String(s.arqueros.rebotes),
+  arcoRapido: (_, l) => `×${uno(Math.pow(1 / BASE.arqueros.rapido, l.arcoRapido ?? 0))}`,
   arcoDanio: (s) => formatNum(s.arqueros.danio),
   flechaHielo: (_, l) => `${Math.round(100 * ((l.flechaHielo ?? 0) > 0 ? HIELO.lento + HIELO.porNivel * ((l.flechaHielo ?? 0) - 1) : 0))}%`,
   espada: (s) => formatNum(s.caballero.danio),

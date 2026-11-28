@@ -60,7 +60,7 @@
     },
     "cadencia": {
       "nombre": "Cadencia",
-      "efecto": "{a} → {b} disparos por segundo"
+      "efecto": "Más seguido y más fuerte {a} → {b}"
     },
     "tiempo": {
       "nombre": "Tiempo",
@@ -96,19 +96,19 @@
     },
     "arqueros": {
       "nombre": "Arquero",
-      "efecto": "Un aliado que dispara a un enemigo a la vez"
+      "efecto": "Un aliado en la muralla que le dispara a los enemigos (con Más flechas, a varios a la vez)"
     },
     "masArqueros": {
-      "nombre": "Más arqueros",
-      "efecto": "Arqueros {a} → {b}"
+      "nombre": "Más flechas",
+      "efecto": "Flechas por disparo {a} → {b}"
     },
     "multiflecha": {
-      "nombre": "Flechas múltiples",
-      "efecto": "Objetivos a la vez {a} → {b}"
+      "nombre": "Rebote",
+      "efecto": "Cada flecha rebota a {a} → {b} enemigos más"
     },
     "arcoRapido": {
       "nombre": "Arco veloz",
-      "efecto": "{a} → {b} tiros por segundo"
+      "efecto": "Más seguido y más fuerte {a} → {b}"
     },
     "arcoDanio": {
       "nombre": "Puntas de acero",
@@ -140,7 +140,7 @@
     },
     "carcaj": {
       "nombre": "Carcaj encantado",
-      "efecto": "Objetivos por arquero {a} → {b}"
+      "efecto": "Flechas por disparo {a} → {b}"
     },
     "albanil": {
       "nombre": "Albañil",
@@ -257,7 +257,7 @@
   "secciones": {
     "jugador": "Jugador",
     "mago": "Mago",
-    "arqueros": "Arqueros",
+    "arqueros": "Arquero",
     "reliquias": "Reliquias",
     "caballero": "Caballero",
     "sacerdote": "Sacerdote",
@@ -277,7 +277,7 @@
     "ocultoPista": "Aparece desde el nivel {n}",
     "quien": {
       "jugador": "Tus flechas",
-      "arqueros": "Arqueros",
+      "arqueros": "Arquero",
       "mago": "Mago",
       "caballero": "Caballero",
       "sacerdote": "Sacerdote",
@@ -328,7 +328,7 @@
     },
     "rojo": {
       "nombre": "Slime rojo",
-      "texto": "Trae resortera y le tira piedras a la muralla. Si la tumba, tu mago y tus arqueros dejan de atacar."
+      "texto": "Trae resortera y le tira piedras a la muralla. Si la tumba, tu mago y tu arquero dejan de atacar."
     },
     "rey": {
       "nombre": "Rey Slime",
@@ -356,7 +356,7 @@
     },
     "arana": {
       "nombre": "Araña gigante",
-      "texto": "Escupe telaraña a un arquero y lo deja enredado (sin tirar) 3 s. El fuego la quema fácil."
+      "texto": "Escupe telaraña a tu arquero y lo deja enredado (sin tirar) 3 s. El fuego la quema fácil."
     },
     "esqueleto": {
       "nombre": "Esqueleto",
@@ -412,7 +412,7 @@
     },
     "dragoncito": {
       "nombre": "Dragón pequeño",
-      "texto": "Vuela y escupe fuego a la muralla. Tu lluvia de flechas no lo alcanza: solo los arqueros y el mago."
+      "texto": "Vuela y escupe fuego a la muralla. Tu lluvia de flechas no lo alcanza: solo el arquero y el mago."
     },
     "dragonAcero": {
       "nombre": "Dragón de acero",
@@ -569,7 +569,7 @@
     "titulo": "Herrería",
     "grupos": {
       "mago": "Mago",
-      "arqueros": "Arqueros",
+      "arqueros": "Arquero",
       "base": "Base"
     },
     "aspecto": "Aspecto {n}/{max}",
@@ -593,11 +593,11 @@
       },
       "arco": {
         "nombre": "Arco",
-        "efecto": "Daño de los arqueros"
+        "efecto": "Daño del arquero"
       },
       "flechas": {
         "nombre": "Flechas",
-        "efecto": "Rapidez de los arqueros"
+        "efecto": "Rapidez del arquero"
       },
       "armadura": {
         "nombre": "Armadura",

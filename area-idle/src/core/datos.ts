@@ -147,8 +147,13 @@ export const BASE = {
   fuego: { duracion: 1.6, dps: 0.6 },
   /** La muralla (donde están el mago y los arqueros): si los rojos la tiran, ellos ya no atacan en ese nivel. */
   muro: { vida: 100 },
-  /** Cada arquero: una flecha a cada uno de sus `objetivos` cada `intervalo` s, con `danio` veces tu daño. */
-  arqueros: { intervalo: 1.2, objetivos: 1, danio: 2 },
+  /**
+   * El arquero (uno solo desde 0.24.0): una flecha a cada uno de sus `objetivos` cada `intervalo` s, con
+   * `danio` veces el daño base. Puntas de acero: +`porNivel` del daño por nivel. Arco veloz: el tiempo
+   * entre tiros ×`rapidoTiempo` y el daño ×`rapidoTiempo`/`rapido` por nivel (lo mismo por segundo que
+   * ×`rapido` el tiempo, con flechas más fuertes en vez de muchas flechitas).
+   */
+  arqueros: { intervalo: 1.2, objetivos: 1, danio: 3.5, porNivel: 0.25, rapido: 0.93, rapidoTiempo: 0.98 },
   /**
    * El caballero (desde el nivel 21): camina por el campo y pega cuerpo a cuerpo cada `intervalo` s con
    * `danio` veces tu daño, a `objetivos` enemigos a su `alcance`. Tiene `vida`; los que lo tocan le pegan y,
@@ -175,6 +180,11 @@ export const BASE = {
  * despacio. A los jefes, la mitad. Convienen contra los débiles al hielo; contra los demás, mejor apagarlas.
  */
 export const HIELO = { desde: 12, lento: 0.25, porNivel: 0.05, dura: 2, danio: 0.75 } as const;
+/**
+ * Rebote (talento de los Arqueros, desde 0.24.0): después de pegar, la flecha salta al enemigo más cercano
+ * (a menos de `alcance`) que todavía no tocó, con `danio` de lo que pegaba; tantas veces como niveles.
+ */
+export const REBOTE = { danio: 0.5, alcance: 70 } as const;
 
 /** Qué tanto le pegan al caballero los que lo tocan: su ataque (al menos 1; los jefes, su golpe × `jefe`) × esto, por segundo. */
 export const CONTACTO = { mult: 0.5, jefe: 0.3, radio: 9 } as const;
@@ -267,14 +277,14 @@ export const JEFES: Partial<Record<EnemyKind, BossDef>> = {
   // Brinca en arco, invoca slimes y lanza bolas de baba.
   rey: { escolta: 'verde', inicial: 6, invoca: 3, escoltaN: 3, mueve: 'brinco', cada: 5, dura: 0.5, aturdido: 1.5, proyectil: 'baba', lanza: 4, golpe: 10, esquiva: 22, alerta: 25 },
   // Embiste rapidísimo por el piso (y queda jadeando), aúlla para llamar lobos y avienta su hoz girando.
-  loboBlanco: { escolta: 'lobo', inicial: 6, invoca: 3.5, escoltaN: 3, mueve: 'embestida', cada: 3.5, dura: 0.35, aturdido: 1.2, proyectil: 'hoz', lanza: 4.5, golpe: 14, esquiva: 32, alerta: 30, vida: 0.7 },
+  loboBlanco: { escolta: 'lobo', inicial: 6, invoca: 3.5, escoltaN: 3, mueve: 'embestida', cada: 3.5, dura: 0.35, aturdido: 1.2, proyectil: 'hoz', lanza: 4.5, golpe: 14, esquiva: 32, alerta: 30, vida: 0.55 },
   // Se teletransporta entre llamas (y queda recuperándose), invoca esqueletos y lanza bolas de fuego.
-  esqueletoMago: { escolta: 'esqueleto', inicial: 3, invoca: 5, escoltaN: 2, mueve: 'teletransporte', cada: 4, dura: 0.4, aturdido: 1.3, proyectil: 'bolaFuego', lanza: 3.5, golpe: 16, esquiva: 18, alerta: 28, vida: 0.6 },
+  esqueletoMago: { escolta: 'esqueleto', inicial: 3, invoca: 5, escoltaN: 2, mueve: 'teletransporte', cada: 4, dura: 0.4, aturdido: 1.3, proyectil: 'bolaFuego', lanza: 3.5, golpe: 16, esquiva: 18, alerta: 28, vida: 0.24 },
   // Embiste rapidísimo, llama bandidos del desierto, lanza tres dagas en abanico y esquiva más que nadie.
   liderBandido: { escolta: 'bandidoDesierto', inicial: 5, invoca: 3.5, escoltaN: 2, mueve: 'embestida', cada: 3, dura: 0.3, aturdido: 1, proyectil: 'daga', lanza: 3, golpe: 8, rafaga: 3, esquiva: 40, alerta: 34, vida: 1.2 },
   // Vuela alto a otro lado (en el aire tu círculo no le pega) y aterriza aturdido; llama dragones pequeños y
   // escupe cinco llamaradas a lo ancho de la muralla.
-  dragonAcero: { escolta: 'dragoncito', inicial: 2, invoca: 6, escoltaN: 1, mueve: 'vuelo', cada: 5, dura: 0.9, aturdido: 1.6, proyectil: 'llamarada', lanza: 4, golpe: 8, rafaga: 5, esquiva: 18, alerta: 26, vida: 0.5 },
+  dragonAcero: { escolta: 'dragoncito', inicial: 2, invoca: 6, escoltaN: 1, mueve: 'vuelo', cada: 5, dura: 0.9, aturdido: 1.6, proyectil: 'llamarada', lanza: 4, golpe: 8, rafaga: 5, esquiva: 18, alerta: 26, vida: 0.55 },
 };
 /** Los jefes en orden: Rey Slime (10), Lobo Blanco (20), Esqueleto Mago (30), Líder de los bandidos (40), Dragón de acero (50); luego se repiten. */
 export const ORDEN_JEFES: EnemyKind[] = ['rey', 'loboBlanco', 'esqueletoMago', 'liderBandido', 'dragonAcero'];
@@ -288,8 +298,30 @@ export const ROJO_DESDE = 7;
 export const DESDE: Record<EnemyKind, number> = { verde: 1, azul: AZUL_DESDE, rojo: ROJO_DESDE, rey: 10, goblin: 11, lobo: 11, orco: 13, orcoArquero: 15, loboBlanco: 20, arana: 21, loboNegro: 21, esqueleto: 23, bandido: 25, esqueletoMago: 30, escorpion: 31, bandidoDesierto: 31, minotauro: 33, ciclope: 35, liderBandido: 40, guerreroHierro: 41, golem: 41, golemito: 41, arqueroHierro: 43, dragoncito: 45, dragonAcero: 50 };
 export const PRIMERA_OLA = 0.3;
 export const LLEGADA = 8;
-/** Lo más que puede haber vivos a la vez (por rendimiento; el resto espera su turno). */
-export const MAX_VIVOS = 450;
+/**
+ * Lo más que puede haber vivos a la vez en un nivel (desde 0.24.0, para que se distinga quién es quién; el
+ * resto llega conforme revientas). En la Supervivencia, `MAX_VIVOS_OLEADAS` (por rendimiento).
+ */
+export const MAX_VIVOS = 80;
+export const MAX_VIVOS_OLEADAS = 450;
+/**
+ * Claridad (desde 0.24.0): hasta el nivel `desde` los niveles crecen como siempre (+8 enemigos por nivel);
+ * después, solo `porNivel` más por nivel. Para que cada nivel cueste lo mismo, cada enemigo trae la vida
+ * y el oro de los que ya no salen. Además, todos los enemigos (también los jefes y las oleadas) tienen
+ * `vida` de lo que tenían, porque tu arquero ya no es un ejército (ver BASE.arqueros y CIRCULO).
+ */
+export const CLARIDAD = { desde: 15, porNivel: 2, vida: 0.8 } as const;
+/**
+ * Tu círculo (desde 0.24.0): pega `mult` veces el daño base de tus aliados, y cada decena de Daño lo
+ * multiplica por `decena` (a tus aliados, por 2). Cada nivel de Cadencia multiplica el tiempo entre
+ * disparos por `cadencia` y el golpe por 0.9/`cadencia`: lo mismo por segundo que antes (cuando era ×0.9
+ * el tiempo), pero con golpes más fuertes en vez de muchos golpecitos.
+ */
+export const CIRCULO = { mult: 2, decena: 2.5, cadencia: 0.97 } as const;
+/** La "carga" de un nivel: cuántos enemigos traía antes de 0.24.0 (de ahí salen la vida del jefe y el premio). */
+export const cargaNivel = (n: number): number => 15 + 8 * (n - 1);
+/** Cuántos enemigos salen de verdad en el nivel. */
+export const totalNivel = (n: number): number => (n <= CLARIDAD.desde ? cargaNivel(n) : cargaNivel(CLARIDAD.desde) + CLARIDAD.porNivel * (n - CLARIDAD.desde));
 
 /** Quiénes salen en un nivel: los de su zona, cada uno con su parte (el más común se queda con el resto). */
 function mixFor(n: number): [EnemyKind, number][] {
@@ -329,8 +361,10 @@ function mixFor(n: number): [EnemyKind, number][] {
  * juego se atora: lo mostró el simulador al agregar el desierto). El daño a la muralla, ×1.05 hasta el 20
  * y luego ×1.02 (la muralla tiene un máximo; con ×1.05 para siempre, en la montaña caía en cada partida).
  */
-export const CURVA = { vida: 1.32, oro: 1.05, desde: 20, vidaTarde: 1.17, oroTarde: 1.15, ataqueTarde: 1.02, ataqueBase: 0.6 };
-export const vidaNivel = (n: number): number => Math.pow(CURVA.vida, Math.min(n, CURVA.desde) - 1) * Math.pow(CURVA.vidaTarde, Math.max(0, n - CURVA.desde));
+export const CURVA = { vida: 1.32, oro: 1.05, desde: 20, vidaTarde: 1.135, hasta: 50, vidaMazmorra: 1.17, oroTarde: 1.15, ataqueTarde: 1.02, ataqueBase: 0.6 };
+/** La vida de los enemigos: ×`vida` por nivel hasta el 20, ×`vidaTarde` hasta el 50 y ×`vidaMazmorra` después. */
+export const vidaNivel = (n: number): number =>
+  Math.pow(CURVA.vida, Math.min(n, CURVA.desde) - 1) * Math.pow(CURVA.vidaTarde, Math.max(0, Math.min(n, CURVA.hasta) - CURVA.desde)) * Math.pow(CURVA.vidaMazmorra, Math.max(0, n - CURVA.hasta));
 /** El daño de los ataques a la muralla: ×1.05 por nivel desde el 7 hasta el 20; después solo ×`ataqueTarde` (la muralla tiene un máximo). */
 export const ataqueNivel = (n: number): number => CURVA.ataqueBase * Math.pow(1.05, Math.max(0, Math.min(n, CURVA.desde) - ROJO_DESDE)) * Math.pow(CURVA.ataqueTarde, Math.max(0, n - CURVA.desde));
 export const oroNivel = (n: number): number => Math.pow(CURVA.oro, Math.min(n, CURVA.desde) - 1) * Math.pow(CURVA.oroTarde, Math.max(0, n - CURVA.desde));
@@ -342,25 +376,29 @@ export const oroNivel = (n: number): number => Math.pow(CURVA.oro, Math.min(n, C
 export const PREMIO = { frac: 0.3 };
 function premioNivel(n: number, mezcla: [EnemyKind, number][]): number {
   const oroMedio = mezcla.reduce((t, [k, p]) => t + p * ENEMIES[k].oro * (ENEMIES[k].manada ?? 1), 0) / mezcla.reduce((t, [k, p]) => t + p * (ENEMIES[k].manada ?? 1), 0);
-  return Math.round(PREMIO.frac * (15 + 8 * (n - 1)) * oroMedio * oroNivel(n) * (isBossLevel(n) ? JEFE.premio : 1));
+  return Math.round(PREMIO.frac * cargaNivel(n) * oroMedio * oroNivel(n) * (isBossLevel(n) ? JEFE.premio : 1));
 }
 
 export function levelConfig(nivel: number): LevelConfig {
   const n = Math.max(1, Math.floor(nivel));
   const mezcla = mixFor(n).filter(([, p]) => p > 0);
   const parte = (k: EnemyKind) => mezcla.find(([kind]) => kind === k)?.[1] ?? 0;
+  // Cada enemigo trae la vida y el oro de los que ya no salen (ver CLARIDAD). En los de jefe solo salen el
+  // jefe y su escolta, que son como siempre.
+  const junta = isBossLevel(n) ? 1 : cargaNivel(n) / totalNivel(n);
   return {
     nivel: n,
     zona: zoneOf(n),
-    total: 15 + 8 * (n - 1),
-    vida: vidaNivel(n),
-    oro: oroNivel(n),
+    total: totalNivel(n),
+    vida: vidaNivel(n) * junta * CLARIDAD.vida,
+    oro: oroNivel(n) * junta,
     mezcla,
     azules: parte('azul'),
     rojos: parte('rojo'),
-    ataque: ataqueNivel(n),
+    // Y pegan con la fuerza de los que ya no salen (a la muralla y al caballero).
+    ataque: ataqueNivel(n) * junta,
     premio: premioNivel(n, mezcla),
-    jefe: isBossLevel(n) ? { kind: bossFor(n), vida: Math.round(3 * (15 + 8 * (n - 1)) * vidaNivel(n) * JEFE.vida * (JEFES[bossFor(n)]?.vida ?? 1)) } : null,
+    jefe: isBossLevel(n) ? { kind: bossFor(n), vida: Math.round(3 * cargaNivel(n) * vidaNivel(n) * CLARIDAD.vida * JEFE.vida * (JEFES[bossFor(n)]?.vida ?? 1)) } : null,
   };
 }
 
@@ -509,10 +547,10 @@ export const TALENTS: TalentDef[] = [
   { id: 'fuego', seccion: 'mago', icono: 'fuego', max: 1, costo: { base: 600, crece: 1 }, requiere: { id: 'magoDanio', nivel: 2 }, pos: [0, 2] },
   { id: 'fuegoFuerte', seccion: 'mago', icono: 'fuegoFuerte', max: 10, costo: { base: 120, crece: 2.1 }, requiere: { id: 'fuego', nivel: 1 }, pos: [0, 3] },
 
-  // ---- Arqueros: flechas a un objetivo a la vez (luego a varios) ----
+  // ---- Arquero (uno solo desde 0.24.0): flechas a un objetivo a la vez; con Más flechas, a varios, y con Rebote saltan ----
   { id: 'arqueros', seccion: 'arqueros', icono: 'arquero', max: 1, costo: { base: 40, crece: 1 }, requiere: { id: 'danio', nivel: 3 }, raiz: true, pos: [0, 0] },
-  { id: 'masArqueros', seccion: 'arqueros', icono: 'masArqueros', max: 5, costo: { base: 90, crece: 3 }, requiere: { id: 'arqueros', nivel: 1 }, pos: [-1, 1] },
-  { id: 'multiflecha', seccion: 'arqueros', icono: 'multiflecha', max: 4, costo: { base: 70, crece: 3.2 }, requiere: { id: 'arqueros', nivel: 1 }, pos: [0, 1] },
+  { id: 'masArqueros', seccion: 'arqueros', icono: 'multiflecha', max: 5, costo: { base: 90, crece: 3 }, requiere: { id: 'arqueros', nivel: 1 }, pos: [-1, 1] },
+  { id: 'multiflecha', seccion: 'arqueros', icono: 'rebote', max: 4, costo: { base: 70, crece: 3.2 }, requiere: { id: 'arqueros', nivel: 1 }, pos: [0, 1] },
   { id: 'arcoRapido', seccion: 'arqueros', icono: 'arcoRapido', max: 10, costo: { base: 30, crece: 1.9 }, requiere: { id: 'arqueros', nivel: 1 }, pos: [1, 1] },
   { id: 'muralla', seccion: 'arqueros', icono: 'muralla', max: 20, costo: { base: 50, crece: 1.9, tarde: { desde: 10, crece: 1.5 } }, requiere: { id: 'masArqueros', nivel: 1 }, pos: [-1, 2] },
   { id: 'arcoDanio', seccion: 'arqueros', icono: 'arcoDanio', max: 15, costo: { base: 40, crece: 1.8 }, requiere: { id: 'multiflecha', nivel: 1 }, pos: [0, 2] },

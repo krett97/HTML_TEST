@@ -3,7 +3,7 @@
 // uno vuelve cada 2 h). Gana el de más poder con más probabilidad, no siempre. Ganarle a alguien con
 // más puntos que tú da más puntos. Al terminar la semana, los 20 mejores suben de liga y los 20 peores
 // bajan. Las peleas y el lugar de la semana dan medallas, que se gastan en la tienda del PvP.
-import { PVP_DESDE, type TalentId } from './datos';
+import { PVP_DESDE, REBOTE, type TalentId } from './datos';
 import { dayKey } from './misiones';
 import { createRng } from './rng';
 import { computeStats, type Stats } from './stats';
@@ -63,7 +63,8 @@ export function powerOf(s: Stats, estandarte = 0): Power {
   const area = (s.mago.lado / 40) ** 2;
   const fuego = s.fuego.activo ? s.fuego.dps * s.fuego.duracion : 0;
   const mago = s.mago.activo ? (40 * area * (s.mago.danio + fuego)) / s.mago.intervalo : 0;
-  const arqueros = (10 * s.arqueros.cantidad * s.arqueros.objetivos * s.arqueros.danio) / s.arqueros.intervalo;
+  // El arquero: sus flechas por disparo, y cada rebote pega otra vez (un poco menos).
+  const arqueros = (10 * s.arqueros.cantidad * s.arqueros.objetivos * (1 + REBOTE.danio * s.arqueros.rebotes) * s.arqueros.danio) / s.arqueros.intervalo;
   // El caballero: sus tajos (y aguanta más con más vida); el sacerdote: su luz en área; sus curas a la muralla suben el multiplicador.
   const c = s.caballero;
   const caballero = c.activo ? ((10 * c.danio * c.objetivos) / c.intervalo) * (1 + c.vida / 400) : 0;
@@ -164,7 +165,8 @@ export function myArmy(m: PvpHost): Ejercito {
 export function rivalArmy(mio: Ejercito, ratio: number, liga: number, id: string): Ejercito {
   const h = hash(id);
   const r = Math.max(0.1, ratio);
-  const arqueros = Math.min(6, Math.max(1, Math.round(Math.max(1, mio.arqueros) * Math.sqrt(r)) + ((h % 3) - 1)));
+  // Desde 0.24.0 todos tienen un solo arquero.
+  const arqueros = 1;
   const mago = mio.mago || r > 1.1 || h % 4 === 0;
   // Los que van más adelantados que tú ya tienen caballero (y, mucho más, sacerdote).
   const caballero = mio.caballero || r > 1.3;

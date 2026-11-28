@@ -1,5 +1,5 @@
 // Las estadísticas de una partida, calculadas de los niveles de los talentos.
-import { AUTOAPUNTAR, BASE, HIELO, INACTIVO, ORO_TALENTOS, type DamageType, type TalentId } from './datos';
+import { AUTOAPUNTAR, BASE, CIRCULO, HIELO, INACTIVO, ORO_TALENTOS, type DamageType, type TalentId } from './datos';
 import { bonosEquipo, type EquipoNiveles } from './equipo';
 
 export type Levels = Partial<Record<TalentId, number>>;
@@ -32,7 +32,7 @@ export interface Stats {
   autoapuntar: { velocidad: number };
   /** Arqueros: cuántos, cada cuánto tiran, a cuántos objetivos a la vez y cuánto pega cada flecha. */
   /** `hielo`: cuánto frenan sus flechas de hielo (0: flechas de siempre, físicas). */
-  arqueros: { cantidad: number; intervalo: number; objetivos: number; danio: number; hielo: number };
+  arqueros: { cantidad: number; intervalo: number; objetivos: number; rebotes: number; danio: number; hielo: number };
   /** El caballero: cuánto pega, cada cuánto, a cuántos, su alcance, su vida, qué tan rápido camina y en cuánto vuelve si cae. */
   caballero: { activo: boolean; danio: number; intervalo: number; objetivos: number; alcance: number; vida: number; velocidad: number; regreso: number };
   /** El sacerdote: su columna de luz (daño, cada cuánto, radio) y sus curas (cada cuánto y qué parte de la vida del caballero y de la muralla). */
@@ -55,11 +55,15 @@ export function computeStats(levels: Levels, equipo: EquipoNiveles = {}, element
   // Mando (el caballero, el líder): +5 % a todo el daño por nivel (solo si tienes al caballero).
   const mando = lv(levels, 'caballero') > 0 ? 1 + 0.05 * lv(levels, 'mando') : 1;
   const golpe = (BASE.danio + danio) * Math.pow(2, Math.floor(danio / 10)) * (1 + 0.1 * lv(levels, 'poder')) * eq.danio * mando;
+  // Tu círculo crece más que tus aliados con cada decena de Daño (ver CIRCULO).
+  const circulo = golpe * CIRCULO.mult * Math.pow(CIRCULO.decena / 2, Math.floor(danio / 10));
   const area = (1 + 0.1 * lv(levels, 'magoArea')) * eq.magoArea;
   return {
-    danio: golpe,
+    // Cadencia: cada nivel, un poco más seguido y algo más fuerte (antes de 0.24.0 era solo más seguido:
+    // muchos golpecitos); da lo mismo por segundo.
+    danio: circulo * Math.pow(CIRCULO.cadencia / 0.9, lv(levels, 'cadencia')),
     radio: BASE.radio * (1 + 0.1 * lv(levels, 'radio')),
-    intervalo: BASE.intervalo * Math.pow(0.9, lv(levels, 'cadencia')),
+    intervalo: BASE.intervalo * Math.pow(CIRCULO.cadencia, lv(levels, 'cadencia')),
     duracion: BASE.duracion + 2 * lv(levels, 'tiempo'),
     ritmo: BASE.ritmo * Math.pow(1.2, slimes),
     oroMult: (1 + ORO_TALENTOS.oro * lv(levels, 'oro')) * eq.oro,
@@ -83,11 +87,14 @@ export function computeStats(levels: Levels, equipo: EquipoNiveles = {}, element
     critico: { prob: 0.05 * lv(levels, 'critico'), mult: 3 },
     autoapuntar: { velocidad: lv(levels, 'autoapuntar') > 0 ? AUTOAPUNTAR.velocidad + AUTOAPUNTAR.porNivel * (lv(levels, 'autoapuntar') - 1) : 0 },
     arqueros: {
-      cantidad: lv(levels, 'arqueros') > 0 ? 1 + lv(levels, 'masArqueros') : 0,
-      intervalo: BASE.arqueros.intervalo * Math.pow(0.88, lv(levels, 'arcoRapido')) * eq.arcoIntervalo,
-      objetivos: BASE.arqueros.objetivos + lv(levels, 'multiflecha') + lv(levels, 'carcaj') + eq.arcoObjetivos,
+      // Desde 0.24.0 es un solo arquero (en su torre) que tira varias flechas a la vez.
+      cantidad: lv(levels, 'arqueros') > 0 ? 1 : 0,
+      intervalo: BASE.arqueros.intervalo * Math.pow(BASE.arqueros.rapidoTiempo, lv(levels, 'arcoRapido')) * eq.arcoIntervalo,
+      objetivos: BASE.arqueros.objetivos + lv(levels, 'masArqueros') + lv(levels, 'carcaj') + eq.arcoObjetivos,
+      /** Rebote: a cuántos enemigos más salta cada flecha después de pegar. */
+      rebotes: lv(levels, 'multiflecha'),
       // Las flechas de hielo pegan menos (a cambio frenan y son de hielo).
-      danio: golpe * BASE.arqueros.danio * (1 + 0.5 * lv(levels, 'arcoDanio')) * eq.arcoDanio * (flechasHielo && lv(levels, 'flechaHielo') > 0 ? HIELO.danio : 1),
+      danio: golpe * BASE.arqueros.danio * (1 + BASE.arqueros.porNivel * lv(levels, 'arcoDanio')) * Math.pow(BASE.arqueros.rapidoTiempo / BASE.arqueros.rapido, lv(levels, 'arcoRapido')) * eq.arcoDanio * (flechasHielo && lv(levels, 'flechaHielo') > 0 ? HIELO.danio : 1),
       hielo: flechasHielo && lv(levels, 'flechaHielo') > 0 ? HIELO.lento + HIELO.porNivel * (lv(levels, 'flechaHielo') - 1) : 0,
     },
     caballero: {

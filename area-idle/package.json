@@ -1,7 +1,7 @@
 {
   "name": "area-idle",
   "private": true,
-  "version": "0.23.0",
+  "version": "0.24.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -14,6 +14,7 @@
     "test": "vitest run",
     "arte": "node tools/arte/dibujar.mjs",
     "simular": "tsx tools/simular.ts",
+    "golpes": "tsx tools/golpes.ts",
     "apk:prueba": "bash apk-prueba/build.sh",
     "e2e": "npm run build && npm run build:compartir && node tests/e2e/flujos.cjs"
   },

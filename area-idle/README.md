@@ -3,13 +3,13 @@
 Idle de áreas para celular (vertical, una mano) y navegador. Tocas donde quieres que caigan tus
 flechas y el círculo dispara solo ahí. Cada **nivel** trae una cantidad de slimes y hay que reventarlos
 todos antes de que se acabe el tiempo; si no, se reintenta o se juega el anterior para juntar oro. Con
-el oro mejoras seis árboles: el tuyo, el del mago (explosiones de fuego cuadradas), el de los arqueros
+el oro mejoras seis árboles: el tuyo, el del mago (explosiones de fuego cuadradas), el del arquero
 (un objetivo a la vez, luego varios), el del **caballero** (desde el 21: pelea cuerpo a cuerpo en el campo y
 frena a los enemigos) el del **sacerdote** (desde el 31: luz sagrada y cura al caballero y a la muralla) y el de la **bruja** (desde
 el 41: rayos de oscuridad que atraviesan). Desde el 45 puedes cambiar el **elemento de tu círculo** (cada
-cambio, viendo un anuncio). Con otro anuncio, **media hora de autoapuntado** rápido (desde el 3). Desde el 12, los arqueros pueden tirar **flechas de hielo** que frenan a los enemigos.
+cambio, viendo un anuncio). Con otro anuncio, **media hora de autoapuntado** rápido (desde el 3). Desde el 12, el arquero puede tirar **flechas de hielo** que frenan a los enemigos. En 0.24.0, **claridad**: menos enemigos a la vez (80 como mucho) que valen más, tu círculo pega más fuerte y hay **un solo arquero** que tira a varios y cuyas flechas rebotan (detalles en `docs/DISENO.md`, 5q).
 
-**Estado: prototipo 0.23.0.** Cinco zonas: **Campo verde** (niveles 1–10, slimes), **Campo de batalla**
+**Estado: prototipo 0.24.0.** Cinco zonas: **Campo verde** (niveles 1–10, slimes), **Campo de batalla**
 (11–20: goblins con lanzas, lobos, orcos y orcos arqueros, con espadas y tablas tiradas) y **Pradera
 amarilla** (21–30 y siguientes: arañas gigantes, esqueletos con espada y escudo, lobos negros y bandidos
 con dagas, entre cráneos y pedazos de armadura) y **Desierto** (31–40: escorpiones gigantes que se

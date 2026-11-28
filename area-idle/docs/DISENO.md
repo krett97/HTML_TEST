@@ -43,7 +43,7 @@ Nivel 5") y el oro. Ahí arriba no aparecen ni pasean slimes, para que nada qued
 |---|---|---|---|
 | **Jugador** | Tu círculo: lluvia de flechas en el área | Físico | Daño (raíz), Área, Atraer slimes (llegan más rápido), Cadencia, Tiempo, Botín (premio por nivel), Ganancia de oro (todo el oro), Oro inactivo, Bolsa grande, Autoapuntado (5i) |
 | **Mago** | Bola de fuego que revienta en un **cuadrado** (40 × 40) donde hay alguien | Fuego | Mago (raíz), Mago veloz, Fuego mágico, Explosión grande, Suelo en llamas (tierra quemada con borde de brasas), Fuego intenso |
-| **Arqueros** | Flechas a **un objetivo a la vez**; con Flechas múltiples, a 2, 3… 5 | Físico | Arquero (raíz), Más arqueros (hasta 6), Flechas múltiples, Arco veloz, Puntas de acero, Muralla reforzada, Flechas de hielo (desde el 12, ver 5p) |
+| **Arquero** (uno solo desde 0.24.0) | Flechas a **un objetivo a la vez**; con Más flechas, a 2, 3… 6 a la vez, y con Rebote cada flecha salta a otros | Físico (o hielo) | Arquero (raíz), Más flechas, Rebote, Arco veloz, Puntas de acero, Muralla reforzada, Flechas de hielo (desde el 12, ver 5p); ver 5q |
 | **Caballero** (desde el nivel 21) | Tajos **cuerpo a cuerpo**: camina por el campo y **frena** a los que marchan | Físico | Caballero (raíz), Tajo veloz, Espada, Coraza, Barrido, De pie otra vez, Mando (ver 5m) |
 | **Sacerdote** (desde el nivel 31) | **Columna de luz** en un círculo sobre el de más vida; **cura** al caballero y a la muralla | Luz | Sacerdote (raíz), Plegaria, Luz sagrada, Sanar, Halo, Bendición (ver 5m) |
 | **Bruja** (desde el nivel 41) | **Rayos de oscuridad** que atraviesan a todos los de su línea; Maldición | Muerte | Bruja (raíz), Conjuro rápido, Rayo oscuro, Sombra ancha, Rayos gemelos, Maldición (ver 5n) |
@@ -437,6 +437,54 @@ En el PvP, el freno suma poder (×(1 + 0.4 × freno)).
 resisten), y la muralla aguanta bastante más en el Desierto y la Montaña. Por días, igual: 39, 59, 59, 69.
 Supervivencia: 24–28 oleadas (antes 20–24). La primera versión pegaba el 100 % y era demasiado fuerte (59 a
 las 4 horas); por eso el 75 %.
+
+## 5q. Claridad: menos enemigos, golpes que pesan y un solo arquero (desde 0.24.0)
+
+En los niveles altos había muchísimos enemigos a la vez (en el 48, unos 390) y cada uno aguantaba mucho:
+los niveles se ganaban por desgaste, con montones de flechitas, y tu círculo casi no contaba (3–6 % del
+daño). Se midió con `npm run golpes` y se cambió así:
+
+- **Menos enemigos:** hasta el nivel 15, los de siempre (15 + 8 por nivel); después, solo 2 más por nivel
+  (127 en el 15, 157 en el 30, 197 en el 50). Y **en pantalla nunca hay más de 80**: el resto llega conforme
+  revientas (en la Supervivencia sigue el tope de antes).
+- **Cada enemigo vale más:** trae la vida, el oro y la fuerza de ataque de los que ya no salen; así cada
+  nivel cuesta y paga lo mismo, y la muralla sigue en peligro. En los niveles de jefe solo salen el jefe y
+  su escolta, como siempre.
+- **Tu círculo pega más:** ×2 la base de tus aliados, y cada decena de Daño lo multiplica ×2.5 (a tus
+  aliados, ×2). **Cadencia** ahora dispara un poco más seguido y algo más fuerte (×0.97 el tiempo y ×0.9/0.97
+  el golpe por nivel): por segundo da lo mismo que antes, con menos golpecitos.
+- **Un solo arquero** (en 0.25.0 tendrá su propia torre) que tira a varios:
+  - **Más flechas** (antes "Más arqueros"): +1 flecha por disparo, cada una a otro enemigo.
+  - **Rebote** (antes "Flechas múltiples"): después de pegar, la flecha salta al enemigo más cercano que
+    no tocó (a menos de 70), con la mitad del daño; tantas veces como niveles (hasta 4).
+  - **Arco veloz:** como Cadencia, más seguido y más fuerte (×0.98 el tiempo; por segundo, ×1/0.93).
+  - **Puntas de acero:** +25 % por nivel (antes +50 %); el arquero pega ×3.5 la base (antes ×2).
+  - Los niveles que ya tenías se respetan: los de "Más arqueros" ahora son de Más flechas, y los de "Flechas
+    múltiples", de Rebote.
+- **El suelo en llamas** quema cada 0.6 s (antes 0.25 s), con más fuerza: menos numeritos.
+- Para que el ritmo no cambie: los enemigos tienen el 80 % de su vida (también jefes y oleadas); de 20 a 50
+  la vida crece ×1.135 por nivel (antes ×1.17; después del 50, como antes); el Lobo Blanco tiene 0.55 (antes
+  0.7), el Esqueleto Mago 0.24 (0.6; su escolta y su teletransporte lo protegen) y el Dragón de acero 0.55
+  (0.5).
+- En el PvP todos tienen un solo arquero; su poder cuenta las flechas por disparo y los rebotes.
+
+**Antes y después** (jugador simulado que juega sin parar; "golpes" son los que recibe cada enemigo que
+revienta, en el primer intento de cada nivel nuevo):
+
+| Nivel | Enemigos (a la vez) | Golpes de tu círculo | Golpes en total | Tu parte del daño |
+|---|---|---|---|---|
+| 8 | 71 (55) → 71 (55) | 0.8 → 1.2 | 1.5 → 1.6 | 22 % → 68 % |
+| 18 | 151 (147) → 133 (80) | 2.6 → 1.8 | 6.7 → 4.7 | 14 % → 34 % |
+| 28 | 231 (231) → 153 (80) | 6.7 → 3.7 | 21 → 12 | 13 % → 41 % |
+| 38 | 311 (311) → 173 (80) | 4.7 → 2.5 | 21 → 13 | 5 % → 23 % |
+| 48 | 391 (391) → 193 (80) | 6.1 → 2.0 | 28 → 11 | 6 % → 27 % |
+| 58 | 471 (450) → 213 (80) | 6.2 → 1.9 | 29 → 13 | 3 % → 19 % |
+
+**Ritmo** (entre paréntesis, 0.23.0): sin parar, 29 a la hora (29), 39 a las 2 h (39), 39–49 a las 3 h (47)
+y 49 a las 4 h (49). Jefes (intentos): 20 → 11 (13), 30 → 13 (16), 40 → 69 (68), 50 → 30 (41). A ratos
+con la app cerrada: 27, 34, 49 y 59 a las 6, 12, 24 y 48 h (29, 35, 49, 59). En la guardia: 29, 39, 49, 59 a
+las 3, 6, 12 y 24 h (igual). Por días: 39, 59, 67, 69 (39, 59, 59, 69). Supervivencia: 19–27 oleadas
+(20–28). La muralla cae algo menos (desierto: 12 veces en 4 horas; antes 23).
 
 ## 5e. Misiones, gemas moradas y Reliquias (desde 0.6.0)
 

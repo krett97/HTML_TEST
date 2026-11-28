@@ -590,6 +590,8 @@ icon('arquero', I(capucha(-6, 6, 0.95) + arco(30, 2, 0.95)));
 icon('masArqueros', I(capucha(-10, 14, 0.7) + capucha(10, 4, 0.7) + capucha(26, 18, 0.7) + line('M54 6 v14 M47 13 h14', P.pastoS, 6)));
 icon('multiflecha', I(flechita(6, 18, -14, 1) + flechita(6, 32, 0, 1) + flechita(6, 46, 14, 1)));
 icon('arcoRapido', I(arco(2, 0, 0.95) + rayo(24, 10, 0.7)));
+// Rebote: la flecha pega a uno y salta a otros dos (camino punteado).
+icon('rebote', I(`<path d="M10 50 Q14 24 32 16" fill="none" stroke="${K}" stroke-width="3.5" stroke-dasharray="5 5" stroke-linecap="round"/>` + circ(10, 52, 7, '#8ad66f', 4) + circ(32, 14, 7, '#8ad66f', 4) + circ(55, 52, 7, '#8ad66f', 4) + flechita(33, 17, 57, 0.62)));
 icon('arcoDanio', I(flechita(4, 36, -30, 1.1) + estrella(48, 16, 13, P.fuegoC)));
 icon('magoDanio', I(sombrero(-4, 4, 0.8) + estrella(48, 18, 13, P.fuegoC)));
 // Tipos de daño (cada uno con su color: físico gris acero, fuego naranja, hielo celeste, energía morado,

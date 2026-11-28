@@ -17,6 +17,7 @@ import { CURVA, GUARDIA, ORO_TALENTOS } from '../src/core/datos';
 import { ALLY_ROW, archerSpots, bossOf, createRun, DAMAGE_TYPE_OF, FIELD_W, moveCursor, startRun, stepRun, type Run, type RunEvent } from '../src/core/run';
 import { KNIGHT_R, priestSpot, slowFactor, witchSpot } from '../src/core/run';
 import { BASE, BRUJA_DESDE, CABALLERO_DESDE, ELEMENTO_DESDE, HIELO, SACERDOTE_DESDE } from '../src/core/datos';
+import { ataqueNivel, cargaNivel, CIRCULO, CLARIDAD, MAX_VIVOS, oroNivel, REBOTE, totalNivel, vidaNivel } from '../src/core/datos';
 import { computeStats } from '../src/core/stats';
 import { BONO_DIARIO, claimableCount, claimBonus, claimMission, dailyProgress, dayKey, DIARIAS, DIARIAS_POR_DIA, MISSION_BY_ID, msUntilReset, permanentProgress, rollDaily } from '../src/core/misiones';
 import { MISIONES_DESDE, PVP_DESDE, RANKING_DESDE } from '../src/core/datos';
@@ -47,16 +48,26 @@ describe('formato', () => {
 describe('estadísticas', () => {
   it('sin talentos', () => {
     const s = computeStats({});
-    expect(s.danio).toBe(1);
+    // Tu círculo pega CIRCULO.mult veces la base de tus aliados (desde 0.24.0).
+    expect(s.danio).toBe(CIRCULO.mult);
     expect(s.duracion).toBe(20);
     expect(s.mago.activo).toBe(false);
     expect(s.fuego.activo).toBe(false);
     expect(s.ritmo).toBe(1);
     expect(s.premioMult).toBe(1);
   });
-  it('el daño se duplica cada 10 niveles', () => {
-    expect(computeStats({ danio: 9 }).danio).toBe(10);
-    expect(computeStats({ danio: 10 }).danio).toBe(22);
+  it('el daño se duplica cada 10 niveles (tu círculo, ×2.5)', () => {
+    expect(computeStats({ danio: 9 }).danio).toBe(10 * CIRCULO.mult);
+    expect(computeStats({ danio: 10 }).danio).toBeCloseTo(11 * CIRCULO.decena * CIRCULO.mult);
+    // Tus aliados, ×2.
+    expect(computeStats({ danio: 10, arqueros: 1 }).arqueros.danio / computeStats({ danio: 9, arqueros: 1 }).arqueros.danio).toBeCloseTo(2.2);
+  });
+  it('Cadencia: más seguido y más fuerte; por segundo da lo mismo que antes (×1/0.9 por nivel)', () => {
+    const a = computeStats({});
+    const b = computeStats({ cadencia: 5 });
+    expect(b.intervalo).toBeCloseTo(a.intervalo * Math.pow(CIRCULO.cadencia, 5));
+    expect(b.danio / b.intervalo / (a.danio / a.intervalo)).toBeCloseTo(Math.pow(1 / 0.9, 5));
+    expect(b.danio).toBeGreaterThan(a.danio);
   });
   it('tiempo suma 2 s por nivel', () => {
     expect(computeStats({ tiempo: 3 }).duracion).toBe(26);
@@ -77,7 +88,7 @@ describe('partida', () => {
     expect(events.some((e) => e.type === 'impact')).toBe(true);
     const hits = events.filter((e) => e.type === 'hit');
     expect(hits).toHaveLength(1);
-    expect(run.enemies.find((e) => e.id === 999)!.vida).toBe(2);
+    expect(run.enemies.find((e) => e.id === 999)!.vida).toBe(3 - computeStats({}).danio);
     expect(run.enemies.find((e) => e.id === 1000)!.vida).toBe(3);
   });
   it('al reventar da oro y cuenta', () => {
@@ -156,13 +167,13 @@ describe('partida', () => {
   it('sin mago no hay fuego aunque se tenga el talento', () => {
     expect(computeStats({ fuego: 1 }).fuego.activo).toBe(false);
   });
-  it('los arqueros tiran a un objetivo a la vez y luego a varios', () => {
+  it('un solo arquero: tira a un objetivo a la vez y, con Más flechas, a varios', () => {
     const uno = computeStats({ arqueros: 1 });
-    expect(uno.arqueros).toMatchObject({ cantidad: 1, objetivos: 1 });
-    expect(computeStats({ arqueros: 1, multiflecha: 2, masArqueros: 1 }).arqueros).toMatchObject({ cantidad: 2, objetivos: 3 });
+    expect(uno.arqueros).toMatchObject({ cantidad: 1, objetivos: 1, rebotes: 0 });
+    expect(computeStats({ arqueros: 1, multiflecha: 2, masArqueros: 5 }).arqueros).toMatchObject({ cantidad: 1, objetivos: 6, rebotes: 2 });
     expect(computeStats({}).arqueros.cantidad).toBe(0);
 
-    const run = createRun(computeStats({ arqueros: 1, multiflecha: 1 }), 560, 1, 1);
+    const run = createRun(computeStats({ arqueros: 1, masArqueros: 1 }), 560, 1, 1);
     // Una sola tanda (el primer tiro sale a los 0.3 s).
     run.stats = { ...run.stats, ritmo: 0, arqueros: { ...run.stats.arqueros, intervalo: 100 } };
     run.cursor = { x: -999, y: -999 };
@@ -710,7 +721,7 @@ describe('misiones y gemas', () => {
     expect(meta.gemas).toBe(0);
     expect(meta.oro).toBe(1e9);
     expect(computeStats({ poder: 2, danio: 4 }).danio).toBeCloseTo(computeStats({ danio: 4 }).danio * 1.2);
-    expect(computeStats({ carcaj: 2, multiflecha: 1 }).arqueros.objetivos).toBe(4);
+    expect(computeStats({ carcaj: 2, masArqueros: 1 }).arqueros.objetivos).toBe(4);
   });
   it('golpe crítico: tus flechas a veces pegan triple', () => {
     const run = createRun(computeStats({}), 560, 1, 1);
@@ -718,7 +729,7 @@ describe('misiones y gemas', () => {
     moveCursor(run, 100, 100);
     withEnemy(run, 100, 100, 100);
     const events = [...stepRun(run, 0.1), ...stepRun(run, 0.25)];
-    expect(events.find((e) => e.type === 'hit')).toMatchObject({ efecto: 'critico', danio: 3 });
+    expect(events.find((e) => e.type === 'hit')).toMatchObject({ efecto: 'critico', danio: 3 * computeStats({}).danio });
   });
   it('el Albañil repara la muralla una vez por nivel, aunque el golpe la fuera a tumbar', () => {
     const run = createRun(computeStats({ albanil: 1 }), 560, 7, 1);
@@ -1003,7 +1014,8 @@ describe('modo guardia', () => {
     startGuardRun(run);
     const enemigos = run.enemies.length;
     updateGuardRun(run, computeStats({ arqueros: 1, masArqueros: 2 }), 2);
-    expect(run.arcos).toHaveLength(3);
+    expect(run.arcos).toHaveLength(1);
+    expect(run.stats.arqueros.objetivos).toBe(3);
     expect(run.guardia!.oroPorBaja).toBe(2);
     expect(run.stats.duracion).toBe(Infinity);
     expect(run.enemies).toHaveLength(enemigos);
@@ -1223,11 +1235,12 @@ describe('cuarta zona: Desierto, y los jefes del 30 y el 40', () => {
 
 describe('curvas de la segunda mitad', () => {
   it('hasta el 20 la vida y el oro crecen con una curva; desde ahí con otra (la vida más lento que antes)', () => {
-    expect(levelConfig(20).vida / levelConfig(19).vida).toBeCloseTo(CURVA.vida);
-    expect(levelConfig(20).oro / levelConfig(19).oro).toBeCloseTo(CURVA.oro);
-    expect(levelConfig(21).vida / levelConfig(20).vida).toBeCloseTo(CURVA.vidaTarde);
-    expect(levelConfig(21).oro / levelConfig(20).oro).toBeCloseTo(CURVA.oroTarde);
-    expect(levelConfig(35).oro / levelConfig(34).oro).toBeCloseTo(CURVA.oroTarde);
+    expect(vidaNivel(20) / vidaNivel(19)).toBeCloseTo(CURVA.vida);
+    expect(oroNivel(20) / oroNivel(19)).toBeCloseTo(CURVA.oro);
+    expect(vidaNivel(21) / vidaNivel(20)).toBeCloseTo(CURVA.vidaTarde);
+    expect(oroNivel(21) / oroNivel(20)).toBeCloseTo(CURVA.oroTarde);
+    expect(oroNivel(35) / oroNivel(34)).toBeCloseTo(CURVA.oroTarde);
+    expect(vidaNivel(51) / vidaNivel(50)).toBeCloseTo(CURVA.vidaMazmorra);
     expect(CURVA.vidaTarde).toBeLessThan(CURVA.vida);
   });
   it('Daño llega a 100 y, pasado el 40, cada nivel cuesta solo ×1.2 más', () => {
@@ -1260,8 +1273,9 @@ describe('quinta zona: Montaña de piedra, y el Dragón de acero', () => {
     expect(quienes(43)).toEqual(['arqueroHierro', 'golem', 'guerreroHierro']);
     expect(quienes(45)).toEqual(['arqueroHierro', 'dragoncito', 'golem', 'guerreroHierro']);
     expect(levelConfig(50).jefe?.kind).toBe('dragonAcero');
-    // El daño a la muralla crece ×1.02 por nivel después del 20.
-    expect(levelConfig(45).ataque / levelConfig(44).ataque).toBeCloseTo(1.02);
+    // El daño a la muralla crece ×1.02 por nivel después del 20 (y cada enemigo pega por los que ya no salen).
+    expect(ataqueNivel(45) / ataqueNivel(44)).toBeCloseTo(1.02);
+    expect(levelConfig(45).ataque).toBeCloseTo((ataqueNivel(45) * cargaNivel(45)) / totalNivel(45));
   });
   it('la armadura quita parte del daño hasta perder media vida; luego se cae y marcha más rápido', () => {
     const run = createRun(computeStats({}), 560, 41, 21);
@@ -1272,7 +1286,7 @@ describe('quinta zona: Montaña de piedra, y el Dragón de acero', () => {
     const ev: RunEvent[] = [];
     for (let i = 0; i < 12; i++) ev.push(...stepRun(run, 0.05));
     const golpe = ev.find((e) => e.type === 'hit' && e.id === 820);
-    expect((golpe as { danio: number }).danio).toBeCloseTo(ARMADURA);
+    expect((golpe as { danio: number }).danio).toBeCloseTo(ARMADURA * computeStats({}).danio);
     g.vida = 5.2;
     const y0 = g.y;
     for (let i = 0; i < 20; i++) ev.push(...stepRun(run, 0.05));
@@ -1556,21 +1570,21 @@ describe('PvP: poder fácil de leer y los dos ejércitos', () => {
     expect(loadPvp({ base: 120, escala: 2 }).base).toBe(120);
     expect(emptyPvp().escala).toBe(2);
   });
-  it('tu ejército sale de tu árbol y tu equipo; el del rival se parece, con más arqueros si es más fuerte', () => {
+  it('tu ejército sale de tu árbol y tu equipo; el del rival se parece (un arquero, como todos)', () => {
     const m = { ...createMeta(), nivel: 30 };
     m.talentos = { arqueros: 1, masArqueros: 2, mago: 1 };
     m.equipo.niveles = { baculo: 5, tunica: 5, sombrero: 3 };
     const mio = myArmy(m);
-    expect(mio).toMatchObject({ arqueros: 3, mago: true, caballero: false, sacerdote: false, bruja: false, etapas: { mago: 2, arqueros: 0, base: 0 } });
+    expect(mio).toMatchObject({ arqueros: 1, mago: true, caballero: false, sacerdote: false, bruja: false, etapas: { mago: 2, arqueros: 0, base: 0 } });
     const fuerte = rivalArmy(mio, 2.5, 5, 'r1');
     const flojo = rivalArmy(mio, 0.4, 0, 'r1');
-    expect(fuerte.arqueros).toBeGreaterThan(flojo.arqueros);
+    expect(fuerte.arqueros).toBe(1);
+    expect(flojo.arqueros).toBe(1);
     expect(fuerte.etapas.base).toBeGreaterThan(flojo.etapas.base);
     expect(rivalArmy(mio, 1, 2, 'r7')).toEqual(rivalArmy(mio, 1, 2, 'r7'));
     for (const id of ['r1', 'r2', 'r3', 'r4']) {
       const e = rivalArmy({ arqueros: 0, mago: false, caballero: false, sacerdote: false, bruja: false, etapas: { mago: 0, arqueros: 0, base: 0 } }, 1, 0, id);
-      expect(e.arqueros).toBeGreaterThanOrEqual(1);
-      expect(e.arqueros).toBeLessThanOrEqual(6);
+      expect(e.arqueros).toBe(1);
     }
   });
 });
@@ -1835,5 +1849,64 @@ describe('flechas de hielo de los arqueros', () => {
     const jefe = { id: 1, kind: 'rey' as const, x: 0, y: 0, vx: 0, vy: 0, vida: 1, vidaMax: 1, giro: 0, lento: { hasta: 999, f: 0.6 } };
     expect(slowFactor(run, jefe)).toBeCloseTo(0.8);
     expect(slowFactor(run, { ...jefe, kind: 'verde', lento: { hasta: run.t - 1, f: 0.6 } })).toBe(1);
+  });
+});
+
+describe('claridad (0.24.0): menos enemigos que valen más, y el arquero que rebota', () => {
+  it('hasta el 15 salen los de siempre; después, 2 más por nivel', () => {
+    expect(totalNivel(15)).toBe(cargaNivel(15));
+    expect(totalNivel(16)).toBe(cargaNivel(15) + CLARIDAD.porNivel);
+    expect(totalNivel(50)).toBe(cargaNivel(15) + CLARIDAD.porNivel * 35);
+    expect(levelConfig(48).total).toBe(totalNivel(48));
+    expect(totalNivel(48)).toBeLessThan(cargaNivel(48) / 2);
+  });
+  it('cada nivel cuesta lo mismo: los que salen traen la vida y el oro de los que ya no salen', () => {
+    for (const n of [5, 18, 33, 47]) {
+      const c = levelConfig(n);
+      expect(c.total * c.vida).toBeCloseTo(cargaNivel(n) * vidaNivel(n) * CLARIDAD.vida, 3);
+      expect(c.total * c.oro).toBeCloseTo(cargaNivel(n) * oroNivel(n), 3);
+    }
+    // En los de jefe solo salen el jefe y su escolta: como siempre.
+    expect(levelConfig(30).vida).toBeCloseTo(vidaNivel(30) * CLARIDAD.vida);
+  });
+  it(`en pantalla nunca hay más de ${MAX_VIVOS}; los demás llegan conforme revientas`, () => {
+    const run = createRun(computeStats({}), 700, 45, 3);
+    run.cursor = { x: -999, y: -999 };
+    startRun(run);
+    let pico = 0;
+    for (let i = 0; i < 300; i++) {
+      stepRun(run, 0.05);
+      pico = Math.max(pico, run.enemies.filter((e) => !ENEMIES[e.kind].cria).length);
+    }
+    expect(pico).toBe(MAX_VIVOS);
+    expect(run.salieron).toBeLessThan(run.nivel.total);
+    // Revientan unos y llegan otros.
+    for (const e of run.enemies.slice(0, 30)) e.vida = 0;
+    const antes = run.salieron;
+    for (let i = 0; i < 20; i++) stepRun(run, 0.05);
+    expect(run.salieron).toBeGreaterThan(antes);
+  });
+  it('Rebote: la flecha salta al más cercano que no tocó, con la mitad del daño', () => {
+    const run = createRun(computeStats({ arqueros: 1, multiflecha: 2 }), 560, 1, 1);
+    run.stats = { ...run.stats, ritmo: 0, arqueros: { ...run.stats.arqueros, intervalo: 100 } };
+    run.cursor = { x: -999, y: -999 };
+    const d = run.stats.arqueros.danio;
+    const pon = (id: number, x: number, y: number) => run.enemies.push({ id, kind: 'verde', x, y, vx: 0, vy: 0, vida: 1000, vidaMax: 1000, giro: 99 });
+    pon(1, 180, 300);
+    pon(2, 180 + REBOTE.alcance - 20, 300);
+    pon(3, 180 + REBOTE.alcance - 20, 300 + REBOTE.alcance - 20);
+    pon(4, 20, 40);
+    const events: RunEvent[] = [];
+    for (let i = 0; i < 80; i++) events.push(...stepRun(run, 0.05));
+    const golpes = events.filter((e): e is Extract<RunEvent, { type: 'hit' }> => e.type === 'hit' && e.fuente === 'arquero');
+    // Uno directo y dos rebotes, cada uno a otro enemigo; al lejano no le toca.
+    expect(golpes).toHaveLength(3);
+    expect(new Set(golpes.map((g) => g.id)).size).toBe(3);
+    expect(golpes.some((g) => g.id === 4)).toBe(false);
+    const danios = golpes.map((g) => Math.round(g.danio * 1000) / 1000).sort((a, b) => b - a);
+    expect(danios[1]).toBeCloseTo(danios[0]! * REBOTE.danio, 2);
+    expect(danios[2]).toBeCloseTo(danios[0]! * REBOTE.danio * REBOTE.danio, 2);
+    expect(danios[0]).toBeGreaterThan(0);
+    expect(d).toBeGreaterThan(0);
   });
 });

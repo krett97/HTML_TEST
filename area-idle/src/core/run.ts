@@ -1,7 +1,7 @@
 // Una partida: el campo, los enemigos que aparecen y pasean, tu círculo donde caen flechas, el mago
 // con sus explosiones de fuego cuadradas y los arqueros que tiran a un objetivo a la vez. Lógica pura: la escena
 // llama a stepRun cada cuadro (a través del controlador) y dibuja los eventos.
-import { AUTO_ANUNCIO, AUTOAPUNTAR, CONTACTO, HIELO, damageMultiplier, effectiveness, ENEMIES, GUARDIA, JEFE, JEFES, levelConfig, ORDEN_JEFES, vidaNivel, LLEGADA, MAX_VIVOS, PRIMERA_OLA, type BossDef, type DamageType, type EnemyKind, type LevelConfig, type ProjectileKind } from './datos';
+import { AUTO_ANUNCIO, AUTOAPUNTAR, CLARIDAD, CONTACTO, HIELO, damageMultiplier, effectiveness, ENEMIES, GUARDIA, JEFE, JEFES, cargaNivel, levelConfig, ORDEN_JEFES, oroNivel, ataqueNivel, REBOTE, vidaNivel, LLEGADA, MAX_VIVOS, MAX_VIVOS_OLEADAS, PRIMERA_OLA, type BossDef, type DamageType, type EnemyKind, type LevelConfig, type ProjectileKind } from './datos';
 import { between, createRng, type Rng } from './rng';
 import type { Stats } from './stats';
 
@@ -10,7 +10,8 @@ export const FIELD_W = 360;
 /** Lo que se deja libre en las orillas al hacer aparecer enemigos. */
 const MARGIN = 14;
 /** Cada cuánto quema el fuego (segundos). */
-const FIRE_TICK = 0.25;
+/** Cada cuánto quema el suelo en llamas (desde 0.24.0, menos seguido y más fuerte: menos numeritos). */
+const FIRE_TICK = 0.6;
 /** Lo que tardan en caer tus flechas y en llegar la bola de fuego del mago (segundos). */
 export const ARROW_FALL = 0.16;
 export const FIREBALL_FLIGHT = 0.28;
@@ -122,6 +123,9 @@ export interface Arrow {
   tx: number;
   ty: number;
   danio: number;
+  /** Cuántas veces más puede rebotar (talento Rebote) y a quiénes ya tocó. */
+  rebotes: number;
+  tocados: number[];
 }
 
 export type RunEvent =
@@ -323,7 +327,8 @@ function startWave(run: Run, events: RunEvent[]): void {
   const n = o.base + o.ola - 1;
   const zona = levelConfig(1 + Math.floor(run.rng() * o.maxNivel));
   const total = Math.min(OLEADAS.max, OLEADAS.base + OLEADAS.porOla * o.ola);
-  run.nivel = { ...levelConfig(n), mezcla: zona.mezcla, total, jefe: null };
+  // Las oleadas no cambiaron con la Claridad: su vida y su oro son los de siempre.
+  run.nivel = { ...levelConfig(n), vida: vidaNivel(n) * CLARIDAD.vida, oro: oroNivel(n), ataque: ataqueNivel(n), mezcla: zona.mezcla, total, jefe: null };
   run.salieron = 0;
   run.acumulado = 0;
   const jefes = jefesOla(o.ola);
@@ -332,7 +337,7 @@ function startWave(run: Run, events: RunEvent[]): void {
   for (let i = 0; i < Math.ceil(total * PRIMERA_OLA); i++) spawn(run, events);
   for (let i = 0; i < jefes; i++) {
     const kind = ORDEN_JEFES[(o.ola / 5 - 1 + i) % ORDEN_JEFES.length]!;
-    const vida = Math.round(3 * (15 + 8 * (n - 1)) * vidaNivel(n) * JEFE.vida * (JEFES[kind]?.vida ?? 1) * OLEADAS.jefeVida);
+    const vida = Math.round(3 * cargaNivel(n) * vidaNivel(n) * CLARIDAD.vida * JEFE.vida * (JEFES[kind]?.vida ?? 1) * OLEADAS.jefeVida);
     const x = run.w * (jefes === 1 ? 0.5 : 0.2 + (0.6 * i) / (jefes - 1));
     // Salen arriba, como todos, y bajan hacia la muralla.
     spawnBoss(run, kind, vida, x, run.arriba + 16, i === 0 && !run.jefe, events);
@@ -354,7 +359,7 @@ function stepWaves(run: Run, step: number, events: RunEvent[]): void {
     return;
   }
   run.acumulado += (run.nivel.total / OLEADAS.llegada) * step;
-  while (run.acumulado >= 1 && run.salieron < run.nivel.total && run.enemies.length < MAX_VIVOS) {
+  while (run.acumulado >= 1 && run.salieron < run.nivel.total && run.enemies.length < MAX_VIVOS_OLEADAS) {
     run.acumulado -= 1;
     spawn(run, events);
   }
@@ -707,6 +712,8 @@ export const autoAiming = (run: Run): boolean =>
   run.autoBoost ? run.manual >= AUTO_ANUNCIO.espera : run.stats.autoapuntar.velocidad > 0 && !run.guardia && run.manual >= AUTOAPUNTAR.espera;
 
 const bottom = (run: Run) => run.h - ALLY_ROW - MARGIN;
+/** Lo más que puede haber vivos a la vez (en la Supervivencia hay más). */
+const topeVivos = (run: Run): number => (run.oleadas ? MAX_VIVOS_OLEADAS : MAX_VIVOS);
 
 function spawn(run: Run, events: RunEvent[]): void {
   // Se sortea quién sale según la mezcla del nivel.
@@ -725,7 +732,8 @@ function spawn(run: Run, events: RunEvent[]): void {
   const y0 = run.oleadas ? between(run.rng, run.arriba, run.arriba + 30) : between(run.rng, run.arriba, bottom(run));
   // Los que salen en manada (lobos negros) llegan juntos, uno al lado del otro.
   const cuantos = Math.max(1, def.manada ?? 1);
-  for (let i = 0; i < cuantos && (i === 0 || (run.salieron < run.nivel.total && run.enemies.length < MAX_VIVOS) || !!run.guardia); i++) {
+  const tope = topeVivos(run);
+  for (let i = 0; i < cuantos && (i === 0 || (run.salieron < run.nivel.total && run.enemies.length < tope) || !!run.guardia); i++) {
     const x = i === 0 ? x0 : Math.min(run.w - MARGIN, Math.max(MARGIN, x0 + between(run.rng, -18, 18)));
     const y = i === 0 ? y0 : Math.min(bottom(run), Math.max(run.arriba, y0 + between(run.rng, -14, 14)));
     spawnOne(run, kind, x, y, events);
@@ -811,7 +819,7 @@ function damage(run: Run, e: Enemy, base: number, fuente: Source, events: RunEve
   }
   events.push({ type: 'kill', id: e.id, kind: e.kind, x: e.x, y: e.y, oro, danio, fuente });
   // El gólem se parte en piedritas.
-  if (def.parte) for (let i = 0; i < def.parte.n && run.enemies.length < MAX_VIVOS; i++) spawnCria(run, def.parte.en, e.x + (i - (def.parte.n - 1) / 2) * 14, e.y, events);
+  if (def.parte) for (let i = 0; i < def.parte.n && run.enemies.length < topeVivos(run); i++) spawnCria(run, def.parte.en, e.x + (i - (def.parte.n - 1) / 2) * 14, e.y, events);
 }
 
 /** Una cría (piedrita de gólem) junto a donde cayó su padre: no cuenta para el nivel. */
@@ -970,7 +978,7 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
       j.invoca += jd.invoca * ritmo;
       events.push({ type: 'bossSummon', id: boss.id, x: boss.x, y: boss.y });
       const cuantos = jd.escoltaN + (j.furia ? 1 : 0);
-      for (let i = 0; i < cuantos && run.enemies.length < MAX_VIVOS; i++) spawnNear(run, boss, events);
+      for (let i = 0; i < cuantos && run.enemies.length < topeVivos(run); i++) spawnNear(run, boss, events);
     }
     j.lanza -= step;
     if (j.lanza <= 0 && !j.salto) {
@@ -1181,7 +1189,7 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
       const blancos = pickTargets(run, s.arqueros.objetivos, true);
       if (blancos.length) events.push({ type: 'volley', arquero: i });
       for (const b of blancos) {
-        run.arrows.push({ id: run.nextId++, x: origen.x, y: origen.y - 22, angulo: Math.atan2(b.y - origen.y, b.x - origen.x), objetivo: b.id, tx: b.x, ty: b.y, danio: s.arqueros.danio });
+        run.arrows.push({ id: run.nextId++, x: origen.x, y: origen.y - 22, angulo: Math.atan2(b.y - origen.y, b.x - origen.x), objetivo: b.id, tx: b.x, ty: b.y, danio: s.arqueros.danio, rebotes: s.arqueros.rebotes, tocados: [] });
       }
     }
   });
@@ -1190,6 +1198,7 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
   stepWitch(run, step, events);
 
   const porId = new Map(run.enemies.map((e) => [e.id, e]));
+  const rebotes: Arrow[] = [];
   for (const a of run.arrows) {
     const blanco = porId.get(a.objetivo);
     if (blanco && blanco.vida > 0) {
@@ -1210,6 +1219,21 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
         // La flecha de hielo lo frena un rato (si ya estaba frenado, se renueva).
         const h = s.arqueros.hielo;
         if (h > 0 && blanco.vida > 0) blanco.lento = { hasta: run.t + HIELO.dura, f: 1 - h };
+        // Rebote: salta al más cercano que todavía no tocó.
+        if (a.rebotes > 0) {
+          const tocados = [...a.tocados, blanco.id];
+          let otro: Enemy | null = null;
+          let mejor: number = REBOTE.alcance;
+          for (const e of run.enemies) {
+            if (e.vida <= 0 || tocados.includes(e.id) || hidden(run, e)) continue;
+            const d2 = Math.hypot(e.x - a.x, e.y - a.y);
+            if (d2 < mejor) {
+              mejor = d2;
+              otro = e;
+            }
+          }
+          if (otro) rebotes.push({ id: run.nextId++, x: a.x, y: a.y, angulo: Math.atan2(otro.y - a.y, otro.x - a.x), objetivo: otro.id, tx: otro.x, ty: otro.y, danio: a.danio * REBOTE.danio, rebotes: a.rebotes - 1, tocados });
+        }
       }
       a.objetivo = -1;
     } else {
@@ -1217,7 +1241,7 @@ export function stepRun(run: Run, dt: number): RunEvent[] {
       a.y += (dy / d) * paso;
     }
   }
-  run.arrows = run.arrows.filter((a) => a.objetivo !== -1);
+  run.arrows = run.arrows.filter((a) => a.objetivo !== -1).concat(rebotes);
 
   // Aterrizan las flechas y las bolas de fuego.
   for (const imp of run.impacts) {
